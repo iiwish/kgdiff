@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/viewer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Drop-in <kgdiff-viewer> web component: overlay, swipe, replay and changes-only views with review workflow.",
   "keywords": [
     "kgdiff",

@@ -1,5 +1,12 @@
 # @kgdiff/g6
 
+## 0.3.0
+
+### Patch Changes
+
+- @kgdiff/core@0.3.0
+  - @kgdiff/scene@0.3.0
+
 ## 0.2.0
 
 ### Patch Changes
