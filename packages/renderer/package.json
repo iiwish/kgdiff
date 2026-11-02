@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/renderer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "High-DPI Canvas 2D renderer for kgdiff scenes: smooth camera, LOD, label placement, hit testing and minimap.",
   "keywords": [
     "kgdiff",
