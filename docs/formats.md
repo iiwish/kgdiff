@@ -107,7 +107,8 @@ where a graph is expected, with a message that says what the file is.
 completion and checks in your editor, or validate what a pipeline writes, such as an LLM's
 structured output, before kgdiff reads it. The schema describes the canonical form: kgdiff also
 reads looser files, with numeric ids, the label in `name` or other fields folded into `attrs`.
-`diff.v1.json` and `delta.v1.json` next to it describe what `--json` and `--delta` write.
+`diff.v1.json` and `delta.v1.json` next to it describe what `--json` and `--delta` write, and
+`diff-packed.v1.json` the packed diff HTML reports embed.
 
 ## Other JSON graph shapes
 

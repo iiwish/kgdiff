@@ -17,6 +17,7 @@ import type {
   GraphInput,
   KGraph,
   Locale,
+  PackedDiffJSON,
 } from '@kgdiff/core';
 import type { ParseOptions } from '@kgdiff/formats';
 import type { LayoutJSON, LayoutOptions } from '@kgdiff/layout';
@@ -39,7 +40,8 @@ export type ViewerLegend = 'auto' | 'full' | 'mini' | 'none';
 export interface ReportPayload {
   readonly format: 'kgdiff.report';
   readonly version: 1;
-  readonly diff: DiffJSON;
+  /** The diff, packed (`packDiffJSON`, what the CLI writes) or not. */
+  readonly diff: DiffJSON | PackedDiffJSON;
   readonly layout: LayoutJSON;
   readonly meta: {
     readonly title?: string;

@@ -13,6 +13,7 @@ import {
   type GraphInput,
   KgdiffError,
   type Locale,
+  packDiffJSON,
 } from '@kgdiff/core';
 import { layoutToJSON } from '@kgdiff/layout';
 import type { KgdiffViewerElement, ReportPayload, ViewerMode, ViewerScope } from '@kgdiff/viewer';
@@ -587,7 +588,7 @@ downloadBtn.addEventListener('click', async () => {
     const payload: ReportPayload = {
       format: 'kgdiff.report',
       version: 1,
-      diff: diffToJSON(result),
+      diff: packDiffJSON(diffToJSON(result)),
       layout: layoutToJSON(layout),
       meta: {
         title: c.title,

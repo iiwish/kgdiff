@@ -3,7 +3,7 @@
  * missing, out-of-layout groups are not expandable (and say why), and an add-on that arrives
  * later (`globalThis.KgdiffCompute`) is used without a reload.
  */
-import { diff, diffToJSON, KgdiffError } from '@kgdiff/core';
+import { type DiffJSON, diff, diffToJSON, KgdiffError, packDiffJSON } from '@kgdiff/core';
 import { extendLayout, layoutDiff, layoutToJSON } from '@kgdiff/layout';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computeStatus } from '../src/compute-loader.js';
@@ -35,6 +35,20 @@ afterEach(() => {
 });
 
 describe('compute add-on', () => {
+  it('reads packed report payloads (what the CLI writes) like unpacked ones', async () => {
+    setRenderBackend(mockBackend());
+    const plain = report();
+    const packed = { ...plain, diff: packDiffJSON(plain.diff as DiffJSON) };
+    expect(packed.diff.format).toBe('kgdiff.diff.packed');
+    const shown = async (payload: ReportPayload) => {
+      const c = new ViewerController(recordingHost(), manualDeps());
+      await c.loadPayload(payload);
+      expect(c.status).toBe('ready');
+      return { diff: diffToJSON(c.data!.diff), scene: c.scene!.nodes.map((n) => n.id) };
+    };
+    expect(await shown(packed)).toEqual(await shown(plain));
+  });
+
   it('reports work without it; load() rejects with an actionable KgdiffError', async () => {
     setRenderBackend(mockBackend());
     const c = new ViewerController(recordingHost(), manualDeps());

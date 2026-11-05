@@ -11,6 +11,7 @@ import {
   type GraphInput,
   graphToJSON,
   invertDelta,
+  packDiffJSON,
 } from '@kgdiff/core';
 import { parseGraph } from '@kgdiff/formats';
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
@@ -29,7 +30,7 @@ import {
 } from './support/fixtures.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/';
-const NAMES = ['graph', 'delta', 'diff'] as const;
+const NAMES = ['graph', 'delta', 'diff', 'diff-packed'] as const;
 const schemas = NAMES.map(
   (name) =>
     JSON.parse(
@@ -47,6 +48,7 @@ function validator(name: (typeof NAMES)[number]): ValidateFunction {
 const graph = validator('graph');
 const delta = validator('delta');
 const diffSchema = validator('diff');
+const packedSchema = validator('diff-packed');
 
 /** Asserts validity, listing the schema errors on failure. */
 function expectValid(validate: ValidateFunction, value: unknown): void {
@@ -59,6 +61,7 @@ function expectAllValid(before: GraphInput, after: GraphInput, options?: DiffOpt
   expectValid(graph, graphToJSON(result.before));
   expectValid(graph, graphToJSON(result.after));
   expectValid(diffSchema, diffToJSON(result));
+  expectValid(packedSchema, packDiffJSON(diffToJSON(result)));
   expectValid(delta, result.delta);
   expectValid(delta, invertDelta(result.delta));
 }

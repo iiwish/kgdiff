@@ -20,7 +20,7 @@ const BUDGET_KB = 90;
  * Enforced ceiling (docs/architecture.md §Budgets). zlib builds compress differently: the
  * official Node binaries CI installs produce about 0.6 kB more than a Node linked against the
  * system zlib (Homebrew's), so the ceiling leaves room above both. Raised from 100 kB for the
- * consistency checks of diffs read from JSON (and the packed payloads to come).
+ * consistency checks of diffs read from JSON and the decoder of packed report payloads.
  */
 const GUARD_KB = 105;
 

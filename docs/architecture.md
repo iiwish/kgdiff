@@ -72,29 +72,34 @@ text ──formats.parseGraph──▶ GraphInput ×2
      ──renderer.setFrame──▶ pixels
 ```
 
-The CLI runs everything up to `layoutDiff` in Node and embeds `diffToJSON` + `layoutToJSON` in
-the HTML report (`ReportPayload`), so the browser only builds the scene and renders. Reports are
-reproducible and open instantly.
+The CLI runs everything up to `layoutDiff` in Node and embeds `packDiffJSON(diffToJSON(…))` +
+`layoutToJSON` in the HTML report (`ReportPayload`), so the browser only builds the scene and
+renders. Reports are reproducible and open instantly. The packed diff stores the unchanged
+elements (most of a large diff) as tables of indices into one string table: for 100k nodes /
+300k edges, 28% of the bytes and 46% once gzipped (edges with a label or attributes of their own
+are not packed, so diffs of such graphs shrink less). The viewer unpacks it and reads it with `diffFromJSON`,
+which checks that the document is consistent before anything is drawn.
 
 ## Package contracts (summary)
 
-| Package  | Main API                                                                                                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel` |
-| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                               |
-| layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                        |
-| scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                        |
-| renderer | `createRenderer`, `createMinimap`                                                                                                                                        |
-| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`                                                                           |
-| g6       | `toG6Data`, `createDiffGraph`                                                                                                                                            |
-| cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                      |
+| Package  | Main API                                                                                                                                                                                                  |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `packDiffJSON`/`unpackDiffJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel` |
+| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                                                                |
+| layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                         |
+| scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                                                         |
+| renderer | `createRenderer`, `createMinimap`                                                                                                                                                                         |
+| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`                                                                                                            |
+| g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                             |
+| cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                       |
 
 The full, documented signatures live in each package's `src/index.ts` (and `src/types.ts`).
 
 The JSON documents kgdiff writes are contracts too: graphs (`kgdiff.graph`), diffs
-(`kgdiff.diff`) and deltas (`kgdiff.delta`) each carry their `format` and `version`, and each has
-a JSON Schema in `packages/core/schema/` (`graph.v1.json`, `diff.v1.json`, `delta.v1.json`,
-published with `@kgdiff/core`). Tests validate everything kgdiff writes against them, so a
+(`kgdiff.diff`), packed diffs (`kgdiff.diff.packed`, in reports) and deltas (`kgdiff.delta`) each
+carry their `format` and `version`, and each has a JSON Schema in `packages/core/schema/`
+(`graph.v1.json`, `diff.v1.json`, `diff-packed.v1.json`, `delta.v1.json`, published with
+`@kgdiff/core`). Tests validate everything kgdiff writes against them, so a
 change to these formats changes its schema in the same commit; an incompatible change bumps the
 version.
 

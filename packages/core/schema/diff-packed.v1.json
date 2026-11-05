@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/diff-packed.v1.json",
+  "title": "kgdiff packed diff, version 1",
+  "description": "A kgdiff diff (diff.v1.json) with its unchanged elements packed into tables of indices into one string table, as packDiffJSON writes it and HTML reports embed it. unpackDiffJSON gives back the diff. See https://github.com/iiwish/kgdiff/blob/main/docs/architecture.md",
+  "type": "object",
+  "properties": {
+    "format": { "const": "kgdiff.diff.packed" },
+    "version": {
+      "const": 1,
+      "description": "Readers reject versions they do not support."
+    },
+    "meta": { "$ref": "diff.v1.json#/properties/meta" },
+    "options": { "$ref": "diff.v1.json#/$defs/options" },
+    "strings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "description": "The node ids and predicates the two tables refer to, each once."
+    },
+    "unchangedNodes": {
+      "type": "array",
+      "items": {
+        "anyOf": [{ "$ref": "#/$defs/index" }, { "const": 0 }, { "$ref": "#/$defs/snapshot" }]
+      },
+      "description": "Unchanged nodes whose union, before and after ids are one id, as flat pairs: the index of the id in strings, then the after snapshot without its id (0 when nothing else is left)."
+    },
+    "unchangedEdges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/index" },
+      "description": "Unchanged edges identified by their triple, with no id, label or attributes of their own, as flat triples of indices into strings: source, predicate (the empty string for none), target."
+    },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "diff.v1.json#/$defs/unionNode" },
+      "description": "Every other union node, sorted by id."
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "diff.v1.json#/$defs/unionEdge" },
+      "description": "Every other union edge, sorted by id."
+    },
+    "hunks": { "$ref": "diff.v1.json#/properties/hunks" },
+    "matches": { "$ref": "diff.v1.json#/properties/matches" },
+    "suggestions": { "$ref": "diff.v1.json#/properties/suggestions" },
+    "delta": { "$ref": "delta.v1.json" },
+    "stats": { "$ref": "diff.v1.json#/$defs/stats" }
+  },
+  "required": [
+    "format",
+    "version",
+    "meta",
+    "options",
+    "strings",
+    "unchangedNodes",
+    "unchangedEdges",
+    "nodes",
+    "edges",
+    "hunks",
+    "matches",
+    "suggestions",
+    "delta",
+    "stats"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "index": { "type": "integer", "minimum": 0 },
+    "snapshot": {
+      "type": "object",
+      "description": "A node snapshot (graph.v1.json#/$defs/node) without its id.",
+      "properties": {
+        "label": { "$ref": "graph.v1.json#/$defs/node/properties/label" },
+        "types": { "$ref": "graph.v1.json#/$defs/strings" },
+        "aliases": { "$ref": "graph.v1.json#/$defs/strings" },
+        "attrs": { "$ref": "graph.v1.json#/$defs/attrs" },
+        "deprecated": { "type": "boolean" },
+        "replaces": { "$ref": "graph.v1.json#/$defs/ids" },
+        "replacedBy": { "$ref": "graph.v1.json#/$defs/ids" },
+        "implicit": { "type": "boolean" }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    }
+  }
+}

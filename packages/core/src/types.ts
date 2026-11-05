@@ -740,6 +740,34 @@ export interface DiffJSON {
   readonly stats: DiffStats;
 }
 
+/**
+ * A `DiffJSON` with its unchanged elements packed into tables (`packDiffJSON`, `unpackDiffJSON`):
+ * what HTML reports embed. Unchanged nodes and edges are most of a diff's bytes, so their ids and
+ * predicates are written once, in `strings`, and referenced by index. Unpacking gives back the
+ * `DiffJSON`, byte for byte. Schema `schema/diff-packed.v1.json`.
+ */
+export interface PackedDiffJSON extends Omit<DiffJSON, 'format' | 'nodes' | 'edges'> {
+  readonly format: 'kgdiff.diff.packed';
+  readonly version: 1;
+  /** The ids and predicates `unchangedNodes` and `unchangedEdges` refer to, each once. */
+  readonly strings: readonly string[];
+  /**
+   * Unchanged nodes whose union, before and after ids are one id and whose before snapshot is not
+   * stored, as flat pairs: the id (an index into `strings`), then the after snapshot without its
+   * `id` (0 when nothing else is left).
+   */
+  readonly unchangedNodes: readonly (number | Omit<NodeJSON, 'id'>)[];
+  /**
+   * Unchanged edges identified by their triple, with no id, label or attributes of their own, as
+   * flat triples of indices into `strings`: source, predicate ('' for none), target.
+   */
+  readonly unchangedEdges: readonly number[];
+  /** Every other union node, as in `DiffJSON`, sorted by id. */
+  readonly nodes: readonly UnionNodeJSON[];
+  /** Every other union edge, as in `DiffJSON`, sorted by id. */
+  readonly edges: readonly UnionEdgeJSON[];
+}
+
 // ─── Errors ─────────────────────────────────────────────────────────────────
 
 export type KgdiffErrorCode =

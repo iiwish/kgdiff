@@ -1,9 +1,9 @@
 /**
- * Build the `ReportPayload` embedded in HTML reports: diff (`diffToJSON`) + layout
+ * Build the `ReportPayload` embedded in HTML reports: packed diff (`packDiffJSON`) + layout
  * (`layoutToJSON`) + meta + initial view preferences. `@kgdiff/layout` and `node:zlib` are
  * loaded on demand, so text outputs never pay for them.
  */
-import { type DiffResult, diffToJSON, type Locale } from '@kgdiff/core';
+import { type DiffResult, diffToJSON, type Locale, packDiffJSON } from '@kgdiff/core';
 import type { ReportPayload, ThemePreference, ViewerMode, ViewerScope } from '@kgdiff/viewer';
 import { renderReportHtml } from './html.js';
 
@@ -34,7 +34,7 @@ export async function buildReportPayload(
   return {
     format: 'kgdiff.report',
     version: 1,
-    diff: diffToJSON(diff),
+    diff: packDiffJSON(diffToJSON(diff)),
     layout,
     meta: {
       title: info.title,
