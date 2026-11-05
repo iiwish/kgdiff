@@ -24,10 +24,12 @@ or turn off merge and split detection with `--no-merges` and `--no-splits`.
 ## Why didn't kgdiff pair two nodes I consider the same?
 
 Their similarity was below the threshold (0.82 by default), or another candidate was about as
-likely. The viewer lists such near misses as possible matches in the detail panel. Lower
-`--threshold`, or state the pairing explicitly with a replacement link (`replaced_by` in OBO,
-`IAO:0100001` in RDF, `replacedBy` in kgdiff JSON). [Graphs without stable
-ids](./guide/llm-graphs.md) explains the scoring.
+likely. Such near misses are listed as possible matches: at the end of the terminal summary and
+of the Markdown summary (so in pull request comments too), and in the viewer's detail panel.
+Lower `--threshold`, add the old name as a synonym, or state the pairing explicitly with a
+replacement link (`replaced_by` in OBO, `IAO:0100001` in RDF, `replacedBy` in kgdiff JSON).
+[How kgdiff tells changes apart](./guide/matching.md) walks through examples, and [Graphs
+without stable ids](./guide/llm-graphs.md) explains the scoring.
 
 ## Is the output deterministic?
 

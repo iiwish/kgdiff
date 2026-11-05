@@ -1,5 +1,6 @@
 /**
- * Golden outputs for two featured datasets, with each dataset's meta.json options. Review the
+ * Golden outputs for the featured datasets, with each dataset's meta.json options (the LLM
+ * extraction runs also cover the possible matches after the hunk list). Review the
  * files under `__snapshots__/` when the diff engine or the layout of the summary changes
  * (`pnpm vitest run packages/cli -u` updates them). The CLI version reads `<version>` in them,
  * so that a release leaves them alone.
@@ -14,6 +15,7 @@ const VERSION = `kgdiff ${cliVersion()}`;
 const CASES = [
   { id: 'enterprise-kg', locale: 'zh-CN' },
   { id: 'ontology-release', locale: 'en' },
+  { id: 'llm-extraction', locale: 'en' },
 ] as const;
 
 const OUTPUTS = [

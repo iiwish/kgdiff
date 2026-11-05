@@ -1,8 +1,9 @@
 /**
  * Presentation model shared by every text output: hunk families, glyphs, name-status letters,
- * phase grouping and the per-phase counts behind the counters and the diffstat bar.
+ * phase grouping, the per-phase counts behind the counters and the diffstat bar, and the
+ * possible matches listed after the hunks.
  */
-import type { DiffResult, Hunk, HunkKind, ReplayPhase } from '@kgdiff/core';
+import type { DiffResult, Hunk, HunkKind, MatchSuggestion, ReplayPhase } from '@kgdiff/core';
 
 /** The five meaning families of docs/visual-language.md (mirrors `@kgdiff/scene`). */
 export type ChangeFamily = 'added' | 'removed' | 'content' | 'structure' | 'identity';
@@ -174,6 +175,69 @@ export function apportion(weights: readonly number[], total: number): number[] {
     used--;
   }
   return cells;
+}
+
+/** One side of a possible match: the node's id in its version and the name shown for it. */
+export interface PossibleMatchSide {
+  readonly id: string;
+  readonly name: string;
+}
+
+/** A pairing kgdiff considered but did not apply (a `MatchSuggestion`), ready to list. */
+export interface PossibleMatch {
+  readonly before: PossibleMatchSide;
+  readonly after: PossibleMatchSide;
+  readonly score: number;
+  readonly reason: MatchSuggestion['reason'];
+  /** Label and neighbourhood evidence, 0..1. */
+  readonly label: number;
+  readonly neighbors: number;
+}
+
+/** Longest name shown for either side (as hunk titles shorten names, @kgdiff/core i18n). */
+const MAX_POSSIBLE_NAME = 40;
+
+function shortName(label: string): string {
+  const chars = Array.from(label);
+  return chars.length > MAX_POSSIBLE_NAME
+    ? `${chars.slice(0, MAX_POSSIBLE_NAME - 1).join('')}…`
+    : label;
+}
+
+const byCodePoint = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * The suggestions a reviewer of the text outputs needs to see: pairings kgdiff did not apply
+ * where the before node is reported removed or the after node added, so that "removed X, added
+ * Y" can be read as "maybe X became Y". The viewer's detail panel lists the same ones. Names
+ * are the label each node had in its own version. Highest score first, then by ids.
+ */
+export function possibleMatches(diff: DiffResult): PossibleMatch[] {
+  const list: PossibleMatch[] = [];
+  for (const s of diff.suggestions) {
+    const before = diff.index.nodeByBefore(s.before);
+    const after = diff.index.nodeByAfter(s.after);
+    if (before?.status !== 'removed' && after?.status !== 'added') continue;
+    list.push({
+      before: { id: s.before, name: shortName(before?.before?.label ?? before?.label ?? s.before) },
+      after: { id: s.after, name: shortName(after?.after?.label ?? after?.label ?? s.after) },
+      score: s.score,
+      reason: s.reason,
+      label: s.evidence.label,
+      neighbors: s.evidence.neighbors,
+    });
+  }
+  return list.sort(
+    (x, y) =>
+      y.score - x.score ||
+      byCodePoint(x.before.id, y.before.id) ||
+      byCodePoint(x.after.id, y.after.id),
+  );
+}
+
+/** A score or evidence value as a whole percentage: `0.796` → `80%`. */
+export function percent(value: number): string {
+  return `${Math.round(value * 100)}%`;
 }
 
 export function assertNever(value: never): never {

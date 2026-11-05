@@ -134,6 +134,20 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
   Restructured → Modified → Added — clean up, restructure, refine, grow. Within a group, hunks
   keep core's `order`. A modify hunk whose only change is a hierarchy move shows as structure.
 - **Right column**: family, then the hunk subtitle (truncated first; the title wins space).
+- **Possible matches** come last: pairings kgdiff considered but did not apply, between a node
+  listed as removed and one listed as added, so that "removed X, added Y" can be read as "maybe
+  X became Y". Each line gives both names (with their ids when the names are equal), the score,
+  why it was not applied (below the `--threshold`, or too close to another candidate), and the
+  label and neighbourhood evidence, highest score first; at most 10 (all with `--limit 0`,
+  every suggestion in `--json`). A closing line says how to pair one. The section has columns
+  of its own and is absent when there is nothing to list.
+
+  ```
+    Possible matches 1
+    ≈ “pitchblende” → “uraninite (pitchblende)”   72% · below the 82% threshold · name 69% · neighbours 55%
+    Not paired, so listed as removed or added. To pair one, add a synonym or a replacement link, or
+    lower --threshold.
+  ```
 - Width: the terminal width on a TTY (`COLUMNS`, then 80, when it reports none), else
   `COLUMNS`, else 120; clamped to 40–120 (narrower terminals get the 40-column layout). Down to
   40 columns every line fits: counters wrap, table columns and type names give way, titles and
@@ -167,8 +181,10 @@ lists them (`#index op: reason`).
 ## Markdown summary
 
 For PR comments and `$GITHUB_STEP_SUMMARY`: a title, a diffstat table (nodes / edges ×
-added / removed / modified), a family legend, and the hunk list grouped by phase inside
-`<details>` blocks (first 100, then "and N more"). No HTML beyond `<details>/<summary>`.
+added / removed / modified), a family legend, the hunk list grouped by phase inside
+`<details>` blocks (first 100, then "and N more"), and the possible matches in a `<details>`
+block of their own, with the same content as in the terminal (first 20; expanded when there
+are at most 10). No HTML beyond `<details>/<summary>`.
 Labels are escaped (Markdown punctuation including `$` for math; `<`, `>`, `&` as entities;
 invisible and bidi characters made visible; control characters dropped), and GitHub's
 post-Markdown filters are defused with a zero-width space before escaping: `:emoji:`

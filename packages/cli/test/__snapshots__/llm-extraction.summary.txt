@@ -1,0 +1,44 @@
+kgdiff  curie-extraction run-a → run-b                                 39 → 40 nodes · 55 → 59 edges
+
+  +3 added   −2 removed   ~24 modified   ⇄1 restructured                      45 changes in 30 hunks
+  +++++++++−−−−−~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~⇄
+
+  Removed 2
+  − Removed “Albert Einstein” and 1 relation                         removed · type Person · was li…
+  − Removed “pitchblende” and 2 relations                            removed · type Mineral · was l…
+  Restructured 1
+  ⇄ Removed “Pierre Curie” —discovered→ “Thorium”                    structure · relation removed
+  Modified 24
+  ~ Renamed “Irène Joliot-Curie” → “Irene Joliot-Curie”              content · +1 relation
+  ~ Renamed “André Debierne” → “André-Louis Debierne”                content
+  ~ Renamed “Henri Becquerel” → “Antoine Henri Becquerel”            content
+  ~ Renamed “uranic rays” → “Becquerel rays”                         content · +2 synonyms
+  ~ Updated synonyms of “Flying University”                          content · +1 synonym
+  ~ Renamed “Frédéric Joliot” → “Frédéric Joliot-Curie”              content · +1 synonym
+  ~ Renamed “St. Joachimsthal” → “Jáchymov”                          content · +2 synonyms
+  ~ Renamed “Passy” → “Passy (Haute-Savoie)”                         content · +1 synonym
+  ~ Renamed “polonium (Po)” → “Polonium”                             content
+  ~ Updated synonyms of “Radium Institute”                           content · +1 synonym
+  ~ Renamed “Recherches sur les substances radioacti…” → “Researc…   content · +1 synonym
+  ~ Renamed “Univ. of Paris” → “University of Paris”                 content · +2 synonyms
+  ~ Renamed “uranium” → “Uranium”                                    content
+  ~ Renamed “Wilhelm Röntgen” → “Wilhelm Conrad Röntgen”             content
+  ~ Renamed “First World War” → “World War I”                        content · +2 synonyms
+  ~ Renamed “aplastic anemia” → “aplastic anaemia”                   content
+  ~ Renamed “artificial radioactivity” → “induced radioactivity”     content · +1 −1 types · +1 syn…
+  ~ Renamed “petites Curies” → “mobile radiography units”            content · +2 synonyms
+  ~ Renamed “Curie electrometer” → “piezoelectric quartz electrom…   content · +1 synonym
+  ~ Changed the type of “radioactivity”                              content · +1 −1 types
+  ~ Renamed “thorium” → “Thorium”                                    content · +1 relation
+  ~ Renamed “ESPCI” → “École supérieure de physique et de chim…”     content · +2 synonyms
+  ~ Renamed “Marie Curie” → “Marie Skłodowska-Curie”                 content · ~1 attribute · +2 sy…
+  ~ Renamed “radium (Ra)” → “Radium”                                 content · ~1 relation
+  Added 3
+  + Added “uraninite (pitchblende)” and 2 relations                  added · type Mineral · linked…
+  + Added “French Academy of Sciences” and 2 relations               added · type Organization · li…
+  + Added “Gustave Bémont” and 2 relations                           added · type Person · linked t…
+
+  Possible matches 1
+  ≈ “pitchblende” → “uraninite (pitchblende)”   72% · below the 82% threshold · name 69% · neighbou…
+  Not paired, so listed as removed or added. To pair one, add a synonym or a replacement link, or
+  lower --threshold.

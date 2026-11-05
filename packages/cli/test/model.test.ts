@@ -1,4 +1,4 @@
-import type { HunkKind } from '@kgdiff/core';
+import type { DiffResult, HunkKind } from '@kgdiff/core';
 import { diff, normalize } from '@kgdiff/core';
 import { hunkFamily as sceneHunkFamily } from '@kgdiff/scene';
 import fc from 'fast-check';
@@ -13,7 +13,7 @@ import {
   overview,
   resolveLocale,
 } from '../src/index.js';
-import { apportion } from '../src/model.js';
+import { apportion, percent, possibleMatches } from '../src/model.js';
 
 const KINDS: readonly HunkKind[] = ['add', 'remove', 'merge', 'split', 'modify', 'relations'];
 
@@ -133,6 +133,67 @@ describe('apportion', () => {
         },
       ),
     );
+  });
+});
+
+describe('possibleMatches', () => {
+  const evidence = { label: 0.5, neighbors: 1, types: 1, attrs: 0 };
+  const node = (status: string, label: string, side?: 'before' | 'after', own?: string) => ({
+    status,
+    label,
+    ...(side ? { [side]: { label: own ?? label } } : {}),
+  });
+  const before: Record<string, object> = {
+    gone: node('removed', 'Gone', 'before', 'Gone (old name)'),
+    kept: node('modified', 'Kept'),
+    long: node('removed', 'L'.repeat(45), 'before'),
+  };
+  const after: Record<string, object> = {
+    fresh: node('added', 'Fresh', 'after'),
+    same: node('unchanged', 'Same'),
+  };
+  const fake = (suggestions: readonly object[]): DiffResult =>
+    ({
+      suggestions,
+      index: { nodeByBefore: (id: string) => before[id], nodeByAfter: (id: string) => after[id] },
+    }) as unknown as DiffResult;
+  const s = (b: string, a: string, score: number) => ({
+    before: b,
+    after: a,
+    score,
+    evidence,
+    reason: 'below-threshold',
+  });
+
+  it('keeps pairings with a removed or an added side, highest score first, then by ids', () => {
+    const list = possibleMatches(
+      fake([
+        s('kept', 'same', 0.95),
+        s('gone', 'same', 0.7),
+        s('kept', 'fresh', 0.8),
+        s('gone', 'fresh', 0.7),
+      ]),
+    );
+    expect(list.map((p) => [p.before.id, p.after.id, p.score])).toEqual([
+      ['kept', 'fresh', 0.8],
+      ['gone', 'fresh', 0.7],
+      ['gone', 'same', 0.7],
+    ]);
+  });
+
+  it('names each side as it was in its own version, shortened to 40 characters', () => {
+    const [gone, long] = possibleMatches(fake([s('gone', 'fresh', 0.9), s('long', 'fresh', 0.8)]));
+    expect(gone?.before.name).toBe('Gone (old name)');
+    expect(gone?.after.name).toBe('Fresh');
+    expect(long?.before.name).toBe(`${'L'.repeat(39)}…`);
+    expect(gone?.label).toBe(0.5);
+    expect(gone?.neighbors).toBe(1);
+  });
+
+  it('formats scores as whole percentages', () => {
+    expect(percent(0.796297)).toBe('80%');
+    expect(percent(0.82)).toBe('82%');
+    expect(percent(1)).toBe('100%');
   });
 });
 

@@ -55,8 +55,16 @@ exact procedure.
 - **`--threshold <n>`** (default 0.82): lower it to pair more variants, at the risk of pairing
   different entities; raise it to pair only near-identical labels.
 - **Near misses become suggestions.** A pair below the threshold but above 0.6, or one that ties
-  with a rival, is not matched; the detail panel of the viewer lists it as a possible match.
-  Above, “pitchblende” and “uraninite (pitchblende)” are such a pair.
+  with a rival, is not matched. The terminal summary and the Markdown summary list it under
+  _Possible matches_, and the viewer in the node's detail panel. Above, “pitchblende” and
+  “uraninite (pitchblende)” are such a pair:
+
+  ```
+    Possible matches 1
+    ≈ “pitchblende” → “uraninite (pitchblende)”   72% · below the 82% threshold · name 69% · neighbours 55%
+  ```
+
+  [How kgdiff tells changes apart](./matching.md) has more examples.
 - **Edges are identified by structure**, that is by source, predicate and target
   (`--edge-identity structure`, the default), so random edge ids do not matter. Use
   `--edge-identity id` when edge ids are meaningful.

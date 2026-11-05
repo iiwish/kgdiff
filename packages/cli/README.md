@@ -70,9 +70,9 @@ Anywhere else, run the CLI yourself:
 - run: npx @kgdiff/cli main/ontology.ttl ontology.ttl --exit-code --quiet
 ```
 
-`--markdown` is GitHub-flavoured Markdown (a diffstat table, a family legend and the hunk list
-in collapsible `<details>` groups), safe to paste into PR comments: labels are escaped and can
-never mention people, link issues or inject HTML.
+`--markdown` is GitHub-flavoured Markdown (a diffstat table, a family legend, the hunk list
+and the possible matches in collapsible `<details>` groups), safe to paste into PR comments:
+labels are escaped and can never mention people, link issues or inject HTML.
 
 ## Output
 
@@ -103,6 +103,17 @@ amber content, blue structure, violet identity) in truecolor, 256 or 16 colors. 
 terminal down to 40 columns; CJK and emoji are measured correctly, and control, bidi and
 invisible characters in labels are shown as `␛` / `⟨U+202E⟩` instead of being interpreted. `--limit <n>` caps the list (default 50, `0`
 lists all). Hunk titles and the summary are localized (`--locale zh-CN`, or from `LANG`).
+
+The summary ends with the **possible matches**: pairings kgdiff considered but did not apply,
+between a node listed as removed and one listed as added, with the score, why it was not
+applied and the evidence, so that "removed X, added Y" can be read as "maybe X became Y":
+
+```
+  Possible matches 1
+  ≈ “pitchblende” → “uraninite (pitchblende)”   72% · below the 82% threshold · name 69% · neighbours 55%
+  Not paired, so listed as removed or added. To pair one, add a synonym or a replacement link, or
+  lower --threshold.
+```
 
 `--stat` adds a nodes / edges table and changes by node type:
 

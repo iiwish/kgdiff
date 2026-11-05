@@ -1,0 +1,44 @@
+[1m[38;2;124;156;255mkgdiff[39m[22m  [1mcurie-extraction run-a → run-b[22m                                 [2m39 → 40 nodes · 55 → 59 edges[22m
+
+  [1m[38;2;52;211;153m+3[39m[22m added   [1m[38;2;248;113;113m−2[39m[22m removed   [1m[38;2;251;191;36m~24[39m[22m modified   [1m[38;2;56;189;248m⇄1[39m[22m restructured                      [2m45 changes in 30 hunks[22m
+  [38;2;52;211;153m█████████[39m[38;2;248;113;113m█████[39m[38;2;251;191;36m██████████████████████████████[39m[38;2;56;189;248m█[39m
+
+  [1mRemoved[22m [2m2[22m
+  [38;2;248;113;113m−[39m Removed “Albert Einstein” and 1 relation                         [38;2;248;113;113mremoved[39m[2m · type Person · was li…[22m
+  [38;2;248;113;113m−[39m Removed “pitchblende” and 2 relations                            [38;2;248;113;113mremoved[39m[2m · type Mineral · was l…[22m
+  [1mRestructured[22m [2m1[22m
+  [38;2;56;189;248m⇄[39m Removed “Pierre Curie” —discovered→ “Thorium”                    [38;2;56;189;248mstructure[39m[2m · relation removed[22m
+  [1mModified[22m [2m24[22m
+  [38;2;251;191;36m~[39m Renamed “Irène Joliot-Curie” → “Irene Joliot-Curie”              [38;2;251;191;36mcontent[39m[2m · +1 relation[22m
+  [38;2;251;191;36m~[39m Renamed “André Debierne” → “André-Louis Debierne”                [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Renamed “Henri Becquerel” → “Antoine Henri Becquerel”            [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Renamed “uranic rays” → “Becquerel rays”                         [38;2;251;191;36mcontent[39m[2m · +2 synonyms[22m
+  [38;2;251;191;36m~[39m Updated synonyms of “Flying University”                          [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Renamed “Frédéric Joliot” → “Frédéric Joliot-Curie”              [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Renamed “St. Joachimsthal” → “Jáchymov”                          [38;2;251;191;36mcontent[39m[2m · +2 synonyms[22m
+  [38;2;251;191;36m~[39m Renamed “Passy” → “Passy (Haute-Savoie)”                         [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Renamed “polonium (Po)” → “Polonium”                             [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Updated synonyms of “Radium Institute”                           [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Renamed “Recherches sur les substances radioacti…” → “Researc…   [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Renamed “Univ. of Paris” → “University of Paris”                 [38;2;251;191;36mcontent[39m[2m · +2 synonyms[22m
+  [38;2;251;191;36m~[39m Renamed “uranium” → “Uranium”                                    [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Renamed “Wilhelm Röntgen” → “Wilhelm Conrad Röntgen”             [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Renamed “First World War” → “World War I”                        [38;2;251;191;36mcontent[39m[2m · +2 synonyms[22m
+  [38;2;251;191;36m~[39m Renamed “aplastic anemia” → “aplastic anaemia”                   [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Renamed “artificial radioactivity” → “induced radioactivity”     [38;2;251;191;36mcontent[39m[2m · +1 −1 types · +1 syn…[22m
+  [38;2;251;191;36m~[39m Renamed “petites Curies” → “mobile radiography units”            [38;2;251;191;36mcontent[39m[2m · +2 synonyms[22m
+  [38;2;251;191;36m~[39m Renamed “Curie electrometer” → “piezoelectric quartz electrom…   [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Changed the type of “radioactivity”                              [38;2;251;191;36mcontent[39m[2m · +1 −1 types[22m
+  [38;2;251;191;36m~[39m Renamed “thorium” → “Thorium”                                    [38;2;251;191;36mcontent[39m[2m · +1 relation[22m
+  [38;2;251;191;36m~[39m Renamed “ESPCI” → “École supérieure de physique et de chim…”     [38;2;251;191;36mcontent[39m[2m · +2 synonyms[22m
+  [38;2;251;191;36m~[39m Renamed “Marie Curie” → “Marie Skłodowska-Curie”                 [38;2;251;191;36mcontent[39m[2m · ~1 attribute · +2 sy…[22m
+  [38;2;251;191;36m~[39m Renamed “radium (Ra)” → “Radium”                                 [38;2;251;191;36mcontent[39m[2m · ~1 relation[22m
+  [1mAdded[22m [2m3[22m
+  [38;2;52;211;153m+[39m Added “uraninite (pitchblende)” and 2 relations                  [38;2;52;211;153madded[39m[2m · type Mineral · linked…[22m
+  [38;2;52;211;153m+[39m Added “French Academy of Sciences” and 2 relations               [38;2;52;211;153madded[39m[2m · type Organization · li…[22m
+  [38;2;52;211;153m+[39m Added “Gustave Bémont” and 2 relations                           [38;2;52;211;153madded[39m[2m · type Person · linked t…[22m
+
+  [1mPossible matches[22m [2m1[22m
+  [38;2;167;139;250m≈[39m “pitchblende” → “uraninite (pitchblende)”   [38;2;167;139;250m72%[39m[2m · below the 82% threshold · name 69% · neighbou…[22m
+  [2mNot paired, so listed as removed or added. To pair one, add a synonym or a replacement link, or[22m
+  [2mlower --threshold.[22m

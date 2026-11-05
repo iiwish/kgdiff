@@ -1,0 +1,45 @@
+kgdiff  curie-extraction run-a…    39 → 40 nodes · 55 → 59 edges
+
+  +3 added   −2 removed   ~24 modified   ⇄1 restructured
+  45 changes in 30 hunks
+  +++++++++−−−−−~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~⇄
+
+  Removed 2
+  − Removed “Albert Einstein” and 1 r…   removed · type Person…
+  − Removed “pitchblende” and 2 relat…   removed · type Mineral…
+  Restructured 1
+  ⇄ Removed “Pierre Curie” —discovere…   structure · relation r…
+  Modified 24
+  ~ Renamed “Irène Joliot-Curie” → “I…   content · +1 relation
+  ~ Renamed “André Debierne” → “André…   content
+  ~ Renamed “Henri Becquerel” → “Anto…   content
+  ~ Renamed “uranic rays” → “Becquere…   content · +2 synonyms
+  ~ Updated synonyms of “Flying Unive…   content · +1 synonym
+  ~ Renamed “Frédéric Joliot” → “Fréd…   content · +1 synonym
+  ~ Renamed “St. Joachimsthal” → “Jác…   content · +2 synonyms
+  ~ Renamed “Passy” → “Passy (Haute-S…   content · +1 synonym
+  ~ Renamed “polonium (Po)” → “Poloni…   content
+  ~ Updated synonyms of “Radium Insti…   content · +1 synonym
+  ~ Renamed “Recherches sur les subst…   content · +1 synonym
+  ~ Renamed “Univ. of Paris” → “Unive…   content · +2 synonyms
+  ~ Renamed “uranium” → “Uranium”        content
+  ~ Renamed “Wilhelm Röntgen” → “Wilh…   content
+  ~ Renamed “First World War” → “Worl…   content · +2 synonyms
+  ~ Renamed “aplastic anemia” → “apla…   content
+  ~ Renamed “artificial radioactivity…   content · +1 −1 types…
+  ~ Renamed “petites Curies” → “mobil…   content · +2 synonyms
+  ~ Renamed “Curie electrometer” → “p…   content · +1 synonym
+  ~ Changed the type of “radioactivit…   content · +1 −1 types
+  ~ Renamed “thorium” → “Thorium”        content · +1 relation
+  ~ Renamed “ESPCI” → “École supérieu…   content · +2 synonyms
+  ~ Renamed “Marie Curie” → “Marie Sk…   content · ~1 attribute…
+  ~ Renamed “radium (Ra)” → “Radium”     content · ~1 relation
+  Added 3
+  + Added “uraninite (pitchblende)” a…   added · type Mineral ·…
+  + Added “French Academy of Sciences…   added · type Organizat…
+  + Added “Gustave Bémont” and 2 rela…   added · type Person ·…
+
+  Possible matches 1
+  ≈ “pitchblende” → “uraninite (pitchblende…   72% · below the…
+  Not paired, so listed as removed or added. To pair one, add a
+  synonym or a replacement link, or lower --threshold.
