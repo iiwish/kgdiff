@@ -28,9 +28,11 @@ describe('public API', () => {
       'isKGraph',
       'matchNodes',
       'normalize',
+      'packDiffJSON',
       'predicateLabel',
       'resolveOptions',
       'textSimilarity',
+      'unpackDiffJSON',
     ]);
     expect(DEFAULT_HIERARCHY_PREDICATES.length).toBeGreaterThan(0);
   });

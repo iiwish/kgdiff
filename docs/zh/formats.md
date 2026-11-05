@@ -92,7 +92,7 @@ kgdiff  zoo v1 → v2                              节点 3 → 4 · 关系 2 �
 
 和 diff、增量一样，kgdiff 写出图时会把 `"format": "kgdiff.graph"` 和 `"version": 1` 放在最前面。没有这两个字段的文件照样能读，按结构识别。有这两个字段的文件会直接按 kgdiff JSON 读取，不再猜测结构；kgdiff 不支持的版本会被拒绝；在需要图的地方传入 diff 或增量文件，也会被拒绝，并且报错信息会说明这是什么文件。
 
-[`graph.v1.json`](../../packages/core/schema/graph.v1.json) 是 kgdiff JSON 的 JSON Schema。`@kgdiff/core` 里带有它（`@kgdiff/core/schema/graph.v1.json`），也可以从 `https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/graph.v1.json` 获取。在文件的 `$schema` 里写上它，编辑器就能补全和检查；也可以在 kgdiff 读取之前，用它校验流水线的产出，例如 LLM 的结构化输出。这份 Schema 描述的是规范形式：kgdiff 也能读更宽松的文件，比如数字 id、写在 `name` 里的标签，以及会归入 `attrs` 的其他字段。同一目录下的 `diff.v1.json` 和 `delta.v1.json` 分别描述 `--json` 和 `--delta` 写出的内容。
+[`graph.v1.json`](../../packages/core/schema/graph.v1.json) 是 kgdiff JSON 的 JSON Schema。`@kgdiff/core` 里带有它（`@kgdiff/core/schema/graph.v1.json`），也可以从 `https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/graph.v1.json` 获取。在文件的 `$schema` 里写上它，编辑器就能补全和检查；也可以在 kgdiff 读取之前，用它校验流水线的产出，例如 LLM 的结构化输出。这份 Schema 描述的是规范形式：kgdiff 也能读更宽松的文件，比如数字 id、写在 `name` 里的标签，以及会归入 `attrs` 的其他字段。同一目录下的 `diff.v1.json` 和 `delta.v1.json` 分别描述 `--json` 和 `--delta` 写出的内容，`diff-packed.v1.json` 描述 HTML 报告里嵌入的打包 diff。
 
 ## 其他 JSON 图结构
 

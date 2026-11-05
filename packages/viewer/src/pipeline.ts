@@ -11,6 +11,7 @@ import {
   isKGraph,
   type KGraph,
   KgdiffError,
+  unpackDiffJSON,
 } from '@kgdiff/core';
 import { type LayoutOptions, type LayoutResult, layoutFromJSON } from '@kgdiff/layout';
 import { loadCompute } from './compute-loader.js';
@@ -157,7 +158,9 @@ export async function readPayload(
   onStep: (step: LoadStep) => Promise<void>,
 ): Promise<LoadedDiff> {
   await onStep('match');
-  const diff = diffFromJSON(payload.diff);
+  const json =
+    payload.diff.format === 'kgdiff.diff.packed' ? unpackDiffJSON(payload.diff) : payload.diff;
+  const diff = diffFromJSON(json);
   await onStep('layout');
   const layout = layoutFromJSON(payload.layout);
   const vb = str(diff.before.meta.version);

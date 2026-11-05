@@ -1,4 +1,5 @@
 import { gunzipSync } from 'node:zlib';
+import { type DiffJSON, unpackDiffJSON } from '@kgdiff/core';
 import type { ReportPayload } from '@kgdiff/viewer';
 import { describe, expect, it } from 'vitest';
 import {
@@ -32,6 +33,10 @@ const AFTER = JSON.stringify({
   ],
 });
 const files = { 'v1.json': BEFORE, 'v2.json': AFTER };
+
+/** The diff a report embeds, unpacked. */
+const diffOf = (payload: ReportPayload): DiffJSON =>
+  payload.diff.format === 'kgdiff.diff.packed' ? unpackDiffJSON(payload.diff) : payload.diff;
 
 async function report(extra: string[] = [], options: Parameters<typeof run>[1] = {}) {
   const r = await run(['v1.json', 'v2.json', '-o', 'report.html', '-q', ...extra], {
@@ -105,7 +110,8 @@ describe('HTML report', () => {
     expect(encoding).toBeUndefined();
     expect(payload.format).toBe('kgdiff.report');
     expect(payload.version).toBe(1);
-    expect(payload.diff.format).toBe('kgdiff.diff');
+    expect(payload.diff.format).toBe('kgdiff.diff.packed');
+    expect(diffOf(payload).nodes.map((n) => n.id)).toEqual(['a', 'b', 'c']);
     expect(payload.layout.format).toBe('kgdiff.layout');
     expect(Object.keys(payload.layout.positions).sort()).toEqual(['a', 'b', 'c']);
     expect(payload.meta).toMatchObject({
@@ -126,7 +132,7 @@ describe('HTML report', () => {
     expect(html.match(/<\/script/gi)).toHaveLength(2);
     expect(html).not.toContain('<!--');
     const { payload } = extractPayload(html) as { payload: ReportPayload };
-    const labels = payload.diff.nodes.map((n) => n.after?.label ?? n.id);
+    const labels = diffOf(payload).nodes.map((n) => n.after?.label ?? n.id);
     expect(labels).toContain('Alpha</script><script>alert(1)</script>');
   });
 
@@ -173,7 +179,7 @@ describe('HTML report', () => {
       payload: ReportPayload;
     };
     expect(encoding).toBe('gzip-base64');
-    expect(payload.diff.nodes).toHaveLength(900);
+    expect(diffOf(payload).nodes).toHaveLength(900);
     const body = /data-encoding="gzip-base64">([^<]*)</.exec(html)?.[1] ?? '';
     const bytes = Buffer.from(body, 'base64');
     expect(bytes[9]).toBe(0xff); // platform-independent gzip header

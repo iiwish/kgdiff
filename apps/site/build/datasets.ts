@@ -6,7 +6,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { type DiffOptions, diff, diffToJSON, type Locale } from '@kgdiff/core';
+import { type DiffOptions, diff, diffToJSON, type Locale, packDiffJSON } from '@kgdiff/core';
 import { parseGraph } from '@kgdiff/formats';
 import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
 import { buildScene, type ChangeFamily, getTheme } from '@kgdiff/scene';
@@ -82,7 +82,7 @@ function compute(root: string, id: string): Computed {
   const payload: ReportPayload = {
     format: 'kgdiff.report',
     version: 1,
-    diff: diffToJSON(result),
+    diff: packDiffJSON(diffToJSON(result)),
     layout: layoutToJSON(layout),
     meta: {
       title: meta.title.en,

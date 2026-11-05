@@ -17,6 +17,7 @@
  *   graph-json.ts    compact JSON of graphs, content hash
  *   json.ts          DiffJSON transport
  *   consistency.ts   checks of diffs read from JSON
+ *   packed.ts        PackedDiffJSON, the packed transport of reports
  *   i18n.ts          formatHunk, facetLabel
  *   diff.ts          the pipeline
  */
@@ -29,6 +30,7 @@ import { diffFromJSON as fromJSON, diffToJSON as toJSON } from './json.js';
 import { matchNodes as match } from './match.js';
 import { isKGraph as isGraph, normalize as normalizeGraph } from './normalize.js';
 import { resolveOptions as resolve } from './options.js';
+import { packDiffJSON as pack, unpackDiffJSON as unpack } from './packed.js';
 import { predicateLabel as labelOfPredicate, textSimilarity as similarity } from './text.js';
 import type {
   ApplyOptions,
@@ -45,6 +47,7 @@ import type {
   MatchOptions,
   MatchResult,
   NormalizeOptions,
+  PackedDiffJSON,
   ResolvedDiffOptions,
 } from './types.js';
 
@@ -156,6 +159,25 @@ export function diffToJSON(result: DiffResult): DiffJSON {
  */
 export function diffFromJSON(json: DiffJSON): DiffResult {
   return fromJSON(json);
+}
+
+/**
+ * Packs the unchanged elements of a diff document into string-indexed tables (edges with a label
+ * or attributes of their own stay as they are). A large, mostly unchanged diff shrinks to about a
+ * third, a little under half once gzipped. Lossless and deterministic.
+ */
+export function packDiffJSON(json: DiffJSON): PackedDiffJSON {
+  return pack(json);
+}
+
+/**
+ * Inverse of `packDiffJSON`: `unpackDiffJSON(packDiffJSON(j))` is `j`, byte for byte, for what
+ * `diffToJSON` writes. Read the result with `diffFromJSON`.
+ *
+ * @throws KgdiffError `unsupported-version`, `invalid-input` for malformed tables.
+ */
+export function unpackDiffJSON(packed: PackedDiffJSON): DiffJSON {
+  return unpack(packed);
 }
 
 /** Similarity of two display strings in [0, 1]; robust to case, punctuation, word order and CJK. */

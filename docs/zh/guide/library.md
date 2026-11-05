@@ -96,6 +96,7 @@ const updated = applyDelta(graph, delta);
 ## 保存与读取
 
 - `diffToJSON(result)` 和 `diffFromJSON(json)`：完整 diff 的 JSON 形式，和命令行 `--json` 的输出一致。`diffFromJSON` 读入时会检查文档是否自洽（状态、hunk、边的端点、delta 对应的两张图、各项计数），遇到矛盾就报出第一处。
+- `packDiffJSON(json)` 和 `unpackDiffJSON(packed)`：把同一份 diff 里未变的元素打包成表（`kgdiff.diff.packed`），HTML 报告里嵌的就是这种格式；一份以未变元素为主的大 diff 会缩小到约三分之一（自带标签或属性的边不打包），解包后逐字节还原。
 - `graphToJSON(graph)`：kgdiff JSON 格式的图，`parseGraph` 可以无损读回。
 - `result.delta` 本身就是普通 JSON，格式见[增量格式](../delta-format.md)。
 
