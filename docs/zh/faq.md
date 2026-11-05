@@ -14,7 +14,7 @@ diff 引擎能处理几十万个节点的图：在 id 完全一致的情况下�
 
 ## 为什么 kgdiff 没有把我认为相同的两个节点配成一对？
 
-它们的相似度低于阈值（默认 0.82），或者另有一个候选的可能性差不多。查看器会在详情面板里把这类差一点配上的候选列为“可能是同一节点”。可以调低 `--threshold`，或者用替代声明明确指出配对关系（OBO 用 `replaced_by`，RDF 用 `IAO:0100001`，kgdiff JSON 用 `replacedBy`）。评分方式见[没有稳定 id 的图](./guide/llm-graphs.md)。
+它们的相似度低于阈值（默认 0.82），或者另有一个候选的可能性差不多。这类差一点配上的候选会作为“可能的匹配”列出：在终端摘要和 Markdown 摘要（因此也包括 PR 评论）的最后，以及查看器的详情面板里。可以调低 `--threshold`，把旧名称补充为别名，或者用替代声明明确指出配对关系（OBO 用 `replaced_by`，RDF 用 `IAO:0100001`，kgdiff JSON 用 `replacedBy`）。[kgdiff 如何区分各种变化](./guide/matching.md)用例子逐一说明，评分方式见[没有稳定 id 的图](./guide/llm-graphs.md)。
 
 ## 输出是确定的吗？
 

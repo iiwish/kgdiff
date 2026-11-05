@@ -1,11 +1,20 @@
 /**
  * GitHub-flavoured Markdown summary for PR comments and `$GITHUB_STEP_SUMMARY`
- * (docs/cli.md §Markdown summary): title, diffstat table, family legend and the hunk list
- * grouped by phase in `<details>` blocks. No HTML beyond `<details>` / `<summary>`.
+ * (docs/cli.md §Markdown summary): title, diffstat table, family legend, the hunk list grouped
+ * by phase and the possible matches, in `<details>` blocks. No HTML beyond `<details>` /
+ * `<summary>`.
  */
 import { type DiffResult, formatHunk, type Locale } from '@kgdiff/core';
 import { formatInt, messages } from './locale.js';
-import { type ChangeFamily, groupByPhase, hunkFamily, hunkGlyph, overview } from './model.js';
+import {
+  type ChangeFamily,
+  groupByPhase,
+  hunkFamily,
+  hunkGlyph,
+  overview,
+  percent,
+  possibleMatches,
+} from './model.js';
 import { totalsText } from './summary.js';
 import { revealInvisible } from './width.js';
 
@@ -13,6 +22,10 @@ import { revealInvisible } from './width.js';
 export const MARKDOWN_HUNK_LIMIT = 100;
 /** Groups start expanded when the whole list is at most this long. */
 const OPEN_THRESHOLD = 30;
+/** Possible matches listed before "…and N more". */
+export const MARKDOWN_POSSIBLE_LIMIT = 20;
+/** The possible matches start expanded when there are at most this many. */
+const POSSIBLE_OPEN_THRESHOLD = 10;
 
 const FAMILY_SQUARE: Readonly<Record<ChangeFamily, string>> = {
   added: '🟩',
@@ -113,7 +126,46 @@ export function renderMarkdown(diff: DiffResult, options: MarkdownOptions): stri
     if (ov.hunks > MARKDOWN_HUNK_LIMIT) {
       out.push(`*${escapeMarkdown(m.markdown.more(ov.hunks - MARKDOWN_HUNK_LIMIT))}*`, '');
     }
+    out.push(...possibleSection(diff, options.locale));
   }
   out.push(`*${escapeMarkdown(m.markdown.generatedBy(options.generator))}*`);
   return `${out.join('\n')}\n`;
+}
+
+/**
+ * The possible matches (`possibleMatches`): pairings kgdiff did not apply between a node listed
+ * as removed and one listed as added. In a pull request comment they are what tells a reviewer
+ * that "removed X" and "added Y" may be one entity. Empty when there are none.
+ */
+function possibleSection(diff: DiffResult, locale: Locale): string[] {
+  const possible = possibleMatches(diff);
+  if (possible.length === 0) return [];
+  const m = messages(locale);
+  const threshold = percent(diff.options.match.threshold);
+  const open = possible.length <= POSSIBLE_OPEN_THRESHOLD ? ' open' : '';
+  const out = [
+    `<details${open}>`,
+    `<summary>${m.possible.heading} (${formatInt(possible.length)})</summary>`,
+    '',
+    `*${m.markdown.possibleHint}*`,
+    '',
+  ];
+  for (const p of possible.slice(0, MARKDOWN_POSSIBLE_LIMIT)) {
+    const reason =
+      p.reason === 'ambiguous' ? m.possible.ambiguous : m.possible.belowThreshold(threshold);
+    const note = [
+      percent(p.score),
+      reason,
+      m.possible.evidence(percent(p.label), percent(p.neighbors)),
+    ].join(' · ');
+    out.push(`- ≈ ${escapeMarkdown(m.possible.title(p.before, p.after))} — *${note}*`);
+  }
+  if (possible.length > MARKDOWN_POSSIBLE_LIMIT) {
+    out.push(
+      '',
+      `*${escapeMarkdown(m.markdown.possibleMore(possible.length - MARKDOWN_POSSIBLE_LIMIT))}*`,
+    );
+  }
+  out.push('', '</details>', '');
+  return out;
 }

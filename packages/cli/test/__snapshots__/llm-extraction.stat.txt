@@ -1,0 +1,20 @@
+kgdiff  curie-extraction run-a → run-b              39 → 40 nodes · 55 → 59 edges
+
+  +3 added   −2 removed   ~24 modified   ⇄1 restructured   45 changes in 30 hunks
+  +++++++++−−−−−~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~⇄
+
+         added  removed  modified  unchanged
+  nodes      3        2        24         13
+  edges      8        4         4         47
+
+  By type
+  Person        8 +−~~~~~~
+  Organization  5 +~~~~
+  Element       4 ~~~~
+  Phenomenon    3 ~~~
+  Instrument    2 ~~
+  Mineral       2 +−
+  Place         2 ~~
+  Disease       1 ~
+  Event         1 ~
+  Work          1 ~

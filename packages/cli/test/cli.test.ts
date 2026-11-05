@@ -5,7 +5,7 @@ import { hashGraph, normalize } from '@kgdiff/core';
 import { parseGraph } from '@kgdiff/formats';
 import { describe, expect, it } from 'vitest';
 import { DIFF_OPTIONS } from '../src/args.js';
-import { stringWidth, stripAnsi } from '../src/index.js';
+import { cliVersion, stringWidth, stripAnsi } from '../src/index.js';
 import { CWD, dataset, REPO, run } from './helpers.js';
 
 const BEFORE = JSON.stringify({
@@ -159,6 +159,170 @@ describe('summary', () => {
         .filter(Boolean)
         .every((l) => l.split('\t').length === 3),
     ).toBe(true);
+  });
+});
+
+describe('possible matches', () => {
+  const graph = (nodes: readonly object[], edges: readonly object[] = []): string =>
+    JSON.stringify({ nodes, edges });
+  /** Two extraction runs with fresh ids: “Saudi Aramco” is “Aramco” with the same neighbours. */
+  const runs = {
+    'run-a.json': graph(
+      [
+        { id: 'e1', label: 'Saudi Aramco', type: 'Organization' },
+        { id: 'e2', label: 'Saudi Arabia', type: 'Country' },
+        { id: 'e3', label: 'Petroleum', type: 'Industry' },
+        { id: 'e4', label: 'Amin Nasser', type: 'Person' },
+        { id: 'e5', label: 'Dhahran', type: 'City' },
+      ],
+      [
+        { source: 'e1', target: 'e2', predicate: 'based_in' },
+        { source: 'e1', target: 'e3', predicate: 'industry' },
+        { source: 'e4', target: 'e1', predicate: 'ceo_of' },
+        { source: 'e1', target: 'e5', predicate: 'headquartered_in' },
+      ],
+    ),
+    'run-b.json': graph(
+      [
+        { id: 'x9', label: 'Aramco', type: 'Organization' },
+        { id: 'x2', label: 'Saudi Arabia', type: 'Country' },
+        { id: 'x7', label: 'Petroleum', type: 'Industry' },
+        { id: 'x4', label: 'Amin Nasser', type: 'Person' },
+        { id: 'x1', label: 'Dhahran', type: 'City' },
+      ],
+      [
+        { source: 'x9', target: 'x2', predicate: 'based_in' },
+        { source: 'x9', target: 'x7', predicate: 'industry' },
+        { source: 'x4', target: 'x9', predicate: 'ceo_of' },
+        { source: 'x9', target: 'x1', predicate: 'headquartered_in' },
+      ],
+    ),
+  };
+  const similar = ['run-a.json', 'run-b.json', '--match', 'similarity'];
+  /** Piped: 120 columns, the widest layout. */
+  const wide = { files: runs };
+
+  /** Six atoms bonded in a ring, and the same atoms as two triangles: every pairing ties. */
+  const ring = (prefix: string, bonds: readonly [number, number][]): string =>
+    graph(
+      [1, 2, 3, 4, 5, 6].map((i) => ({ id: `${prefix}${i}`, label: 'C', type: 'Atom' })),
+      bonds.map(([s, t]) => ({
+        source: `${prefix}${s}`,
+        target: `${prefix}${t}`,
+        predicate: 'bond',
+      })),
+    );
+  const rings = {
+    'hexagon.json': ring('h', [
+      [1, 2],
+      [2, 3],
+      [3, 4],
+      [4, 5],
+      [5, 6],
+      [6, 1],
+    ]),
+    'triangles.json': ring('t', [
+      [1, 2],
+      [2, 3],
+      [3, 1],
+      [4, 5],
+      [5, 6],
+      [6, 4],
+    ]),
+  };
+  const symmetric = ['hexagon.json', 'triangles.json', '--match', 'similarity'];
+
+  it('lists a pairing that was not applied, with its score, why, and the evidence', async () => {
+    const r = await run(similar, wide);
+    expect(r.code, r.stderr).toBe(0);
+    expect(r.stdout).toContain('  − Removed “Saudi Aramco” and 3 relations');
+    expect(r.stdout).toContain('  + Added “Aramco” and 3 relations');
+    // Its own columns: the long hunk titles above do not squeeze the reason and the evidence.
+    expect(r.stdout).toMatch(
+      /\n\n {2}Possible matches 1\n {2}≈ “Saudi Aramco” → “Aramco” {3}80% · below the 82% threshold · name 67% · neighbours 100%\n/,
+    );
+    expect(r.stdout).toMatch(
+      /neighbours 100%\n {2}Not paired, so listed as removed or added\. To pair one, add a synonym or a replacement link, or lower --threshold\.\n$/,
+    );
+  });
+
+  it('says nothing once the pairing is applied, or when there is none', async () => {
+    const paired = await run([...similar, '--threshold', '0.79'], wide);
+    expect(paired.stdout).toContain('~ Renamed “Saudi Aramco” → “Aramco”');
+    expect(paired.stdout).not.toContain('Possible matches');
+    const zoo = await run(['before.json', 'after.json'], { files });
+    expect(zoo.stdout).not.toContain('Possible matches');
+  });
+
+  it('names each side by its id when both have the same name', async () => {
+    const r = await run([...symmetric, '--limit', '1'], { files: rings });
+    expect(r.stdout).toMatch(
+      / {2}≈ “C” \(h1\) → “C” \(t1\) +100% · too close to another candidate · name 100%/,
+    );
+  });
+
+  it('lists 10 unless --limit is lower or 0', async () => {
+    const count = (stdout: string): number =>
+      stdout.split('\n').filter((l) => l.startsWith('  ≈ ')).length;
+    const capped = await run(symmetric, { files: rings });
+    expect(capped.stdout).toContain('  Possible matches 36\n');
+    expect(count(capped.stdout)).toBe(10);
+    expect(capped.stdout).toContain('  … and 26 more · --json lists all\n');
+    expect(count((await run([...symmetric, '--limit', '3'], { files: rings })).stdout)).toBe(3);
+    const all = await run([...symmetric, '--limit', '0'], { files: rings });
+    expect(count(all.stdout)).toBe(36);
+    expect(all.stdout).not.toContain('more · --json');
+  });
+
+  it('speaks Chinese', async () => {
+    const r = await run([...similar, '--locale', 'zh-CN'], wide);
+    expect(r.stdout).toMatch(
+      / {2}可能的匹配 1\n {2}≈ 「Saudi Aramco」→「Aramco」 +80% · 低于阈值 82% · 名称 67% · 邻居 100%\n/,
+    );
+    expect(r.stdout).toContain('这些节点未配对，因此按删除或新增列出。');
+  });
+
+  it('--markdown lists them in their own block, after the hunks', async () => {
+    const r = await run([...similar, '--markdown'], { files: runs });
+    const block = r.stdout.slice(r.stdout.indexOf('<details open>\n<summary>Possible'));
+    expect(block).toBe(
+      [
+        '<details open>',
+        '<summary>Possible matches (1)</summary>',
+        '',
+        '*kgdiff did not pair these nodes, so they are listed above as removed or added. If a pair is the same thing, add a synonym or a replacement link, or lower `--threshold`.*',
+        '',
+        '- ≈ “Saudi Aramco” → “Aramco” — *80% · below the 82% threshold · name 67% · neighbours 100%*',
+        '',
+        '</details>',
+        '',
+        `*Generated by kgdiff ${cliVersion()}*`,
+        '',
+      ].join('\n'),
+    );
+    const paired = await run([...similar, '--threshold', '0.79', '--markdown'], { files: runs });
+    expect(paired.stdout).not.toContain('Possible matches');
+  });
+
+  it('--markdown escapes the names, collapses a long list and caps it at 20', async () => {
+    const escaped = await run(
+      ['a.json', 'b.json', '--match', 'similarity', '--threshold', '0.99', '--markdown'],
+      {
+        files: {
+          'a.json': graph([{ id: 't', label: '*Tom* @cat <b>' }]),
+          'b.json': graph([{ id: 'u', label: '*Tom* @cats <b>' }]),
+        },
+      },
+    );
+    expect(escaped.stdout).toContain(
+      '- ≈ “\\*Tom\\* @​cat &lt;b&gt;” → “\\*Tom\\* @​cats &lt;b&gt;” — *82% · below the 99% threshold',
+    );
+    const many = await run([...symmetric, '--markdown'], { files: rings });
+    expect(many.stdout).toContain('<details>\n<summary>Possible matches (36)</summary>');
+    expect(many.stdout.split('\n').filter((l) => l.startsWith('- ≈ '))).toHaveLength(20);
+    expect(many.stdout).toContain(
+      "*…and 16 more possible matches. The HTML report shows them in each node's details.*",
+    );
   });
 });
 

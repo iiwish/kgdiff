@@ -1,6 +1,6 @@
 /**
- * Terminal outputs: the default summary (header, counters, diffstat bar, hunk list), `--stat`
- * and `--name-status` (docs/cli.md §Terminal summary).
+ * Terminal outputs: the default summary (header, counters, diffstat bar, hunk list, possible
+ * matches), `--stat` and `--name-status` (docs/cli.md §Terminal summary).
  *
  * Every line is laid out on plain text first (measured with `stringWidth`, truncated with an
  * ellipsis) and painted last, so alignment holds with and without color and with CJK labels.
@@ -9,6 +9,7 @@ import { type DiffResult, formatHunk, type Hunk, type Locale } from '@kgdiff/cor
 import { formatInt, type Messages, messages } from './locale.js';
 import {
   apportion,
+  type ChangeFamily,
   COUNTER_PHASES,
   groupByPhase,
   hunkFamily,
@@ -18,6 +19,9 @@ import {
   overview,
   PHASE_FAMILY,
   PHASE_GLYPH,
+  type PossibleMatch,
+  percent,
+  possibleMatches,
 } from './model.js';
 import type { Painter } from './style.js';
 import { padEnd, padStart, sanitize, stringWidth, truncate, wrap } from './width.js';
@@ -169,8 +173,10 @@ function identicalLines(diff: DiffResult, ctx: TextContext, width: number): stri
   ];
 }
 
+/** A line of the hunk list (or of the possible matches): glyph, title, family and summary. */
 interface Row {
-  readonly hunk: Hunk;
+  /** Colour of the glyph and the family label. */
+  readonly tone: ChangeFamily;
   readonly glyph: string;
   readonly title: string;
   readonly family: string;
@@ -182,13 +188,36 @@ function rowsOf(diff: DiffResult, hunks: readonly Hunk[], ctx: TextContext): Row
   return hunks.map((hunk) => {
     const { title, subtitle } = formatHunk(hunk, diff, ctx.locale);
     return {
-      hunk,
+      tone: hunkFamily(hunk),
       glyph: hunkGlyph(hunk),
       title: sanitize(title),
       family: m.family[hunkFamily(hunk)],
       subtitle: sanitize(subtitle),
     };
   });
+}
+
+/** Glyph of a possible match: “maybe the same”. */
+const POSSIBLE_GLYPH = '≈';
+/** Possible matches listed before "… and N more" (all with `--limit 0`). */
+export const POSSIBLE_LIMIT = 10;
+
+/** Possible match rows: both names, then the score, why it was not applied and the evidence. */
+function possibleRows(diff: DiffResult, list: readonly PossibleMatch[], ctx: TextContext): Row[] {
+  const m = messages(ctx.locale);
+  const threshold = percent(diff.options.match.threshold);
+  return list.map((p) => ({
+    tone: 'identity',
+    glyph: POSSIBLE_GLYPH,
+    title: sanitize(m.possible.title(p.before, p.after)),
+    family: percent(p.score),
+    subtitle: sanitize(
+      [
+        p.reason === 'ambiguous' ? m.possible.ambiguous : m.possible.belowThreshold(threshold),
+        m.possible.evidence(percent(p.label), percent(p.neighbors)),
+      ].join(' · '),
+    ),
+  }));
 }
 
 const rightText = (row: Row): string =>
@@ -229,7 +258,7 @@ function listColumns(rows: readonly Row[], width: number): { title: number; righ
 
 function renderRow(row: Row, cols: { title: number; right: number }, ctx: TextContext): string {
   const { paint } = ctx;
-  const tone = hunkFamily(row.hunk);
+  const tone = row.tone;
   const glyph = paint.tone(tone, row.glyph);
   if (cols.right === 0) return `${INDENT}${glyph} ${truncate(row.title, cols.title)}`;
   const title = padEnd(truncate(row.title, cols.title), cols.title);
@@ -268,6 +297,11 @@ function headerNatural(diff: DiffResult, title: string, ctx: TextContext, ov: Ov
  * The default terminal output: header (title, node and edge totals), per-phase counters, a
  * proportional diffstat bar, then the hunks grouped by phase with glyph, title and a family /
  * summary column. At most `ctx.limit` hunks are listed (0 = all), then "… and N more".
+ *
+ * Last come the possible matches: pairings kgdiff considered but did not apply, between a node
+ * listed as removed and one listed as added (`possibleMatches`), with their score, why they were
+ * not applied, the evidence, and how to pair one. At most `POSSIBLE_LIMIT` (all with
+ * `--limit 0`).
  */
 export function renderSummary(diff: DiffResult, title: string, ctx: TextContext): string {
   const ov = overview(diff);
@@ -276,6 +310,7 @@ export function renderSummary(diff: DiffResult, title: string, ctx: TextContext)
     return `${[...headerLines(diff, title, ctx, width), '', ...identicalLines(diff, ctx, width)].join('\n')}\n`;
   }
   const m = messages(ctx.locale);
+  const { paint } = ctx;
   const groups = groupByPhase(diff.hunks);
   let shown = 0;
   const budget = ctx.limit > 0 ? ctx.limit : Number.POSITIVE_INFINITY;
@@ -284,24 +319,45 @@ export function renderSummary(diff: DiffResult, title: string, ctx: TextContext)
     shown += take.length;
     return { phase: g.phase, total: g.hunks.length, rows: rowsOf(diff, take, ctx) };
   });
+  const possible = possibleMatches(diff);
+  const possibleShown = possible.slice(
+    0,
+    ctx.limit > 0 ? Math.min(ctx.limit, POSSIBLE_LIMIT) : possible.length,
+  );
+  const possibleList = possibleRows(diff, possibleShown, ctx);
   const allRows = listed.flatMap((g) => g.rows);
   const width = layoutWidth(
-    Math.max(headerNatural(diff, title, ctx, ov), listWidth(allRows)),
+    Math.max(headerNatural(diff, title, ctx, ov), listWidth(allRows), listWidth(possibleList)),
     ctx.width,
   );
   const cols = listColumns(allRows, width);
+  // Columns of their own: hunk titles are often long, and the reason and evidence matter more
+  // here than lining up with the hunks above (the section has its own heading).
+  const possibleCols = listColumns(possibleList, width);
   const lines = [...headerLines(diff, title, ctx, width), '', ...statLines(ov, ctx, width), ''];
   for (const group of listed) {
     if (group.rows.length === 0) continue;
-    lines.push(
-      `${INDENT}${ctx.paint.bold(m.phase[group.phase])} ${ctx.paint.dim(formatInt(group.total))}`,
-    );
+    lines.push(`${INDENT}${paint.bold(m.phase[group.phase])} ${paint.dim(formatInt(group.total))}`);
     for (const row of group.rows) lines.push(renderRow(row, cols, ctx));
   }
   const hidden = ov.hunks - shown;
   if (hidden > 0) {
     const more = `${m.more(hidden)} · ${m.moreHint}`;
-    lines.push(INDENT + ctx.paint.dim(truncate(more, width - INDENT.length)));
+    lines.push(INDENT + paint.dim(truncate(more, width - INDENT.length)));
+  }
+  if (possible.length > 0) {
+    lines.push(
+      '',
+      `${INDENT}${paint.bold(m.possible.heading)} ${paint.dim(formatInt(possible.length))}`,
+    );
+    for (const row of possibleList) lines.push(renderRow(row, possibleCols, ctx));
+    const notListed = possible.length - possibleShown.length;
+    if (notListed > 0) {
+      lines.push(INDENT + paint.dim(truncate(m.possible.more(notListed), width - INDENT.length)));
+    }
+    for (const line of wrap(m.possible.hint, width - INDENT.length)) {
+      lines.push(INDENT + paint.dim(line));
+    }
   }
   return `${lines.join('\n')}\n`;
 }
