@@ -104,6 +104,12 @@ terminal down to 40 columns; CJK and emoji are measured correctly, and control, 
 invisible characters in labels are shown as `␛` / `⟨U+202E⟩` instead of being interpreted. `--limit <n>` caps the list (default 50, `0`
 lists all). Hunk titles and the summary are localized (`--locale zh-CN`, or from `LANG`).
 
+Changes to **watched attributes** are flagged ⚑ for review first: a line under the bar counts
+the hunks that change one, and their rows say so before the summary
+(`content · ⚑ definition · ~2 attributes`). By default kgdiff watches definitions (`def`,
+`definition`, `IAO:0000115`, `skos:definition`); `--watch-attr <key>` (repeatable) replaces
+them. `--markdown` lists the same hunks in a ⚑ _Review first_ block before the others.
+
 The summary ends with the **possible matches**: pairings kgdiff considered but did not apply,
 between a node listed as removed and one listed as added, with the score, why it was not
 applied and the evidence, so that "removed X, added Y" can be read as "maybe X became Y":

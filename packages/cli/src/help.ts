@@ -138,6 +138,11 @@ const MAIN: readonly Section[] = [
         default: 'auto',
       },
       { flags: '--limit <n>', text: 'Hunks listed in the summary; 0 lists all', default: '50' },
+      {
+        flags: '--watch-attr <key>',
+        text: 'Flag changes to this attribute ⚑ for review first (repeatable); replaces the defaults',
+        default: 'definitions',
+      },
       { flags: '-h, --help', text: 'Show this help' },
       { flags: '-v, --version', text: 'Show the version' },
     ],

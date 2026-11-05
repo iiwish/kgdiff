@@ -31,6 +31,10 @@ kgdiff release-1.obo release-2.obo --match id
 - **`--ignore-attr <key>`**: leave out annotations that change in every release (repeatable).
   Keys are OBO tag names such as `creation_date`, or compact predicates such as `dcterms:date`
   in RDF; the detail panel of the report shows them.
+- **`--watch-attr <key>`**: changes to definitions are flagged ⚑ for review first, in the
+  summary and in pull request comments: `def` in OBO, `IAO:0000115` and `skos:definition` in
+  RDF. A reworded definition can change what existing annotations mean. Name other keys to
+  watch instead, e.g. `--watch-attr rdfs:comment` for a schema.org-style vocabulary.
 
 ## What kgdiff reports
 

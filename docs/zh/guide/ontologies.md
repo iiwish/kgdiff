@@ -18,6 +18,7 @@ kgdiff release-1.obo release-2.obo --match id
 - **`--hierarchy <predicate>`**：哪些谓词表示术语位于某个父类之下，这样父类变化时才会显示为“移至……下”。默认是 `rdfs:subClassOf`、`rdfs:subPropertyOf`、`skos:broader`、`is_a`、`subClassOf` 和 `parent`。指定 `--hierarchy` 会替换默认值；需要多个时重复使用，例如 `--hierarchy is_a --hierarchy part_of`，把部分–整体关系也当作层级。
 - **`--lang <tags>`**（RDF）：一个术语有多种语言的标签时显示哪一种，例如 `--lang en` 或 `--lang zh,en`。
 - **`--ignore-attr <key>`**：忽略每次发布都会变的注解（可重复）。键名在 OBO 里是标签名，例如 `creation_date`；在 RDF 里是缩写后的谓词，例如 `dcterms:date`。报告的详情面板里能看到它们。
+- **`--watch-attr <key>`**：定义的修改会在摘要和 PR 评论里标记 ⚑、优先审查：OBO 里是 `def`，RDF 里是 `IAO:0000115` 和 `skos:definition`。改写后的定义可能改变已有注释的含义。也可以改为关注其他键名，例如 schema.org 风格的词表用 `--watch-attr rdfs:comment`。
 
 ## kgdiff 报告什么
 

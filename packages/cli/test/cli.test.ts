@@ -326,6 +326,112 @@ describe('possible matches', () => {
   });
 });
 
+describe('review first (watched attributes)', () => {
+  const node = (id: string, label: string, attrs?: object) => ({
+    id,
+    label,
+    ...(attrs ? { attrs } : {}),
+  });
+  const graph = (nodes: readonly object[]): string =>
+    JSON.stringify({
+      nodes: [...nodes, node('disease', 'Disease')],
+      edges: nodes.map((n) => ({
+        source: (n as { id: string }).id,
+        target: 'disease',
+        predicate: 'is_a',
+      })),
+    });
+  /** Asthma's definition is reworded (and a note edited); Gout is only renamed. */
+  const release = {
+    'v1.json': graph([
+      node('asthma', 'Asthma', { def: 'A chronic disease of the airways.', note: 'a' }),
+      node('gout', 'Gout'),
+    ]),
+    'v2.json': graph([
+      node('asthma', 'Asthma', {
+        def: 'A chronic inflammatory disease of the airways.',
+        note: 'b',
+      }),
+      node('gout', 'Gouty arthritis'),
+    ]),
+  };
+  const pair = ['v1.json', 'v2.json'];
+
+  it('counts the hunks that change a definition under the bar and marks their rows', async () => {
+    const r = await run(pair, { files: release });
+    expect(r.code, r.stderr).toBe(0);
+    const lines = r.stdout.split('\n');
+    expect(lines[3]).toMatch(/^ {2}~+$/);
+    expect(lines[4]).toBe('  ⚑ Review first: definition changed in 1 hunk');
+    expect(r.stdout).toMatch(
+      / {2}~ Updated attributes of “Asthma” +content · ⚑ definition · ~2 attributes\n/,
+    );
+    expect(r.stdout).toMatch(/ {2}~ Renamed “Gout” → “Gouty arthritis” +content\n/);
+    expect((await run([...pair, '--stat'], { files: release })).stdout).toContain(
+      '  ⚑ Review first: definition changed in 1 hunk\n',
+    );
+  });
+
+  it('speaks Chinese', async () => {
+    const r = await run([...pair, '--locale', 'zh-CN'], { files: release });
+    expect(r.stdout).toContain('  ⚑ 优先审查：1 组变更修改了定义\n');
+    expect(r.stdout).toMatch(/「Asthma」.* +内容 · ⚑ 定义 · /);
+  });
+
+  it('--watch-attr replaces the definitions; --ignore-attr and [] leave nothing to flag', async () => {
+    const note = await run([...pair, '--watch-attr', 'note'], { files: release });
+    expect(note.stdout).toContain('  ⚑ Review first: note changed in 1 hunk\n');
+    expect(note.stdout).toContain('content · ⚑ note · ');
+    expect(note.stdout).not.toContain('⚑ definition');
+    const both = await run([...pair, '--watch-attr', 'note', '--watch-attr', 'def'], {
+      files: release,
+    });
+    expect(both.stdout).toContain('  ⚑ Review first: note, definition changed in 1 hunk\n');
+    const ignored = await run([...pair, '--ignore-attr', 'def'], { files: release });
+    expect(ignored.stdout).not.toContain('⚑');
+    expect((await run(['before.json', 'after.json'], { files })).stdout).not.toContain('⚑');
+  });
+
+  it('--markdown lists them in a block before the groups, and marks them in the groups', async () => {
+    const r = await run([...pair, '--markdown'], { files: release });
+    const item = '- 🟨 \\~ Updated attributes of “Asthma” — *⚑ definition · \\~2 attributes*';
+    expect(r.stdout).toContain(
+      [
+        '<details open>',
+        '<summary>⚑ Review first (1)</summary>',
+        '',
+        '*These hunks change a watched attribute (definition). Such an edit can change what existing data means even when the diff looks small.*',
+        '',
+        item,
+        '',
+        '</details>',
+        '',
+        '<details open>',
+        '<summary>Modified (2)</summary>',
+        '',
+        item,
+        '- 🟨 \\~ Renamed “Gout” → “Gouty arthritis”',
+      ].join('\n'),
+    );
+    const none = await run(['before.json', 'after.json', '--markdown'], { files });
+    expect(none.stdout).not.toContain('Review first');
+  });
+
+  it('--markdown lists at most 20 under Review first', async () => {
+    const ids = Array.from({ length: 25 }, (_, i) => `t${String(i).padStart(2, '0')}`);
+    const r = await run(['m1.json', 'm2.json', '--markdown'], {
+      files: {
+        'm1.json': graph(ids.map((id) => node(id, `Term ${id}`, { def: `Old ${id}.` }))),
+        'm2.json': graph(ids.map((id) => node(id, `Term ${id}`, { def: `New ${id}.` }))),
+      },
+    });
+    const block = r.stdout.slice(0, r.stdout.indexOf('</details>'));
+    expect(block).toContain('<summary>⚑ Review first (25)</summary>');
+    expect(block.split('\n').filter((l) => l.startsWith('- '))).toHaveLength(20);
+    expect(block).toContain('*…and 5 more, marked ⚑ below.*');
+  });
+});
+
 describe('colors', () => {
   it('is plain when stdout is not a terminal', async () => {
     const r = await run(['before.json', 'after.json'], { files });

@@ -78,6 +78,11 @@ export interface DiffCommandOptions extends CommonOptions {
   readonly exitCode: boolean;
   /** Max hunks in the summary; 0 = all. */
   readonly limit: number;
+  /**
+   * `--watch-attr`: attributes whose changes are flagged ⚑ for review first, replacing the
+   * default definitions. Absent when not given.
+   */
+  readonly watchAttrs?: readonly string[];
 }
 
 export interface ApplyCommandOptions extends CommonOptions {
@@ -148,6 +153,7 @@ export const DIFF_OPTIONS: Readonly<Record<string, OptionSpec>> = {
   'allow-empty': { type: 'boolean' },
   'exit-code': { type: 'boolean' },
   limit: { type: 'string' },
+  'watch-attr': { type: 'string', multiple: true },
 };
 
 /** Options of `kgdiff apply <graph> <delta>`. */
@@ -499,6 +505,13 @@ function parseDiff(argv: readonly string[]): Command {
   const delta = v.target('delta');
   const markdown = v.target('markdown');
   const html = v.string('html');
+  const watchAttrs = v.strings('watch-attr');
+  if (watchAttrs.some((key) => key.trim() === '')) {
+    throw usageError(
+      '--watch-attr needs an attribute key.',
+      'e.g. --watch-attr rdfs:comment. Attribute keys are listed in the JSON output (--json).',
+    );
+  }
   const options: DiffCommandOptions = {
     ...common,
     before,
@@ -527,6 +540,7 @@ function parseDiff(argv: readonly string[]): Command {
       limit === undefined
         ? DEFAULT_LIMIT
         : parseNumber('limit', limit, 0, Number.MAX_SAFE_INTEGER, true),
+    ...(watchAttrs.length > 0 ? { watchAttrs } : {}),
   };
   checkOutputs(options);
   return { kind: 'diff', options };

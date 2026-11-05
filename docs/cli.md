@@ -92,6 +92,7 @@ writes into a fresh private temporary directory (`mkdtemp`).
 | `-q, --quiet`                   | No stdout output (useful with `--exit-code`)                |
 | `--color <auto\|always\|never>` | Default auto (TTY and `NO_COLOR` aware)                     |
 | `--limit <n>`                   | Max hunks listed in the summary (default 50; `0` = all)     |
+| `--watch-attr <key>`            | Attribute to flag ⚑ for review first (repeatable)           |
 | `--allow-empty`                 | Read an empty input as an empty graph instead of failing    |
 
 Environment: `NO_COLOR`; `FORCE_COLOR` (`0` off, `1` / `2` / `3` exactly 16 / 256 / truecolor
@@ -134,6 +135,15 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
   Restructured → Modified → Added — clean up, restructure, refine, grow. Within a group, hunks
   keep core's `order`. A modify hunk whose only change is a hierarchy move shows as structure.
 - **Right column**: family, then the hunk subtitle (truncated first; the title wins space).
+- **Review first**: changes to watched attributes can change what existing data means while
+  the diff looks small, so they are flagged ⚑. A line under the bar counts the hunks that
+  change one (`⚑ Review first: definition changed in 9 hunks`), and each of those rows says so
+  before its summary (`content · ⚑ definition · ~2 attributes`). By default kgdiff watches
+  definitions under the keys the formats give them: `def` (OBO), `definition` (kgdiff JSON),
+  `IAO:0000115` (OBO ontologies in RDF) and `skos:definition`, all shown as “definition”.
+  `--watch-attr <key>` (repeatable) replaces that list, e.g. `--watch-attr rdfs:comment` for
+  vocabularies that define terms in `rdfs:comment`, as schema.org does. Only attributes of
+  nodes that are in both versions count, and `--ignore-attr` wins. `--stat` shows the line too.
 - **Possible matches** come last: pairings kgdiff considered but did not apply, between a node
   listed as removed and one listed as added, so that "removed X, added Y" can be read as "maybe
   X became Y". Each line gives both names (with their ids when the names are equal), the score,
@@ -182,7 +192,9 @@ lists them (`#index op: reason`).
 
 For PR comments and `$GITHUB_STEP_SUMMARY`: a title, a diffstat table (nodes / edges ×
 added / removed / modified), a family legend, the hunk list grouped by phase inside
-`<details>` blocks (first 100, then "and N more"), and the possible matches in a `<details>`
+`<details>` blocks (first 100, then "and N more"), preceded by a ⚑ _Review first_ block of the
+hunks that change a watched attribute (first 20; the same items are marked ⚑ in the groups,
+which may start collapsed), and the possible matches in a `<details>`
 block of their own, with the same content as in the terminal (first 20; expanded when there
 are at most 10). No HTML beyond `<details>/<summary>`.
 Labels are escaped (Markdown punctuation including `$` for math; `<`, `>`, `&` as entities;

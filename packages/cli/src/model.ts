@@ -1,7 +1,7 @@
 /**
  * Presentation model shared by every text output: hunk families, glyphs, name-status letters,
- * phase grouping, the per-phase counts behind the counters and the diffstat bar, and the
- * possible matches listed after the hunks.
+ * phase grouping, the per-phase counts behind the counters and the diffstat bar, the watched
+ * attributes flagged for review first, and the possible matches listed after the hunks.
  */
 import type { DiffResult, Hunk, HunkKind, MatchSuggestion, ReplayPhase } from '@kgdiff/core';
 
@@ -175,6 +175,55 @@ export function apportion(weights: readonly number[], total: number): number[] {
     used--;
   }
   return cells;
+}
+
+/**
+ * Attributes watched by default: definitions, under the keys the formats give them (OBO `def`,
+ * kgdiff JSON `definition`, `IAO:0000115` for OBO ontologies in RDF, `skos:definition`). A
+ * reworded definition can change what existing data means while the diff looks small.
+ */
+export const DEFAULT_WATCH_ATTRS: readonly string[] = [
+  'def',
+  'definition',
+  'IAO:0000115',
+  'skos:definition',
+];
+
+const DEFINITION_KEYS: ReadonlySet<string> = new Set(DEFAULT_WATCH_ATTRS);
+
+/** Whether `key` is one of the default definition keys, shown as “definition”. */
+export function isDefinitionKey(key: string): boolean {
+  return DEFINITION_KEYS.has(key);
+}
+
+/**
+ * The watched attributes each hunk changes, by hunk id, in `watch` order; hunks that change
+ * none are absent. Only attribute changes of matched nodes count: an added or removed node's
+ * definition is part of that addition or removal, not a change to a definition. Ignored
+ * attributes (`ignoreAttrs`) never show up here, since the diff does not report them. O(changes).
+ */
+export function watchedChanges(
+  diff: DiffResult,
+  watch: readonly string[],
+): ReadonlyMap<string, readonly string[]> {
+  const watched = new Set(watch);
+  const byHunk = new Map<string, readonly string[]>();
+  if (watched.size === 0) return byHunk;
+  for (const hunk of diff.hunks) {
+    const keys = new Set<string>();
+    for (const id of hunk.nodes) {
+      for (const facet of diff.index.node(id)?.facets ?? []) {
+        if (facet.kind !== 'attrs') continue;
+        for (const change of facet.changes) if (watched.has(change.key)) keys.add(change.key);
+      }
+    }
+    if (keys.size > 0)
+      byHunk.set(
+        hunk.id,
+        [...watched].filter((k) => keys.has(k)),
+      );
+  }
+  return byHunk;
 }
 
 /** One side of a possible match: the node's id in its version and the name shown for it. */
