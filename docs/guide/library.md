@@ -105,7 +105,8 @@ the others to `onSkip`. [Deltas](./deltas.md) covers the same from the command l
 ## Save and load
 
 - `diffToJSON(result)` and `diffFromJSON(json)`: the complete diff as JSON, as the CLI's
-  `--json` writes it.
+  `--json` writes it. `diffFromJSON` checks that the document is consistent (statuses, hunks,
+  edge endpoints, the delta's graphs, the counts) and names the first contradiction.
 - `graphToJSON(graph)`: a graph in kgdiff JSON, which `parseGraph` reads back losslessly.
 - `result.delta` is plain JSON already; [Delta format](../delta-format.md) specifies it.
 

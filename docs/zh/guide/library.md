@@ -95,7 +95,7 @@ const updated = applyDelta(graph, delta);
 
 ## 保存与读取
 
-- `diffToJSON(result)` 和 `diffFromJSON(json)`：完整 diff 的 JSON 形式，和命令行 `--json` 的输出一致。
+- `diffToJSON(result)` 和 `diffFromJSON(json)`：完整 diff 的 JSON 形式，和命令行 `--json` 的输出一致。`diffFromJSON` 读入时会检查文档是否自洽（状态、hunk、边的端点、delta 对应的两张图、各项计数），遇到矛盾就报出第一处。
 - `graphToJSON(graph)`：kgdiff JSON 格式的图，`parseGraph` 可以无损读回。
 - `result.delta` 本身就是普通 JSON，格式见[增量格式](../delta-format.md)。
 

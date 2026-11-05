@@ -318,7 +318,43 @@
         }
       },
       "required": ["id", "status"],
+      "allOf": [{ "$ref": "#/$defs/versionsOfNode" }, { "$ref": "#/$defs/changeOfElement" }],
       "additionalProperties": false
+    },
+    "versionsOfNode": {
+      "type": "object",
+      "description": "An added node is only in the after version, a removed one only in the before version, the others in both (their before snapshot only when it differs).",
+      "if": { "properties": { "status": { "const": "added" } } },
+      "then": {
+        "required": ["afterId", "after"],
+        "properties": { "afterId": true, "after": true, "beforeId": false, "before": false }
+      },
+      "else": {
+        "if": { "properties": { "status": { "const": "removed" } } },
+        "then": {
+          "required": ["beforeId", "before"],
+          "properties": { "beforeId": true, "before": true, "afterId": false, "after": false }
+        },
+        "else": {
+          "required": ["beforeId", "afterId", "after"],
+          "properties": { "beforeId": true, "afterId": true, "after": true }
+        }
+      }
+    },
+    "changeOfElement": {
+      "type": "object",
+      "description": "An unchanged element has no facets and no hunk; a changed one belongs to a hunk, and a modified one has at least one facet.",
+      "if": { "properties": { "status": { "const": "unchanged" } } },
+      "then": { "properties": { "facets": { "type": "array", "maxItems": 0 }, "hunk": false } },
+      "else": {
+        "required": ["hunk"],
+        "properties": { "hunk": true },
+        "if": { "properties": { "status": { "const": "modified" } } },
+        "then": {
+          "required": ["facets"],
+          "properties": { "facets": { "type": "array", "minItems": 1 } }
+        }
+      }
     },
     "unionEdge": {
       "type": "object",
@@ -351,7 +387,37 @@
         "hunk": { "type": "string" }
       },
       "required": ["id", "source", "target", "status"],
+      "allOf": [{ "$ref": "#/$defs/versionsOfEdge" }, { "$ref": "#/$defs/changeOfElement" }],
       "additionalProperties": false
+    },
+    "versionsOfEdge": {
+      "type": "object",
+      "description": "An added edge is only in the after version, a removed one only in the before version, the others in both (their before snapshot only when it differs). Only edges in both versions can have changed endpoints or predicate.",
+      "if": { "properties": { "status": { "const": "added" } } },
+      "then": {
+        "required": ["after"],
+        "properties": {
+          "after": true,
+          "before": false,
+          "sourceBefore": false,
+          "targetBefore": false,
+          "predicateBefore": false
+        }
+      },
+      "else": {
+        "if": { "properties": { "status": { "const": "removed" } } },
+        "then": {
+          "required": ["before"],
+          "properties": {
+            "before": true,
+            "after": false,
+            "sourceBefore": false,
+            "targetBefore": false,
+            "predicateBefore": false
+          }
+        },
+        "else": { "required": ["after"], "properties": { "after": true } }
+      }
     },
     "countTriplet": {
       "type": "object",

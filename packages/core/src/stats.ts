@@ -24,7 +24,7 @@ export function computeStats(
   before: KGraph,
   after: KGraph,
   nodes: readonly NodeRecord[],
-  edges: readonly EdgeRecord[],
+  edges: readonly Pick<EdgeRecord, 'status' | 'facets'>[],
   hunks: readonly Pick<Hunk, 'kind'>[],
 ): DiffStats {
   const nodeCounts = zero();
