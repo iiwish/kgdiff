@@ -13,11 +13,15 @@ report payload ties core, layout and scene together, so "kgdiff 0.3.1" names one
 2. On every push to `main`, [`release.yml`](../.github/workflows/release.yml) collects the
    pending changesets into a "chore: release packages" pull request that bumps the versions and
    updates each `CHANGELOG.md` (`pnpm version-packages`: `changeset version`, then Biome formats
-   the changelogs, since a changeset with several paragraphs indents its blank lines).
+   the changelogs, since a changeset with several paragraphs indents its blank lines, and
+   `scripts/sync-citation.ts` sets the version in `CITATION.cff`; a test fails if they differ).
 3. Merging that pull request publishes: the workflow runs `pnpm release` (`pnpm check`,
    `pnpm build`, `pnpm check:packages`, `changeset publish`), publishes every package whose
-   version is not on npm yet, pushes the `<package>@<version>` tags and creates GitHub releases.
-   It also tags the GitHub Action (below).
+   version is not on npm yet and pushes the `<package>@<version>` tags. It then tags the GitHub
+   Action (below) and creates one GitHub release, `v<version>`, for the whole group: its notes
+   (`scripts/release-notes.ts`) merge the packages' changelog sections, list each change once
+   with the packages it changed, and leave out the "Updated dependencies" entries. Releases up to
+   0.4.0 were created per package (`@kgdiff/cli@0.4.0`, …).
 
 The version pull request is opened with the workflow's `GITHUB_TOKEN`, and GitHub does not run
 other workflows for pull requests created that way, so CI does not start on it by itself. Its diff

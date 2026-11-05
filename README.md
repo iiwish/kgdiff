@@ -168,7 +168,7 @@ The same graph in different serializations diffs as identical. Mapping conventio
 - **Deterministic**: the same inputs give byte-identical diffs, layouts and reports.
 - **Invertible**: `apply(A, diff(A, B).delta) ≅ B` and the inverse delta restores `A`;
   applying hunks one by one in review order always succeeds. Property-tested with fast-check.
-- **Tested**: ~1,600 tests across packages, including acceptance tests that run every example
+- **Tested**: ~1,900 tests across packages, including acceptance tests that run every example
   dataset through the whole pipeline.
 - **Measured** (M-class laptop, `pnpm bench`): diff of 10k nodes / 30k edges ≈ 0.1 s; 50k RDF
   triples parsed in ≈ 0.1 s; layout of a 10k-node diff (changes scope) ≈ 1.1 s; per-frame visual
