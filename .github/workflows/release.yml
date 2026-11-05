@@ -2,7 +2,8 @@ name: Release
 
 # On every push to main, changesets/action either opens / updates the "Version Packages" pull
 # request (while there are changesets in .changeset/), or, once that pull request is merged,
-# builds, checks and publishes the packages that have a new version, then tags the release.
+# builds, checks and publishes the packages that have a new version, then tags the release and
+# creates one GitHub release for it.
 #
 # Publishing uses npm trusted publishing (OIDC): no npm token is stored anywhere, and npm adds a
 # provenance attestation to every version. Setup and the first publish: docs/releasing.md.
@@ -51,10 +52,14 @@ jobs:
           publish-script: pnpm release
           commit-message: "chore: release packages"
           pr-title: "chore: release packages"
+          # One GitHub release per version (below), not one per package: the <package>@<version>
+          # git tags are still pushed.
+          create-github-releases: false
       # The GitHub Action (action.yml) runs the @kgdiff/cli version of its commit: tag the release
       # commit v<version> for `uses: iiwish/kgdiff@v0.2.0` (and Dependabot), and move v<major>
       # there for `uses: iiwish/kgdiff@v0`. Prereleases only get their own tag.
       - name: Tag the GitHub Action
+        id: tag
         if: steps.changesets.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -62,6 +67,7 @@ jobs:
         run: |
           version=$(jq -r '.[] | select(.name == "@kgdiff/cli") | .version' <<<"$PUBLISHED")
           if [ -z "$version" ]; then exit 0; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           refs="repos/$GITHUB_REPOSITORY/git/refs"
           if ! gh api "$refs" -f ref="refs/tags/v$version" -f sha="$GITHUB_SHA" --silent; then
             # Already there from an earlier attempt of this run: fine if it is this commit.
@@ -73,3 +79,21 @@ jobs:
           gh api -X PATCH "$refs/tags/$major" -f sha="$GITHUB_SHA" -F force=true --silent ||
             gh api "$refs" -f ref="refs/tags/$major" -f sha="$GITHUB_SHA" --silent
           echo "Tagged $GITHUB_SHA as v$version and $major"
+      # One release, v<version>, for the whole package group: every package's changelog section
+      # merged, each change listed once with the packages it changed (scripts/release-notes.ts).
+      - name: Create the GitHub release
+        if: steps.tag.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          tag="v$VERSION"
+          if gh release view "$tag" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "$tag already has a release (an earlier attempt of this run)"
+            exit 0
+          fi
+          pnpm tsx scripts/release-notes.ts "$VERSION" > "$RUNNER_TEMP/notes.md"
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$tag" -R "$GITHUB_REPOSITORY" --verify-tag --title "$tag" \
+            --notes-file "$RUNNER_TEMP/notes.md" $prerelease
