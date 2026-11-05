@@ -365,11 +365,11 @@ function headerNatural(diff: DiffResult, title: string, ctx: TextContext, ov: Ov
  */
 export function renderSummary(diff: DiffResult, title: string, ctx: TextContext): string {
   const ov = overview(diff);
-  const watched = watchedOf(diff, ctx);
   if (ov.hunks === 0) {
     const width = layoutWidth(headerNatural(diff, title, ctx, ov), ctx.width);
     return `${[...headerLines(diff, title, ctx, width), '', ...identicalLines(diff, ctx, width)].join('\n')}\n`;
   }
+  const watched = watchedOf(diff, ctx);
   const m = messages(ctx.locale);
   const { paint } = ctx;
   const groups = groupByPhase(diff.hunks);
@@ -432,9 +432,9 @@ const MAX_TYPE_ROWS = 12;
 const MAX_TYPE_NAME = 28;
 
 /**
- * `--stat`: header, counters and bar (with the review-first line, as in the summary), a nodes /
- * edges × added / removed / modified / unchanged
- * table, and a git-style per-type breakdown (`+` added, `−` removed, `~` modified nodes).
+ * `--stat`: header, counters and bar (with the review-first line, as in the summary), a
+ * nodes / edges × added / removed / modified / unchanged table, and a git-style per-type
+ * breakdown (`+` added, `−` removed, `~` modified nodes).
  */
 export function renderStat(diff: DiffResult, title: string, ctx: TextContext): string {
   const ov = overview(diff);

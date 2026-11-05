@@ -215,7 +215,7 @@ const en: Messages = {
     reviewFirstHint: (labels) =>
       `These hunks change a watched attribute (${labels.join(', ')}). Such an edit can change ` +
       'what existing data means even when the diff looks small.',
-    reviewFirstMore: (n) => `…and ${formatInt(n)} more, marked ⚑ below.`,
+    reviewFirstMore: (n) => `…and ${formatInt(n)} more.`,
     possibleHint:
       'kgdiff did not pair these nodes, so they are listed above as removed or added. If a ' +
       'pair is the same thing, add a synonym or a replacement link, or lower `--threshold`.',
@@ -283,7 +283,7 @@ const zh: Messages = {
     reviewFirst: '优先审查',
     reviewFirstHint: (labels) =>
       `这些变更修改了受关注的属性（${labels.join('、')}）。这类修改在差异里看起来很小，却可能改变已有数据的含义。`,
-    reviewFirstMore: (n) => `……另有 ${formatInt(n)} 组，已在下方标记 ⚑。`,
+    reviewFirstMore: (n) => `……另有 ${formatInt(n)} 组。`,
     possibleHint:
       'kgdiff 没有配对这些节点，因此它们在上方按删除或新增列出。如果某一对其实是同一节点，可补充别名或替换链接，或调低 `--threshold`。',
     possibleMore: (n) =>

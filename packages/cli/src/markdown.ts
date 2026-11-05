@@ -2,8 +2,7 @@
  * GitHub-flavoured Markdown summary for PR comments and `$GITHUB_STEP_SUMMARY`
  * (docs/cli.md §Markdown summary): title, diffstat table, family legend, the hunks that change
  * a watched attribute (review first), the hunk list grouped by phase and the possible matches,
- * in `<details>` blocks. No HTML beyond `<details>` /
- * `<summary>`.
+ * in `<details>` blocks. No HTML beyond `<details>` / `<summary>`.
  */
 import { type DiffResult, formatHunk, type Hunk, type Locale } from '@kgdiff/core';
 import { formatInt, messages, watchLabels } from './locale.js';

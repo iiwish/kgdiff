@@ -428,7 +428,7 @@ describe('review first (watched attributes)', () => {
     const block = r.stdout.slice(0, r.stdout.indexOf('</details>'));
     expect(block).toContain('<summary>⚑ Review first (25)</summary>');
     expect(block.split('\n').filter((l) => l.startsWith('- '))).toHaveLength(20);
-    expect(block).toContain('*…and 5 more, marked ⚑ below.*');
+    expect(block).toContain('*…and 5 more.*');
   });
 });
 
