@@ -303,3 +303,108 @@ describe('matchNodes: many identical names', () => {
     expect(d.delta.ops).toEqual([]);
   });
 });
+
+describe('matchNodes: same name, conflicting types', () => {
+  // Mercury the planet orbits the Sun; Mercury the element has the symbol Hg. Fresh ids, so
+  // under `similarity` nothing is matched when the two are first compared.
+  const before = graph(
+    [
+      { id: 'm1', label: 'Mercury', type: 'Planet' },
+      { id: 'sun', label: 'Sun', type: 'Star' },
+    ],
+    [{ source: 'm1', target: 'sun', predicate: 'orbits' }],
+  );
+  const after = graph(
+    [
+      { id: 'x1', label: 'Mercury', type: 'Element' },
+      { id: 'sun', label: 'Sun', type: 'Star' },
+      { id: 'hg', label: 'Hg', type: 'Symbol' },
+    ],
+    [{ source: 'x1', target: 'hg', predicate: 'symbol' }],
+  );
+  const planetToElement = {
+    before: 'm1',
+    after: 'x1',
+    score: expect.closeTo(0.55 / 0.9, 5),
+    evidence: { label: 1, neighbors: 0, types: 0, attrs: 0 },
+    reason: 'below-threshold',
+  };
+
+  it('waits for the neighbour evidence before pairing them under `similarity`', () => {
+    const { matches, suggestions } = matchNodes(before, after, { strategy: 'similarity' });
+    expect(matches.map((m) => [m.before, m.after])).toEqual([['sun', 'sun']]);
+    expect(suggestions).toEqual([planetToElement]);
+  });
+
+  it('agrees with `auto`, where the shared neighbour is matched by id first', () => {
+    const { matches, suggestions } = matchNodes(before, after);
+    expect(matches.map((m) => [m.before, m.after, m.method])).toEqual([['sun', 'sun', 'id']]);
+    expect(suggestions).toEqual([planetToElement]);
+  });
+
+  it('still matches a type change that the neighbours confirm', () => {
+    const renamedType = graph(
+      [
+        { id: 'p1', label: 'Mercury', type: 'Terrestrial planet' },
+        { id: 'sun', label: 'Sun', type: 'Star' },
+      ],
+      [{ source: 'p1', target: 'sun', predicate: 'orbits' }],
+    );
+    const { matches } = matchNodes(before, renamedType, { strategy: 'similarity' });
+    expect(matches.find((m) => m.before === 'm1')).toEqual({
+      before: 'm1',
+      after: 'p1',
+      method: 'similarity',
+      score: expect.closeTo(0.8 / 0.9, 5),
+      evidence: { label: 1, neighbors: 1, types: 0, attrs: 0 },
+    });
+  });
+
+  it('does not wait when an attribute agrees, since the label is then not the only support', () => {
+    const withAttr = (g: typeof before) =>
+      graph(
+        [...g.nodes.values()].map((n) =>
+          n.label === 'Mercury' ? { ...n, attrs: { known: 'antiquity' } } : n,
+        ),
+        [...g.edges.values()],
+      );
+    const { matches } = matchNodes(withAttr(before), withAttr(after), { strategy: 'similarity' });
+    expect(matches.find((m) => m.before === 'm1')).toEqual({
+      before: 'm1',
+      after: 'x1',
+      method: 'similarity',
+      score: expect.closeTo(0.65 / 0.75, 5),
+      evidence: { label: 1, neighbors: 0, types: 0, attrs: 1 },
+    });
+  });
+
+  it('decides on the label once no neighbour evidence can arrive', () => {
+    // Nothing else can be matched, so waiting gains nothing: the pair is scored as before.
+    const lone = (id: string, type: string, other: string) =>
+      graph(
+        [
+          { id, label: 'Mercury', type },
+          { id: other, label: other === 'sol' ? 'Sol' : 'Hg' },
+        ],
+        [{ source: id, target: other, predicate: 'linked to' }],
+      );
+    for (const strategy of ['similarity', 'auto'] as const) {
+      const { matches } = matchNodes(lone('m1', 'Planet', 'sol'), lone('x1', 'Element', 'hg'), {
+        strategy,
+      });
+      expect(matches).toEqual([
+        expect.objectContaining({
+          before: 'm1',
+          after: 'x1',
+          score: expect.closeTo(0.55 / 0.65, 5),
+        }),
+      ]);
+    }
+    const isolated = matchNodes(
+      graph([{ id: 'm1', label: 'Mercury', type: 'Planet' }]),
+      graph([{ id: 'x1', label: 'Mercury', type: 'Element' }]),
+      { strategy: 'similarity' },
+    );
+    expect(isolated.matches.map((m) => [m.before, m.after])).toEqual([['m1', 'x1']]);
+  });
+});

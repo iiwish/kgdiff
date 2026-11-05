@@ -1,6 +1,7 @@
 /**
  * Node matching (docs/algorithms.md §2): exact ids, then 1:1 replacement hints, then blocked
- * similarity matching with weighted evidence, an unambiguity margin and neighbour propagation.
+ * similarity matching with weighted evidence, an unambiguity margin and neighbour propagation
+ * (pairs whose label is the only support against conflicting types wait for the neighbours).
  *
  * Complexity: O(N) for id matching; similarity matching is ~O((|R| + |A|) · k · d) per round
  * (k candidates per node, d average degree) thanks to blocking. No step compares all pairs.
@@ -193,6 +194,19 @@ function neighborEvidence(a: Signature, b: Signature): number | undefined {
     }
   }
   return max === 0 ? undefined : min / max;
+}
+
+/** Whether `id` has an edge to another node (self-loops say nothing before `id` is matched). */
+function hasNeighbour(graph: KGraph, id: Id): boolean {
+  for (const key of graph.outgoing.get(id) ?? []) {
+    const edge = graph.edges.get(key);
+    if (edge && edge.target !== id) return true;
+  }
+  for (const key of graph.incoming.get(id) ?? []) {
+    const edge = graph.edges.get(key);
+    if (edge && edge.source !== id) return true;
+  }
+  return false;
 }
 
 // ─── Candidate generation ────────────────────────────────────────────────────
@@ -446,21 +460,29 @@ export function alignNodes(
   const byScore = (x: Pair, y: Pair): number =>
     y.score - x.score || Number(y.sameId) - Number(x.sameId) || x.r - y.r || x.a - y.a;
 
-  let live = pairs;
-  let acceptedInLastRound = 0;
-  for (let round = 0; round < MAX_ROUNDS; round++) {
-    live = live.filter(isLive);
-    if (live.length === 0) break;
-    score(live);
-    live.sort(byScore);
-    const byR = new Map<number, Pair[]>();
-    const byA = new Map<number, Pair[]>();
-    for (const p of live) {
-      pushTo(byR, p.r, p);
-      pushTo(byA, p.a, p);
-    }
-    acceptedInLastRound = 0;
-    for (const p of live) {
+  /**
+   * Whether accepting `p` now would decide against its types on the label alone
+   * (docs/algorithms.md §2, step 6): both nodes are typed and share no type, no attribute agrees,
+   * and the neighbour signal is missing only because none of their neighbours is matched yet —
+   * it can still arrive through propagation, and it is what tells two same-named things apart.
+   */
+  const awaitsNeighbours = (p: Pair): boolean => {
+    if (p.neighbors !== undefined || p.types !== 0 || (p.attrs ?? 0) > 0) return false;
+    const r = R[p.r] as KGNode;
+    const a = A[p.a] as KGNode;
+    if (r.types.length === 0 || a.types.length === 0) return false; // a type was only added
+    return hasNeighbour(before, r.id) || hasNeighbour(after, a.id);
+  };
+
+  /** One pass of greedy assignment over the sorted live pairs; returns how many were accepted. */
+  const assign = (
+    sorted: readonly Pair[],
+    byR: ReadonlyMap<number, Pair[]>,
+    byA: ReadonlyMap<number, Pair[]>,
+    defer: (p: Pair) => boolean,
+  ): number => {
+    let accepted = 0;
+    for (const p of sorted) {
       if (p.score < options.threshold) break;
       if (!isLive(p)) continue;
       if (
@@ -469,6 +491,8 @@ export function alignNodes(
       ) {
         continue;
       }
+      // A deferred pair stays free, so it still blocks its weaker rivals in this round.
+      if (defer(p)) continue;
       const r = R[p.r] as KGNode;
       const a = A[p.a] as KGNode;
       matchedR[p.r] = true;
@@ -482,7 +506,35 @@ export function alignNodes(
         score: p.score,
         evidence: evidenceOf(p.label, p.neighbors, p.types, p.attrs),
       });
-      acceptedInLastRound++;
+      accepted++;
+    }
+    return accepted;
+  };
+
+  let live = pairs;
+  let acceptedInLastRound = 0;
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    live = live.filter(isLive);
+    if (live.length === 0) break;
+    score(live);
+    live.sort(byScore);
+    const byR = new Map<number, Pair[]>();
+    const byA = new Map<number, Pair[]>();
+    for (const p of live) {
+      pushTo(byR, p.r, p);
+      pushTo(byA, p.a, p);
+    }
+    // Pairs awaiting neighbour evidence wait while other matches still propagate; once a round
+    // (or the last round) has nothing else to accept, they are decided on what is known.
+    let deferred = 0;
+    const defer = (p: Pair): boolean => {
+      if (round === MAX_ROUNDS - 1 || !awaitsNeighbours(p)) return false;
+      deferred++;
+      return true;
+    };
+    acceptedInLastRound = assign(live, byR, byA, defer);
+    if (acceptedInLastRound === 0 && deferred > 0) {
+      acceptedInLastRound = assign(live, byR, byA, () => false);
     }
     if (acceptedInLastRound === 0) break;
   }

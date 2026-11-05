@@ -87,6 +87,20 @@ Goal: a 1:1 partial mapping before → after with a confidence for each pair.
    (which only arises with `similarity`, where indistinguishable nodes would otherwise turn
    `diff(A, A)` into removals and additions). Ambiguous pairs above the threshold become
    suggestions with reason `ambiguous`.
+
+   **Deferral.** A pair is not accepted on its label alone against conflicting types while the
+   neighbour evidence can still arrive. It is _deferred_ when both nodes are typed and share no
+   type, no attribute agrees (`attrs` missing or 0), and the neighbour signal is missing although
+   `r` or `a` has an edge to another node, so it is missing only because none of their
+   neighbours is matched yet. Without this rule the missing signal drops out of the mean and an
+   equal label outweighs the types (`Mercury` the planet, orbiting the Sun, against `Mercury`
+   the element, with symbol `Hg`, scores 0.55 / 0.65 ≈ 0.85), which under `similarity` happens
+   to every pair in the first round. A deferred pair stays free, so it still blocks its weaker
+   rivals, and is scored again in the next round with the neighbours matched meanwhile (the two
+   Mercurys share none: 0.55 / 0.9 ≈ 0.61, a suggestion; a planet whose type was merely
+   renamed still orbits the Sun: 0.8 / 0.9 ≈ 0.89, a match). When a round accepts nothing else,
+   and in the last round, deferred pairs are assigned on what is known. The scoring is
+   unchanged: deferral only lets the neighbour evidence arrive before such a pair is decided.
 7. **Propagation.** Neighbour similarity depends on the matching, so repeat steps 5–6 for the
    still-unmatched pairs while the previous round accepted at least one match (max 5 rounds).
 8. **Suggestions.** Remaining pairs with `score ≥ suggestThreshold` (best per `r`, best per `a`)
