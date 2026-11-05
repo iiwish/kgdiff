@@ -1,4 +1,4 @@
-import type { EdgeFacet, NodeFacet, UnionEdge, UnionNode } from '@kgdiff/core';
+import type { EdgeFacet, KGEdge, KGNode, NodeFacet, UnionEdge, UnionNode } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
 import { hunkFamily } from '../src/index.js';
 import {
@@ -14,41 +14,57 @@ import {
   ownFacetFamily,
 } from '../src/roles.js';
 
-const node = (status: UnionNode['status'], facets: NodeFacet[] = []): UnionNode => ({
+const kgNode: KGNode = {
   id: 'n',
-  status,
-  facets,
   label: 'n',
   types: [],
-  degree: { before: 0, after: 0 },
-});
+  aliases: [],
+  attrs: {},
+  deprecated: false,
+  replaces: [],
+  replacedBy: [],
+  implicit: false,
+};
 
-const edge = (
-  status: UnionEdge['status'],
-  facets: EdgeFacet[] = [],
-  beforeLabel?: string,
-): UnionEdge => ({
-  id: 'e',
+/** A union node `n` in the versions its status implies. */
+const node = (status: UnionNode['status'], facets: NodeFacet[] = []): UnionNode => {
+  const common = { id: 'n', facets, label: 'n', types: [], degree: { before: 0, after: 0 } };
+  if (status === 'added') return { ...common, status, afterId: 'n', after: kgNode };
+  if (status === 'removed') return { ...common, status, beforeId: 'n', before: kgNode };
+  return { ...common, status, beforeId: 'n', afterId: 'n', before: kgNode, after: kgNode };
+};
+
+const kgEdge = (label: string): KGEdge => ({
+  key: 'k',
   source: 'a',
   target: 'b',
   predicate: 'p',
-  label: 'p',
-  status,
-  facets,
-  hierarchical: false,
-  ...(beforeLabel !== undefined
-    ? {
-        before: {
-          key: 'k',
-          source: 'a',
-          target: 'b',
-          predicate: 'o',
-          label: beforeLabel,
-          attrs: {},
-        },
-      }
-    : {}),
+  label,
+  attrs: {},
 });
+
+/** A union edge a → b in the versions its status implies; `beforeLabel` labels the before one. */
+const edge = (
+  status: UnionEdge['status'],
+  facets: EdgeFacet[] = [],
+  beforeLabel = 'p',
+): UnionEdge => {
+  const common = {
+    id: 'e',
+    source: 'a',
+    target: 'b',
+    predicate: 'p',
+    label: 'p',
+    facets,
+    hierarchical: false,
+  };
+  if (status === 'added') return { ...common, status, afterKey: 'k', after: kgEdge('p') };
+  if (status === 'removed') {
+    return { ...common, status, beforeKey: 'k', before: kgEdge(beforeLabel) };
+  }
+  const versions = { beforeKey: 'k', afterKey: 'k', before: kgEdge(beforeLabel) };
+  return { ...common, ...versions, status, after: kgEdge('p') };
+};
 
 const F = {
   rename: { kind: 'rename', from: 'a', to: 'b' },
@@ -136,17 +152,15 @@ describe('node roles and families (primary facet rule)', () => {
   });
 
   it('draws merge / split targets in their own facet family before', () => {
-    const present = { ...node('modified', [F.mergeTarget, F.move]), beforeId: 'n' };
+    const present = node('modified', [F.mergeTarget, F.move]);
     expect(nodeFamilyBefore(present, 'merge-target', 'identity')).toBe('structure');
-    const plain = { ...node('modified', [F.mergeTarget]), beforeId: 'n' };
+    const plain = node('modified', [F.mergeTarget]);
     expect(nodeFamilyBefore(plain, 'merge-target', 'identity')).toBe('neutral');
     // Absent before (new target): keeps its family.
     expect(nodeFamilyBefore(node('added', [F.splitFrom]), 'split-target', 'identity')).toBe(
       'identity',
     );
-    expect(nodeFamilyBefore({ ...node('removed', []), beforeId: 'n' }, 'removed', 'removed')).toBe(
-      'removed',
-    );
+    expect(nodeFamilyBefore(node('removed', []), 'removed', 'removed')).toBe('removed');
   });
 
   it('computes the own-facet family ignoring restructuring facets', () => {

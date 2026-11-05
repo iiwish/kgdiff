@@ -112,19 +112,26 @@ export function makeDiff(spec: GraphSpec): DiffResult {
       s === 'removed'
         ? undefined
         : { key: id, source: e.source, target: e.target, predicate, label: predicate, attrs: {} };
-    return {
+    const common = {
       id,
       source: e.source,
       target: e.target,
-      ...(e.sourceBefore !== undefined ? { sourceBefore: e.sourceBefore } : {}),
-      ...(e.targetBefore !== undefined ? { targetBefore: e.targetBefore } : {}),
       predicate,
       label: predicate,
-      ...(before ? { beforeKey: id, before } : {}),
-      ...(after ? { afterKey: id, after } : {}),
-      status: s,
       facets: e.facets ?? [],
       hierarchical: e.hierarchical ?? false,
+    };
+    if (s === 'added') return { ...common, status: s, afterKey: id, after: after! };
+    if (s === 'removed') return { ...common, status: s, beforeKey: id, before: before! };
+    return {
+      ...common,
+      ...(e.sourceBefore !== undefined ? { sourceBefore: e.sourceBefore } : {}),
+      ...(e.targetBefore !== undefined ? { targetBefore: e.targetBefore } : {}),
+      status: s,
+      beforeKey: id,
+      afterKey: id,
+      before: before!,
+      after: after!,
     };
   });
   edges.sort(byId);
@@ -150,16 +157,16 @@ export function makeDiff(spec: GraphSpec): DiffResult {
     const s = n.status ?? 'unchanged';
     const before = presentBefore(n.id) ? kgNode(n.id, beforeLabel, n.beforePosition) : undefined;
     const after = presentAfter(n.id) ? kgNode(n.id, label, n.afterPosition) : undefined;
-    return {
+    const common = {
       id: n.id,
-      ...(before ? { beforeId: n.id, before } : {}),
-      ...(after ? { afterId: n.id, after } : {}),
-      status: s,
       facets: n.facets ?? [],
       label,
       types: [],
       degree: { before: degBefore.get(n.id) ?? 0, after: degAfter.get(n.id) ?? 0 },
     };
+    if (s === 'added') return { ...common, status: s, afterId: n.id, after: after! };
+    if (s === 'removed') return { ...common, status: s, beforeId: n.id, before: before! };
+    return { ...common, status: s, beforeId: n.id, afterId: n.id, before: before!, after: after! };
   });
   nodes.sort(byId);
 

@@ -168,21 +168,32 @@ export function makeDiff(spec: {
           attrs: {},
         }
       : undefined;
-    return {
+    const common = {
       id,
       source: e.source,
       target: e.target,
-      ...(e.sourceBefore !== undefined ? { sourceBefore: e.sourceBefore } : {}),
-      ...(e.targetBefore !== undefined ? { targetBefore: e.targetBefore } : {}),
       predicate,
-      ...(e.predicateBefore !== undefined ? { predicateBefore: e.predicateBefore } : {}),
       label,
-      ...(before !== undefined ? { beforeKey: before.key, before } : {}),
-      ...(after !== undefined ? { afterKey: after.key, after } : {}),
-      status: e.status,
       facets: e.facets ?? [],
       ...(e.hunk !== undefined ? { hunk: e.hunk } : {}),
       hierarchical: e.hierarchical ?? false,
+    };
+    if (e.status === 'added') {
+      return { ...common, status: e.status, afterKey: after!.key, after: after! };
+    }
+    if (e.status === 'removed') {
+      return { ...common, status: e.status, beforeKey: before!.key, before: before! };
+    }
+    return {
+      ...common,
+      ...(e.sourceBefore !== undefined ? { sourceBefore: e.sourceBefore } : {}),
+      ...(e.targetBefore !== undefined ? { targetBefore: e.targetBefore } : {}),
+      ...(e.predicateBefore !== undefined ? { predicateBefore: e.predicateBefore } : {}),
+      status: e.status,
+      beforeKey: before!.key,
+      afterKey: after!.key,
+      before: before!,
+      after: after!,
     };
   });
 
@@ -218,16 +229,23 @@ export function makeDiff(spec: {
           implicit: n.implicit ?? false,
         })
       : undefined;
-    return {
+    const common = {
       id: n.id,
-      ...(presentBefore ? { beforeId, before } : {}),
-      ...(presentAfter ? { afterId: n.id, after } : {}),
-      status: n.status,
       facets: n.facets ?? [],
       ...(n.hunk !== undefined ? { hunk: n.hunk } : {}),
       label,
       types: [],
       degree: degree.get(n.id) ?? { before: 0, after: 0 },
+    };
+    if (n.status === 'added') return { ...common, status: n.status, afterId: n.id, after: after! };
+    if (n.status === 'removed') return { ...common, status: n.status, beforeId, before: before! };
+    return {
+      ...common,
+      status: n.status,
+      beforeId,
+      afterId: n.id,
+      before: before!,
+      after: after!,
     };
   });
   unionNodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
