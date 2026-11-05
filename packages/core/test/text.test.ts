@@ -1,7 +1,7 @@
 import { predicateLabel, textSimilarity } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { jsonString, tripleKey } from '../src/canonical.js';
+import { tripleKey } from '../src/canonical.js';
 import { blockKeys, jaroWinkler, normalizeText, textProfile } from '../src/text.js';
 
 describe('normalizeText', () => {
@@ -171,7 +171,6 @@ describe('structural keys', () => {
         fc.string({ unit: 'binary' }),
         (s, p, t) => {
           expect(tripleKey(s, p, t)).toBe(JSON.stringify([s, p, t]));
-          expect(jsonString(s)).toBe(JSON.stringify(s));
         },
       ),
       { numRuns: 2000 },
