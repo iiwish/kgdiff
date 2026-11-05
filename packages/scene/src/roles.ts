@@ -41,7 +41,8 @@ export function nodeRole(node: UnionNode): NodeRole {
   if (has(f, 'mergeTarget')) return 'merge-target';
   if (has(f, 'splitInto')) return 'split-source';
   if (has(f, 'splitFrom')) return 'split-target';
-  switch (node.status) {
+  const status = node.status;
+  switch (status) {
     case 'added':
       return 'added';
     case 'removed':
@@ -51,7 +52,7 @@ export function nodeRole(node: UnionNode): NodeRole {
     case 'modified':
       return f.some((x) => x.kind === 'deprecate' && x.deprecated) ? 'deprecated' : 'modified';
     default:
-      return assertNever(node.status);
+      return assertNever(status);
   }
 }
 
@@ -117,8 +118,7 @@ export function nodeFamily(node: UnionNode, role: NodeRole): Family {
  * (including nodes absent before, which the before layer hides).
  */
 export function nodeFamilyBefore(node: UnionNode, role: NodeRole, family: Family): Family {
-  const present = node.before !== undefined || node.beforeId !== undefined;
-  if ((role === 'merge-target' || role === 'split-target') && present)
+  if ((role === 'merge-target' || role === 'split-target') && node.status !== 'added')
     return ownFacetFamily(node.facets);
   return family;
 }

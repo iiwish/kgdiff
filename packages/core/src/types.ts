@@ -356,13 +356,9 @@ export type NodeFacetKind = NodeFacet['kind'];
 export type EdgeFacetKind = EdgeFacet['kind'];
 export type FacetKind = NodeFacetKind | EdgeFacetKind;
 
-export interface UnionNode {
+/** What every union node has, whatever its status. */
+export interface UnionNodeBase {
   readonly id: UnionId;
-  readonly beforeId?: Id;
-  readonly afterId?: Id;
-  readonly before?: KGNode;
-  readonly after?: KGNode;
-  readonly status: ChangeStatus;
   /** In canonical facet order (docs/algorithms.md §Facet order). */
   readonly facets: readonly NodeFacet[];
   /** The hunk this node's change belongs to. Unchanged nodes have none. */
@@ -374,28 +370,99 @@ export interface UnionNode {
   readonly degree: { readonly before: number; readonly after: number };
 }
 
-export interface UnionEdge {
+/** A node of the after version only. */
+export interface AddedUnionNode extends UnionNodeBase {
+  readonly status: 'added';
+  readonly afterId: Id;
+  readonly after: KGNode;
+  readonly beforeId?: undefined;
+  readonly before?: undefined;
+}
+
+/** A node of the before version only. */
+export interface RemovedUnionNode extends UnionNodeBase {
+  readonly status: 'removed';
+  readonly beforeId: Id;
+  readonly before: KGNode;
+  readonly afterId?: undefined;
+  readonly after?: undefined;
+}
+
+/** A node in both versions (the same id, a replacement hint or a similarity match). */
+export interface MatchedUnionNode extends UnionNodeBase {
+  /** `modified` exactly when it has a facet. */
+  readonly status: 'unchanged' | 'modified';
+  readonly beforeId: Id;
+  readonly afterId: Id;
+  readonly before: KGNode;
+  readonly after: KGNode;
+}
+
+/**
+ * A node of the union graph. `status` decides which versions it is in: `added` has only `after`,
+ * `removed` only `before`, `unchanged` and `modified` both (narrow on `status` to read them).
+ */
+export type UnionNode = AddedUnionNode | RemovedUnionNode | MatchedUnionNode;
+
+/** What every union edge has, whatever its status. */
+export interface UnionEdgeBase {
   readonly id: UnionId;
   /** Endpoints in the after version (or the before version for removed edges). */
   readonly source: UnionId;
   readonly target: UnionId;
-  /** Present only when the before-version endpoint differs (retarget / carried edges). */
-  readonly sourceBefore?: UnionId;
-  readonly targetBefore?: UnionId;
   readonly predicate: string;
-  /** Present only when the predicate changed. */
-  readonly predicateBefore?: string;
   readonly label: string;
-  readonly beforeKey?: EdgeKey;
-  readonly afterKey?: EdgeKey;
-  readonly before?: KGEdge;
-  readonly after?: KGEdge;
-  readonly status: ChangeStatus;
   readonly facets: readonly EdgeFacet[];
   readonly hunk?: string;
   /** True when the predicate is a hierarchy predicate. */
   readonly hierarchical: boolean;
 }
+
+/** An edge of the after version only. */
+export interface AddedUnionEdge extends UnionEdgeBase {
+  readonly status: 'added';
+  readonly afterKey: EdgeKey;
+  readonly after: KGEdge;
+  readonly beforeKey?: undefined;
+  readonly before?: undefined;
+  readonly sourceBefore?: undefined;
+  readonly targetBefore?: undefined;
+  readonly predicateBefore?: undefined;
+}
+
+/** An edge of the before version only. */
+export interface RemovedUnionEdge extends UnionEdgeBase {
+  readonly status: 'removed';
+  readonly beforeKey: EdgeKey;
+  readonly before: KGEdge;
+  readonly afterKey?: undefined;
+  readonly after?: undefined;
+  readonly sourceBefore?: undefined;
+  readonly targetBefore?: undefined;
+  readonly predicateBefore?: undefined;
+}
+
+/** An edge in both versions, paired by identity, by a merge / split, or as a retarget. */
+export interface MatchedUnionEdge extends UnionEdgeBase {
+  /** `modified` exactly when it has a facet. */
+  readonly status: 'unchanged' | 'modified';
+  readonly beforeKey: EdgeKey;
+  readonly afterKey: EdgeKey;
+  readonly before: KGEdge;
+  readonly after: KGEdge;
+  /** Present only when the before-version endpoint differs (retarget / carried edges). */
+  readonly sourceBefore?: UnionId;
+  readonly targetBefore?: UnionId;
+  /** Present only when the predicate changed. */
+  readonly predicateBefore?: string;
+}
+
+/**
+ * An edge of the union graph. Like `UnionNode`, `status` decides which versions it is in; only
+ * edges in both can have changed endpoints or predicate (`sourceBefore`, `targetBefore`,
+ * `predicateBefore`).
+ */
+export type UnionEdge = AddedUnionEdge | RemovedUnionEdge | MatchedUnionEdge;
 
 // ─── Hunks ──────────────────────────────────────────────────────────────────
 
