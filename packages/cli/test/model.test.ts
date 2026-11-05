@@ -13,7 +13,13 @@ import {
   overview,
   resolveLocale,
 } from '../src/index.js';
-import { apportion, percent, possibleMatches } from '../src/model.js';
+import {
+  apportion,
+  DEFAULT_WATCH_ATTRS,
+  percent,
+  possibleMatches,
+  watchedChanges,
+} from '../src/model.js';
 
 const KINDS: readonly HunkKind[] = ['add', 'remove', 'merge', 'split', 'modify', 'relations'];
 
@@ -133,6 +139,54 @@ describe('apportion', () => {
         },
       ),
     );
+  });
+});
+
+describe('watchedChanges', () => {
+  const before = normalize({
+    nodes: [
+      { id: 'a', label: 'A', attrs: { def: 'An a.', comment: 'old', note: 'x' } },
+      { id: 'b', label: 'B', attrs: { def: 'A b.' } },
+      { id: 'c', label: 'C', attrs: { 'skos:definition': 'A c.', def: 'A c.' } },
+      { id: 'gone', label: 'Gone', attrs: { def: 'Gone.' } },
+    ],
+    edges: [],
+  });
+  const after = normalize({
+    nodes: [
+      { id: 'a', label: 'A', attrs: { def: 'An a, reworded.', comment: 'new', note: 'y' } },
+      { id: 'b', label: 'B', attrs: { def: 'A b.' } },
+      { id: 'c', label: 'C', attrs: { 'skos:definition': 'A c, reworded.', def: 'A c!' } },
+      { id: 'new', label: 'New', attrs: { def: 'New.' } },
+    ],
+    edges: [],
+  });
+  const result = diff(before, after);
+  const hunkOf = (id: string): string => result.index.node(id)?.hunk ?? '';
+
+  it('lists the watched keys each hunk changes, in watch order', () => {
+    const watched = watchedChanges(result, DEFAULT_WATCH_ATTRS);
+    expect([...watched.entries()].sort()).toEqual(
+      [
+        [hunkOf('a'), ['def']],
+        [hunkOf('c'), ['def', 'skos:definition']],
+      ].sort(),
+    );
+    expect(watchedChanges(result, ['skos:definition', 'def']).get(hunkOf('c'))).toEqual([
+      'skos:definition',
+      'def',
+    ]);
+  });
+
+  it('ignores added and removed nodes, unchanged values, other keys and ignored attributes', () => {
+    const watched = watchedChanges(result, ['def', 'comment']);
+    expect(watched.has(hunkOf('b'))).toBe(false);
+    expect(watched.has(hunkOf('gone'))).toBe(false);
+    expect(watched.has(hunkOf('new'))).toBe(false);
+    expect(watched.get(hunkOf('a'))).toEqual(['def', 'comment']);
+    expect(watchedChanges(result, []).size).toBe(0);
+    const ignored = diff(before, after, { ignoreAttrs: ['def'] });
+    expect(watchedChanges(ignored, ['def']).size).toBe(0);
   });
 });
 

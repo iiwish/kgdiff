@@ -40,6 +40,7 @@ export {
 } from './markdown.js';
 export {
   type ChangeFamily,
+  DEFAULT_WATCH_ATTRS,
   hunkFamily,
   hunkGlyph,
   KIND_FAMILY,
@@ -47,6 +48,7 @@ export {
   nameStatus,
   type Overview,
   overview,
+  watchedChanges,
 } from './model.js';
 export { nodeIO, openCommand } from './node-io.js';
 export { buildReportHtml, buildReportPayload, createGzip, type ReportInfo } from './report.js';

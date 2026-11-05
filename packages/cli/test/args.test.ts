@@ -126,6 +126,17 @@ describe('diff command line', () => {
     });
   });
 
+  it('--watch-attr collects attribute keys, and is absent when not given', () => {
+    expect(diffOptions(['a.obo', 'b.obo']).watchAttrs).toBeUndefined();
+    expect(
+      diffOptions(['a.ttl', 'b.ttl', '--watch-attr', 'rdfs:comment', '--watch-attr=def'])
+        .watchAttrs,
+    ).toEqual(['rdfs:comment', 'def']);
+    const error = usageError(['a.ttl', 'b.ttl', '--watch-attr', ' ']);
+    expect(error.message).toBe('--watch-attr needs an attribute key.');
+    expect(error.hint).toContain('--watch-attr rdfs:comment');
+  });
+
   it('accepts - for stdin on one side', () => {
     expect(diffOptions(['-', 'b.ttl']).before).toBe('-');
     expect(diffOptions(['a.ttl', '-']).after).toBe('-');

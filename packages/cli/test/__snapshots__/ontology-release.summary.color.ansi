@@ -2,27 +2,28 @@
 
   [1m[38;2;52;211;153m+3[39m[22m added   [1m[38;2;251;191;36m~12[39m[22m modified   [1m[38;2;56;189;248m⇄7[39m[22m restructured                                   [2m58 changes in 22 hunks[22m
   [38;2;52;211;153m█████[39m[38;2;251;191;36m████████████[39m[38;2;56;189;248m█████████████████████████████████[39m
+  [38;2;124;156;255m⚑[39m Review first: definition changed in 9 hunks
 
   [1mRestructured[22m [2m7[22m
-  [38;2;167;139;250m⊕[39m Merged “juvenile diabetes” and “insulin-dependent diabetes me…   [38;2;167;139;250midentity[39m[2m · via replacement hin…[22m
-  [38;2;167;139;250m⊕[39m Merged “heart attack” into “myocardial infarction”               [38;2;167;139;250midentity[39m[2m · via replacement hin…[22m
-  [38;2;167;139;250m⊕[39m Merged “chronic obstructive airway disease” into “chronic obs…   [38;2;167;139;250midentity[39m[2m · via replacement hin…[22m
+  [38;2;167;139;250m⊕[39m Merged “juvenile diabetes” and “insulin-dependent diabetes me…   [38;2;167;139;250midentity[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · via…[22m
+  [38;2;167;139;250m⊕[39m Merged “heart attack” into “myocardial infarction”               [38;2;167;139;250midentity[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · via…[22m
+  [38;2;167;139;250m⊕[39m Merged “chronic obstructive airway disease” into “chronic obs…   [38;2;167;139;250midentity[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · via…[22m
   [38;2;56;189;248m⇄[39m Moved “Crohn disease” under “inflammatory bowel disease”         [38;2;56;189;248mstructure[39m[2m · from “intestinal d…[22m
   [38;2;56;189;248m⇄[39m Moved “Hashimoto thyroiditis” under “autoimmune thyroid disea…   [38;2;56;189;248mstructure[39m[2m · from “hypothyroidi…[22m
   [38;2;56;189;248m⇄[39m Moved “tuberculosis” under “bacterial infectious disease”        [38;2;56;189;248mstructure[39m[2m · from “lung disease”[22m
-  [38;2;167;139;250m⑂[39m Split “diabetes insipidus” into “arginine vasopressin deficie…   [38;2;167;139;250midentity[39m[2m · inferred · 80% conf…[22m
+  [38;2;167;139;250m⑂[39m Split “diabetes insipidus” into “arginine vasopressin deficie…   [38;2;167;139;250midentity[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · infe…[22m
   [1mModified[22m [2m12[22m
   [38;2;251;191;36m~[39m Renamed “alcoholic liver disease” → “alcohol-related liver di…   [38;2;251;191;36mcontent[39m[2m · ~1 attribute · +1 sy…[22m
-  [38;2;251;191;36m~[39m Moved “hyperglycemia” under “abnormal blood glucose concentra…   [38;2;251;191;36mcontent[39m[2m · ~2 attributes · from…[22m
+  [38;2;251;191;36m~[39m Moved “hyperglycemia” under “abnormal blood glucose concentra…   [38;2;251;191;36mcontent[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · ~2 at…[22m
   [38;2;251;191;36m~[39m Renamed “Alzheimer's disease” → “Alzheimer disease”              [38;2;251;191;36mcontent[39m[2m · ~1 attribute · +1 sy…[22m
   [38;2;251;191;36m~[39m Updated attributes of “COVID-19”                                 [38;2;251;191;36mcontent[39m[2m · ~1 attribute[22m
-  [38;2;251;191;36m~[39m Updated attributes of “asthma”                                   [38;2;251;191;36mcontent[39m[2m · ~2 attributes[22m
-  [38;2;251;191;36m~[39m Updated attributes of “chronic kidney disease”                   [38;2;251;191;36mcontent[39m[2m · ~2 attributes[22m
+  [38;2;251;191;36m~[39m Updated attributes of “asthma”                                   [38;2;251;191;36mcontent[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · ~2 at…[22m
+  [38;2;251;191;36m~[39m Updated attributes of “chronic kidney disease”                   [38;2;251;191;36mcontent[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · ~2 at…[22m
   [38;2;251;191;36m~[39m Edited “dyspnea”                                                 [38;2;251;191;36mcontent[39m[2m · ~1 attribute · +2 sy…[22m
   [38;2;251;191;36m~[39m Renamed “non-alcoholic steatohepatitis” → “metabolic dysfunct…   [38;2;251;191;36mcontent[39m[2m · ~1 attribute · +2 sy…[22m
-  [38;2;251;191;36m~[39m Renamed “non-alcoholic fatty liver disease” → “metabolic dysf…   [38;2;251;191;36mcontent[39m[2m · ~2 attributes · +2 s…[22m
+  [38;2;251;191;36m~[39m Renamed “non-alcoholic fatty liver disease” → “metabolic dysf…   [38;2;251;191;36mcontent[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · ~2 at…[22m
   [38;2;251;191;36m~[39m Edited “migraine”                                                [38;2;251;191;36mcontent[39m[2m · ~1 attribute · −1 sy…[22m
-  [38;2;251;191;36m~[39m Renamed “fatty liver disease” → “steatotic liver disease”        [38;2;251;191;36mcontent[39m[2m · +1 ~2 attributes · +…[22m
+  [38;2;251;191;36m~[39m Renamed “fatty liver disease” → “steatotic liver disease”        [38;2;251;191;36mcontent[39m[2m · [22m[38;2;124;156;255m⚑ definition[39m[2m · +1 ~2…[22m
   [38;2;251;191;36m~[39m Updated attributes of “type 2 diabetes mellitus”                 [38;2;251;191;36mcontent[39m[2m · ~1 attribute[22m
   [1mAdded[22m [2m3[22m
   [38;2;52;211;153m+[39m Added “arginine vasopressin disorder” and 1 relation             [38;2;52;211;153madded[39m[2m · type Term · linked to…[22m

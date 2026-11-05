@@ -102,7 +102,8 @@ possible matches that are “too close to another candidate”.
   listed before the other edits. Renames and attribute edits are _content_. `--hierarchy`
   decides which relations count as the hierarchy (`subClassOf`, `is_a`, `skos:broader`, … by
   default).
-- A reworded definition is an attribute change. The viewer shows it as a character-level diff
-  in the node's detail panel.
+- A reworded definition is an attribute change. The summaries flag it ⚑ for review first
+  (`content · ⚑ definition · ~1 attribute`), and the viewer shows it as a character-level diff
+  in the node's detail panel. `--watch-attr` names other attributes to flag.
 - kgdiff does not judge whether a meaning shifted. It makes such edits visible, and leaves the
   judgement to the reviewer.

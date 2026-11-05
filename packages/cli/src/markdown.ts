@@ -1,19 +1,21 @@
 /**
  * GitHub-flavoured Markdown summary for PR comments and `$GITHUB_STEP_SUMMARY`
- * (docs/cli.md §Markdown summary): title, diffstat table, family legend, the hunk list grouped
- * by phase and the possible matches, in `<details>` blocks. No HTML beyond `<details>` /
- * `<summary>`.
+ * (docs/cli.md §Markdown summary): title, diffstat table, family legend, the hunks that change
+ * a watched attribute (review first), the hunk list grouped by phase and the possible matches,
+ * in `<details>` blocks. No HTML beyond `<details>` / `<summary>`.
  */
-import { type DiffResult, formatHunk, type Locale } from '@kgdiff/core';
-import { formatInt, messages } from './locale.js';
+import { type DiffResult, formatHunk, type Hunk, type Locale } from '@kgdiff/core';
+import { formatInt, messages, watchLabels } from './locale.js';
 import {
   type ChangeFamily,
+  DEFAULT_WATCH_ATTRS,
   groupByPhase,
   hunkFamily,
   hunkGlyph,
   overview,
   percent,
   possibleMatches,
+  watchedChanges,
 } from './model.js';
 import { totalsText } from './summary.js';
 import { revealInvisible } from './width.js';
@@ -22,6 +24,8 @@ import { revealInvisible } from './width.js';
 export const MARKDOWN_HUNK_LIMIT = 100;
 /** Groups start expanded when the whole list is at most this long. */
 const OPEN_THRESHOLD = 30;
+/** Hunks listed under "Review first" before "…and N more". */
+export const MARKDOWN_REVIEW_LIMIT = 20;
 /** Possible matches listed before "…and N more". */
 export const MARKDOWN_POSSIBLE_LIMIT = 20;
 /** The possible matches start expanded when there are at most this many. */
@@ -74,6 +78,11 @@ export interface MarkdownOptions {
   readonly title: string;
   /** e.g. `kgdiff 0.1.0`. */
   readonly generator: string;
+  /**
+   * Attribute keys whose changes are flagged ⚑ for review first (`--watch-attr`). Default
+   * `DEFAULT_WATCH_ATTRS` (definitions); `[]` flags nothing.
+   */
+  readonly watch?: readonly string[];
 }
 
 /** Render the Markdown summary. Deterministic: no timestamps. */
@@ -103,6 +112,10 @@ export function renderMarkdown(diff: DiffResult, options: MarkdownOptions): stri
       m.markdown.legend,
       '',
     );
+    const watch = options.watch ?? DEFAULT_WATCH_ATTRS;
+    const watched = watchedChanges(diff, watch);
+    const item = (hunk: Hunk): string => hunkItem(hunk, diff, options.locale, watched.get(hunk.id));
+    out.push(...reviewFirstSection(diff, watched, watch, options.locale, item));
     let budget = MARKDOWN_HUNK_LIMIT;
     const open = ov.hunks <= OPEN_THRESHOLD ? ' open' : '';
     for (const group of groupByPhase(diff.hunks)) {
@@ -114,13 +127,7 @@ export function renderMarkdown(diff: DiffResult, options: MarkdownOptions): stri
         `<summary>${m.phase[group.phase]} (${formatInt(group.hunks.length)})</summary>`,
         '',
       );
-      for (const hunk of listed) {
-        const { title, subtitle } = formatHunk(hunk, diff, options.locale);
-        const family = hunkFamily(hunk);
-        const glyph = hunkGlyph(hunk) === '~' ? '\\~' : hunkGlyph(hunk);
-        const note = subtitle ? ` — *${escapeMarkdown(subtitle)}*` : '';
-        out.push(`- ${FAMILY_SQUARE[family]} ${glyph} ${escapeMarkdown(title)}${note}`);
-      }
+      for (const hunk of listed) out.push(item(hunk));
       out.push('', '</details>', '');
     }
     if (ov.hunks > MARKDOWN_HUNK_LIMIT) {
@@ -130,6 +137,63 @@ export function renderMarkdown(diff: DiffResult, options: MarkdownOptions): stri
   }
   out.push(`*${escapeMarkdown(m.markdown.generatedBy(options.generator))}*`);
   return `${out.join('\n')}\n`;
+}
+
+/**
+ * A hunk as a list item: family square, glyph, title, then its summary in italics, after
+ * `⚑ definition` when it changes a watched attribute.
+ */
+function hunkItem(
+  hunk: Hunk,
+  diff: DiffResult,
+  locale: Locale,
+  watchedKeys: readonly string[] | undefined,
+): string {
+  const m = messages(locale);
+  const { title, subtitle } = formatHunk(hunk, diff, locale);
+  const glyph = hunkGlyph(hunk) === '~' ? '\\~' : hunkGlyph(hunk);
+  const flag = watchedKeys ? `⚑ ${m.watch.marker(watchLabels(watchedKeys, m))}` : '';
+  const note = [flag, subtitle].filter(Boolean).join(' · ');
+  return `- ${FAMILY_SQUARE[hunkFamily(hunk)]} ${glyph} ${escapeMarkdown(title)}${note ? ` — *${escapeMarkdown(note)}*` : ''}`;
+}
+
+/**
+ * The hunks that change a watched attribute, before the phase groups (which may start
+ * collapsed), in list order: a reworded definition can change what existing data means while
+ * the diff looks small. The same items in the groups carry the ⚑ marker. Empty when none.
+ */
+function reviewFirstSection(
+  diff: DiffResult,
+  watched: ReadonlyMap<string, readonly string[]>,
+  watch: readonly string[],
+  locale: Locale,
+  item: (hunk: Hunk) => string,
+): string[] {
+  if (watched.size === 0) return [];
+  const m = messages(locale);
+  const keys = new Set<string>();
+  for (const list of watched.values()) for (const key of list) keys.add(key);
+  const labels = watchLabels(
+    watch.filter((k) => keys.has(k)),
+    m,
+  );
+  const flagged = groupByPhase(diff.hunks).flatMap((g) => g.hunks.filter((h) => watched.has(h.id)));
+  const out = [
+    '<details open>',
+    `<summary>⚑ ${m.markdown.reviewFirst} (${formatInt(flagged.length)})</summary>`,
+    '',
+    `*${escapeMarkdown(m.markdown.reviewFirstHint(labels))}*`,
+    '',
+  ];
+  for (const hunk of flagged.slice(0, MARKDOWN_REVIEW_LIMIT)) out.push(item(hunk));
+  if (flagged.length > MARKDOWN_REVIEW_LIMIT) {
+    out.push(
+      '',
+      `*${escapeMarkdown(m.markdown.reviewFirstMore(flagged.length - MARKDOWN_REVIEW_LIMIT))}*`,
+    );
+  }
+  out.push('', '</details>', '');
+  return out;
 }
 
 /**

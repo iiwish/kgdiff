@@ -235,7 +235,12 @@ export async function runDiff(o: DiffCommandOptions, io: CliIO): Promise<number>
   }
   if (o.markdown !== undefined) {
     const { renderMarkdown } = await import('./markdown.js');
-    const md = renderMarkdown(result, { locale: ctx.locale, title, generator });
+    const md = renderMarkdown(result, {
+      locale: ctx.locale,
+      title,
+      generator,
+      ...(o.watchAttrs ? { watch: o.watchAttrs } : {}),
+    });
     if (o.markdown !== STDIO)
       files.push({ path: o.markdown, content: md, label: 'Markdown summary' });
     else stdoutText = md;
@@ -284,6 +289,7 @@ export async function runDiff(o: DiffCommandOptions, io: CliIO): Promise<number>
       locale: ctx.locale,
       width: outputWidth(io),
       limit: o.limit,
+      ...(o.watchAttrs ? { watch: o.watchAttrs } : {}),
     };
     if (o.json === STDIO) stdoutText = json(diffToJSON(result), o.pretty);
     else if (o.delta === STDIO) stdoutText = json(result.delta, o.pretty);

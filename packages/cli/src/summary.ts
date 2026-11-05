@@ -6,11 +6,12 @@
  * ellipsis) and painted last, so alignment holds with and without color and with CJK labels.
  */
 import { type DiffResult, formatHunk, type Hunk, type Locale } from '@kgdiff/core';
-import { formatInt, type Messages, messages } from './locale.js';
+import { formatInt, type Messages, messages, watchLabels } from './locale.js';
 import {
   apportion,
   type ChangeFamily,
   COUNTER_PHASES,
+  DEFAULT_WATCH_ATTRS,
   groupByPhase,
   hunkFamily,
   hunkGlyph,
@@ -22,6 +23,7 @@ import {
   type PossibleMatch,
   percent,
   possibleMatches,
+  watchedChanges,
 } from './model.js';
 import type { Painter } from './style.js';
 import { padEnd, padStart, sanitize, stringWidth, truncate, wrap } from './width.js';
@@ -33,6 +35,35 @@ export interface TextContext {
   readonly width: number;
   /** Maximum hunks listed in the summary; 0 lists all. */
   readonly limit: number;
+  /**
+   * Attribute keys whose changes are flagged ⚑ for review first (`--watch-attr`). Default
+   * `DEFAULT_WATCH_ATTRS` (definitions); `[]` flags nothing.
+   */
+  readonly watch?: readonly string[];
+}
+
+/** Flag glyph of hunks that change a watched attribute. */
+const FLAG = '⚑';
+
+/** The watched attributes each hunk changes, for `ctx.watch` or the default definitions. */
+function watchedOf(diff: DiffResult, ctx: TextContext): ReadonlyMap<string, readonly string[]> {
+  return watchedChanges(diff, ctx.watch ?? DEFAULT_WATCH_ATTRS);
+}
+
+/** `⚑ Review first: definition changed in 10 hunks`, under the diffstat bar; none if no flags. */
+function reviewFirstLines(
+  watched: ReadonlyMap<string, readonly string[]>,
+  ctx: TextContext,
+  width: number,
+): string[] {
+  if (watched.size === 0) return [];
+  const m = messages(ctx.locale);
+  const keys = new Set<string>();
+  for (const list of watched.values()) for (const key of list) keys.add(key);
+  const watchOrder = (ctx.watch ?? DEFAULT_WATCH_ATTRS).filter((k) => keys.has(k));
+  const text = m.watch.line(watchLabels(watchOrder, m), watched.size);
+  const room = width - INDENT.length - stringWidth(FLAG) - 1;
+  return [`${INDENT}${ctx.paint.tone('accent', FLAG)} ${truncate(sanitize(text), room)}`];
 }
 
 const INDENT = '  ';
@@ -139,7 +170,13 @@ export function diffstatBar(ov: Overview, width: number, paint: Painter): string
   }).join('');
 }
 
-function statLines(ov: Overview, ctx: TextContext, width: number): string[] {
+/** Counters, the diffstat bar, and the review-first line when a watched attribute changed. */
+function statLines(
+  ov: Overview,
+  ctx: TextContext,
+  width: number,
+  watched: ReadonlyMap<string, readonly string[]>,
+): string[] {
   const m = messages(ctx.locale);
   const right = m.changes(ov.changes, ov.hunks);
   const rows = counterLines(counterItems(ov, m, ctx.paint), width - INDENT.length);
@@ -153,6 +190,7 @@ function statLines(ov: Overview, ctx: TextContext, width: number): string[] {
     ),
   );
   lines.push(INDENT + diffstatBar(ov, width, ctx.paint));
+  lines.push(...reviewFirstLines(watched, ctx, width));
   return lines;
 }
 
@@ -180,22 +218,35 @@ interface Row {
   readonly glyph: string;
   readonly title: string;
   readonly family: string;
+  /** Watched attributes the hunk changes (`definition`), shown as `⚑ definition`. */
+  readonly flag?: string;
   readonly subtitle: string;
 }
 
-function rowsOf(diff: DiffResult, hunks: readonly Hunk[], ctx: TextContext): Row[] {
+function rowsOf(
+  diff: DiffResult,
+  hunks: readonly Hunk[],
+  ctx: TextContext,
+  watched: ReadonlyMap<string, readonly string[]>,
+): Row[] {
   const m = messages(ctx.locale);
   return hunks.map((hunk) => {
     const { title, subtitle } = formatHunk(hunk, diff, ctx.locale);
+    const keys = watched.get(hunk.id);
     return {
       tone: hunkFamily(hunk),
       glyph: hunkGlyph(hunk),
       title: sanitize(title),
       family: m.family[hunkFamily(hunk)],
+      ...(keys ? { flag: sanitize(m.watch.marker(watchLabels(keys, m))) } : {}),
       subtitle: sanitize(subtitle),
     };
   });
 }
+
+/** What follows the family label: ` · ⚑ definition · <subtitle>`, as plain text. */
+const restText = (row: Row): string =>
+  (row.flag ? ` · ${FLAG} ${row.flag}` : '') + (row.subtitle ? ` · ${row.subtitle}` : '');
 
 /** Glyph of a possible match: “maybe the same”. */
 const POSSIBLE_GLYPH = '≈';
@@ -220,8 +271,7 @@ function possibleRows(diff: DiffResult, list: readonly PossibleMatch[], ctx: Tex
   }));
 }
 
-const rightText = (row: Row): string =>
-  row.subtitle ? `${row.family} · ${row.subtitle}` : row.family;
+const rightText = (row: Row): string => row.family + restText(row);
 
 /** Natural width of the hunk list (before any truncation). */
 function listWidth(rows: readonly Row[]): number {
@@ -264,10 +314,18 @@ function renderRow(row: Row, cols: { title: number; right: number }, ctx: TextCo
   const title = padEnd(truncate(row.title, cols.title), cols.title);
   const familyWidth = stringWidth(row.family);
   const restRoom = cols.right - familyWidth;
-  const rest = row.subtitle && restRoom >= 6 ? truncate(` · ${row.subtitle}`, restRoom) : '';
+  const full = restText(row);
+  const rest = full && restRoom >= 6 ? truncate(full, restRoom) : '';
+  // The flag comes first, so it survives truncation, and keeps the accent colour; the summary
+  // after it is dimmed.
+  const flag = row.flag ? ` · ${FLAG} ${row.flag}` : '';
+  const flagShown = flag ? rest.slice(0, Math.min(rest.length, flag.length)) : '';
+  const painted = flagShown
+    ? paint.dim(flagShown.slice(0, 3)) + paint.tone('accent', flagShown.slice(3))
+    : '';
   return (
     `${INDENT}${glyph} ${title}${' '.repeat(COLUMN_GAP)}` +
-    `${paint.tone(tone, row.family)}${paint.dim(rest)}`
+    `${paint.tone(tone, row.family)}${painted}${paint.dim(rest.slice(flagShown.length))}`
   );
 }
 
@@ -297,6 +355,8 @@ function headerNatural(diff: DiffResult, title: string, ctx: TextContext, ov: Ov
  * The default terminal output: header (title, node and edge totals), per-phase counters, a
  * proportional diffstat bar, then the hunks grouped by phase with glyph, title and a family /
  * summary column. At most `ctx.limit` hunks are listed (0 = all), then "… and N more".
+ * Hunks that change a watched attribute (`ctx.watch`, definitions by default) are marked
+ * `⚑ definition` before their summary, and a line under the bar counts them.
  *
  * Last come the possible matches: pairings kgdiff considered but did not apply, between a node
  * listed as removed and one listed as added (`possibleMatches`), with their score, why they were
@@ -309,6 +369,7 @@ export function renderSummary(diff: DiffResult, title: string, ctx: TextContext)
     const width = layoutWidth(headerNatural(diff, title, ctx, ov), ctx.width);
     return `${[...headerLines(diff, title, ctx, width), '', ...identicalLines(diff, ctx, width)].join('\n')}\n`;
   }
+  const watched = watchedOf(diff, ctx);
   const m = messages(ctx.locale);
   const { paint } = ctx;
   const groups = groupByPhase(diff.hunks);
@@ -317,7 +378,7 @@ export function renderSummary(diff: DiffResult, title: string, ctx: TextContext)
   const listed = groups.map((g) => {
     const take = g.hunks.slice(0, Math.max(0, budget - shown));
     shown += take.length;
-    return { phase: g.phase, total: g.hunks.length, rows: rowsOf(diff, take, ctx) };
+    return { phase: g.phase, total: g.hunks.length, rows: rowsOf(diff, take, ctx, watched) };
   });
   const possible = possibleMatches(diff);
   const possibleShown = possible.slice(
@@ -334,7 +395,12 @@ export function renderSummary(diff: DiffResult, title: string, ctx: TextContext)
   // Columns of their own: hunk titles are often long, and the reason and evidence matter more
   // here than lining up with the hunks above (the section has its own heading).
   const possibleCols = listColumns(possibleList, width);
-  const lines = [...headerLines(diff, title, ctx, width), '', ...statLines(ov, ctx, width), ''];
+  const lines = [
+    ...headerLines(diff, title, ctx, width),
+    '',
+    ...statLines(ov, ctx, width, watched),
+    '',
+  ];
   for (const group of listed) {
     if (group.rows.length === 0) continue;
     lines.push(`${INDENT}${paint.bold(m.phase[group.phase])} ${paint.dim(formatInt(group.total))}`);
@@ -366,15 +432,16 @@ const MAX_TYPE_ROWS = 12;
 const MAX_TYPE_NAME = 28;
 
 /**
- * `--stat`: header, counters and bar, a nodes / edges × added / removed / modified / unchanged
- * table, and a git-style per-type breakdown (`+` added, `−` removed, `~` modified nodes).
+ * `--stat`: header, counters and bar (with the review-first line, as in the summary), a
+ * nodes / edges × added / removed / modified / unchanged table, and a git-style per-type
+ * breakdown (`+` added, `−` removed, `~` modified nodes).
  */
 export function renderStat(diff: DiffResult, title: string, ctx: TextContext): string {
   const ov = overview(diff);
   const width = layoutWidth(headerNatural(diff, title, ctx, ov), ctx.width);
   const lines = [...headerLines(diff, title, ctx, width), ''];
   if (ov.hunks === 0) return `${[...lines, ...identicalLines(diff, ctx, width)].join('\n')}\n`;
-  lines.push(...statLines(ov, ctx, width), '');
+  lines.push(...statLines(ov, ctx, width, watchedOf(diff, ctx)), '');
   lines.push(...countsTable(diff, ctx, width), '');
   lines.push(...typeLines(diff, ctx, width));
   return `${lines.join('\n')}\n`;

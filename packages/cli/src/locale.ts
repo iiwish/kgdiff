@@ -4,7 +4,7 @@
  * searched for.
  */
 import type { Locale, ReplayPhase } from '@kgdiff/core';
-import type { ChangeFamily, PossibleMatchSide } from './model.js';
+import { type ChangeFamily, isDefinitionKey, type PossibleMatchSide } from './model.js';
 import type { Env } from './style.js';
 
 export const LOCALES: readonly Locale[] = ['en', 'zh-CN'];
@@ -67,6 +67,15 @@ export interface Messages {
   readonly byType: string;
   readonly untyped: string;
   readonly moreTypes: (n: number) => string;
+  /** Watched attributes (`--watch-attr`): changes flagged ⚑ for review first. */
+  readonly watch: {
+    /** How the default definition keys (`def`, `IAO:0000115`, …) are named. */
+    readonly definition: string;
+    /** After ⚑ under the diffstat bar: `Review first: definition changed in 10 hunks`. */
+    readonly line: (labels: readonly string[], hunks: number) => string;
+    /** After ⚑ in a hunk's summary: `definition`. */
+    readonly marker: (labels: readonly string[]) => string;
+  };
   /** Pairings kgdiff considered but did not apply, listed after the hunks. */
   readonly possible: {
     readonly heading: string;
@@ -82,11 +91,28 @@ export interface Messages {
   readonly markdown: {
     readonly legend: string;
     readonly more: (n: number) => string;
+    /** Heading of the block of hunks that change a watched attribute (after ⚑). */
+    readonly reviewFirst: string;
+    readonly reviewFirstHint: (labels: readonly string[]) => string;
+    readonly reviewFirstMore: (n: number) => string;
     /** Like `possible.hint`, as Markdown. */
     readonly possibleHint: string;
     readonly possibleMore: (n: number) => string;
     readonly generatedBy: (generator: string) => string;
   };
+}
+
+/**
+ * Display names of watched attribute keys, in order: the default definition keys are all
+ * “definition” (once), other keys are shown as they are.
+ */
+export function watchLabels(keys: readonly string[], m: Messages): string[] {
+  const labels: string[] = [];
+  for (const key of keys) {
+    const label = isDefinitionKey(key) ? m.watch.definition : key;
+    if (!labels.includes(label)) labels.push(label);
+  }
+  return labels;
 }
 
 /**
@@ -155,6 +181,12 @@ const en: Messages = {
   byType: 'By type',
   untyped: '(untyped)',
   moreTypes: (n) => `… and ${plural(n, 'more type', 'more types')}`,
+  watch: {
+    definition: 'definition',
+    line: (labels, hunks) =>
+      `Review first: ${labels.join(', ')} changed in ${plural(hunks, 'hunk', 'hunks')}`,
+    marker: (labels) => labels.join(', '),
+  },
   possible: {
     heading: 'Possible matches',
     title: (before, after) =>
@@ -179,6 +211,11 @@ const en: Messages = {
       '🟦 structure (moves, relations) · 🟪 identity (merges, splits)',
     more: (n) =>
       `…and ${plural(n, 'more hunk', 'more hunks')}. Open the HTML report for the full list.`,
+    reviewFirst: 'Review first',
+    reviewFirstHint: (labels) =>
+      `These hunks change a watched attribute (${labels.join(', ')}). Such an edit can change ` +
+      'what existing data means even when the diff looks small.',
+    reviewFirstMore: (n) => `…and ${formatInt(n)} more.`,
     possibleHint:
       'kgdiff did not pair these nodes, so they are listed above as removed or added. If a ' +
       'pair is the same thing, add a synonym or a replacement link, or lower `--threshold`.',
@@ -218,6 +255,11 @@ const zh: Messages = {
   byType: '按类型',
   untyped: '（无类型）',
   moreTypes: (n) => `… 另有 ${formatInt(n)} 个类型`,
+  watch: {
+    definition: '定义',
+    line: (labels, hunks) => `优先审查：${formatInt(hunks)} 组变更修改了${labels.join('、')}`,
+    marker: (labels) => labels.join('、'),
+  },
   possible: {
     heading: '可能的匹配',
     title: (before, after) =>
@@ -238,6 +280,10 @@ const zh: Messages = {
     legend:
       '🟩 新增 · 🟥 删除 · 🟨 内容（改名、属性、类型、别名） · 🟦 结构（移动、关系） · 🟪 身份（合并、拆分、换 ID）',
     more: (n) => `……另有 ${formatInt(n)} 组变更未列出，完整列表请查看 HTML 报告。`,
+    reviewFirst: '优先审查',
+    reviewFirstHint: (labels) =>
+      `这些变更修改了受关注的属性（${labels.join('、')}）。这类修改在差异里看起来很小，却可能改变已有数据的含义。`,
+    reviewFirstMore: (n) => `……另有 ${formatInt(n)} 组。`,
     possibleHint:
       'kgdiff 没有配对这些节点，因此它们在上方按删除或新增列出。如果某一对其实是同一节点，可补充别名或替换链接，或调低 `--threshold`。',
     possibleMore: (n) =>
