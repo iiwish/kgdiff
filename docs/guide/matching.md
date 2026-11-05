@@ -72,21 +72,18 @@ them apart: each pairs with its own counterpart, and removing the fruit later do
 into the company.
 
 When each version has a single “Mercury”, a planet before and a chemical element after, the
-outcome depends on the ids around them. With `auto`, the nodes whose ids did not change are
-paired first, so the neighbours count, the two do not agree, and the pair is only a possible
-match. Both sides show their ids because the names are equal:
+names are equal but the types disagree. kgdiff does not pair them on the name alone: it waits
+until their neighbours are paired, also with `--match similarity`, where every node starts
+unpaired. The neighbours do not agree either (the planet orbits the Sun, the element has the
+symbol Hg), so the pair is only a possible match. Both sides show their ids because the names
+are equal:
 
 ```
   ≈ “Mercury” (m1) → “Mercury” (x1)   61% · below the 82% threshold · name 100% · neighbours 0%
 ```
 
-### Limit
-
-With `--match similarity` every node is paired from scratch. In the first round no neighbour is
-paired yet, so equal names outweigh different types (10%), and the two “Mercury”s are paired
-and reported as one node whose type changed (`~ Edited “Mercury”`, `+1 −1 types`). Read type
-changes on renamed or edited nodes with that in mind, and use `auto` or `id` when ids are
-stable.
+A type change that the neighbours confirm is still one change: a “Mercury” that still orbits the
+Sun under a renamed type reads `~ Changed the type of “Mercury”`.
 
 ## Symmetric graphs
 
