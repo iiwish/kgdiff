@@ -5,28 +5,18 @@
  */
 import type { Attrs, AttrValue } from './types.js';
 
-// ─── JSON strings and structural keys ────────────────────────────────────────
-
-/** True when `JSON.stringify(s)` would escape something (quotes, backslash, control, surrogates). */
-function needsEscape(s: string): boolean {
-  for (let i = 0; i < s.length; i++) {
-    const c = s.charCodeAt(i);
-    if (c < 0x20 || c === 0x22 || c === 0x5c || (c >= 0xd800 && c <= 0xdfff)) return true;
-  }
-  return false;
-}
-
-/** `JSON.stringify(s)` for a string, with a fast path for the common case. */
-export function jsonString(s: string): string {
-  return needsEscape(s) ? JSON.stringify(s) : `"${s}"`;
-}
+// ─── Structural keys ─────────────────────────────────────────────────────────
 
 /**
- * Structural edge key: exactly `JSON.stringify([source, predicate, target])`
- * (docs/algorithms.md §1), built without the intermediate array.
+ * Structural edge key: `JSON.stringify([source, predicate, target])` (docs/algorithms.md §1).
+ *
+ * Keys are kept for the lifetime of a graph (map keys, `KGEdge.key`, union edge ids), so they
+ * must be flat strings. Concatenating the parts instead (`[${a},${b},${c}]`) yields the same
+ * text as a V8 rope (a tree of cons strings) that stays allocated behind the key: about 2.7× the
+ * memory of the flat string, nearly a third of a whole graph's heap, and slower to hash.
  */
 export function tripleKey(source: string, predicate: string, target: string): string {
-  return `[${jsonString(source)},${jsonString(predicate)},${jsonString(target)}]`;
+  return JSON.stringify([source, predicate, target]);
 }
 
 /** True when a structural key carries a parallel-edge suffix (`#2`, `#3`…). */

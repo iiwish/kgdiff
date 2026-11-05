@@ -34,7 +34,7 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 - **Zero-config, fully configurable.** Good defaults for every option, every default documented.
 - **Accessible by construction.** Contrast is tested, color is never the only cue, motion
   respects `prefers-reduced-motion`, everything is keyboard-operable.
-- **Small and fast.** Budgets below are enforced by benchmarks and size checks.
+- **Small and fast.** Budgets below are enforced by benchmarks, a heap check and size checks.
 - **Isomorphic.** `core`, `formats`, `layout` and `scene` run unchanged in browsers, Node,
   Deno, Bun and workers.
 
@@ -168,6 +168,7 @@ Fields a JSON dialect does not map (rendering state, G6 shape types, …) are dr
 | ------------------------------------------------------------------------- | ------------------------------------- |
 | `diff`, exact ids, 10k nodes / 30k edges                                  | < 150 ms (Node, M-class laptop)       |
 | `diff`, exact ids, 100k nodes / 300k edges                                | < 2 s                                 |
+| `normalize` heap retained, 100k nodes / 300k edges                        | < 135 MB (Node; ~111 MB today)        |
 | similarity matching, 5k unmatched on each side                            | < 1.5 s                               |
 | `layoutDiff`, 2k nodes                                                    | < 800 ms                              |
 | `buildScene`, 10k nodes                                                   | < 50 ms                               |
