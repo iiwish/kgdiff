@@ -6,6 +6,7 @@
  * types, degrees, edge keys, `hierarchical`, the index — is rebuilt by `diffFromJSON`.
  */
 import { attrsEqual, canonicalJSON, tripleKey } from './canonical.js';
+import { checkConsistency } from './consistency.js';
 import { nodeInput } from './delta.js';
 import { toUnionEdge, toUnionNode } from './diff.js';
 import { createDiffIndex } from './diff-index.js';
@@ -23,7 +24,6 @@ import type {
   EdgeJSON,
   Hunk,
   KGEdge,
-  KGNode,
   KGraph,
   NodeInput,
   NodeJSON,
@@ -137,10 +137,19 @@ function checkEnvelope(json: DiffJSON): void {
   }
   if (!isRecord(j.delta)) invalid('A kgdiff diff needs a delta');
   if (!isRecord(j.stats)) invalid('A kgdiff diff needs stats');
+  /** A snapshot of the version an element is not in (an added node's `before`, …). */
+  const stray = (x: { status: string; before?: unknown; after?: unknown }): string | undefined =>
+    x.status === 'added' && x.before !== undefined
+      ? 'before'
+      : x.status === 'removed' && x.after !== undefined
+        ? 'after'
+        : undefined;
   json.nodes.forEach((n, i) => {
     if (!isRecord(n) || typeof n.id !== 'string' || !STATUSES.has(n.status)) {
       invalid(`diff.nodes[${i}] needs a string id and a valid status`);
     }
+    const side = stray(n);
+    if (side) invalid(`diff.nodes[${i}] ("${n.id}") is ${n.status}, so it has no ${side} snapshot`);
   });
   json.edges.forEach((e, i) => {
     const valid =
@@ -150,6 +159,8 @@ function checkEnvelope(json: DiffJSON): void {
       typeof e.target === 'string' &&
       STATUSES.has(e.status);
     if (!valid) invalid(`diff.edges[${i}] needs string id / source / target and a valid status`);
+    const side = stray(e);
+    if (side) invalid(`diff.edges[${i}] (${e.id}) is ${e.status}, so it has no ${side} snapshot`);
   });
 }
 
@@ -166,10 +177,40 @@ function fingerprint(edge: EdgeJSON | KGEdge, mode: EdgeIdentity): string {
   return `t${tripleKey(edge.source, predicate, edge.target)}\u0000${canonicalJSON([label, edge.attrs ?? {}])}`;
 }
 
-function byFingerprint(graph: KGraph): Map<string, KGEdge> {
-  const map = new Map<string, KGEdge>();
-  for (const edge of graph.edges.values()) map.set(fingerprint(edge, graph.edgeIdentity), edge);
-  return map;
+/** `fingerprint(edge) === fingerprint(json)`, without building either. */
+function sameFingerprint(edge: KGEdge, json: EdgeJSON, mode: EdgeIdentity): boolean {
+  if (mode === 'id' && (edge.id !== undefined || json.id !== undefined)) return edge.id === json.id;
+  const predicate = json.predicate ?? '';
+  return (
+    edge.source === json.source &&
+    edge.target === json.target &&
+    edge.predicate === predicate &&
+    edge.label === (json.label ?? predicateLabel(predicate)) &&
+    attrsEqual(edge.attrs, json.attrs ?? {})
+  );
+}
+
+/**
+ * Finds the edge of a re-normalized graph a snapshot became. An identity that occurs once is keyed
+ * by its id or triple, so that key is tried first; only parallel copies and key collisions need
+ * the fingerprint index, built on first use.
+ */
+function edgeFinder(graph: KGraph): (json: EdgeJSON) => KGEdge | undefined {
+  const mode = graph.edgeIdentity;
+  let index: Map<string, KGEdge> | undefined;
+  return (json) => {
+    const key =
+      mode === 'id' && json.id !== undefined
+        ? json.id
+        : tripleKey(json.source, json.predicate ?? '', json.target);
+    const direct = graph.edges.get(key);
+    if (direct && sameFingerprint(direct, json, mode)) return direct;
+    if (!index) {
+      index = new Map();
+      for (const edge of graph.edges.values()) index.set(fingerprint(edge, mode), edge);
+    }
+    return index.get(fingerprint(json, mode));
+  };
 }
 
 /**
@@ -239,28 +280,31 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
     { edgeIdentity: mode },
   );
 
+  // A version a node or edge must not have is left out here, so `toUnionNode` / `toUnionEdge`
+  // report it (a removed node with an afterId, …).
   const nodes = json.nodes.map((n) => {
     const record: Mutable<NodeRecord> = { id: n.id, status: n.status, facets: n.facets ?? [] };
     if (n.beforeId !== undefined) {
       record.beforeId = n.beforeId;
-      record.before = before.nodes.get(n.beforeId) as KGNode;
+      const node = hasBefore(n.status) ? before.nodes.get(n.beforeId) : undefined;
+      if (node) record.before = node;
     }
     if (n.afterId !== undefined) {
       record.afterId = n.afterId;
-      record.after = after.nodes.get(n.afterId) as KGNode;
+      const node = hasAfter(n.status) ? after.nodes.get(n.afterId) : undefined;
+      if (node) record.after = node;
     }
     if (n.hunk !== undefined) record.hunk = n.hunk;
     return toUnionNode(record, before, after);
   });
 
   const hierarchy = new Set(options.hierarchyPredicates);
-  const beforeEdgeIndex = byFingerprint(before);
-  const afterEdgeIndex = byFingerprint(after);
+  const findBefore = edgeFinder(before);
+  const findAfter = edgeFinder(after);
   const edges = json.edges.map((e) => {
-    const b = hasBefore(e.status)
-      ? beforeEdgeIndex.get(fingerprint((e.before ?? e.after) as EdgeJSON, mode))
-      : undefined;
-    const a = e.after ? afterEdgeIndex.get(fingerprint(e.after, mode)) : undefined;
+    const snapshot = e.before ?? e.after;
+    const b = hasBefore(e.status) && snapshot ? findBefore(snapshot) : undefined;
+    const a = hasAfter(e.status) && e.after ? findAfter(e.after) : undefined;
     const shown = a ?? b;
     if (!shown) invalid(`Union edge ${e.id} could not be rebuilt`);
     const record: Mutable<EdgeRecord> = {
@@ -290,6 +334,8 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
   });
 
   const hunks: readonly Hunk[] = json.hunks;
+  const { delta, stats } = json;
+  checkConsistency({ before, after, options, nodes, edges, hunks, delta, stats });
   return {
     before,
     after,
@@ -299,8 +345,8 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
     hunks,
     matches: json.matches ?? [],
     suggestions: json.suggestions ?? [],
-    delta: json.delta,
-    stats: json.stats,
+    delta,
+    stats,
     index: createDiffIndex(nodes, edges, hunks),
   };
 }

@@ -167,9 +167,89 @@ describe('the delta and diff schemas', () => {
     ],
     ['a delta that is not one', { delta: { ops: [] } }],
     ['a missing field', { stats: undefined }],
+    [
+      'an added node with a before version',
+      {
+        nodes: [
+          { id: 'x', beforeId: 'x', afterId: 'x', after: { id: 'x' }, status: 'added', hunk: 'h' },
+        ],
+      },
+    ],
+    [
+      'a removed edge with an after version',
+      {
+        edges: [
+          {
+            id: 'e',
+            source: 'a',
+            target: 'b',
+            before: { source: 'a', target: 'b' },
+            after: { source: 'a', target: 'b' },
+            status: 'removed',
+            hunk: 'h',
+          },
+        ],
+      },
+    ],
+    [
+      'an added edge with a changed endpoint',
+      {
+        edges: [
+          {
+            id: 'e',
+            source: 'a',
+            target: 'b',
+            sourceBefore: 'c',
+            after: { source: 'a', target: 'b' },
+            status: 'added',
+            hunk: 'h',
+          },
+        ],
+      },
+    ],
+    [
+      'an unchanged node in a hunk',
+      {
+        nodes: [
+          {
+            id: 'x',
+            beforeId: 'x',
+            afterId: 'x',
+            after: { id: 'x' },
+            status: 'unchanged',
+            hunk: 'h',
+          },
+        ],
+      },
+    ],
+    [
+      'a modified node without facets',
+      {
+        nodes: [
+          {
+            id: 'x',
+            beforeId: 'x',
+            afterId: 'x',
+            after: { id: 'x' },
+            status: 'modified',
+            hunk: 'h',
+          },
+        ],
+      },
+    ],
+    [
+      'a changed node outside every hunk',
+      { nodes: [{ id: 'x', afterId: 'x', after: { id: 'x' }, status: 'added' }] },
+    ],
   ])('the diff schema rejects %s', (_case, spoiled) => {
     const json = JSON.parse(JSON.stringify({ ...diffToJSON(result), ...spoiled }));
     expect(diffSchema(json)).toBe(false);
+  });
+
+  it('accept the empty facet list diffFromJSON accepts on unchanged elements', () => {
+    const json = JSON.parse(JSON.stringify(diffToJSON(result)));
+    for (const n of json.nodes) if (n.status === 'unchanged') n.facets = [];
+    expectValid(diffSchema, json);
   });
 
   it('accept an identical pair', () => {

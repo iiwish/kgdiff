@@ -338,7 +338,8 @@ export function buildDelta(
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
-function checkDelta(delta: Delta): void {
+/** Validates the envelope and the shape of every op (values are checked when applied). */
+export function checkDelta(delta: Delta): void {
   if (!isRecord(delta) || delta.format !== 'kgdiff.delta') {
     throw new KgdiffError(
       'unsupported-version',

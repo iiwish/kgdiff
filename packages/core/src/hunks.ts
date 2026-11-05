@@ -6,6 +6,7 @@
 import type { EdgeRecord, NodeRecord, PipelineContext } from './model.js';
 import { FACET_ORDER } from './model.js';
 import type {
+  ChangeStatus,
   CountTriplet,
   FacetKind,
   Hunk,
@@ -272,25 +273,28 @@ function summarize(
   nodeById: ReadonlyMap<UnionId, NodeRecord>,
   edgeById: ReadonlyMap<UnionId, EdgeRecord>,
 ): HunkSummary {
+  return hunkSummary(
+    d.nodes.map((id) => nodeById.get(id) as NodeRecord),
+    d.edges.map((id) => edgeById.get(id) as EdgeRecord),
+  );
+}
+
+type Counted = { readonly status: ChangeStatus; readonly facets: readonly { kind: FacetKind }[] };
+
+/** The summary of a hunk owning `nodes` and `edges` (also used to check diffs read from JSON). */
+export function hunkSummary(nodes: readonly Counted[], edges: readonly Counted[]): HunkSummary {
   const kinds = new Set<FacetKind>();
-  const count = (statuses: readonly string[]): CountTriplet => ({
-    added: statuses.filter((s) => s === 'added').length,
-    removed: statuses.filter((s) => s === 'removed').length,
-    modified: statuses.filter((s) => s === 'modified').length,
-  });
-  const nodeStatuses = d.nodes.map((id) => {
-    const n = nodeById.get(id) as NodeRecord;
-    for (const f of n.facets) kinds.add(f.kind);
-    return n.status;
-  });
-  const edgeStatuses = d.edges.map((id) => {
-    const e = edgeById.get(id) as EdgeRecord;
-    for (const f of e.facets) kinds.add(f.kind);
-    return e.status;
-  });
+  const count = (elements: readonly Counted[]): CountTriplet => {
+    const c = { added: 0, removed: 0, modified: 0 };
+    for (const e of elements) {
+      if (e.status !== 'unchanged') c[e.status]++;
+      for (const f of e.facets) kinds.add(f.kind);
+    }
+    return c;
+  };
   return {
-    nodes: count(nodeStatuses),
-    edges: count(edgeStatuses),
+    nodes: count(nodes),
+    edges: count(edges),
     facets: FACET_ORDER.filter((k) => kinds.has(k)),
   };
 }

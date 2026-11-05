@@ -72,6 +72,10 @@ import graphSchema from '@kgdiff/core/schema/graph.v1.json' with { type: 'json' 
 They are also served at `https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/graph.v1.json`
 (`diff.v1.json`, `delta.v1.json`).
 
+`diffFromJSON(json)` checks that a document is consistent (every element has the versions its
+status implies and lies in the hunk it names, edges join union nodes, the delta goes from the
+before to the after graph, the counts match) and names the first contradiction it finds.
+
 ## Learn more
 
 - [Algorithms](../../docs/algorithms.md): normalization, matching, classification, hunks, delta.
