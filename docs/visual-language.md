@@ -99,18 +99,19 @@ stylesheet uses (motion, hover and press tints) are not.
 
 | CSS token                                                              | Theme token                                          |
 | ---------------------------------------------------------------------- | ---------------------------------------------------- |
-| `--kgdiff-bg`, `--kgdiff-grid`                                         | `canvas.background`, `canvas.grid`                   |
+| `--kgdiff-background`, `--kgdiff-grid`                                 | `canvas.background`, `canvas.grid`                   |
 | `--kgdiff-panel`, `--kgdiff-raised`, `--kgdiff-overlay`                | `surface.panel`, `surface.raised`, `surface.overlay` |
 | `--kgdiff-border`, `--kgdiff-border-strong`, `--kgdiff-control-border` | `surface.border`, `borderStrong`, `controlBorder`    |
 | `--kgdiff-shadow`                                                      | `surface.shadow`                                     |
-| `--kgdiff-text`, `--kgdiff-text-2`, `--kgdiff-text-3`                  | `text.primary`, `text.secondary`, `text.muted`       |
+| `--kgdiff-text`, `--kgdiff-text-secondary`, `--kgdiff-text-muted`      | `text.primary`, `text.secondary`, `text.muted`       |
 | `--kgdiff-accent`, `-strong`, `-soft`, `-text`                         | `accent.base`, `strong`, `soft`, `text`              |
 | `--kgdiff-neutral`, `-stroke`, `-edge`, `-label`                       | `neutral.node`, `nodeStroke`, `edge`, `label`        |
 | `--kgdiff-<family>`, `-strong`, `-soft`, `-text`                       | `family.<family>.base`, `strong`, `soft`, `text`     |
-| `--kgdiff-font`, `--kgdiff-mono`                                       | `font.family`, `font.mono`                           |
+| `--kgdiff-font`, `--kgdiff-font-mono`                                  | `font.family`, `font.mono`                           |
 
 `<family>` is `added`, `removed`, `content`, `structure` or `identity`, so for example
-`--kgdiff-removed-soft`. Colors may be written in any sRGB syntax the browser knows (names,
+`--kgdiff-removed-soft`. Names are whole words, like the theme's (`--kgdiff-text-muted` for
+`text.muted`). Colors may be written in any sRGB syntax the browser knows (names,
 `hsl()`, `color-mix()`); the canvas normalizes them, and ignores, with a console warning, a
 value it cannot draw (such as `oklch()`). The contrast guarantees above hold for the built-in
 values only.
