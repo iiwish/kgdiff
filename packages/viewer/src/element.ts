@@ -23,7 +23,7 @@ import type {
   ViewerLegend,
   ViewerPanels,
 } from './index.js';
-import { type Remembered, readRemembered, writeRemembered } from './layout-store.js';
+import { LAYOUT_KEY, type Remembered, readRemembered, writeRemembered } from './layout-store.js';
 import { presetPanels, resolvePanels, SIDEBAR_REGIONS, samePanels } from './panel-levels.js';
 import { DEFAULT_PANELS, formatPanels, PANEL_REGIONS, parsePanels, toPanels } from './panels.js';
 import { sanitizeView, toChrome, toLegend } from './prefs.js';
@@ -55,6 +55,7 @@ const OBSERVED = [
   'legend',
   'panels',
   'persist',
+  'persist-key',
 ] as const;
 
 type Preset = 'sidebar' | 'header' | 'chrome';
@@ -161,7 +162,9 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
         break;
       }
       case 'persist':
-        // Turned on in the page: what the user chose before applies now, as a host change.
+      case 'persist-key':
+        // Turned on, or another store, in the page: what the user chose before there applies
+        // now, as a host change.
         if (this.#layoutReady && this.persist === 'local') this.#remembered = this.#recall();
         this.#resolve('host');
         break;
@@ -171,7 +174,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   }
 
   protected override upgradedProperties(): readonly string[] {
-    return ['chrome', 'legend', 'panels', 'persist'];
+    return ['chrome', 'legend', 'panels', 'persist', 'persistKey'];
   }
 
   protected sheets(doc: Document): readonly CSSStyleSheet[] {
@@ -247,6 +250,16 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   set persist(value: 'local' | 'none') {
     if (value === 'none') this.setAttribute('persist', 'none');
     else this.removeAttribute('persist');
+  }
+
+  /** Where the layout remembers (`persist-key`): a `localStorage` key, `kgdiff:viewer` by default. */
+  get persistKey(): string {
+    return this.getAttribute('persist-key') || LAYOUT_KEY;
+  }
+
+  set persistKey(value: string) {
+    if (!value || value === LAYOUT_KEY) this.removeAttribute('persist-key');
+    else this.setAttribute('persist-key', String(value));
   }
 
   /** Every region's state and the sizes now, as `kgdiff-layout` reports them. */
@@ -325,7 +338,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
 
   /** What the user chose before; theme, palette and language apply unless the host set them. */
   #recall(): Remembered {
-    const r = readRemembered(this.#storage);
+    const r = readRemembered(this.#storage, this.persistKey);
     // A preference the host set wins; one the user chose before wins over a report's view.
     const c = this.controller;
     if (r.theme && !this.hasAttribute('theme') && !c.explicit.has('theme')) {
@@ -354,14 +367,14 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   /** Remember the user's choice (merged into what other viewers of this origin wrote). */
   #remember(patch: Partial<Remembered>): void {
     if (this.persist !== 'local') return;
-    const stored = readRemembered(this.#storage);
+    const stored = readRemembered(this.#storage, this.persistKey);
     const next: Remembered = {
       ...stored,
       ...patch,
       panels: { ...stored.panels, ...(patch.panels ?? {}) },
     };
     this.#remembered = { ...this.#remembered, ...patch, panels: next.panels };
-    writeRemembered(this.#storage, next);
+    writeRemembered(this.#storage, next, this.persistKey);
   }
 
   /** The user resized the sidebar or moved the split (once the drag or key press ended). */

@@ -18,9 +18,10 @@ describe('site viewers', () => {
     for (const tag of demos) expect(tag, tag).toContain('persist="none"');
   });
 
-  it('the playground remembers the visitor’s layout', () => {
+  it('the playground remembers the visitor’s layout, under a key of its own', () => {
     const [playground] = viewers('playground.html');
     expect(playground).toBeDefined();
-    expect(playground).not.toContain('persist=');
+    expect(playground).not.toContain('persist="none"');
+    expect(playground).toContain('persist-key="kgdiff:playground"');
   });
 });

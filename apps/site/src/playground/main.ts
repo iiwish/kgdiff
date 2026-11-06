@@ -159,7 +159,8 @@ function optionsFromUrl(params: URLSearchParams, base: Options): Options {
 // ── Elements ───────────────────────────────────────────────────────────────
 
 // The playground is the site's one viewer that remembers the visitor's layout, theme and
-// language (`persist`, on by default); the landing page's demos remember nothing.
+// language, under a key of its own (`persist-key="kgdiff:playground"`, so a site hosted on a
+// shared origin keeps it apart); the landing page's demos remember nothing.
 const viewer = byId<KgdiffViewerElement>('viewer');
 const datasetSelect = byId<HTMLSelectElement>('dataset');
 const statusEl = byId('status');

@@ -57,6 +57,7 @@ viewer.play();
 | `locale`           | `en`、`zh-CN`                                           | 取自 `navigator.language` |
 | `panels`           | 各区域的状态，例如 `detail:collapsed minimap:hidden`    | 全部展开，图例收起        |
 | `persist`          | `none`：什么也不记                                      | 记住（按源）              |
+| `persist-key`      | 记住时使用的 `localStorage` 键                          | `kgdiff:viewer`           |
 | `sidebar`          | `open`、`closed`（`panels` 的一个预设）                 |                           |
 | `sync-hash`        | 布尔值：深链接 `#kgdiff=hunk:<id>;mode:<m>;scope:<s>`   |                           |
 | `shortcuts`        | `scoped`、`global`（页面上没有焦点时也生效）、`none`    | `scoped`                  |
@@ -75,7 +76,7 @@ viewer.play();
 
 ## 调整布局
 
-查看器的每个区域都可以用一个属性设为展开、收起（收起到能再次展开它的控件）或隐藏：变更列表（`list`）、详情面板（`detail`）、搜索（`search`）、筛选（`filters`）、视图坞（`dock`）、回放控制条（`transport`）、图例（`legend`）、缩放按钮（`zoom`）、小地图（`minimap`）、标题（`title`）和操作按钮（`actions`）。查看器会记住读者的调整（面板、侧栏宽度、列表与详情之间的分隔位置、主题、配色、语言），下次访问时恢复；你的页面设置的值优先于这些记录。`persist="none"` 关闭记住。规则见[面板](../interaction.md#panels)。
+查看器的每个区域都可以用一个属性设为展开、收起（收起到能再次展开它的控件）或隐藏：变更列表（`list`）、详情面板（`detail`）、搜索（`search`）、筛选（`filters`）、视图坞（`dock`）、回放控制条（`transport`）、图例（`legend`）、缩放按钮（`zoom`）、小地图（`minimap`）、标题（`title`）和操作按钮（`actions`）。查看器会记住读者的调整（面板、侧栏宽度、列表与详情之间的分隔位置、主题、配色、语言），下次访问时恢复；你的页面设置的值优先于这些记录。`persist="none"` 关闭记住，`persist-key="my-app:viewer"` 让你的应用的记录与同一个源上的其他应用分开。规则见[面板](../interaction.md#panels)。
 
 ### 默认收起详情面板
 

@@ -61,6 +61,7 @@ viewer.play();
 | `locale`           | `en`, `zh-CN`                                                 | from `navigator.language`  |
 | `panels`           | region states, e.g. `detail:collapsed minimap:hidden`         | all open, legend collapsed |
 | `persist`          | `none`: remember nothing                                      | remembers (per origin)     |
+| `persist-key`      | the `localStorage` key to remember under                      | `kgdiff:viewer`            |
 | `sidebar`          | `open`, `closed` (a preset of `panels`)                       |                            |
 | `sync-hash`        | boolean: deep links `#kgdiff=hunk:<id>;mode:<m>;scope:<s>`    |                            |
 | `shortcuts`        | `scoped`, `global` (also when nothing has focus), `none`      | `scoped`                   |
@@ -95,7 +96,8 @@ search (`search`), the filters (`filters`), the view dock (`dock`), the replay t
 title (`title`) and the actions (`actions`). The viewer remembers what the reader changes
 (panels, the sidebar's width and the split between the list and the details, theme, palette,
 language) for the next visit; what your page sets wins over that. `persist="none"` turns it
-off. [Panels](../interaction.md#panels) has the rules.
+off, and `persist-key="my-app:viewer"` keeps your app's choices apart from other apps on the same
+origin. [Panels](../interaction.md#panels) has the rules.
 
 ### The detail panel collapsed by default
 
