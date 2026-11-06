@@ -1,6 +1,6 @@
 /**
- * What UI components share: the controller, the current translator and element-level actions
- * (attribute-reflected preferences, sidebar, popovers).
+ * What UI components share: the session (`controller`), the layout's actions, the translator
+ * and the root's focus targets.
  */
 import type { AttrValue, HunkKind, Locale } from '@kgdiff/core';
 import type { ChangeFamily, PaletteName, SceneHunk } from '@kgdiff/scene';
@@ -8,8 +8,11 @@ import type { ViewerController } from '../controller.js';
 import type { Translator } from '../i18n.js';
 import type { ThemePreference, ViewerMode } from '../index.js';
 
-export interface UiContext {
-  readonly controller: ViewerController;
+/**
+ * What the layout does for the regions (preferences it reflects as attributes, the panels and
+ * popovers it owns).
+ */
+export interface UiActions {
   readonly tr: () => Translator;
   setMode(mode: ViewerMode): void;
   /** Toggle the `changes` scope (explains itself when it is locked). */
@@ -21,9 +24,22 @@ export interface UiContext {
   sidebarOpen(): boolean;
   toggleMenu(open?: boolean): void;
   openHelp(): void;
+  /** Show and focus the search (`/`). */
   focusSearch(): void;
-  /** Root of the shadow tree (for focus management). */
+}
+
+/** Elements of a region that others move focus to, through the root. */
+export type FocusTarget = 'search' | 'list';
+
+/** What a region gets from the root it is bound to: the session, the actions, focus moves. */
+export interface UiContext extends UiActions {
+  readonly controller: ViewerController;
+  /** Root of the region's shadow tree (for focus management). */
   readonly root: ShadowRoot;
+  /** Register `focus` as the root's `name` target; returns the function that unregisters it. */
+  target(name: FocusTarget, focus: () => void): () => void;
+  /** Focus the root's `name` target registered last; false when there is none. */
+  focus(name: FocusTarget): boolean;
 }
 
 /** One-character glyph of a hunk (docs/interaction.md §Change list): `+ − ~ ⇄ ⊕ ⑂`. */
