@@ -319,11 +319,13 @@ export class Sidebar {
     this.#resize.addEventListener('dblclick', () => set(SIDEBAR_WIDTH, true));
     this.#resize.addEventListener('keydown', (e) => {
       const step = e.shiftKey ? WIDTH_STEP_LARGE : WIDTH_STEP;
+      // From the width shown (a narrow layout holds the sidebar below the stored width).
+      const shown = Math.min(this.#width, this.#maxWidth());
       const to: Record<string, number> = {
-        ArrowLeft: this.#width + step,
-        ArrowRight: this.#width - step,
-        PageUp: this.#width + WIDTH_STEP_LARGE,
-        PageDown: this.#width - WIDTH_STEP_LARGE,
+        ArrowLeft: shown + step,
+        ArrowRight: shown - step,
+        PageUp: shown + WIDTH_STEP_LARGE,
+        PageDown: shown - WIDTH_STEP_LARGE,
         Home: SIDEBAR_MIN,
         End: this.#maxWidth(),
       };

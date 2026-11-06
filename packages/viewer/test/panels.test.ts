@@ -311,6 +311,19 @@ describe('sizes', () => {
     expect(readRemembered(localStorage).sidebarWidth).toBe(280);
   });
 
+  it('steps from the width shown when the layout holds the sidebar below its stored width', async () => {
+    remember({ panels: {}, sidebarWidth: 700 });
+    const el = await loaded();
+    // 800 px wide: the canvas keeps 320, so the sidebar shows at most 480.
+    Object.defineProperty($(el, '.body'), 'clientWidth', { configurable: true, value: 800 });
+    const edge = $(el, '.sb-resize');
+    press(edge, 'ArrowRight');
+    expect(edge.getAttribute('aria-valuenow')).toBe('464');
+    press(edge, 'ArrowLeft');
+    press(edge, 'ArrowLeft');
+    expect(edge.getAttribute('aria-valuenow')).toBe('480');
+  });
+
   it('moves the list / detail split from the keyboard, and resets it on double click', async () => {
     const el = await loaded();
     const seen = layouts(el);
