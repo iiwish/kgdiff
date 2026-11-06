@@ -40,6 +40,7 @@ import { defaultStorage } from './review-store.js';
 import { bindRegion, uiContext } from './root.js';
 import { ROOT_ATTRIBUTES, RootElement } from './root-element.js';
 import type { Topic } from './session.js';
+import { stylesheet } from './styles.js';
 import { ChangeList } from './ui/change-list.js';
 import type { UiActions } from './ui/context.js';
 import { Detail } from './ui/detail.js';
@@ -179,6 +180,10 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
 
   protected override upgradedProperties(): readonly string[] {
     return ['chrome', 'legend', 'panels', 'persist'];
+  }
+
+  protected sheets(doc: Document): readonly CSSStyleSheet[] {
+    return [stylesheet(doc)];
   }
 
   protected override keysEnabled(): boolean {

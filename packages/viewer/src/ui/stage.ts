@@ -32,6 +32,15 @@ const TICK_W = 1000;
 /** How the legend shows: the card, one line of dots, or not at all. */
 export type LegendStyle = 'full' | 'mini' | 'none';
 
+/** The named slots of `<kgdiff-stage>`, where the page puts its own content over the canvas. */
+export const STAGE_SLOTS = [
+  'top-start',
+  'top-end',
+  'bottom-start',
+  'bottom-center',
+  'bottom-end',
+] as const;
+
 export class Stage {
   readonly el: HTMLElement;
   readonly canvasHost: HTMLElement;
@@ -77,10 +86,17 @@ export class Stage {
   #dragging: number | null = null;
   #legendOpen = false;
   #stateKey = '';
+  readonly #slots: HTMLSlotElement[] = [];
+  /** Elements over the canvas that registered themselves (`registerObstacle`). */
+  readonly #obstacles = new Set<Element>();
 
   readonly #ctx: UiContext;
 
-  constructor(ctx: UiContext) {
+  /**
+   * `slots`: the stage is `<kgdiff-stage>`, with named slots for the page's content (stacked
+   * with the built-in chrome in its corner). The default layout's stage has none.
+   */
+  constructor(ctx: UiContext, slots = false) {
     this.#ctx = ctx;
     const c = ctx.controller;
     this.canvasHost = h('div', { class: 'stage' });
@@ -221,14 +237,35 @@ export class Stage {
 
     this.tooltip = h('div', { class: 'tooltip card', role: 'tooltip', 'data-open': 'false' });
     this.#state = h('div', { class: 'state', hidden: true });
+    let bottomStart: HTMLElement = this.#legend;
+    let bottomEnd: HTMLElement = this.#mapCluster;
+    const corners: HTMLElement[] = [];
+    if (slots) {
+      const slot = (name: string): HTMLSlotElement => {
+        const el = document.createElement('slot');
+        el.name = name;
+        el.addEventListener('slotchange', () => c.layoutChanged());
+        this.#slots.push(el);
+        return el;
+      };
+      // Slotted content sits further from the corner than the built-in chrome.
+      corners.push(
+        h('div', { class: 'corner top-start' }, slot('top-start')),
+        h('div', { class: 'corner top-end' }, slot('top-end')),
+      );
+      bottomStart = h('div', { class: 'corner bottom-start' }, slot('bottom-start'), this.#legend);
+      bottomEnd = h('div', { class: 'corner bottom-end' }, slot('bottom-end'), this.#mapCluster);
+      this.#dockWrap.prepend(slot('bottom-center'));
+    }
     this.#chrome = h(
       'div',
       { class: 'chrome' },
       this.#swipe,
-      this.#legend,
+      bottomStart,
       this.#miniLegend,
-      this.#mapCluster,
+      bottomEnd,
       this.#dockWrap,
+      ...corners,
       this.tooltip,
     );
     this.el = h(
@@ -257,7 +294,7 @@ export class Stage {
   chromeLayout(): ChromeLayout {
     const r = this.el.getBoundingClientRect();
     const obstacles: Rect[] = [];
-    const parts = [
+    const parts: Element[] = [
       this.#legend,
       this.#miniLegend,
       this.#zoomBar,
@@ -271,13 +308,27 @@ export class Stage {
     if (this.minimapHost.dataset.hidden !== 'true') parts.push(this.minimapHost);
     // The HUD (title, actions) floats over the canvas too.
     for (const el of this.el.querySelectorAll<HTMLElement>('.hud .card')) parts.push(el);
+    // The page's content in the slots, and what registered itself: one rule for all.
+    for (const slot of this.#slots) parts.push(...slot.assignedElements({ flatten: true }));
+    parts.push(...this.#obstacles);
     for (const el of parts) {
-      if (el.hidden || el.closest('[hidden]')) continue;
+      if ((el as HTMLElement).hidden || el.closest('[hidden]')) continue;
       const b = el.getBoundingClientRect();
       if (b.width <= 0 || b.height <= 0) continue;
       obstacles.push({ x: b.left - r.left, y: b.top - r.top, width: b.width, height: b.height });
     }
     return { width: r.width, height: r.height, obstacles };
+  }
+
+  /**
+   * Keep `el` clear of fits and flights, as the chrome is (content over the canvas the stage
+   * does not place itself); returns the function that stops it.
+   */
+  registerObstacle(el: Element): () => void {
+    this.#obstacles.add(el);
+    return () => {
+      this.#obstacles.delete(el);
+    };
   }
 
   /** Re-measure what depends on rendered sizes (fonts, resizes). */
@@ -345,8 +396,8 @@ export class Stage {
       this.#renderTooltip(tr);
     }
     if (topics.has('theme')) this.#renderTicks();
-    const ready = c.status === 'ready';
-    this.#chrome.hidden = !ready;
+    // Until a diff is ready the built-in chrome waits; the page's slotted content stays.
+    attr(this.#chrome, 'data-ready', String(c.status === 'ready'));
   }
 
   #renderLabels(tr: Translator): void {

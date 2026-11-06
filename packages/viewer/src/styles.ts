@@ -75,6 +75,17 @@ kbd {
 .stage canvas:focus-visible { outline: 2px solid var(--kgdiff-accent); outline-offset: -2px; }
 .chrome { position: absolute; inset: 0; pointer-events: none; }
 .chrome > * { pointer-events: auto; }
+/* Until a diff is ready only the page's slotted content shows. */
+.chrome[data-ready="false"] > :not(.corner, .dock), .chrome[data-ready="false"] .corner > :not(slot),
+.chrome[data-ready="false"] .dock > :not(slot) { display: none !important; }
+/* <kgdiff-stage>: the page's content in the corners, further from the corner than the chrome. */
+.corner { position: absolute; z-index: 2; display: flex; flex-direction: column; gap: 8px; max-width: calc(50% - 24px); pointer-events: none; }
+.corner > * { pointer-events: auto; }
+.corner.top-start { top: 12px; left: 12px; align-items: flex-start; }
+.corner.top-end { top: 12px; right: 12px; align-items: flex-end; }
+.corner.bottom-start { bottom: 16px; left: 16px; align-items: flex-start; }
+.corner.bottom-end { bottom: 16px; right: 16px; align-items: flex-end; }
+.corner > .float { position: static; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .icon-btn {
@@ -641,6 +652,64 @@ ins.hl { text-decoration: none; background: var(--kgdiff-added-soft); color: var
   .skeleton-grid, .shimmer { animation: none; }
 }
 `;
+
+/** What every element's host starts from (`all: initial` also resets the shared `:host` rule). */
+const HOST =
+  'all: initial; font-family: var(--kgdiff-font); font-size: 13px; line-height: 1.45; color: var(--kgdiff-text); -webkit-font-smoothing: antialiased;';
+
+/** The elements of RFC 0001 §3, by the name after `kgdiff-`. */
+export type ElementName = 'root' | 'stage' | 'change-list' | 'change-detail' | 'search' | 'filters';
+
+/** Each element's host rules, adopted after the shared sheet (`<kgdiff-root>`: instead of it). */
+const ELEMENT_STYLES: Readonly<Record<ElementName, string>> = {
+  root: /* css */ `
+:host { display: contents; }
+[hidden] { display: none !important; }
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}`,
+  stage: /* css */ `
+:host { ${HOST} display: block; position: relative; height: 100%; min-height: 240px; contain: content; background: var(--kgdiff-bg); }
+:host([hidden]) { display: none; }
+.stage-wrap { position: absolute; inset: 0; }`,
+  'change-list': /* css */ `
+:host { ${HOST} display: flex; flex-direction: column; min-height: 0; background: var(--kgdiff-panel); }
+:host([hidden]) { display: none; }
+.change-list { flex: 1; min-height: 0; display: flex; flex-direction: column; }`,
+  'change-detail': /* css */ `
+:host { ${HOST} display: flex; flex-direction: column; min-height: 0; background: var(--kgdiff-panel); }
+:host([hidden]) { display: none; }
+.detail { flex: 1 1 auto; }`,
+  search: /* css */ `
+:host { ${HOST} display: block; position: relative; }
+:host([hidden]) { display: none; }
+/* Standalone, the results open below the box. */
+.results {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 10; max-height: min(60vh, 420px);
+  border-radius: 12px; background: var(--kgdiff-raised); box-shadow: var(--kgdiff-shadow), 0 0 0 1px var(--kgdiff-border);
+}`,
+  filters: /* css */ `
+:host { ${HOST} display: block; }
+:host([hidden]) { display: none; }`,
+};
+
+const elementSheets = new WeakMap<Document, Map<ElementName, CSSStyleSheet>>();
+
+/** The host rules of the element `name` as a stylesheet of `doc`, parsed once per document. */
+export function elementSheet(doc: Document, name: ElementName): CSSStyleSheet {
+  let byName = elementSheets.get(doc);
+  if (!byName) {
+    byName = new Map();
+    elementSheets.set(doc, byName);
+  }
+  let sheet = byName.get(name);
+  if (!sheet) {
+    sheet = sheetFor(doc, ELEMENT_STYLES[name]);
+    byName.set(name, sheet);
+  }
+  return sheet;
+}
 
 /**
  * A stylesheet of `doc` holding `css`. A constructed sheet can only be adopted in the document
