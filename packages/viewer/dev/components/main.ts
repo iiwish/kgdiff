@@ -2,8 +2,10 @@
 /**
  * Dev harness page for the composed elements (RFC 0001 §3): a layout with every region placed
  * by the page and a host card in the stage's `top-end` slot (A), a replay-only root (B) and its
- * change list and search elsewhere on the page through `for` (C). `window.kgdiff.underCard()`
- * counts the nodes drawn under the card, which fits and flights keep clear.
+ * change list and search elsewhere on the page through `for` (C), two stages of one root side by
+ * side with the chrome as elements (D) and a replay of a stage and a transport alone (E).
+ * `window.kgdiff.underCard()` counts the nodes drawn under the card, which fits and flights keep
+ * clear; `window.kgdiff.cameras('d')` gives the camera of each of a root's stages.
  */
 import type { GraphInput } from '@kgdiff/core';
 import '@kgdiff/viewer';
@@ -59,8 +61,16 @@ function underCard(): { under: number; total: number } {
   return { under, total };
 }
 
+/** The camera of each stage of root `id` (side by side: one selection, a camera each). */
+function cameras(id: string): ({ x: number; y: number; k: number } | null)[] {
+  const root = document.getElementById(id) as Root;
+  return [...root.querySelectorAll<KgdiffStage>('kgdiff-stage')].map(
+    (stage) => stage.view?.camera?.get() ?? null,
+  );
+}
+
 document.getElementById('large')?.addEventListener('click', () => {
   document.getElementById('card')?.classList.toggle('large');
 });
 
-Object.assign(window, { kgdiff: { roots, underCard } });
+Object.assign(window, { kgdiff: { roots, underCard, cameras } });
