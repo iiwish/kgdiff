@@ -1,5 +1,33 @@
 # @kgdiff/viewer
 
+## 0.5.0
+
+### Minor Changes
+
+- 6ed2b9c: HTML reports are smaller: they embed the diff packed (`packDiffJSON`, format `kgdiff.diff.packed`, schema `schema/diff-packed.v1.json`), with its unchanged elements, which are most of a large diff, stored as tables of indices into one string table. For 100k nodes / 300k edges the embedded diff goes from 68.7 MB to 19.3 MB, 6.8 MB to 3.2 MB gzipped, and the report opens as fast. `unpackDiffJSON` gives the `DiffJSON` back byte for byte; the viewer reads packed and unpacked payloads (`ReportPayload.diff` is either), so older reports still open. The standalone viewer bundle budget goes from 100 kB to 105 kB (min + gzip) for the unpacking and the consistency checks of `diffFromJSON`.
+
+### Patch Changes
+
+- 638c617: `diffFromJSON` is about 30% faster on large diffs, so HTML reports open about 20% sooner: a report of 100k nodes / 300k edges is ready in 1.0 s instead of 1.24 s in headless Chrome. Rebuilding the two graphs was most of `diffFromJSON`. The snapshots `diffToJSON` writes are already canonical, so they are now read straight into graphs, and each union edge keeps the edge it was read into instead of looking it up again. A document `normalize` would change (parallel edges, a repeated id, a dangling end, a hand-edited snapshot) is normalized as before, as fast as before. The result is the same, field for field and in the same order: `diffToJSON(diffFromJSON(j))` is still `j`, byte for byte, the graph hashes are unchanged, and every consistency check still runs.
+- 6d34966: The standalone viewer bundle, which every HTML report inlines, no longer carries the facet names
+  of `facetLabel`: they are kept apart from the hunk phrasebooks that `formatHunk` reads, which
+  saves 0.2 kB (min + gzip). Behaviour is unchanged. The bundle's size ceiling goes from 105 kB to
+  130 kB, so a feature no longer has to raise it, and the HTML report overhead budget (without data
+  or compute add-on) from 120 kB to 135 kB gzip, so it still covers the bundle.
+- 5286e02: The viewer's CSS custom properties are renamed from `--kg-*` to `--kgdiff-*`. They are not documented API yet; a page that set one of the old names on `<kgdiff-viewer>` sets the new name instead, and the canvas now follows it too, not only the panels. Styles are one shared constructable stylesheet, parsed once for every viewer on the page, instead of `<style>` elements in each. Inside, `<kgdiff-viewer>` is now built from a headless session and regions bound to it (RFC 0001, phase 1); its attributes, properties, methods, events and HTML reports are unchanged.
+- Updated dependencies [638c617]
+- Updated dependencies [f957a49]
+- Updated dependencies [ed1c3c9]
+- Updated dependencies [212c48c]
+- Updated dependencies [f02bc72]
+- Updated dependencies [6ed2b9c]
+- Updated dependencies [6d34966]
+  - @kgdiff/core@0.5.0
+  - @kgdiff/formats@0.5.0
+  - @kgdiff/layout@0.5.0
+  - @kgdiff/renderer@0.5.0
+  - @kgdiff/scene@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

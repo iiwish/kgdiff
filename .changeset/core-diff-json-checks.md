@@ -1,5 +1,0 @@
----
-'@kgdiff/core': minor
----
-
-`diffFromJSON` checks that a diff document is consistent before it returns, and throws `invalid-input` naming the first contradiction: an element whose versions do not fit its status (an added node with a before id, a removed edge with an after snapshot), an unchanged element with facets or a hunk, a changed one outside every hunk, a repeated id, an edge whose endpoints are not union nodes or disagree with its snapshots, a hunk that lists elements that are not its own, delta ops owned by two hunks or out of range, hunks out of review order, a summary or stats that do not match the elements, or a delta whose base or target is another graph (by content hash). Until now such a document was read as it was, and a viewer could show wrong counts or export a delta for other graphs. Everything kgdiff writes passes. `diffFromJSON` is also about 10% faster on large diffs: edges are found by their key instead of by a canonical JSON fingerprint. `schema/diff.v1.json` states the same rules per element (versions by status; facets and hunk by status).

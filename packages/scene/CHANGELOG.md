@@ -1,5 +1,19 @@
 # @kgdiff/scene
 
+## 0.5.0
+
+### Patch Changes
+
+- Updated dependencies [638c617]
+- Updated dependencies [f957a49]
+- Updated dependencies [ed1c3c9]
+- Updated dependencies [212c48c]
+- Updated dependencies [f02bc72]
+- Updated dependencies [6ed2b9c]
+- Updated dependencies [6d34966]
+  - @kgdiff/core@0.5.0
+  - @kgdiff/layout@0.5.0
+
 ## 0.4.0
 
 ### Patch Changes
