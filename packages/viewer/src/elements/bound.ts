@@ -13,7 +13,7 @@
  *   the root, which owns the keyboard map.
  */
 import { forwardKey, type Region, uiContext, type ViewerContext, viewerContext } from '../bind.js';
-import { requestContext } from '../context.js';
+import { type Context, type ContextProviderEvent, requestContext } from '../context.js';
 import type { KgdiffBoundElement, KgdiffRootElement } from '../index.js';
 import { type ElementName, elementSheet, stylesheet } from '../styles.js';
 import { ALL_TOPICS } from '../topics.js';
@@ -32,6 +32,53 @@ function inside(el: Element, host: Element): boolean {
 function byId(el: Element, id: string): Element | null {
   const tree = el.getRootNode() as { getElementById?: (id: string) => Element | null };
   return tree.getElementById?.(id) ?? el.ownerDocument.getElementById(id);
+}
+
+/**
+ * Find the provider of `context` for `consumer`: the nearest one around it when `id` is empty,
+ * else the element of that id as `consumer` sees it (its own tree first, then the document),
+ * now, once that element provides `context` (the protocol replays the request), or once a
+ * provider of that id announces itself. `answer` gets the first value only, and none after the
+ * returned function cancels (a rebinding or a disconnection).
+ */
+export function bindContext<T>(
+  consumer: Element,
+  context: Context<T>,
+  id: string | null,
+  answer: (value: T) => void,
+): () => void {
+  let live = true;
+  const once = (value: T): void => {
+    if (!live) return;
+    live = false;
+    answer(value);
+  };
+  if (!id) {
+    requestContext(consumer, context, once);
+    return () => {
+      live = false;
+    };
+  }
+  const named = byId(consumer, id);
+  if (named) {
+    requestContext(consumer, context, once, named);
+    return () => {
+      live = false;
+    };
+  }
+  // No element of that id yet: wait for a provider of that id to announce itself.
+  const onProvider = (e: Event): void => {
+    const host = e.composedPath()[0];
+    if ((e as ContextProviderEvent<unknown>).context?.key !== context.key) return;
+    if (!(host instanceof Element) || host.id !== id) return;
+    document.removeEventListener('context-provider', onProvider);
+    requestContext(consumer, context, once, host);
+  };
+  document.addEventListener('context-provider', onProvider);
+  return () => {
+    live = false;
+    document.removeEventListener('context-provider', onProvider);
+  };
 }
 
 /** Define `name` once (another copy of the library may have defined it first). */
@@ -110,8 +157,6 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
 
   protected readonly shadow: ShadowRoot;
   #ctx: ViewerContext | null = null;
-  /** Bumped on every (re)binding: answers to an older request are ignored. */
-  #generation = 0;
   readonly #release: (() => void)[] = [];
 
   constructor() {
@@ -175,30 +220,10 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
   }
 
   #bind(): void {
-    const generation = ++this.#generation;
-    const answer = (ctx: ViewerContext): void => {
-      if (generation === this.#generation && this.#ctx === null) this.#attach(ctx);
-    };
-    const id = this.getAttribute('for');
-    if (!id) {
-      requestContext(this, viewerContext, answer);
-      return;
-    }
-    const root = byId(this, id);
-    if (root) {
-      // Answered now, or replayed when that element becomes a root.
-      requestContext(this, viewerContext, answer, root);
-      return;
-    }
-    // No element of that id yet: wait for a root of that id to announce itself.
-    const onProvider = (e: Event): void => {
-      const host = e.composedPath()[0];
-      if (!(host instanceof Element) || host.id !== id) return;
-      document.removeEventListener('context-provider', onProvider);
-      requestContext(this, viewerContext, answer, host);
-    };
-    document.addEventListener('context-provider', onProvider);
-    this.#release.push(() => document.removeEventListener('context-provider', onProvider));
+    const cancel = bindContext(this, viewerContext, this.getAttribute('for'), (ctx) =>
+      this.#attach(ctx),
+    );
+    this.#release.push(cancel);
   }
 
   #attach(ctx: ViewerContext): void {
@@ -210,7 +235,6 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
   }
 
   #unbind(): void {
-    this.#generation++;
     this.#ctx = null;
     for (const fn of this.#release.splice(0)) fn();
     this.shadow.replaceChildren();
