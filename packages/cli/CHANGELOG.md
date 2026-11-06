@@ -1,5 +1,33 @@
 # @kgdiff/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- 764535e: The terminal summary and the Markdown summary (so the GitHub Action's pull request comment too) list the possible matches: pairings kgdiff considered but did not apply, between a node listed as removed and one listed as added. Until now only the viewer's detail panel showed them, so "removed “Saudi Aramco”, added “Aramco”" gave no hint that the two may be one entity. Each line names both nodes (with their ids when the names are equal), the score, why it was not applied (below `--threshold`, or too close to another candidate) and the label and neighbourhood evidence, and a closing line says how to pair one: a synonym, a replacement link or a lower threshold. At most 10 in the terminal (all with `--limit 0`) and 20 in Markdown; `--json` keeps every suggestion.
+- 3f6e7d8: Changes to definitions are flagged ⚑ for review first. A reworded definition can change what existing data means while the diff looks small, and it used to be folded into `~1 attribute` among the other edits. Now a line under the diffstat bar counts the hunks that change one (`⚑ Review first: definition changed in 9 hunks`, also in `--stat`), each of their rows says so before its summary (`content · ⚑ definition · ~2 attributes`), and the Markdown summary, so the GitHub Action's pull request comment too, lists them in a ⚑ _Review first_ block before the phase groups. By default kgdiff watches `def` (OBO), `definition` (kgdiff JSON), `IAO:0000115` and `skos:definition`; the new `--watch-attr <key>` (repeatable) replaces that list, e.g. `--watch-attr rdfs:comment` for schema.org-style vocabularies. `TextContext` and `MarkdownOptions` take the same list as `watch`, and `DEFAULT_WATCH_ATTRS` and `watchedChanges` are exported.
+- 6ed2b9c: HTML reports are smaller: they embed the diff packed (`packDiffJSON`, format `kgdiff.diff.packed`, schema `schema/diff-packed.v1.json`), with its unchanged elements, which are most of a large diff, stored as tables of indices into one string table. For 100k nodes / 300k edges the embedded diff goes from 68.7 MB to 19.3 MB, 6.8 MB to 3.2 MB gzipped, and the report opens as fast. `unpackDiffJSON` gives the `DiffJSON` back byte for byte; the viewer reads packed and unpacked payloads (`ReportPayload.diff` is either), so older reports still open. The standalone viewer bundle budget goes from 100 kB to 105 kB (min + gzip) for the unpacking and the consistency checks of `diffFromJSON`.
+
+### Patch Changes
+
+- 86f4583: The bug report link of an unexpected error takes the platform and the Node.js version from `CliIO.runtime` instead of reading `process` in `main`, so `main` keeps taking every side effect from `io` and runs in hosts other than Node.js. `nodeIO()` fills it in, so the link is unchanged for the `kgdiff` command; a custom `io` without `runtime` gets a link that names only the CLI version.
+- 088671c: Link unexpected CLI errors to a bug-report form prefilled with public version and runtime
+  metadata, without including error messages or input paths in the URL.
+- f02bc72: Similarity matching no longer pairs two same-named nodes on their label alone when their types conflict. With `--match similarity` nothing is matched in the first round, so the neighbour evidence was missing for every pair and an equal label outweighed disjoint types: “Mercury” the planet (orbiting the Sun) and “Mercury” the element (with symbol Hg) were reported as one node whose type changed. Such a pair (both nodes typed, no type and no attribute in common, neighbours not matched yet) now waits for the next round, when propagation brings in the neighbours; the two Mercurys share none, so they are reported as removed and added with a possible match below the threshold, as `--match auto` already did. A type change that the neighbours confirm is still matched, and nodes without edges are matched as before.
+- Updated dependencies [638c617]
+- Updated dependencies [f957a49]
+- Updated dependencies [ed1c3c9]
+- Updated dependencies [212c48c]
+- Updated dependencies [f02bc72]
+- Updated dependencies [6ed2b9c]
+- Updated dependencies [6d34966]
+- Updated dependencies [5286e02]
+  - @kgdiff/core@0.5.0
+  - @kgdiff/viewer@0.5.0
+  - @kgdiff/formats@0.5.0
+  - @kgdiff/layout@0.5.0
+  - @kgdiff/scene@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
