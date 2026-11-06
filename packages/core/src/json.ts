@@ -5,7 +5,13 @@
  * (unchanged elements are stored once). Everything else derived from the graphs — labels,
  * types, degrees, edge keys, `hierarchical`, the index — is rebuilt by `diffFromJSON`.
  */
-import { attrsEqual, canonicalJSON, isEmptyAttrs, tripleKey } from './canonical.js';
+import {
+  attrsEqual,
+  canonicalJSON,
+  hasParallelSuffix,
+  isEmptyAttrs,
+  tripleKey,
+} from './canonical.js';
 import { checkConsistency } from './consistency.js';
 import { nodeInput } from './delta.js';
 import { toUnionEdge, toUnionNode } from './diff.js';
@@ -308,6 +314,9 @@ export function canonicalGraphs(json: DiffJSON, mode: EdgeIdentity): RebuiltGrap
 }
 
 function readCanonical(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs | undefined {
+  // Parallel copies of a triple are keyed `#2`, `#3`… by normalizing, and their union ids show
+  // it: no need to read the graphs to find that out.
+  if (mode === 'structure' && json.edges.some((e) => hasParallelSuffix(e.id))) return undefined;
   // A repeated id or key is caught by the size of the map not growing (the overwritten entry
   // does not matter: the whole read is given up).
   const issues: GraphIssue[] = [];

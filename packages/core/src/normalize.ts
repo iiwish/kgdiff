@@ -22,7 +22,7 @@ import type {
   NormalizeOptions,
   Point,
 } from './types.js';
-import { compareStrings, EMPTY, isRecord, sortedUnique } from './util.js';
+import { compareStrings, EMPTY, isRecord, pushTo, sortedUnique } from './util.js';
 
 /**
  * Untrusted input record: every field is validated before use. Besides `NodeInput`, the
@@ -551,17 +551,10 @@ export function adjacencyOf(
 ): Adjacency | undefined {
   const outgoing = new Map<Id, EdgeKey[]>();
   const incoming = new Map<Id, EdgeKey[]>();
-  const link = (adjacent: Map<Id, EdgeKey[]>, id: Id, key: EdgeKey): boolean => {
-    const list = adjacent.get(id);
-    if (list) list.push(key);
-    else if (!nodes || nodes.has(id)) adjacent.set(id, [key]);
-    else return false;
-    return true;
-  };
   for (const edge of edges.values()) {
-    if (!link(outgoing, edge.source, edge.key) || !link(incoming, edge.target, edge.key)) {
-      return undefined;
-    }
+    if (nodes && !(nodes.has(edge.source) && nodes.has(edge.target))) return undefined;
+    pushTo(outgoing, edge.source, edge.key);
+    pushTo(incoming, edge.target, edge.key);
   }
   return { outgoing, incoming };
 }
