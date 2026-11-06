@@ -71,6 +71,7 @@ const SUBPATHS: Readonly<Record<string, string>> = {
   'elements/search': 'elements/search.ts',
   'elements/filters': 'elements/filters.ts',
   session: 'headless.ts',
+  panels: 'panels.ts',
 };
 
 describe('ESM subpaths', () => {
@@ -115,6 +116,9 @@ describe('ESM subpaths', () => {
     }
     expect(of('elements/root').text).toContain('kgdiff:review:');
     expect(of('session').text).not.toContain('customElements.define');
+    // The panels syntax is for the CLI too: no DOM, nothing else.
+    expect(of('panels').text).not.toMatch(/customElements|document\.|HTMLElement/);
+    expect(of('panels').gzip).toBeLessThan(1024);
     for (const s of sizes) expect(s.gzip, s.name).toBeLessThanOrEqual(of('.').gzip);
   }, 120_000);
 });

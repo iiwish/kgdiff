@@ -12,14 +12,9 @@
 import { parseArgs } from 'node:util';
 import type { DiffOptions, EdgeIdentity, Locale, MatchOptions } from '@kgdiff/core';
 import type { FormatId } from '@kgdiff/formats';
-import type {
-  PanelRegion,
-  PanelState,
-  ThemePreference,
-  ViewerMode,
-  ViewerPanels,
-  ViewerScope,
-} from '@kgdiff/viewer';
+import type { ThemePreference, ViewerMode, ViewerPanels, ViewerScope } from '@kgdiff/viewer';
+// The viewer's own panels syntax (no DOM): `--panels` reads exactly what `panels` does.
+import { PANEL_REGIONS, PANEL_STATES, parsePanels } from '@kgdiff/viewer/panels';
 import { CliError } from './errors.js';
 import { matchLocale } from './locale.js';
 import type { ColorMode } from './style.js';
@@ -45,28 +40,6 @@ const THEMES: readonly ThemePreference[] = ['auto', 'light', 'dark'];
 const MODES: readonly (ViewerMode | 'changes')[] = ['overlay', 'swipe', 'replay', 'changes'];
 const SCOPES: readonly ViewerScope[] = ['all', 'changes'];
 const COLOR_MODES: readonly ColorMode[] = ['auto', 'always', 'never'];
-/** The viewer's panel regions and states (`ViewerPanels`), for `--panels`. */
-const PANEL_REGIONS = [
-  'list',
-  'detail',
-  'search',
-  'filters',
-  'dock',
-  'transport',
-  'legend',
-  'zoom',
-  'minimap',
-  'title',
-  'actions',
-] as const satisfies readonly PanelRegion[];
-const PANEL_STATES = ['open', 'collapsed', 'hidden'] as const satisfies readonly PanelState[];
-// Every region and state of the viewer is listed above.
-const _everyRegion: Exclude<PanelRegion, (typeof PANEL_REGIONS)[number]> extends never
-  ? true
-  : never = true;
-const _everyState: Exclude<PanelState, (typeof PANEL_STATES)[number]> extends never ? true : never =
-  true;
-
 /** Default `--limit`. */
 export const DEFAULT_LIMIT = 50;
 
@@ -256,37 +229,38 @@ function usageError(message: string, hint = HELP_HINT): CliError {
 
 /**
  * `--panels "detail:collapsed minimap:hidden"` (pairs separated by spaces or commas, the option
- * repeatable), the syntax of the viewer's `panels` attribute; a region named twice takes the
- * last state.
+ * repeatable), read by the viewer's own parser; a region named twice takes the last state. The
+ * first pair it rejects becomes a usage error that says what is wrong with it.
  */
-function parsePanels(values: readonly string[]): ViewerPanels | undefined {
-  const out: { -readonly [R in PanelRegion]?: PanelState } = {};
+function panelsOption(values: readonly string[]): ViewerPanels | undefined {
+  const { panels, invalid } = parsePanels(values.join(' '));
+  const [token] = invalid;
+  if (token !== undefined) throw panelsError(token);
+  return Object.keys(panels).length > 0 ? panels : undefined;
+}
+
+/** Why `parsePanels` rejected `token`: not a pair, an unknown region, or an unknown state. */
+function panelsError(token: string): CliError {
   const regions = `Regions: ${PANEL_REGIONS.join(', ')}; states: ${PANEL_STATES.join(', ')}.`;
-  for (const token of values.flatMap((v) => v.split(/[\s,]+/)).filter((t) => t !== '')) {
-    const [region = '', state, ...rest] = token.split(':');
-    if (state === undefined || rest.length > 0) {
-      throw usageError(
-        `Invalid value "${token}" for --panels.`,
-        `Expected region:state pairs, e.g. --panels "detail:collapsed minimap:hidden". ${regions}`,
-      );
-    }
-    if (!(PANEL_REGIONS as readonly string[]).includes(region)) {
-      const close = suggest(region, PANEL_REGIONS);
-      throw usageError(
-        `Unknown panel region "${region}" in --panels.`,
-        `${close ? `Did you mean "${close}"? ` : ''}${regions}`,
-      );
-    }
-    if (!(PANEL_STATES as readonly string[]).includes(state)) {
-      const close = suggest(state, PANEL_STATES);
-      throw usageError(
-        `Invalid state "${state}" for the ${region} panel in --panels.`,
-        `${close ? `Did you mean "${close}"? ` : ''}Expected one of: ${PANEL_STATES.join(', ')}.`,
-      );
-    }
-    out[region as PanelRegion] = state as PanelState;
+  const [region = '', state, ...rest] = token.split(':');
+  if (state === undefined || rest.length > 0) {
+    return usageError(
+      `Invalid value "${token}" for --panels.`,
+      `Expected region:state pairs, e.g. --panels "detail:collapsed minimap:hidden". ${regions}`,
+    );
   }
-  return Object.keys(out).length > 0 ? out : undefined;
+  if (!(PANEL_REGIONS as readonly string[]).includes(region)) {
+    const close = suggest(region, PANEL_REGIONS);
+    return usageError(
+      `Unknown panel region "${region}" in --panels.`,
+      `${close ? `Did you mean "${close}"? ` : ''}${regions}`,
+    );
+  }
+  const close = suggest(state, PANEL_STATES);
+  return usageError(
+    `Invalid state "${state}" for the ${region} panel in --panels.`,
+    `${close ? `Did you mean "${close}"? ` : ''}Expected one of: ${PANEL_STATES.join(', ')}.`,
+  );
 }
 
 function choice<T extends string>(name: string, value: string, choices: readonly T[]): T {
@@ -564,7 +538,7 @@ function parseDiff(argv: readonly string[]): Command {
       : mode === 'changes'
         ? 'changes'
         : undefined;
-  const panels = parsePanels(v.strings('panels'));
+  const panels = panelsOption(v.strings('panels'));
   const limit = v.string('limit');
   const languages = parseLanguages(v);
   const title = v.string('title');

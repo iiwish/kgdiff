@@ -158,7 +158,7 @@
 - **键盘。** 键盘映射归根元素所有（`shortcuts`、`keymap`）。在根元素内部的元素里按键，通过冒泡到达根元素；用 `for` 绑定的元素会转发它的按键。
 - **无障碍。** 变更列表和详情面板是带标签的区域；ARIA 的 id 引用都在同一个元素内部（列表的选项、搜索的结果）；跨元素只用焦点移动（选择搜索结果会聚焦变更列表）和根元素唯一的实时区域播报。
 - **主题。** 根元素上的令牌由它内部的元素继承；在根元素子树之外、用 `for` 绑定的元素采用根元素的内置令牌集；页面在根元素上的覆盖不会到达它，需要在该元素上也设置一遍。
-- **包。** `import '@kgdiff/viewer'` 定义所有元素。每个元素还有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`…/stage`、`…/change-list`、`…/change-detail`、`…/search`、`…/filters`。`@kgdiff/viewer/session` 是不带 DOM 的无界面会话（`createSession`、`DiffSession`）。
+- **包。** `import '@kgdiff/viewer'` 定义所有元素。每个元素还有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`…/stage`、`…/change-list`、`…/change-detail`、`…/search`、`…/filters`。`@kgdiff/viewer/session` 是不带 DOM 的无界面会话（`createSession`、`DiffSession`），`@kgdiff/viewer/panels` 是面板写法的解析（`parsePanels`、`PANEL_REGIONS`、`PANEL_STATES`），命令行的 `--panels` 也用它。
 
 ## 主题
 
