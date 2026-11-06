@@ -107,6 +107,18 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 });
 ```
 
+### 把你的内容放在画布上
+
+画布有五个插槽可以放你页面的内容：`top-start` 和 `top-end`（在标题和操作按钮下方）、`bottom-start`、`bottom-center` 和 `bottom-end`。每次适应视图和飞行定位时，图都会避开放在那里的内容来取景。
+
+```html
+<kgdiff-viewer style="height: 640px">
+  <my-status-card slot="top-end"></my-status-card>
+</kgdiff-viewer>
+```
+
+放进插槽的界面元素会替换内置的那个区域，例如用 `<kgdiff-legend slot="bottom-start" variant="mini">` 代替图例卡片（[见下文](#自己组合布局)）；`panels` 对其余区域照常生效。查看器较窄时的紧凑布局里，`top-end` 的内容移到缩放按钮下方，底部的内容移到视图坞上方：那里空间不多，内容要小。
+
 ## 嵌入一段循环回放
 
 要在别的页面上用一小块区域展示图的变化，可以去掉审阅界面，让回放循环播放：
@@ -121,14 +133,21 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 
 查看器由一些元素组成，这些元素你也可以自己摆放（在 0.6 中是实验性的：稳定之前可能在次版本中变化）。`<kgdiff-root>` 持有 diff 会话，本身不显示任何东西；其他元素无论放在哪里都显示它的一部分：放在它里面，或者用 `for="<根元素 id>"` 放在页面任意位置。
 
-| 元素                     | 显示                                 |
-| ------------------------ | ------------------------------------ |
-| `<kgdiff-root>`          | 不显示：拥有查看器的属性、方法和事件 |
-| `<kgdiff-stage>`         | 图，以及视图坞、控制条、图例和缩放   |
-| `<kgdiff-change-list>`   | 变更列表和审阅进度                   |
-| `<kgdiff-change-detail>` | 选中的变更                           |
-| `<kgdiff-search>`        | 节点搜索，结果在弹出层里             |
-| `<kgdiff-filters>`       | 筛选标签                             |
+| 元素                     | 显示                                                          |
+| ------------------------ | ------------------------------------------------------------- |
+| `<kgdiff-root>`          | 不显示：拥有查看器的属性、方法和事件                          |
+| `<kgdiff-stage>`         | 图，以及它自己的视图坞、控制条、图例、缩放按钮和小地图        |
+| `<kgdiff-change-list>`   | 变更列表和审阅进度                                            |
+| `<kgdiff-change-detail>` | 选中的变更                                                    |
+| `<kgdiff-search>`        | 节点搜索，结果在弹出层里                                      |
+| `<kgdiff-filters>`       | 筛选标签                                                      |
+| `<kgdiff-view-dock>`     | 视图坞：对比方式、仅看变更和上下文跳数                        |
+| `<kgdiff-transport>`     | 回放控制条，只在回放模式下显示                                |
+| `<kgdiff-legend>`        | 图例：卡片（`open` 反映它是否展开）或一行（`variant="mini"`） |
+| `<kgdiff-zoom>`          | 放大、缩小和适应视图，作用于一块画布                          |
+| `<kgdiff-minimap>`       | 一块画布的小地图，在图有一部分不在视野里时显示                |
+| `<kgdiff-title>`         | 品牌标识和对比的两个版本名                                    |
+| `<kgdiff-actions>`       | 外观菜单（主题、配色、语言）和快捷键对话框                    |
 
 ### 把变更列表放进你自己的侧栏
 
@@ -153,10 +172,43 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 ```
 
 - 用你自己的 CSS 布局这些元素；给画布和列表一个高度。`<kgdiff-root>` 以 `display: contents` 渲染，它的子元素直接参与你的布局。
-- 画布的插槽（`top-start`、`top-end`、`bottom-start`、`bottom-center`、`bottom-end`）把你的内容放在画布上，图会避开它来取景。你自己定位的内容，调用 `stage.registerObstacle(element)`。
-- 键盘映射属于根元素：`j` / `k`、`x`、`/` 等在绑定到它的每个元素里都有效，`/` 聚焦搜索。`shortcuts` 和 `keymap` 设在根元素上。
+- 画布的插槽（`top-start`、`top-end`、`bottom-start`、`bottom-center`、`bottom-end`）把你的内容放在画布上，图会避开它来取景。放进插槽的界面元素（视图坞、控制条、图例、缩放按钮或小地图）替换画布自己的那个，画布的 `panels` 对其余区域照常生效。
+- 放在其他任何地方的元素，无论是否盖在画布上，适应视图和飞行定位都不会避开它，除非你登记它：`stage.registerObstacle(element)`。
+- `<kgdiff-zoom>` 和 `<kgdiff-minimap>` 作用于一块画布：离它最近的外层画布，或者 `stage="<id>"` 指定的页面上任意一块（`zoom.stageId`，找到的画布是 `zoom.stageElement`）。放在 `<kgdiff-viewer>` 里时，它们作用于查看器的画布。其他元素和变更列表一样显示根元素的会话。
+- 键盘映射属于根元素：`j` / `k`、`x`、`/` 等在绑定到它的每个元素里都有效，`/` 聚焦搜索，`?` 打开 `<kgdiff-actions>` 的快捷键对话框，对话框列出 `keymap` 生效后实际绑定的按键。`shortcuts` 和 `keymap` 设在根元素上。`+`、`−` 和 `f` 键缩放、适应根元素的每一块画布。
 - 组合出来的元素什么也不记：布局归你的页面所有。
-- 每个元素都有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`/stage`、`/change-list`、`/change-detail`、`/search`、`/filters`。
+- 每个元素都有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`/stage`、`/change-list`、`/change-detail`、`/search`、`/filters`、`/view-dock`、`/transport`、`/legend`、`/zoom`、`/minimap`、`/title`、`/actions`。
+
+### 前后两版并排对比
+
+```html
+<kgdiff-root id="diff">
+  <div class="pair">
+    <kgdiff-stage version="before" panels="dock:hidden transport:hidden"></kgdiff-stage>
+    <kgdiff-stage version="after" panels="dock:hidden transport:hidden legend:hidden"></kgdiff-stage>
+  </div>
+  <kgdiff-change-list></kgdiff-change-list>
+</kgdiff-root>
+
+<style>
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 480px; }
+  kgdiff-change-list { display: block; height: 240px; }
+</style>
+```
+
+一个根元素，两块画布：无论什么模式，每块只画一个版本（`version="before"`、`version="after"`，并有一个标签写明版本），各有自己的相机、缩放按钮和小地图。选中、悬停、筛选和搜索属于根元素：在列表里选一项变更（或按 `j`），两块画布都会把它带进视野，各自按自己的版本取景；在一块画布上悬停的节点，两块里都会高亮。需要“仅看变更”时加上 `<kgdiff-view-dock>`，也可以在两块画布上方放 `<kgdiff-title>` 和 `<kgdiff-actions>`。
+
+### 只用画布和控制条的回放
+
+```html
+<kgdiff-root mode="replay" loop>
+  <kgdiff-stage panels="dock:hidden transport:hidden legend:hidden" style="height: 360px">
+  </kgdiff-stage>
+  <kgdiff-transport></kgdiff-transport>
+</kgdiff-root>
+```
+
+控制条放在画布下方而不是盖在上面，用来播放、单步和拖动根元素的回放；它只在回放模式下显示。如果把它放进画布的插槽 `<kgdiff-transport slot="bottom-center">`，它会替换画布自己的控制条，浮在画布上，图会避开它（保留 `dock:hidden`）。
 
 ## 用 CSS 定制主题
 

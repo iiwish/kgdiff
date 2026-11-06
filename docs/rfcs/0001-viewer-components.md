@@ -1,8 +1,9 @@
 # RFC 0001: Composable viewer components
 
-- **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)). Phase 1 is
-  implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13); phase 2 is
-  in progress.
+- **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)). Phases 1 and 2
+  are implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13;
+  [PR #37](https://github.com/iiwish/kgdiff/pull/37), merged as 22f28c6); phase 3 is in review
+  (see [Phase 3 results](#phase-3-results)).
 - **Date:** 2026-11-06
 - **Prototype:** the branch `spike/viewer-components` was never merged and was deleted on
   2026-11-06; its findings are in [Prototype results](#prototype-results)
@@ -467,3 +468,112 @@ names) brought it to 113.21 kB. Each subpath bundled on its own (min + gzip): ro
 (the session and the canvas), stage 18.2, change-list 13.2, change-detail 16.5, search 11.9,
 filters 10.2; the elements other than root leave the session out. `@kgdiff/viewer/panels`
 (0.6 kB) is the panels syntax without DOM, which the CLI's `--panels` reads with too.
+
+## Phase 3 results
+
+Phase 3 split `StageView` out of the controller and made the canvas chrome elements, marked
+experimental like the rest. Where it departs from the design above, or decides what it left
+open:
+
+- **What is a view's, what is the session's.** A view (one per stage) has the canvas, the
+  camera, fits and flights (with the user-camera grace and following), the tooltip's position
+  and the minimaps. The session keeps the selection, the mode and scope, the replay clock, the
+  filters, the search, the review state, theme and language, and **the hover too**: §1 put
+  hover in the view, but a node hovered in one of two stages side by side is highlighted in
+  both, which is what comparing them asks for (each stage places its own tooltip). `fit()` on
+  the root and the `f`, `+`, `−` keys reach every view, since the root's keyboard has no notion
+  of a current stage; a stage's own zoom buttons, and `<kgdiff-zoom>`, act on that view alone.
+  The first fit frames the whole scene, the same in every stage; flights to a change frame it
+  in each stage's version.
+- **One setting per view: `version`.** `<kgdiff-stage version="before|after">` (property
+  `version`, `null` follows the mode; another value is ignored with a warning) draws one
+  version whatever the mode, with a chip naming it and no swipe divider or replay caption. A
+  mode per stage was left out: the replay clock, the divider and the scope would have to split
+  with it, and side by side needs none of that.
+- **`elements/root` has no renderer.** `<kgdiff-root>` creates a plain `DiffSession`; each
+  stage creates its view and adds it to the session. `<kgdiff-viewer>` keeps a
+  `ViewerController`, a session with its one built-in view, so its API and behaviour are
+  unchanged. The one-stage-per-root warning is gone.
+- **The chrome as elements reuses the region classes**: the stage's chrome and the header were
+  split into `Dock`, `Transport`, `Legend`, `ZoomBar`, `Title` and `Actions` first (a refactor
+  commit, the viewer suite unchanged), then wrapped in `<kgdiff-view-dock>`,
+  `<kgdiff-transport>`, `<kgdiff-legend>`, `<kgdiff-zoom>`, `<kgdiff-minimap>`,
+  `<kgdiff-title>` and `<kgdiff-actions>`, each with its subpath.
+- **Binding to a view: `stage="<id>"`, `stageId`, `stageElement`.** Zoom and the minimap bind
+  to the nearest stage (the stage context, `kgdiff.stage/1`) or to the one `stage` names.
+  Not a second `for`: `for` binds a root everywhere else, and an element inside one root's
+  layout may act on a stage of another. The property is `stageId`, as `htmlFor` mirrors `for`,
+  because a `stage` property would read as the element; the read-only `stageElement` is the
+  stage found (or null while it waits), as `popoverTargetElement` resolves `popovertarget`. A
+  `<kgdiff-viewer>` provides the stage context too: zoom and minimap elements inside it (or
+  naming it) act on its built-in view, so `stageElement` is a stage or a viewer.
+- **The other chrome elements bind to the session** (`for`, `htmlFor`, `root`). The legend has
+  `variant="full|mini"` (one attribute, not a boolean `mini`) and a boolean `open` that
+  reflects the reader's toggle, as `<details>` does; the minimap carries `overview` while the
+  whole graph is in view and hides then, which a page can override in CSS; the transport shows
+  in replay mode only; the actions open their menu and dialog in place, and `?` in a composed
+  root opens the dialog of a `<kgdiff-actions>` bound to it (a `help` focus target, like `/`
+  and the search).
+- **Replacement.** A chrome element slotted into a stage replaces that region: the stage draws
+  it no more, whatever its `panels` says, and `panels` keeps applying to the rest; taking the
+  element out brings the stage's own back, in the state `panels` gives it. The title and the
+  actions have no region in a stage; in `<kgdiff-viewer>` they stay where they are and follow
+  `panels` (`title:hidden`). Placed anywhere else, over the canvas or not, a chrome element is
+  no obstacle unless registered: the stage cannot tell a card floated over it from one beside
+  it.
+- **`<kgdiff-viewer>` has the stage's slots.** Its built-in stage is built with them: the
+  default layout's DOM gains the corner wrappers and the slots, and the viewer suite passed
+  unchanged. The top corners sit under the title and the actions. In the compact layout the
+  zoom buttons stay under the actions, the top-end content goes under them and the bottom
+  content above the full-width dock; with content in every corner of a phone-sized canvas they
+  overlap, as there is no room.
+- **The shortcuts dialog lists the keys bound after `keymap`** (left open in phase 2): a
+  rebound key shows where it acts, an unbound shortcut is left out, and a row of shortcuts that
+  no longer has one key each splits into a row per shortcut. The dialog of `<kgdiff-actions>`
+  leaves out `\`, which does nothing in a composed root. The default dialog is unchanged.
+- **Accessibility checks** (the Testing section's per-region snapshots, as assertions rather
+  than snapshots) found and fixed: no name on the zoom toolbar (and no vertical orientation),
+  the appearance menu and the search's results; a `<kgdiff-stage>` that was a `main` landmark,
+  now a region named after the graph and its version; the replay's end announced twice (the
+  pill was a status too); the page's top-corner content tabbing after the dock. What happy-dom
+  cannot check is listed in [interaction.md](../interaction.md#accessibility).
+- **Not done:** the Custom Elements Manifest and generated docs, framework recipes, the
+  experimental marks, the reduced session surface (`@kgdiff/viewer/session`, the `session`
+  property): phase 4. A stage whose minimap is replaced still draws its own, hidden.
+
+Measured in Chrome (the desktop app's browser pane) on `examples/datasets/enterprise-kg`
+(75 nodes, 12 changes), with the dev harness's `/components/` page, which gained two stages of
+one root side by side (D) and a replay of a stage and a transport alone (E):
+
+| Check                                          | Result                                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Side by side: selection                        | Both stages flew to the change, each framing it in its version (k 1.07 and 1.17)            |
+| Side by side: zoom buttons                     | The before stage's `+` zoomed it alone; the after stage's camera did not move               |
+| Side by side: replay from `<kgdiff-view-dock>` | The page's transport showed; both chips stayed, no caption on the pinned stages             |
+| `?` in the composed root                       | Opened the `<kgdiff-actions>` dialog; Escape gave focus back to the canvas                  |
+| Replay of a stage and a transport (E)          | The transport's play button played the root's replay; the stage's dock and transport hidden |
+| Viewer slots (content in all five)             | Placed under the HUD and above the corners' chrome; the fit framed the graph clear of them  |
+| Viewer compact (375 px)                        | Zoom at 64 px under the actions, top-end at 174 px, bottom content above the dock           |
+| Tab order in the viewer                        | Canvas, the page's top-end button, legend, zoom, dock, actions, sidebar: as the tests pin   |
+| Host card in A (both sizes)                    | 0 of 75 nodes under it after a fit                                                          |
+
+The browser tool's key events carry no `key`, so `?` was dispatched from the page; Tab moved
+focus natively.
+
+Size (min + gzip, local zlib; `kgdiff-viewer.js` under the 130 kB ceiling), per commit:
+
+| Commit                                          | Standalone | root | stage |
+| ----------------------------------------------- | ---------: | ---: | ----: |
+| main (22f28c6)                                  |      113.2 | 88.1 |  18.2 |
+| several stages per root, each with its own view |      113.9 | 64.1 |  43.2 |
+| the canvas chrome and the header as UI classes  |      114.4 | 64.1 |  43.7 |
+| the canvas chrome as elements                   |      115.4 | 64.3 |  44.0 |
+| the stage's slots on `<kgdiff-viewer>`          |      115.5 | 64.3 |  44.0 |
+| the shortcuts dialog lists the keys bound       |      115.9 | 64.3 |  44.0 |
+| name every region and announce once             |      116.0 | 64.4 |  44.1 |
+
+Each subpath bundled on its own, at the end (min + gzip, kB): root 64.4, stage 44.1,
+change-list 13.5, change-detail 16.8, search 12.2, filters 10.5, view-dock 12.1, transport 12.8,
+legend 11.9, zoom 11.2, minimap 9.9, title 10.4, actions 16.0, panels 0.6. The renderer comes
+with a stage only, the session with the root only: the subpath test checks both for every
+element.
