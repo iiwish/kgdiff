@@ -138,6 +138,7 @@ export function nodeIO(): CliIO {
     stderrIsTTY: process.stderr.isTTY === true,
     stdinIsTTY: process.stdin.isTTY === true,
     columns: process.stdout.isTTY ? process.stdout.columns : undefined,
+    runtime: `${process.platform} ${process.arch}, Node.js ${process.version}`,
     now: () => new Date(),
     makeTempDir: () => mkdtemp(join(tmpdir(), 'kgdiff-')),
     openFile,

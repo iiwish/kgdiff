@@ -143,6 +143,7 @@ export function createTestIO(options: TestIOOptions = {}): {
     stderrIsTTY: options.stderrIsTTY ?? false,
     stdinIsTTY: options.stdinIsTTY ?? false,
     columns: options.columns,
+    runtime: 'testos x64, Node.js v0.0.0',
     now: () => options.now ?? new Date('2026-11-01T12:00:00.000Z'),
     makeTempDir: async () => `/tmp/kgdiff-${++temps}`,
     openFile: options.openFile ?? (async (path) => void opened.push(path)),
