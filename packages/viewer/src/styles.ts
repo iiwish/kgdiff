@@ -86,6 +86,8 @@ kbd {
 .corner.bottom-start { bottom: 16px; left: 16px; align-items: flex-start; }
 .corner.bottom-end { bottom: 16px; right: 16px; align-items: flex-end; }
 .corner > .float { position: static; }
+/* A minimap slotted in replaces the stage's own: hidden while everything is in view, as it is. */
+::slotted(kgdiff-minimap:state(overview)) { display: none; }
 /* <kgdiff-viewer>: the top corners sit under the title and the actions. */
 .root .corner.top-start, .root .corner.top-end { top: 64px; }
 
@@ -731,7 +733,7 @@ const ELEMENT_STYLES: Readonly<Record<ElementName, string>> = {
 :host([hidden]) { display: none; }`,
   minimap: /* css */ `
 :host { ${HOST} display: block; position: relative; width: 184px; height: 128px; }
-:host([hidden]), :host([overview]) { display: none; }
+:host([hidden]) { display: none; }
 .minimap-host { width: 100%; height: 100%; }`,
   title: /* css */ `
 :host { ${HOST} display: inline-block; max-width: 100%; }

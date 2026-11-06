@@ -4,7 +4,7 @@
  * view (the nearest, or `stage="<id>"`), the others on the session; placed outside a stage they
  * are no obstacle unless registered.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../src/index.js';
 import type { ChromeLayout } from '../src/framing.js';
 import type {
@@ -16,8 +16,30 @@ import type {
 } from '../src/index.js';
 import { setRenderBackend } from '../src/renderer-port.js';
 import type { DiffSession } from '../src/session.js';
+import { STYLES } from '../src/styles.js';
 import { StageView } from '../src/view.js';
 import { MockMinimap, type MockRenderer, mockBackend, tick, zoo } from './support.js';
+
+/**
+ * happy-dom has no `ElementInternals`: custom states, enough to read them back (the elements
+ * are constructed in the tests, after this runs).
+ */
+const states = new WeakMap<Element, Set<string>>();
+const hadInternals = 'attachInternals' in HTMLElement.prototype;
+if (!hadInternals) {
+  Object.defineProperty(HTMLElement.prototype, 'attachInternals', {
+    configurable: true,
+    value(this: HTMLElement) {
+      const set = new Set<string>();
+      states.set(this, set);
+      return { states: set };
+    },
+  });
+}
+afterAll(() => {
+  if (hadInternals) return;
+  delete (HTMLElement.prototype as { attachInternals?: unknown }).attachInternals;
+});
 
 let backend: ReturnType<typeof mockBackend>;
 
@@ -173,7 +195,7 @@ describe('<kgdiff-zoom> and <kgdiff-minimap>', () => {
     expect(rendererOf(stage).camera.zooms).toHaveLength(1);
   });
 
-  it('draw a minimap of the stage’s view, marked overview while it all fits', async () => {
+  it('draw a minimap of the stage’s view, in the overview state while it all fits', async () => {
     const destroyed = vi.spyOn(MockMinimap.prototype, 'destroy');
     const root = place<Root>(`<kgdiff-root><kgdiff-stage>
       <kgdiff-minimap slot="bottom-end"></kgdiff-minimap>
@@ -187,16 +209,43 @@ describe('<kgdiff-zoom> and <kgdiff-minimap>', () => {
     expect($(stage, '.minimap-host').dataset.panel).toBe('hidden');
     expect($(minimap, '.minimap-host').getAttribute('aria-label')).toBeTruthy();
     expect(minimap.overview).toBe(true);
-    expect(minimap.hasAttribute('overview')).toBe(true);
+    expect(states.get(minimap)?.has('overview')).toBe(true);
+    // A custom state, not an attribute: the host's attributes are the page's.
+    expect(minimap.hasAttribute('overview')).toBe(false);
+    // Slotted into a stage it replaces the stage's own, and hides in overview as that one does.
+    expect(STYLES).toContain('::slotted(kgdiff-minimap:state(overview)) { display: none; }');
     // The user zooms in on the canvas.
     const r = rendererOf(stage);
     r.camera.zoomBy(4);
     r.emit('camera', { ...r.camera.state, source: 'user' });
     root.controller.flush();
     expect(minimap.overview).toBe(false);
-    expect(minimap.hasAttribute('overview')).toBe(false);
+    expect(states.get(minimap)?.has('overview')).toBe(false);
     minimap.remove();
     expect(destroyed).toHaveBeenCalledOnce();
+  });
+
+  it('keep a minimap the page places shown in overview, the state set for its CSS', async () => {
+    const root = place<Root>(`<kgdiff-root><kgdiff-stage id="s"></kgdiff-stage></kgdiff-root>
+      <aside><kgdiff-minimap stage="s"></kgdiff-minimap></aside>`);
+    const minimap = document.querySelector('kgdiff-minimap') as KgdiffMinimapElement;
+    await loaded(root);
+    await tick(20);
+    expect(minimap.overview).toBe(true);
+    expect(states.get(minimap)?.has('overview')).toBe(true);
+    expect(minimap.attributes).toHaveLength(1);
+    // The element's own rules leave it shown: the page opts in to hiding it.
+    const rules = (minimap.shadowRoot?.adoptedStyleSheets ?? []).flatMap((sheet) =>
+      [...sheet.cssRules].map((rule) => rule.cssText),
+    );
+    expect(rules.some((rule) => rule.startsWith(':host'))).toBe(true);
+    expect(rules.filter((rule) => rule.startsWith(':host') && rule.includes('overview'))).toEqual(
+      [],
+    );
+    // Unbound, it is not in overview.
+    minimap.remove();
+    expect(minimap.overview).toBe(false);
+    expect(states.get(minimap)?.has('overview')).toBe(false);
   });
 
   it('are no obstacle outside the stage unless registered', async () => {

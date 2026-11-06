@@ -188,7 +188,7 @@ the page with `for="<root id>"`.
 | `<kgdiff-transport>`     | the replay transport, in replay mode                                              |
 | `<kgdiff-legend>`        | the legend: a card (`open` reflects whether it is) or one line (`variant="mini"`) |
 | `<kgdiff-zoom>`          | zoom in, zoom out and fit, for one stage                                          |
-| `<kgdiff-minimap>`       | one stage's minimap, while part of the graph is out of view                       |
+| `<kgdiff-minimap>`       | one stage's minimap (`:state(overview)` while the whole graph is in view)         |
 | `<kgdiff-title>`         | the brand and the names of the versions compared                                  |
 | `<kgdiff-actions>`       | the appearance menu (theme, colors, language) and the shortcuts dialog            |
 
@@ -226,6 +226,9 @@ the page with `for="<root id>"`.
   one `stage="<id>"` names anywhere on the page (`zoom.stage`, and `zoom.stageElement` for
   the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements
   show the root's session, like the change list.
+- A minimap you place yourself stays shown while the whole graph is in view, so your layout
+  does not move; hide it in place with `kgdiff-minimap:state(overview) { visibility: hidden }`.
+  Slotted into a stage, it hides then, as the stage's own does.
 - The keyboard map belongs to the root: `j` / `k`, `x`, `/` and the rest work in every element
   bound to it, `/` focuses the search and `?` opens the shortcuts dialog of a
   `<kgdiff-actions>`, which lists the keys bound after `keymap`. `shortcuts` and `keymap` go on
