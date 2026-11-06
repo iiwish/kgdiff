@@ -238,7 +238,8 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     stage.view = view;
     stage.setVersion(this.#version);
     release(ctx.controller.addView(view));
-    view.attach(stage.canvasHost, stage.minimapHost);
+    // The stage adds its own minimap to the view (unless a slotted one replaces it).
+    view.attach(stage.canvasHost, null);
     view.setChrome(() => stage.chromeLayout());
     this.#setView(view);
     release(() => {

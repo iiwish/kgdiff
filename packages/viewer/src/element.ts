@@ -125,7 +125,8 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
       this.#loadRemembered();
       this.#layoutReady = true;
     }
-    this.controller.attach(ui.stage.canvasHost, ui.stage.minimapHost);
+    // The stage adds its own minimap to the view (unless a slotted one replaces it).
+    this.controller.attach(ui.stage.canvasHost, null);
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
     const canvas = this.#canvas();
     if (canvas) {

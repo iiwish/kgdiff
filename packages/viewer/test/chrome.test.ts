@@ -204,9 +204,10 @@ describe('<kgdiff-zoom> and <kgdiff-minimap>', () => {
     const minimap = root.querySelector('kgdiff-minimap') as KgdiffMinimapElement;
     await loaded(root);
     await tick(20);
-    // The stage's own minimap and this one.
-    expect(backend.minimaps).toHaveLength(2);
+    // This one only: the stage creates none of its own while it is replaced.
+    expect(backend.minimaps).toHaveLength(1);
     expect($(stage, '.minimap-host').dataset.panel).toBe('hidden');
+    expect($(stage, '.minimap-host').childElementCount).toBe(0);
     expect($(minimap, '.minimap-host').getAttribute('aria-label')).toBeTruthy();
     expect(minimap.overview).toBe(true);
     expect(states.get(minimap)?.has('overview')).toBe(true);
@@ -223,6 +224,12 @@ describe('<kgdiff-zoom> and <kgdiff-minimap>', () => {
     expect(states.get(minimap)?.has('overview')).toBe(false);
     minimap.remove();
     expect(destroyed).toHaveBeenCalledOnce();
+    // Taken out: the stage's own comes back, drawn again.
+    await tick();
+    expect(backend.minimaps).toHaveLength(2);
+    expect($(stage, '.minimap-host').dataset.panel).toBe('open');
+    await tick(20);
+    expect(backend.minimaps[1]?.updates).toBeGreaterThan(0);
   });
 
   it('keep a minimap the page places shown in overview, the state set for its CSS', async () => {
@@ -413,6 +420,8 @@ describe('in <kgdiff-viewer>', () => {
     expect($(viewer, '.zoom-bar').dataset.panel).toBe('hidden');
     expect($(viewer, '.minimap-host').dataset.panel).toBe('open');
     expect($(viewer, '.dock-bar').dataset.panel).toBe('collapsed');
+    // The viewer's own minimap, drawn: nothing slotted replaces it.
+    expect(backend.minimaps).toHaveLength(1);
     const legend = viewer.querySelector('kgdiff-legend') as KgdiffLegendElement;
     expect(legend.rootElement).toBe(viewer);
     expect($(legend, '.mini-legend')).not.toBeNull();

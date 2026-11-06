@@ -55,8 +55,36 @@ export class Stage {
   readonly el: HTMLElement;
   readonly canvasHost: HTMLElement;
   readonly minimapHost: HTMLElement;
+  #view: StageView | null = null;
+  /** Removes the stage's own minimap from the view; null while it has none. */
+  #ownMinimap: (() => void) | null = null;
+
   /** The view drawing this stage's canvas (its camera, minimap, framing), once attached. */
-  view: StageView | null = null;
+  get view(): StageView | null {
+    return this.#view;
+  }
+
+  set view(view: StageView | null) {
+    if (view === this.#view) return;
+    this.#ownMinimap?.();
+    this.#ownMinimap = null;
+    this.#view = view;
+    this.#syncMinimap();
+  }
+
+  /**
+   * The view draws the stage's own minimap unless a slotted `<kgdiff-minimap>` replaces it:
+   * none is created, or drawn, while one is, and it comes back when that one leaves.
+   */
+  #syncMinimap(): void {
+    const view = this.#view;
+    const own = view !== null && !this.#replaced.has('minimap');
+    if (own && !this.#ownMinimap) this.#ownMinimap = view.addMinimap(this.minimapHost);
+    else if (!own && this.#ownMinimap) {
+      this.#ownMinimap();
+      this.#ownMinimap = null;
+    }
+  }
   readonly #chrome: HTMLElement;
   readonly #liveCanvasLabel: HTMLElement;
   // Replay
@@ -296,6 +324,7 @@ export class Stage {
       this.#replaced.clear();
       for (const r of replaced) this.#replaced.add(r);
       this.#applyPanels();
+      this.#syncMinimap();
       this.onReplaced?.();
     }
     this.view?.layoutChanged();
