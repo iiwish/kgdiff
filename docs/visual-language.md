@@ -185,8 +185,7 @@ are inside the viewport (van Wijk–Nuij, ρ = √2, duration `clamp(S·620 ms, 
 - Crisp at any DPR (canvas sized in device pixels; `pixelRatio ≤ 3`).
 - Batch strokes by style (one `stroke()` per style bucket); halos drawn from cached sprites.
 - Culling against the viewport with a margin; LOD hides what cannot be read.
-- No layout thrash: one `ResizeObserver`; one frame loop that sleeps when idle (animation frames,
-  with a 32 ms timer when a hidden container holds them back).
+- No layout thrash: one `ResizeObserver`; one `requestAnimationFrame` loop that sleeps when idle.
 - 60 fps pan/zoom at 5k nodes / 10k edges; inertia on pan; zoom anchored at the cursor; pinch.
 
 ## Implementation reference (scene v0.1)

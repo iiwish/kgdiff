@@ -89,6 +89,21 @@ describe('context protocol', () => {
     expect(got).toEqual(['root']);
   });
 
+  it('forgets waiting requests of consumers that left the document', () => {
+    const root = provider('root');
+    const gone = document.createElement('span');
+    const stays = document.createElement('span');
+    root.append(gone, stays);
+    document.body.append(root);
+    const goneGot = ask(gone);
+    gone.remove();
+    const staysGot = ask(stays);
+    root.append(gone);
+    provideContext(root, ctx, () => 'root');
+    expect(staysGot).toEqual(['root']);
+    expect(goneGot).toEqual([]);
+  });
+
   it('stops answering once the provider stops', () => {
     const root = provider('root');
     const child = document.createElement('span');

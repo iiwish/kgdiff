@@ -603,13 +603,26 @@ ins.hl { text-decoration: none; background: var(--kgdiff-added-soft); color: var
 }
 `;
 
-let shared: CSSStyleSheet | null = null;
+/**
+ * A stylesheet of `doc` holding `css`. A constructed sheet can only be adopted in the document
+ * it was made for, so it is made with that document's own `CSSStyleSheet` (a viewer moved into
+ * an iframe or a popup gets sheets of its new document).
+ */
+export function sheetFor(doc: Document, css: string): CSSStyleSheet {
+  const Sheet = (doc.defaultView as (Window & typeof globalThis) | null)?.CSSStyleSheet;
+  const sheet = new (Sheet ?? CSSStyleSheet)();
+  sheet.replaceSync(css);
+  return sheet;
+}
 
-/** `STYLES` as a stylesheet, parsed once (constructable sheets also satisfy strict CSPs). */
-export function stylesheet(): CSSStyleSheet {
-  if (!shared) {
-    shared = new CSSStyleSheet();
-    shared.replaceSync(STYLES);
+const shared = new WeakMap<Document, CSSStyleSheet>();
+
+/** `STYLES` as a stylesheet of `doc`, parsed once per document. */
+export function stylesheet(doc: Document): CSSStyleSheet {
+  let sheet = shared.get(doc);
+  if (!sheet) {
+    sheet = sheetFor(doc, STYLES);
+    shared.set(doc, sheet);
   }
-  return shared;
+  return sheet;
 }

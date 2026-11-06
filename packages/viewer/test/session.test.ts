@@ -1,16 +1,20 @@
 /**
  * The session / view boundary (RFC 0001 §1): `DiffSession` runs without a renderer, tells its
- * views what to draw and frame, and owns the search query. The frame scheduler races animation
- * frames against a timer, so loading never stalls where frames do not come.
+ * views what to draw and frame, and owns the search query. Its frame loop runs on animation
+ * frames only; one-off work (loading steps) races a frame against a timer, so loading never
+ * stalls where frames do not come.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Rect } from '@kgdiff/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cancelFrame, FRAME_TIMEOUT, nextPaint, requestFrame } from '../src/schedule.js';
+import type { KgdiffViewer } from '../src/element.js';
+import '../src/index.js';
+import { setRenderBackend } from '../src/renderer-port.js';
+import { FRAME_TIMEOUT, frameOrTimeout, nextPaint, requestFrame } from '../src/schedule.js';
 import { DiffSession, type SessionView, type Topic } from '../src/session.js';
-import { manualDeps, recordingHost, tick, zoo } from './support.js';
+import { manualDeps, mockBackend, recordingHost, tick, zoo } from './support.js';
 
 class RecordingView implements SessionView {
   readonly calls: string[] = [];
@@ -123,39 +127,80 @@ describe('DiffSession', () => {
   });
 });
 
-describe('requestFrame', () => {
+describe('scheduling', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    setRenderBackend(null);
+    document.body.textContent = '';
   });
 
-  it('runs on a timer when animation frames do not come (hidden containers)', async () => {
-    vi.stubGlobal('requestAnimationFrame', () => 1);
-    vi.stubGlobal('cancelAnimationFrame', () => undefined);
+  /** Animation frames that come only when `flush` is called (none: a background tab). */
+  function heldFrames(): { flush(): void; cancelled: number[] } {
+    const queued = new Map<number, (t: number) => void>();
+    const cancelled: number[] = [];
+    let id = 0;
+    vi.stubGlobal('requestAnimationFrame', (f: (t: number) => void) => {
+      queued.set(++id, f);
+      return id;
+    });
+    vi.stubGlobal('cancelAnimationFrame', (n: number) => {
+      cancelled.push(n);
+      queued.delete(n);
+    });
+    return {
+      cancelled,
+      flush: () => {
+        const due = [...queued.values()];
+        queued.clear();
+        for (const f of due) f(performance.now());
+      },
+    };
+  }
+
+  it('runs the frame loop on animation frames only: no timer draws while they are held', async () => {
+    const frames = heldFrames();
     const cb = vi.fn();
     requestFrame(cb);
+    await tick(FRAME_TIMEOUT + 20);
+    expect(cb).not.toHaveBeenCalled();
+    frames.flush();
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not let one-off work wait for frames that never come (loading in hidden containers)', async () => {
+    heldFrames();
+    const cb = vi.fn();
+    frameOrTimeout(cb);
     await tick(FRAME_TIMEOUT + 20);
     expect(cb).toHaveBeenCalledTimes(1);
     await expect(nextPaint()).resolves.toBeUndefined();
   });
 
-  it('runs once, on whichever comes first, and can be cancelled', async () => {
-    let frame: ((t: number) => void) | null = null;
-    vi.stubGlobal('requestAnimationFrame', (f: (t: number) => void) => {
-      frame = f;
-      return 7;
-    });
-    const cancelled = vi.fn();
-    vi.stubGlobal('cancelAnimationFrame', cancelled);
+  it('runs one-off work once, on the frame when it comes first', async () => {
+    const frames = heldFrames();
     const cb = vi.fn();
-    requestFrame(cb);
-    (frame as unknown as (t: number) => void)(5);
+    frameOrTimeout(cb);
+    frames.flush();
     await tick(FRAME_TIMEOUT + 20);
     expect(cb).toHaveBeenCalledTimes(1);
-    expect(cb).toHaveBeenCalledWith(5);
-    expect(cancelled).toHaveBeenCalledWith(7);
-    const never = vi.fn();
-    cancelFrame(requestFrame(never));
-    await tick(FRAME_TIMEOUT + 20);
-    expect(never).not.toHaveBeenCalled();
+    expect(frames.cancelled).toEqual([1]);
+  });
+
+  it('loads a looping replay without frames, and plays it only when frames come', async () => {
+    const frames = heldFrames();
+    setRenderBackend(mockBackend());
+    const el = document.createElement('kgdiff-viewer') as KgdiffViewer;
+    el.setAttribute('mode', 'replay');
+    el.setAttribute('loop', '');
+    document.body.append(el);
+    await el.load(zoo());
+    expect(el.controller.status).toBe('ready');
+    expect(el.controller.clock?.playing).toBe(true);
+    await tick(FRAME_TIMEOUT * 3);
+    expect(el.controller.clock?.t).toBe(0);
+    frames.flush();
+    await tick(20);
+    frames.flush();
+    expect(el.controller.clock?.t).toBeGreaterThan(0);
   });
 });

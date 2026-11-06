@@ -8,7 +8,7 @@
 import type { SceneHunk } from '@kgdiff/scene';
 import { attr, h, icon, replace, setText } from '../dom.js';
 import type { ListItem } from '../list-model.js';
-import { requestFrame } from '../schedule.js';
+import { frameOrTimeout } from '../schedule.js';
 import type { Topic } from '../session.js';
 import { sceneHunkGlyph, type UiContext } from './context.js';
 
@@ -200,7 +200,7 @@ export class ChangeList {
   #queueWindow(): void {
     if (this.#scrollQueued) return;
     this.#scrollQueued = true;
-    requestFrame(() => {
+    frameOrTimeout(() => {
       this.#scrollQueued = false;
       this.renderWindow();
     });

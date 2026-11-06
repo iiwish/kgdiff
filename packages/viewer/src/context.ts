@@ -57,6 +57,8 @@ function collect(): void {
   if (collecting || typeof document === 'undefined') return;
   collecting = true;
   document.addEventListener('context-request', (e) => {
+    // Consumers that left the document since they asked are forgotten, closures and all.
+    for (const w of waiting) if (!w.consumer.isConnected) waiting.delete(w);
     const r = e as ContextRequestEvent<unknown>;
     waiting.add({
       context: r.context,

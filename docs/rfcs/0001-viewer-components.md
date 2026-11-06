@@ -93,10 +93,12 @@ done in phase 3 (decision 6).
 The public surface of the session is deliberately smaller than the class is today: a read-only
 state snapshot, commands, and `subscribe(topics, listener)`. Internal fields stay internal.
 
-**Scheduling.** The session advances with animation frames and falls back to a timer when
-frames do not come. The prototype found that a hidden embedding container pauses
-`requestAnimationFrame` without the page reporting itself hidden, so loading stalled forever;
-racing a frame against a 32 ms timer fixed it.
+**Scheduling.** The session's frame loop advances with animation frames only, so it pauses
+where the browser pauses them (a looping replay in a background tab costs nothing) and never
+draws a frame that is not presented. One-off work that must not wait forever, the loading steps
+above all, races a frame against a 32 ms timer: the prototype found that a hidden embedding
+container pauses `requestAnimationFrame` without the page reporting itself hidden, so loading
+stalled forever. (Phase 1 first raced every frame; review kept the timer to one-off work.)
 
 ### 2. Binding: the context protocol
 
