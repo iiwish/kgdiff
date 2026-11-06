@@ -11,6 +11,7 @@
 import { attr, h, icon, iconButton, moveFocusOut, relabel } from '../dom.js';
 import type { PanelRegion, PanelState, PanelStates } from '../index.js';
 import { SIDEBAR_REGIONS } from '../panels.js';
+import { frameOrTimeout } from '../schedule.js';
 import type { Topic } from '../session.js';
 import type { ChangeList } from './change-list.js';
 import type { UiContext } from './context.js';
@@ -203,8 +204,15 @@ export class Sidebar {
     this.#relabel();
   }
 
-  /** Apply sizes (remembered, or after a drag); the width is clamped when the layout is known. */
-  setSizes(width: number, detailShare: number | null): void {
+  /**
+   * Apply sizes (after a drag, or `instant`: remembered ones, which must not animate in on
+   * load); the width is clamped when the layout is known.
+   */
+  setSizes(width: number, detailShare: number | null, instant = false): void {
+    if (instant) {
+      this.el.classList.add('dragging');
+      frameOrTimeout(() => this.el.classList.remove('dragging'));
+    }
     this.#width = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, Math.round(width)));
     this.#share = detailShare === null ? null : Math.max(0, Math.min(1, detailShare));
     this.el.style.setProperty('--sidebar-w', `${this.#width}px`);

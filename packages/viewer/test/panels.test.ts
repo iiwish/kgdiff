@@ -337,6 +337,18 @@ describe('persistence', () => {
     expect(second.panels.detail).toBe('collapsed');
   });
 
+  it('opens at the remembered sizes, without animating to them', async () => {
+    remember({ panels: {}, sidebarWidth: 420, detailShare: 0.4 });
+    const el = mount();
+    const sidebar = $(el, '.sidebar');
+    expect(sidebar.style.getPropertyValue('--sidebar-w')).toBe('420px');
+    expect(sidebar.style.getPropertyValue('--detail-share')).toBe('0.4');
+    expect(sidebar.classList.contains('dragging')).toBe(true);
+    await tick(60);
+    expect(sidebar.classList.contains('dragging')).toBe(false);
+    expect($(el, '.sb-resize').getAttribute('aria-valuenow')).toBe('420');
+  });
+
   it('host attribute > remembered > the report’s view > default', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     remember({ panels: { detail: 'open', zoom: 'hidden' } });

@@ -337,7 +337,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
       c.setLocale(r.locale);
       c.explicit.add('locale');
     }
-    this.#ui?.sidebar.setSizes(r.sidebarWidth ?? SIDEBAR_WIDTH, r.detailShare ?? null);
+    this.#ui?.sidebar.setSizes(r.sidebarWidth ?? SIDEBAR_WIDTH, r.detailShare ?? null, true);
     // The first states are not a change: no event.
     const ready = this.#layoutReady;
     this.#layoutReady = false;
@@ -477,7 +477,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     };
     stage.el.addEventListener('pointerenter', hover(true));
     stage.el.addEventListener('pointerleave', hover(false));
-    sidebar.setSizes(SIDEBAR_WIDTH, null);
+    sidebar.setSizes(SIDEBAR_WIDTH, null, true);
     this.#applyPanels();
     this.#applyChrome();
   }
