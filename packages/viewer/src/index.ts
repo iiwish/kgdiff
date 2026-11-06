@@ -308,10 +308,10 @@ export interface KgdiffRootElement extends HTMLElement {
  * your choosing, such as 320px).
  *
  * The canvas has the slots of `<kgdiff-stage>` (`top-start`, `top-end`, `bottom-start`,
- * `bottom-center`, `bottom-end`; the top ones under the title and the actions): a child with
- * `slot="top-end"` goes over the canvas, kept clear of fits and flights. A chrome element
- * slotted in replaces the built-in region; `<kgdiff-zoom>` and `<kgdiff-minimap>` inside the
- * viewer act on its canvas.
+ * `bottom-center`, `bottom-end`; the top ones under the title and the actions while those
+ * show): a child with `slot="top-end"` goes over the canvas, kept clear of fits and flights. A
+ * chrome element slotted in replaces the built-in region of its kind, the title and the
+ * actions included; `<kgdiff-zoom>` and `<kgdiff-minimap>` inside the viewer act on its canvas.
  */
 export interface KgdiffViewerElement extends KgdiffRootElement {
   /**

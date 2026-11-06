@@ -149,8 +149,9 @@ what you put there, at every fit and flight.
 ```
 
 A chrome element slotted there replaces the built-in region: `<kgdiff-legend slot="bottom-start"
-variant="mini">` instead of the legend card, say ([below](#compose-your-own-layout)); `panels`
-keeps applying to every other region. In the compact layout of a narrow viewer the top-end
+variant="mini">` instead of the legend card, say, or `<kgdiff-title slot="top-start">` and
+`<kgdiff-actions slot="top-end">` instead of the title and the actions, which then sit where
+those did ([below](#compose-your-own-layout)); `panels` keeps applying to every other region. In the compact layout of a narrow viewer the top-end
 content moves under the zoom buttons and the bottom content above the dock: keep it small there.
 
 

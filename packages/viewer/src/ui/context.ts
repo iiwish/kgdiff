@@ -23,6 +23,11 @@ export interface UiActions {
   setLocale(locale: Locale): void;
   toggleSidebar(open?: boolean): void;
   sidebarOpen(): boolean;
+  /**
+   * Whether the layout has a sidebar to toggle now (`<kgdiff-viewer>`, unless its four regions
+   * are hidden); absent where there is none (a composed root).
+   */
+  hasSidebar?(): boolean;
   toggleMenu(open?: boolean): void;
   openHelp(): void;
   /** Show and focus the search (`/`). */

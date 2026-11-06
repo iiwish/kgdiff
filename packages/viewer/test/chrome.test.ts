@@ -422,4 +422,40 @@ describe('in <kgdiff-viewer>', () => {
     $<HTMLButtonElement>(zoom, '.zoom-bar button').click();
     expect(backend.last().camera.zooms).toHaveLength(1);
   });
+
+  it('lets a slotted title or actions replace the HUD’s, as every chrome element does', async () => {
+    const viewer = place<Viewer & { layout: { panels: Record<string, string> } }>(
+      `<kgdiff-viewer>
+        <kgdiff-title slot="top-start"></kgdiff-title>
+        <kgdiff-actions slot="top-end"></kgdiff-actions>
+      </kgdiff-viewer>`,
+      'kgdiff-viewer',
+    );
+    await loaded(viewer);
+    expect($(viewer, '.hud-title').dataset.panel).toBe('hidden');
+    expect($(viewer, '.hud-end').dataset.panel).toBe('hidden');
+    expect($(viewer, '.hud-end').inert).toBe(true);
+    // The page's declaration and the resolved states are unchanged: the region is replaced.
+    expect(viewer.layout.panels.title).toBe('open');
+    // The corners move up into the HUD's place, so the elements sit where it did.
+    expect($(viewer, '.stage-wrap').dataset.hud).toBe('');
+    // Bound to a viewer, the actions have its sidebar toggle, kept up with the layout.
+    const actions = viewer.querySelector('kgdiff-actions') as Element;
+    const buttons = [...(actions.shadowRoot?.querySelectorAll('.hud-actions button') ?? [])];
+    expect(buttons).toHaveLength(3);
+    const toggle = buttons[2] as HTMLButtonElement;
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    toggle.click();
+    expect(viewer.layout.panels.list).toBe('collapsed');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    viewer.setAttribute('panels', 'list:hidden detail:hidden search:hidden filters:hidden');
+    expect(toggle.hidden).toBe(true);
+    // Taken out, the HUD's own come back.
+    viewer.querySelector('kgdiff-title')?.remove();
+    actions.remove();
+    await tick();
+    expect($(viewer, '.hud-title').dataset.panel).toBe('open');
+    expect($(viewer, '.hud-end').dataset.panel).toBe('open');
+    expect($(viewer, '.stage-wrap').dataset.hud).toBe('title actions');
+  });
 });

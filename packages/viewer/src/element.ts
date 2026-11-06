@@ -14,7 +14,7 @@
 
 import { provideContext } from './context.js';
 import { ViewerController } from './controller.js';
-import { h } from './dom.js';
+import { h, isOpen } from './dom.js';
 import { type StageViewContext, stageContext } from './elements/stage-context.js';
 import type {
   KgdiffViewerElement,
@@ -413,8 +413,14 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     ui.sidebar.setPanels(s);
     ui.stage.setPanels(s);
     const sidebar = SIDEBAR_REGIONS.some((r) => s[r] !== 'hidden');
-    ui.header.setPanels(s.title, s.actions, sidebar, () => this.#canvas());
+    // A `<kgdiff-title>` or `<kgdiff-actions>` slotted into the viewer replaces the HUD's.
+    const title = ui.stage.replaces('title') ? 'hidden' : s.title;
+    const actions = ui.stage.replaces('actions') ? 'hidden' : s.actions;
+    ui.header.setPanels(title, actions, sidebar, () => this.#canvas());
     ui.header.setSidebarState(this.#sidebarOpen);
+    // The top corners sit under what the HUD shows there.
+    const hud = [title === 'open' ? 'title' : '', actions === 'open' ? 'actions' : ''];
+    ui.stage.el.dataset.hud = hud.filter(Boolean).join(' ');
   }
 
   #canvas(): HTMLElement | null {
@@ -469,6 +475,7 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
       },
       toggleSidebar: (open) => this.#toggleSidebar(open),
       sidebarOpen: () => this.#sidebarOpen,
+      hasSidebar: () => SIDEBAR_REGIONS.some((r) => this.#states[r] !== 'hidden'),
       toggleMenu: (open) => this.#toggleMenu(open),
       openHelp: () => this.#ui?.help.show(),
       focusSearch: () => this.#focusSearch(),
@@ -488,6 +495,7 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     // The stage's slots are the viewer's: the page's content goes over the canvas.
     const stage = bindRegion(root, (ui) => new Stage(ui, true));
     stage.view = this.controller.view;
+    stage.onReplaced = () => this.#applyPanels();
     this.#provideStage(stage);
     const ui = uiContext(this.root, this.shadow);
     const menu = new Menu(ui);
@@ -497,7 +505,7 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
       {
         setPanel: (region, state) => this.#userPanels({ [region]: state }),
         resized: (width, share) => this.#resized(width, share),
-        focusOutside: () => (header.sidebarButton.hidden ? this.#canvas() : header.sidebarButton),
+        focusOutside: () => (isOpen(header.sidebarButton) ? header.sidebarButton : this.#canvas()),
       },
       list,
       search,
@@ -508,6 +516,8 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     header.attachMenu(menu.el);
     stage.el.appendChild(header.el);
     root.append(h('div', { class: 'body' }, stage.el, sidebar.el), help.el, this.root.live);
+    // Content slotted before the layout was built.
+    stage.slotted();
     this.#ui = { root, header, stage, list, sidebar, menu, help };
     // Close the menu on outside clicks.
     root.addEventListener('pointerdown', (e) => {

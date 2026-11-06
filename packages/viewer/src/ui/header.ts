@@ -155,6 +155,11 @@ export class Actions {
   setMenuState(open: boolean): void {
     attr(this.menuButton, 'aria-expanded', String(open));
   }
+
+  /** Whether the sidebar is open (the toggle's pressed state). */
+  setSidebarState(open: boolean): void {
+    if (this.sidebarButton) attr(this.sidebarButton, 'aria-pressed', String(open));
+  }
 }
 
 /** The default layout's HUD: the title and the actions over the canvas. */
@@ -186,7 +191,7 @@ export class Header {
   }
 
   setSidebarState(open: boolean): void {
-    attr(this.sidebarButton, 'aria-pressed', String(open));
+    this.actions.setSidebarState(open);
   }
 
   /**

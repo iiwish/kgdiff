@@ -521,17 +521,19 @@ open:
   in replay mode only; the actions open their menu and dialog in place, and `?` in a composed
   root opens the dialog of a `<kgdiff-actions>` bound to it (a `help` focus target, like `/`
   and the search).
-- **Replacement.** A chrome element slotted into a stage replaces that region: the stage draws
-  it no more, whatever its `panels` says, and `panels` keeps applying to the rest; taking the
-  element out brings the stage's own back, in the state `panels` gives it. The title and the
-  actions have no region in a stage; in `<kgdiff-viewer>` they stay where they are and follow
-  `panels` (`title:hidden`). Placed anywhere else, over the canvas or not, a chrome element is
+- **Replacement, one rule.** A chrome element slotted into a stage or a viewer replaces the
+  built-in region of its kind: it is drawn no more, whatever `panels` says (which keeps applying
+  to the rest, and keeps reading the page's declaration); taking the element out brings it back,
+  in the state `panels` gives it. In `<kgdiff-viewer>` that includes the title and the actions,
+  which a stage does not have; the top corners then move up into their place, and a
+  `<kgdiff-actions>` bound to a viewer has its sidebar toggle (kept up through
+  `kgdiff-layout`). Placed anywhere else, over the canvas or not, a chrome element is
   no obstacle unless registered: the stage cannot tell a card floated over it from one beside
   it.
 - **`<kgdiff-viewer>` has the stage's slots.** Its built-in stage is built with them: the
   default layout's DOM gains the corner wrappers and the slots, and the viewer suite passed
-  unchanged. The top corners sit under the title and the actions. In the compact layout the
-  zoom buttons stay under the actions, the top-end content goes under them and the bottom
+  unchanged. The top corners sit under the title and the actions while those show. In the
+  compact layout the zoom buttons stay under the actions, the top-end content goes under them and the bottom
   content above the full-width dock; with content in every corner of a phone-sized canvas they
   overlap, as there is no room.
 - **The shortcuts dialog lists the keys bound after `keymap`** (left open in phase 2): a

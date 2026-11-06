@@ -1,6 +1,7 @@
 /**
  * `<kgdiff-title>` (RFC 0001 §3; experimental): the kgdiff mark and the root's compared names
- * and versions. Binds to a root (`for`, `htmlFor`, `rootElement`). Importing this module defines it.
+ * and versions. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a
+ * `<kgdiff-viewer>` it replaces the title over its canvas. Importing this module defines it.
  */
 import type { Region } from '../bind.js';
 import type { KgdiffBoundElement } from '../index.js';

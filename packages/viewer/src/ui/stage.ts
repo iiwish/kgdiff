@@ -35,13 +35,18 @@ export const STAGE_SLOTS = [
   'bottom-end',
 ] as const;
 
-/** The chrome elements, by the stage region a slotted one replaces. */
-const CHROME_TAGS: Readonly<Record<string, StageRegion>> = {
+/** The chrome over a canvas: the stage's regions, and the viewer's title and actions. */
+export type ChromeRegion = StageRegion | 'title' | 'actions';
+
+/** The chrome elements, by the region a slotted one replaces. */
+const CHROME_TAGS: Readonly<Record<string, ChromeRegion>> = {
   'kgdiff-view-dock': 'dock',
   'kgdiff-transport': 'transport',
   'kgdiff-legend': 'legend',
   'kgdiff-zoom': 'zoom',
   'kgdiff-minimap': 'minimap',
+  'kgdiff-title': 'title',
+  'kgdiff-actions': 'actions',
 };
 
 type ChromeStates = Pick<PanelStates, StageRegion>;
@@ -81,7 +86,12 @@ export class Stage {
   readonly #versionChip = h('div', { class: 'version-chip chip card', hidden: true });
   /** The chrome's panel states, and the regions a slotted chrome element replaces. */
   #states: ChromeStates | null = null;
-  readonly #replaced = new Set<StageRegion>();
+  readonly #replaced = new Set<ChromeRegion>();
+  /**
+   * Called when the regions slotted elements replace change: the layout that draws the title
+   * and the actions (`<kgdiff-viewer>`) applies its panels again.
+   */
+  onReplaced: (() => void) | null = null;
   /** Whether the stage is a named region (`asRegion`) rather than the main landmark. */
   #region = false;
   /** The legend's state applied last: the user's toggle stands until it changes. */
@@ -273,7 +283,7 @@ export class Stage {
    * element replaces the built-in one.
    */
   slotted(): void {
-    const replaced = new Set<StageRegion>();
+    const replaced = new Set<ChromeRegion>();
     for (const slot of this.#slots) {
       for (const el of slot.assignedElements({ flatten: true })) {
         const region = CHROME_TAGS[el.localName];
@@ -286,8 +296,14 @@ export class Stage {
       this.#replaced.clear();
       for (const r of replaced) this.#replaced.add(r);
       this.#applyPanels();
+      this.onReplaced?.();
     }
     this.view?.layoutChanged();
+  }
+
+  /** Whether a chrome element slotted into the stage replaces `region`. */
+  replaces(region: ChromeRegion): boolean {
+    return this.#replaced.has(region);
   }
 
   /**

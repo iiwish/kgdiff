@@ -109,7 +109,7 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 
 ### 把你的内容放在画布上
 
-画布有五个插槽可以放你页面的内容：`top-start` 和 `top-end`（在标题和操作按钮下方）、`bottom-start`、`bottom-center` 和 `bottom-end`。每次适应视图和飞行定位时，图都会避开放在那里的内容来取景。
+画布有五个插槽可以放你页面的内容：`top-start` 和 `top-end`（在显示着的标题和操作按钮下方）、`bottom-start`、`bottom-center` 和 `bottom-end`。每次适应视图和飞行定位时，图都会避开放在那里的内容来取景。
 
 ```html
 <kgdiff-viewer style="height: 640px">
@@ -117,7 +117,7 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 </kgdiff-viewer>
 ```
 
-放进插槽的界面元素会替换内置的那个区域，例如用 `<kgdiff-legend slot="bottom-start" variant="mini">` 代替图例卡片（[见下文](#自己组合布局)）；`panels` 对其余区域照常生效。查看器较窄时的紧凑布局里，`top-end` 的内容移到缩放按钮下方，底部的内容移到视图坞上方：那里空间不多，内容要小。
+放进插槽的界面元素会替换内置的那个区域，例如用 `<kgdiff-legend slot="bottom-start" variant="mini">` 代替图例卡片，或者用 `<kgdiff-title slot="top-start">` 和 `<kgdiff-actions slot="top-end">` 代替标题和操作按钮，它们就放在原来的位置（[见下文](#自己组合布局)）；`panels` 对其余区域照常生效。查看器较窄时的紧凑布局里，`top-end` 的内容移到缩放按钮下方，底部的内容移到视图坞上方：那里空间不多，内容要小。
 
 ## 嵌入一段循环回放
 

@@ -54,9 +54,9 @@ the elements is [RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/
   the content is out of view.
 - **Slots**: the page's content in `slot="top-start"`, `top-end`, `bottom-start`,
   `bottom-center` or `bottom-end` of `<kgdiff-viewer>` goes over the canvas (the top ones under
-  the title and the actions, the bottom ones above the chrome of their corner) and is kept clear
-  of fits and flights. A chrome element slotted there replaces the built-in region
-  ([Elements](#elements-experimental)). In the compact layout the zoom buttons move under the
+  the title and the actions while those show, the bottom ones above the chrome of their corner)
+  and is kept clear of fits and flights. A chrome element slotted there replaces the built-in
+  region, the title and the actions included ([Elements](#elements-experimental)). In the compact layout the zoom buttons move under the
   actions, the top-end content under them, and the bottom content above the full-width dock.
 
 ## Panels
@@ -320,12 +320,13 @@ are stable.
   scheme the `stage` property reflects the attribute (setting '' removes it), the read-only
   `stageElement` is the stage found, or null while it waits, and `rootElement` is that stage's
   root.
-- **Replacing the built-in chrome.** Slotted into a stage (or a `<kgdiff-viewer>`), the view
-  dock, transport, legend, zoom or minimap element replaces the stage's own region; the stage's
-  `panels` keeps applying to the regions it still draws, and the element is kept clear of fits
-  and flights like any slotted content. `<kgdiff-title>` and `<kgdiff-actions>` have no
-  counterpart in a stage; the viewer's own title and actions follow its `panels`
-  (`title:hidden`). Placed anywhere else, over the canvas or not, a chrome element is not an
+- **Replacing the built-in chrome**, one rule for every chrome element: slotted into a stage
+  or a `<kgdiff-viewer>`, it replaces the built-in region of its kind (the view dock,
+  transport, legend, zoom or minimap; in the viewer the title and the actions too, a stage
+  having none); `panels` keeps applying to the regions still drawn (and still reads the page's
+  declaration), and the element is kept clear of fits and flights like any slotted content.
+  Taking it out brings the built-in one back. A `<kgdiff-actions>` bound to a viewer has the
+  sidebar toggle too. Placed anywhere else, over the canvas or not, a chrome element is not an
   obstacle unless registered with `stage.registerObstacle(element)`.
 - **`<kgdiff-legend>`**: `variant="full"` (the default) is the card, folded to its head until
   opened; the boolean `open` (property `open`) reflects whether it is, the reader's toggle
