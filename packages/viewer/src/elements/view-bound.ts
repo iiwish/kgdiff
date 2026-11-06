@@ -2,13 +2,14 @@
  * What the chrome that acts on one view shares (`<kgdiff-zoom>`, `<kgdiff-minimap>`; RFC 0001
  * §3): it binds to a stage, not to a root. The nearest `<kgdiff-stage>` around it (across
  * shadow roots, through the stage context `kgdiff.stage/1`), or the one its `stage="<id>"`
- * names anywhere on the page; a stage defined or bound later is found then. It shows what the
+ * names anywhere on the page (a `<kgdiff-viewer>` is the stage of what it holds, and can be
+ * named too); a stage defined or bound later is found then. It shows what the
  * stage's root says (language, tokens), acts on the stage's view, and follows the stage when it
  * binds again (a new view).
  */
 import type { Region } from '../bind.js';
 import { requestContext } from '../context.js';
-import type { KgdiffStageElement } from '../index.js';
+import type { KgdiffStageElement, KgdiffViewerElement } from '../index.js';
 import type { ElementName } from '../styles.js';
 import type { UiContext } from '../ui/context.js';
 import type { StageView } from '../view.js';
@@ -62,7 +63,7 @@ export abstract class ViewBoundElement extends HTMLElement {
   }
 
   /** The stage this element acts on, or null while it waits for one. */
-  get stageElement(): KgdiffStageElement | null {
+  get stageElement(): KgdiffStageElement | KgdiffViewerElement | null {
     return this.#stage?.stage ?? null;
   }
 

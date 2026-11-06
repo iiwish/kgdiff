@@ -12,8 +12,10 @@
  * reports every change.
  */
 
+import { provideContext } from './context.js';
 import { ViewerController } from './controller.js';
 import { h } from './dom.js';
+import { type StageViewContext, stageContext } from './elements/stage-context.js';
 import type {
   KgdiffViewerElement,
   LoadOptions,
@@ -483,8 +485,10 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     const search = bindRegion(root, (ui) => new Search(ui));
     const filters = bindRegion(root, (ui) => new Filters(ui));
     const detail = bindRegion(root, (ui) => new Detail(ui));
-    const stage = bindRegion(root, (ui) => new Stage(ui));
+    // The stage's slots are the viewer's: the page's content goes over the canvas.
+    const stage = bindRegion(root, (ui) => new Stage(ui, true));
     stage.view = this.controller.view;
+    this.#provideStage(stage);
     const ui = uiContext(this.root, this.shadow);
     const menu = new Menu(ui);
     const help = new HelpDialog(ui);
@@ -520,6 +524,25 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     sidebar.setSizes(SIDEBAR_WIDTH, null, true);
     this.#applyPanels();
     this.#applyChrome();
+  }
+
+  /**
+   * The viewer is the stage of the chrome that acts on a view (`<kgdiff-zoom>`,
+   * `<kgdiff-minimap>`) inside it or naming it with `stage`: its built-in stage's view.
+   */
+  #provideStage(stage: Stage): void {
+    const view = this.controller.view;
+    const ctx: StageViewContext = {
+      stage: this,
+      root: this.root,
+      view,
+      registerObstacle: (el) => stage.registerObstacle(el),
+      watchView: (listener) => {
+        listener(view);
+        return () => undefined;
+      },
+    };
+    provideContext(this, stageContext, () => ctx);
   }
 
   /** The layout's part of a render (the root renders the regions after it). */

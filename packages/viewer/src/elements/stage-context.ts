@@ -5,7 +5,7 @@
  */
 import type { ViewerContext } from '../bind.js';
 import { createContext } from '../context.js';
-import type { KgdiffStageElement } from '../index.js';
+import type { KgdiffStageElement, KgdiffViewerElement } from '../index.js';
 import type { StageView } from '../view.js';
 
 /**
@@ -20,8 +20,8 @@ export interface StageContext {
 
 /** @internal What the chrome that acts on a view (`<kgdiff-zoom>`, `<kgdiff-minimap>`) gets. */
 export interface StageViewContext extends StageContext {
-  /** The stage element. */
-  readonly stage: KgdiffStageElement;
+  /** The stage element, or the viewer (its built-in stage). */
+  readonly stage: KgdiffStageElement | KgdiffViewerElement;
   /** The root the stage is bound to now, or null while it waits for one. */
   readonly root: ViewerContext | null;
   /** The stage's view now, or null while the stage waits for its root. */

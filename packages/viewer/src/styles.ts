@@ -86,6 +86,8 @@ kbd {
 .corner.bottom-start { bottom: 16px; left: 16px; align-items: flex-start; }
 .corner.bottom-end { bottom: 16px; right: 16px; align-items: flex-end; }
 .corner > .float { position: static; }
+/* <kgdiff-viewer>: the top corners sit under the title and the actions. */
+.root .corner.top-start, .root .corner.top-end { top: 64px; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .icon-btn {
@@ -638,8 +640,14 @@ ins.hl { text-decoration: none; background: var(--kgdiff-added-soft); color: var
 .root[data-compact="true"] .brand-name { display: none; }
 .root[data-compact="true"] .hud-title { padding: 0 10px; }
 .root[data-compact="true"] .minimap-host, .root[data-compact="true"] .legend { display: none; }
-/* Zoom controls move under the actions, clear of the full-width replay transport. */
-.root[data-compact="true"] .map-cluster { top: 64px; bottom: auto; right: 12px; }
+/* Zoom controls move under the actions, clear of the full-width replay transport (fixed: the
+   stage, a size container, contains them), and the page's top-end content under them. The page's
+   bottom content rises over the full-width dock, and the transport above it in replay. */
+.root[data-compact="true"] .map-cluster { position: fixed; top: 64px; bottom: auto; right: 12px; }
+.root[data-compact="true"] .corner.top-end { top: 174px; }
+.root[data-compact="true"] .corner.bottom-start, .root[data-compact="true"] .corner.bottom-end { bottom: 82px; }
+.root[data-compact="true"][data-mode="replay"] .corner.bottom-start,
+.root[data-compact="true"][data-mode="replay"] .corner.bottom-end { bottom: 134px; }
 /* The bottom sheet's rounded top overlaps the canvas. */
 .root[data-compact="true"] .chrome > .dock { left: 12px; right: 12px; bottom: 26px; }
 .root[data-compact="true"] .transport { width: 100%; min-width: 0; }
