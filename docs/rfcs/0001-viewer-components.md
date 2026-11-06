@@ -461,7 +461,9 @@ page as in the prototype:
 
 Size (`kgdiff-viewer.js`, min + gzip, local zlib): 105.54 kB after phase 1, 112.62 kB after
 phase 2 (ceiling 130 kB): panel states, presets, splitters and persistence +4.2 kB, the
-elements, keyboard configuration and slots +2.5 kB. Each subpath bundled on its own (min +
-gzip): root 88.0 kB (the session and the canvas), stage 17.4, change-list 13.1, change-detail
-16.4, search 11.8, filters 10.1; the elements other than root leave the session out. `@kgdiff/viewer/panels` (0.6 kB) is the panels syntax without DOM, which the CLI's
-`--panels` reads with too. After review fixes the standalone bundle is 112.77 kB.
+elements, keyboard configuration and slots +2.5 kB; two review rounds (fixes, then the API
+changes: `layout`, the stage's `panels`, `htmlFor` / `root`, `persist-key`, whole-word token
+names) brought it to 113.21 kB. Each subpath bundled on its own (min + gzip): root 88.1 kB
+(the session and the canvas), stage 18.2, change-list 13.2, change-detail 16.5, search 11.9,
+filters 10.2; the elements other than root leave the session out. `@kgdiff/viewer/panels`
+(0.6 kB) is the panels syntax without DOM, which the CLI's `--panels` reads with too.
