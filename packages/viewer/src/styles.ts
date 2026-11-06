@@ -88,8 +88,8 @@ kbd {
 .corner > .float { position: static; }
 /* A minimap slotted in replaces the stage's own: hidden while everything is in view, as it is. */
 ::slotted(kgdiff-minimap:state(overview)) { display: none; }
-/* <kgdiff-viewer>: the top corners sit under the title and the actions. */
-.root .corner.top-start, .root .corner.top-end { top: 64px; }
+/* <kgdiff-viewer>: the top corners sit under the title and the actions it shows. */
+.stage-wrap[data-hud~="title"] .corner.top-start, .stage-wrap[data-hud~="actions"] .corner.top-end { top: 64px; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .icon-btn {

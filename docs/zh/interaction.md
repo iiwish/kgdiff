@@ -32,7 +32,7 @@
   - 画布较窄时只显示图标（每个控件仍以提示文字显示名称）。
 - **图例**（左下），默认收起：侧栏的筛选标签使用同样的图形。
 - **缩放**（放大 / 缩小 / 适配）在右下。旁边的**小地图**只在部分内容不在视野内时出现。
-- **插槽**：放在 `<kgdiff-viewer>` 的 `slot="top-start"`、`top-end`、`bottom-start`、`bottom-center` 或 `bottom-end` 里的页面内容盖在画布上（顶部的在标题和操作按钮下方，底部的在所在角落的内置控件上方），适配视图和飞行时会避开它。放进插槽的界面元素会替换内置的那个区域（见[元素](#elements)）。紧凑布局里，缩放按钮移到操作按钮下方，`top-end` 的内容在缩放按钮下方，底部的内容在全宽的视图坞上方。
+- **插槽**：放在 `<kgdiff-viewer>` 的 `slot="top-start"`、`top-end`、`bottom-start`、`bottom-center` 或 `bottom-end` 里的页面内容盖在画布上（顶部的在显示着的标题和操作按钮下方，底部的在所在角落的内置控件上方），适配视图和飞行时会避开它。放进插槽的界面元素会替换内置的那个区域，标题和操作按钮也一样（见[元素](#elements)）。紧凑布局里，缩放按钮移到操作按钮下方，`top-end` 的内容在缩放按钮下方，底部的内容在全宽的视图坞上方。
 
 <a id="panels"></a>
 
@@ -168,7 +168,7 @@
 - **画布**有五个具名插槽 `top-start`、`top-end`、`bottom-start`、`bottom-center` 和 `bottom-end`，用来在画布上放页面自己的内容：由画布负责定位（在同一角落里比内置控件离角落更远），每个插入的元素都像内置控件一样，在适配视图和飞行时被避开。用其他方式定位的内容自己登记：`stage.registerObstacle(element)`（返回取消登记的函数），也以上下文（`Symbol.for('kgdiff.stage/1')`）的形式提供给画布的后代元素。画布自带它的控件：它的 `panels` 属性用上面的写法，展开、收起或隐藏画布的区域 `dock`、`transport`、`legend`、`zoom` 和 `minimap`（`<kgdiff-stage panels="zoom:hidden minimap:hidden">`）。每块画布是一个以图（及其版本）命名的区域（region），而不是页面的主地标（main）。
 - **多块画布。** 根元素绘制绑定到它的每一块画布，每块是一个独立的视图：自己的画布、相机、适配和飞行、悬停提示和小地图。会话属于根元素，由各块共享：选中（每块画布都会把它带进视野）、悬停（每块画布里都高亮）、对比方式和范围、回放时钟、筛选和搜索。`version="before"` 或 `"after"`（`version` 属性；null 跟随对比方式，其他值会被忽略并给出警告）让一块画布无论什么对比方式都只画一个版本：这时没有滑动分隔线和回放说明，有一个标签写明版本。它是视图唯一的设置，其余都属于会话。
 - **界面元素。** `<kgdiff-view-dock>`、`<kgdiff-transport>`、`<kgdiff-legend>`、`<kgdiff-title>` 和 `<kgdiff-actions>` 显示根元素的会话（`for`、`htmlFor`、`rootElement`，同上）。`<kgdiff-zoom>` 和 `<kgdiff-minimap>` 作用于一个视图：离它最近的外层 `<kgdiff-stage>`，或者页面上任意位置、由 `stage="<id>"` 指定的那块（`<kgdiff-viewer>` 是它内部这些元素的画布，也可以被指定）。按同样的约定，`stage` 属性反映这个 HTML 属性（设为 '' 会移除它），只读的 `stageElement` 是找到的画布，等待期间为 null，`rootElement` 是那块画布的根元素。
-- **替换内置控件。** 放进画布（或 `<kgdiff-viewer>`）插槽的视图坞、控制条、图例、缩放或小地图元素，会替换画布自己的那个区域；画布的 `panels` 对它仍在绘制的区域照常生效，这个元素也像其他插入的内容一样，在适配和飞行时被避开。`<kgdiff-title>` 和 `<kgdiff-actions>` 在画布里没有对应的区域；查看器自己的标题和操作按钮由它的 `panels`（`title:hidden`）控制。放在其他任何地方的界面元素，无论是否盖在画布上，都不算障碍，除非用 `stage.registerObstacle(element)` 登记。
+- **替换内置控件**，对每个界面元素都是同一条规则：放进画布或 `<kgdiff-viewer>` 的插槽，它就替换同类的内置区域（视图坞、控制条、图例、缩放或小地图；在查看器里还包括标题和操作按钮，画布没有这两样）；`panels` 对仍在绘制的区域照常生效（读取它仍得到页面的声明），这个元素也像其他插入的内容一样，在适配和飞行时被避开。把它拿走，内置的那个就回来。绑定到查看器的 `<kgdiff-actions>` 也有侧栏开关。放在其他任何地方的界面元素，无论是否盖在画布上，都不算障碍，除非用 `stage.registerObstacle(element)` 登记。
 - **`<kgdiff-legend>`**：`variant="full"`（默认）是卡片，展开之前收起到标题；布尔属性 `open`（属性 `open`）反映它是否展开，包括读者的操作，和 `<details>` 一样。`variant="mini"` 是一行色点。**`<kgdiff-minimap>`** 在整张图都在视野内时处于自定义状态 `overview`（`:state(overview)`，只读属性 `overview`）；它不给自己设置 HTML 属性，因为宿主元素的属性归页面所有。页面自己放置的小地图保持显示，周围的布局不会跳动；`kgdiff-minimap:state(overview) { visibility: hidden }` 让它原地隐藏。放进画布插槽的小地图替换画布自己的那个，并像它一样在 `overview` 时隐藏。**`<kgdiff-transport>`** 只在回放模式下显示。**`<kgdiff-actions>`** 在原地打开它的菜单和对话框。
 - **搜索**在查询不为空时，在输入框下方弹出结果。查询保存在会话里：绑定到同一根元素的变更列表这时让位。`/` 聚焦最后登记、且正在显示的那个搜索。
 - **键盘。** 键盘映射归根元素所有（`shortcuts`、`keymap`）。在根元素内部的元素里按键，通过冒泡到达根元素；用 `for` 绑定的元素会转发它的按键。

@@ -1,10 +1,11 @@
 /**
  * `<kgdiff-actions>` (RFC 0001 §3; experimental): the appearance menu (theme, color palette,
  * language: the root's `theme`, `palette` and `locale`) and the keyboard shortcuts dialog,
- * which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); a composed root has no
- * sidebar, so there is no sidebar toggle. Importing this module defines it.
+ * which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); bound to a
+ * `<kgdiff-viewer>` it has the sidebar toggle too (a composed root has no sidebar). Slotted
+ * into a viewer it replaces the actions over its canvas. Importing this module defines it.
  */
-import type { Region } from '../bind.js';
+import type { Region, ViewerContext } from '../bind.js';
 import { isOpen } from '../dom.js';
 import type { KgdiffBoundElement } from '../index.js';
 import type { UiContext } from '../ui/context.js';
@@ -16,7 +17,7 @@ import { BoundElement, define } from './bound.js';
 export class KgdiffActions extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'actions';
 
-  protected build(ui: UiContext, _ctx: unknown, release: (fn: () => void) => void): Region {
+  protected build(ui: UiContext, ctx: ViewerContext, release: (fn: () => void) => void): Region {
     let menu: Menu | null = null;
     let help: HelpDialog | null = null;
     let actions: Actions | null = null;
@@ -28,18 +29,26 @@ export class KgdiffActions extends BoundElement implements KgdiffBoundElement {
       actions.setMenuState(next);
     };
     // The menu and the dialog are this element's: they open here, not in the root's layout.
-    const local: UiContext = {
-      ...ui,
-      toggleMenu: toggle,
-      openHelp: () => help?.show(),
-      toggleSidebar: () => undefined,
-      sidebarOpen: () => false,
-    };
+    const local: UiContext = { ...ui, toggleMenu: toggle, openHelp: () => help?.show() };
+    // The sidebar toggle where the root has a sidebar (a `<kgdiff-viewer>`); none in a
+    // composed root, where `\` does nothing.
+    const hasSidebar = ui.hasSidebar;
     menu = new Menu(local);
-    // No sidebar in a composed root: `\` does nothing there.
-    help = new HelpDialog(local, ['sidebar']);
-    actions = new Actions(local, false);
+    help = new HelpDialog(local, hasSidebar ? [] : ['sidebar']);
+    actions = new Actions(local, hasSidebar !== undefined);
     actions.attachMenu(menu.el);
+    const sidebar = (): void => {
+      const button = actions?.sidebarButton;
+      if (!button || !hasSidebar) return;
+      button.hidden = !hasSidebar();
+      actions?.setSidebarState(ui.sidebarOpen());
+    };
+    if (hasSidebar) {
+      // The viewer reports every change of its panels, the sidebar's folds included.
+      sidebar();
+      ctx.host.addEventListener('kgdiff-layout', sidebar);
+      release(() => ctx.host.removeEventListener('kgdiff-layout', sidebar));
+    }
     this.shadow.append(actions.el, help.el);
     const shown = actions;
     const dialog = help;
