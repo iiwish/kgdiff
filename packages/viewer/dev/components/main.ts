@@ -7,7 +7,8 @@
  */
 import type { GraphInput } from '@kgdiff/core';
 import '@kgdiff/viewer';
-import type { ViewerController } from '../../src/controller.js';
+import type { KgdiffStage } from '../../src/elements/stage.js';
+import type { DiffSession } from '../../src/session.js';
 
 const files = import.meta.glob<string>('../../../../examples/datasets/enterprise-kg/*.json', {
   query: '?raw',
@@ -21,7 +22,7 @@ async function graph(side: 'before' | 'after'): Promise<GraphInput> {
 }
 
 type Root = HTMLElement & {
-  controller: ViewerController;
+  controller: DiffSession;
   load(options: object): Promise<void>;
 };
 
@@ -38,9 +39,9 @@ await Promise.all(
 function underCard(): { under: number; total: number } {
   const root = document.getElementById('a') as Root;
   const c = root.controller;
-  const camera = c.camera;
+  const stage = root.querySelector('kgdiff-stage') as KgdiffStage | null;
+  const camera = stage?.view?.camera;
   const layout = c.layout;
-  const stage = root.querySelector('kgdiff-stage');
   const canvas = stage?.shadowRoot?.querySelector('canvas');
   const card = document.getElementById('card');
   if (!camera || !layout || !canvas || !card) return { under: 0, total: 0 };

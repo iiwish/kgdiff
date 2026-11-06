@@ -106,6 +106,10 @@ export interface SessionView {
   looped(): void;
   /** The world region in view, or null before layout. */
   viewport(): Rect | null;
+  /** Fit everything visible into view (labels included); views without a camera need none. */
+  fit?(options?: { readonly animate?: boolean; readonly padding?: number }): Promise<void>;
+  /** Zoom in (1) or out (-1) one step. */
+  zoom?(direction: 1 | -1): void;
 }
 
 export type Preference = 'mode' | 'scope' | 'theme' | 'palette' | 'locale';
@@ -228,6 +232,21 @@ export class DiffSession {
   addView(view: SessionView): () => void {
     this.#views.add(view);
     return () => this.#views.delete(view);
+  }
+
+  /** @internal The session's clock (`SessionDeps.now`), for its views. */
+  now(): number {
+    return this.#deps.now();
+  }
+
+  /** Fit what is drawn into every view (each frames it on its own canvas). */
+  fit(options?: { readonly animate?: boolean; readonly padding?: number }): Promise<void> {
+    return Promise.all([...this.#views].map((v) => v.fit?.(options))).then(() => undefined);
+  }
+
+  /** Zoom every view one step in (1) or out (-1): the keyboard's `+` / `−`. */
+  zoom(direction: 1 | -1): void {
+    for (const v of this.#views) v.zoom?.(direction);
   }
 
   // ─── Derived state ────────────────────────────────────────────────────────

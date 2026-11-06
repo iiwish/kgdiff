@@ -11,7 +11,6 @@ import type { Theme } from '@kgdiff/scene';
 import type { Region, ViewerContext } from './bind.js';
 import { viewerContext } from './bind.js';
 import { provideContext } from './context.js';
-import { type ControllerHost, ViewerController } from './controller.js';
 import { h } from './dom.js';
 import type { ThemePreference } from './index.js';
 import { isTypingTarget, type Keymap, keyAction } from './keyboard.js';
@@ -19,6 +18,7 @@ import { THEME_PREFERENCES } from './prefs.js';
 import { defaultStorage } from './review-store.js';
 import { cancelFrame, nextPaint, requestFrame } from './schedule.js';
 import type { Topic } from './session.js';
+import { DiffSession, type SessionDeps, type SessionHost } from './session.js';
 import { stylesheet } from './styles.js';
 import { themeFromStyle, tokenSheet } from './theme.js';
 import type { FocusTarget, UiActions } from './ui/context.js';
@@ -35,7 +35,9 @@ export function isRoot(target: EventTarget): boolean {
 }
 
 /** What the element that owns a root adds to it. */
-export interface RootOptions {
+export interface RootOptions<S extends DiffSession = DiffSession> {
+  /** The session to make (default: a plain `DiffSession`, without a canvas of its own). */
+  readonly session?: (host: SessionHost, deps: SessionDeps) => S;
   /** The sheets the root's shadow root adopts before its token set (default: the viewer's). */
   readonly sheets?: (doc: Document) => readonly CSSStyleSheet[];
   /** A key forwarded by an element bound with `for` (default: the keyboard map). */
@@ -58,8 +60,8 @@ function media(query: string): MediaQueryList | null {
     : null;
 }
 
-export class ViewerRoot implements ViewerContext {
-  readonly controller: ViewerController;
+export class ViewerRoot<S extends DiffSession = DiffSession> implements ViewerContext {
+  readonly controller: S;
   /** The single polite live region announcing navigation ("Change 3 of 12: …"). */
   readonly live = h('div', { class: 'sr-only', 'aria-live': 'polite', 'aria-atomic': 'true' });
   readonly host: HTMLElement;
@@ -67,11 +69,10 @@ export class ViewerRoot implements ViewerContext {
   readonly #shadow: ShadowRoot;
   readonly #regions: Region[] = [];
   readonly #targets = new Map<FocusTarget, Target[]>();
-  readonly #options: RootOptions;
+  readonly #options: RootOptions<S>;
   #renderFailed = false;
   /** The built-in theme of the token set applied last. */
   #base: Theme | null = null;
-  #stage: object | null = null;
   /** `keymap`: single keys bound to other shortcuts, or unbound. */
   keymap: Keymap | null = null;
   /** `shortcuts="none"`: no shortcuts, but a focused list keeps its own keys. */
@@ -86,7 +87,7 @@ export class ViewerRoot implements ViewerContext {
     shadow: ShadowRoot,
     actions: UiActions,
     emitted?: (type: string) => void,
-    options: RootOptions = {},
+    options: RootOptions<S> = {},
   ) {
     this.host = host;
     this.#shadow = shadow;
@@ -97,7 +98,7 @@ export class ViewerRoot implements ViewerContext {
       host.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
       emitted?.(type);
     };
-    const events: ControllerHost = {
+    const events: SessionHost = {
       ready: (stats) => emit('kgdiff-ready', { stats }),
       select: (hunk, node) => emit('kgdiff-select', { hunk, node }),
       mode: (mode, scope) => emit('kgdiff-mode', { mode, scope }),
@@ -106,7 +107,7 @@ export class ViewerRoot implements ViewerContext {
       announce: (text) => this.announce(text),
       replayEnd: (loop) => emit('kgdiff-replay-end', { loop }),
     };
-    this.controller = new ViewerController(events, {
+    const deps: SessionDeps = {
       now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
       requestFrame,
       cancelFrame,
@@ -119,7 +120,10 @@ export class ViewerRoot implements ViewerContext {
         const view = host.ownerDocument.defaultView;
         return view ? themeFromStyle(base, view.getComputedStyle(host)) : base;
       },
-    });
+    };
+    this.controller = options.session
+      ? options.session(events, deps)
+      : (new DiffSession(events, deps) as S);
     this.controller.subscribe((topics) => this.render(topics));
   }
 
@@ -232,16 +236,6 @@ export class ViewerRoot implements ViewerContext {
 
   hover(over: boolean): void {
     this.#options.hover?.(over);
-  }
-
-  claimStage(owner: object): boolean {
-    if (this.#stage !== null && this.#stage !== owner) return false;
-    this.#stage = owner;
-    return true;
-  }
-
-  releaseStage(owner: object): void {
-    if (this.#stage === owner) this.#stage = null;
   }
 
   handleKey(e: KeyboardEvent): void {

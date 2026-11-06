@@ -4,9 +4,9 @@
  */
 import type { AttrValue, HunkKind, Locale } from '@kgdiff/core';
 import type { ChangeFamily, PaletteName, SceneHunk } from '@kgdiff/scene';
-import type { ViewerController } from '../controller.js';
 import type { Translator } from '../i18n.js';
 import type { PanelRegion, PanelState, ThemePreference, ViewerMode } from '../index.js';
+import type { DiffSession } from '../session.js';
 
 /**
  * What the layout does for the regions (preferences it reflects as attributes, the panels and
@@ -35,7 +35,7 @@ export type FocusTarget = 'search' | 'list';
 
 /** What a region gets from the root it is bound to: the session, the actions, focus moves. */
 export interface UiContext extends UiActions {
-  readonly controller: ViewerController;
+  readonly controller: DiffSession;
   /** Root of the region's shadow tree (for focus management). */
   readonly root: ShadowRoot;
   /**

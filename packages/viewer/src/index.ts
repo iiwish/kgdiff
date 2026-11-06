@@ -86,6 +86,14 @@ export type PanelStates = { readonly [R in PanelRegion]: PanelState };
 export type ViewerPanels = { readonly [R in PanelRegion]?: PanelState };
 
 /**
+ * The version a `<kgdiff-stage>` draws whatever the mode (`version`): `before` or `after`, for
+ * side-by-side canvases of one session.
+ *
+ * @experimental Like the elements, in 0.6.
+ */
+export type StageVersion = 'before' | 'after';
+
+/**
  * The regions of `<kgdiff-stage>`'s built-in chrome (its `panels`).
  *
  * @experimental Like the elements, in 0.6.
@@ -373,6 +381,14 @@ export interface KgdiffStageElement extends KgdiffBoundElement {
    */
   get panels(): StagePanels;
   set panels(value: StagePanels | string | null);
+  /**
+   * Reflected to the `version` attribute: the version this stage draws whatever the root's
+   * mode, `before` or `after` (two stages of one root side by side), or null to follow the
+   * mode. Another value is ignored with a warning. Each stage has its own camera; the
+   * selection, hover, filters and search are the root's, so both bring the same change into
+   * view.
+   */
+  version: StageVersion | null;
   /**
    * Keep `element` (content over the canvas the stage does not place) clear of fits and
    * flights; returns the function that stops it. Also on the stage context descendants can

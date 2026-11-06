@@ -7,7 +7,6 @@
  */
 import { type Delta, KgdiffError, type Locale } from '@kgdiff/core';
 import type { PaletteName } from '@kgdiff/scene';
-import type { ViewerController } from './controller.js';
 import { formatHash, parseHash } from './hash-sync.js';
 import { detectLocale, translate, translator } from './i18n.js';
 import type {
@@ -33,7 +32,13 @@ import {
   toTheme,
 } from './prefs.js';
 import { isRoot, ViewerRoot, wasForwarded } from './root.js';
-import { ALL_TOPICS, type Topic } from './session.js';
+import {
+  ALL_TOPICS,
+  type DiffSession,
+  type SessionDeps,
+  type SessionHost,
+  type Topic,
+} from './session.js';
 import type { UiActions } from './ui/context.js';
 
 /** Attributes every root observes. */
@@ -95,11 +100,11 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
-export abstract class RootElement extends HTMLElement {
+export abstract class RootElement<S extends DiffSession = DiffSession> extends HTMLElement {
   /** @internal */
-  readonly controller: ViewerController;
+  readonly controller: S;
   /** @internal The root: session, keyboard map, live region, events, tokens. */
-  protected readonly root: ViewerRoot;
+  protected readonly root: ViewerRoot<S>;
   protected readonly shadow: ShadowRoot;
   #currentPayload: ReportPayload | null = null;
   #reflecting = false;
@@ -120,6 +125,7 @@ export abstract class RootElement extends HTMLElement {
         if (type === 'kgdiff-select' || type === 'kgdiff-mode') this.#writeHash();
       },
       {
+        session: (host, deps) => this.createSession(host, deps),
         sheets: (doc) => this.sheets(doc),
         key: (e) => this.#key(e),
         hover: (over) => this.pointerOver(over),
@@ -142,6 +148,9 @@ export abstract class RootElement extends HTMLElement {
 
   /** An observed attribute that is not a root attribute changed (from `_old`). */
   protected attributeChanged(_name: string, _value: string | null, _old: string | null): void {}
+
+  /** The session this root holds (the default layout's has its canvas built in). */
+  protected abstract createSession(host: SessionHost, deps: SessionDeps): S;
 
   /** The sheets the shadow root adopts before the token set. */
   protected abstract sheets(doc: Document): readonly CSSStyleSheet[];
