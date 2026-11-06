@@ -14,6 +14,7 @@
  */
 import { forwardKey, type Region, uiContext, type ViewerContext, viewerContext } from '../bind.js';
 import { requestContext } from '../context.js';
+import type { KgdiffBoundElement, KgdiffRootElement } from '../index.js';
 import { type ElementName, elementSheet, stylesheet } from '../styles.js';
 import { ALL_TOPICS } from '../topics.js';
 import type { UiContext } from '../ui/context.js';
@@ -40,7 +41,7 @@ export function define(name: string, ctor: CustomElementConstructor): void {
   }
 }
 
-export abstract class BoundElement extends HTMLElement {
+export abstract class BoundElement extends HTMLElement implements KgdiffBoundElement {
   static get observedAttributes(): readonly string[] {
     return ['for'];
   }
@@ -74,7 +75,21 @@ export abstract class BoundElement extends HTMLElement {
 
   /** Properties a page may set before the element is defined (they shadow the accessors). */
   protected upgradedProperties(): readonly string[] {
-    return [];
+    return ['htmlFor'];
+  }
+
+  /** Reflects `for`, as on `<label>` and `<output>`: the id of the root to show ('' for the nearest). */
+  get htmlFor(): string {
+    return this.getAttribute('for') ?? '';
+  }
+
+  set htmlFor(value: string) {
+    this.setAttribute('for', String(value));
+  }
+
+  /** The root this element shows, or null while it waits for one. */
+  get root(): KgdiffRootElement | null {
+    return (this.#ctx?.host as KgdiffRootElement | undefined) ?? null;
   }
 
   connectedCallback(): void {
