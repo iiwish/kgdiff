@@ -32,7 +32,7 @@ import {
   toScope,
   toTheme,
 } from './prefs.js';
-import { isRoot, ViewerRoot } from './root.js';
+import { isRoot, ViewerRoot, wasForwarded } from './root.js';
 import { ALL_TOPICS, type Topic } from './session.js';
 import type { UiActions } from './ui/context.js';
 
@@ -549,6 +549,8 @@ export abstract class RootElement extends HTMLElement {
   }
 
   #onKeyDown(e: KeyboardEvent): void {
+    // A key an element forwarded to its own root is that root's, even when it did nothing.
+    if (wasForwarded(e)) return;
     // The nearest root takes a key pressed inside it; an outer one leaves it alone.
     const nearest = e.composedPath().find(isRoot);
     if (nearest !== undefined && nearest !== this) return;

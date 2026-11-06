@@ -24,7 +24,7 @@ import { themeFromStyle, tokenSheet } from './theme.js';
 import type { FocusTarget, UiActions } from './ui/context.js';
 
 export type { Region, ViewerContext } from './bind.js';
-export { bindRegion, uiContext, viewerContext } from './bind.js';
+export { bindRegion, uiContext, viewerContext, wasForwarded } from './bind.js';
 
 /** Hosts of roots (the nearest root acts on a key; an outer one leaves it alone). */
 const rootHosts = new WeakSet<EventTarget>();

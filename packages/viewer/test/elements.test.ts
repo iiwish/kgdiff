@@ -367,6 +367,26 @@ describe('keyboard', () => {
     expect(root.controller.selectedHunk).toBe(root.controller.list.order[0]);
   });
 
+  it('keeps a key forwarded to the bound root from the root the element sits in', async () => {
+    place(`<kgdiff-root id="a"><kgdiff-change-list for="b"></kgdiff-change-list></kgdiff-root>
+      <kgdiff-root id="b"></kgdiff-root>`);
+    const a = document.getElementById('a') as Root;
+    const b = document.getElementById('b') as Root;
+    await loaded(a);
+    // B is still loading: it takes no navigation key, and A must not take it either.
+    const loading = b.load(zoo());
+    expect(b.controller.status).toBe('loading');
+    const list = a.querySelector('kgdiff-change-list') as Element;
+    const e = press(list.shadowRoot?.querySelector('.list') as HTMLElement, 'j');
+    expect(e.defaultPrevented).toBe(false);
+    expect(a.controller.selectedHunk).toBe(-1);
+    await loading;
+    await tick();
+    press(list.shadowRoot?.querySelector('.list') as HTMLElement, 'j');
+    expect(b.controller.selectedHunk).toBe(b.controller.list.order[0]);
+    expect(a.controller.selectedHunk).toBe(-1);
+  });
+
   it('takes keys inside a nested root for the nearest root only', async () => {
     const outer = place<Root>(`<kgdiff-root id="outer"><kgdiff-root id="inner">
       <kgdiff-change-list></kgdiff-change-list></kgdiff-root></kgdiff-root>`);
