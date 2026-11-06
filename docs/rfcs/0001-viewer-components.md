@@ -411,6 +411,11 @@ design left open:
   `view.panels` > default; the host restating a region replaces the user's change there.
   `sidebar="open"` is a preset too (the four regions open), so a host that says open wins over
   a remembered fold. `panels` wins over the presets for the regions it names.
+- **`panels` is the page's declaration, both ways.** The property reads back what the page
+  declared, as the attribute does; the resolved states and sizes are a read-only `layout`
+  (what `kgdiff-layout` reports, without `source`). Declaring the same panels again, as React
+  and Vue do on every render, keeps what the user did: only a region whose declared (or
+  preset) value changed gives way.
 - **Persistence** is one `localStorage` entry per origin, `kgdiff:viewer`: panel states the
   user changed, the sidebar width, the list / detail split, theme, palette, language. Writes
   merge with what other viewers of the origin wrote. `kgdiff-layout` carries

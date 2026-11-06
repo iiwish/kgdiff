@@ -104,7 +104,10 @@ off. [Panels](../interaction.md#panels) has the rules.
 ```
 
 The change list gets the sidebar's height; the reader opens the details from their bar. Set it
-as a property just as well: `viewer.panels = { detail: 'collapsed' }`.
+as a property just as well: `viewer.panels = { detail: 'collapsed' }`. Reading `panels` gives back
+what your page declared; `viewer.layout.panels` has every region's state now, including what the
+reader changed. Setting the same `panels` again (a React or Vue re-render) keeps the reader's
+changes.
 
 ### Watch the replay only
 

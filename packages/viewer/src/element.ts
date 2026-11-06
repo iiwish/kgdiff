@@ -228,8 +228,9 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     this.#applyChrome();
   }
 
-  get panels(): PanelStates {
-    return { ...this.#states };
+  /** The host's declaration (the `panels` attribute as an object); `layout` has the states. */
+  get panels(): ViewerPanels {
+    return { ...this.#hostPanels };
   }
 
   set panels(value: ViewerPanels | string | null) {
@@ -248,8 +249,8 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     else this.removeAttribute('persist');
   }
 
-  /** The panel states and sizes, as `kgdiff-layout` reports them. */
-  get #layout(): ViewerLayout {
+  /** Every region's state and the sizes now, as `kgdiff-layout` reports them. */
+  get layout(): ViewerLayout {
     const sidebar = this.#ui?.sidebar;
     return {
       panels: { ...this.#states },
@@ -279,7 +280,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   #emitLayout(source: 'user' | 'host'): void {
     this.dispatchEvent(
       new CustomEvent('kgdiff-layout', {
-        detail: { ...this.#layout, source },
+        detail: { ...this.layout, source },
         bubbles: true,
         composed: true,
       }),
