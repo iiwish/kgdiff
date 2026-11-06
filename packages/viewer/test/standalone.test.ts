@@ -70,6 +70,13 @@ const SUBPATHS: Readonly<Record<string, string>> = {
   'elements/change-detail': 'elements/change-detail.ts',
   'elements/search': 'elements/search.ts',
   'elements/filters': 'elements/filters.ts',
+  'elements/view-dock': 'elements/view-dock.ts',
+  'elements/transport': 'elements/transport.ts',
+  'elements/legend': 'elements/legend.ts',
+  'elements/zoom': 'elements/zoom.ts',
+  'elements/minimap': 'elements/minimap.ts',
+  'elements/title': 'elements/title.ts',
+  'elements/actions': 'elements/actions.ts',
   panels: 'panels.ts',
 };
 
@@ -113,19 +120,23 @@ describe('ESM subpaths', () => {
       `[subpaths] ${sizes.map((s) => `${s.name} ${kb(s.min)} min, ${kb(s.gzip)} gzip`).join(' · ')}`,
     );
     const of = (name: string) => sizes.find((s) => s.name === name) as (typeof sizes)[number];
+    // Every element but the root and the stage: the regions and the chrome.
+    const parts = Object.keys(SUBPATHS).filter(
+      (name) =>
+        name.startsWith('elements/') && name !== 'elements/root' && name !== 'elements/stage',
+    );
     // The session's load pipeline and review store come with the root, not with an element.
-    for (const name of ['elements/change-list', 'elements/search', 'elements/filters']) {
+    for (const name of parts) {
       expect(of(name).text, name).not.toContain('kgdiff:review:');
       expect(of(name).gzip, name).toBeLessThan(of('elements/root').gzip);
     }
     expect(of('elements/root').text).toContain('kgdiff:review:');
-    // The renderer comes with a stage (each draws its own view), not with the root.
+    // The renderer comes with a stage (each draws its own view), not with the root, nor with
+    // the zoom buttons and the minimap, which act on a stage's view.
     const RENDERER = 'device-pixel-content-box';
     expect(of('elements/stage').text).toContain(RENDERER);
     expect(of('elements/root').text).not.toContain(RENDERER);
-    for (const name of ['elements/change-list', 'elements/search', 'elements/filters']) {
-      expect(of(name).text, name).not.toContain(RENDERER);
-    }
+    for (const name of parts) expect(of(name).text, name).not.toContain(RENDERER);
     // The panels syntax is for the CLI too: no DOM, nothing else.
     expect(of('panels').text).not.toMatch(/customElements|document\.|HTMLElement/);
     expect(of('panels').gzip).toBeLessThan(1024);

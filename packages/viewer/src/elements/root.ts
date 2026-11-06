@@ -45,14 +45,17 @@ export class KgdiffRoot extends RootElement implements KgdiffRootElement {
     return new DiffSession(host, deps);
   }
 
-  /** No layout of its own: `\` and `?` do nothing, `/` focuses the search registered last. */
+  /** No layout of its own: `\` does nothing, `?` and `/` go to the elements registered last. */
   protected actions(): UiActions {
     return {
       ...this.baseActions(),
       toggleSidebar: () => undefined,
       sidebarOpen: () => false,
       toggleMenu: () => undefined,
-      openHelp: () => undefined,
+      // `?` opens the dialog of a `<kgdiff-actions>` bound to this root, if there is one.
+      openHelp: () => {
+        this.root.focus('help');
+      },
       focusSearch: () => {
         this.root.focus('search');
       },
