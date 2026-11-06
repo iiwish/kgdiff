@@ -4,7 +4,13 @@
  * loaded on demand, so text outputs never pay for them.
  */
 import { type DiffResult, diffToJSON, type Locale, packDiffJSON } from '@kgdiff/core';
-import type { ReportPayload, ThemePreference, ViewerMode, ViewerScope } from '@kgdiff/viewer';
+import type {
+  ReportPayload,
+  ThemePreference,
+  ViewerMode,
+  ViewerPanels,
+  ViewerScope,
+} from '@kgdiff/viewer';
 import { renderReportHtml } from './html.js';
 
 export interface ReportInfo {
@@ -20,6 +26,7 @@ export interface ReportInfo {
     readonly scope?: ViewerScope;
     readonly theme?: ThemePreference;
     readonly locale: Locale;
+    readonly panels?: ViewerPanels;
   };
 }
 
@@ -30,7 +37,7 @@ export async function buildReportPayload(
 ): Promise<ReportPayload> {
   const { layoutDiff, layoutToJSON } = await import('@kgdiff/layout');
   const layout = layoutToJSON(layoutDiff(diff));
-  const { mode, scope, theme, locale } = info.view;
+  const { mode, scope, theme, locale, panels } = info.view;
   return {
     format: 'kgdiff.report',
     version: 1,
@@ -48,6 +55,7 @@ export async function buildReportPayload(
       ...(scope !== undefined ? { scope } : {}),
       ...(theme !== undefined ? { theme } : {}),
       locale,
+      ...(panels !== undefined ? { panels } : {}),
     },
   };
 }

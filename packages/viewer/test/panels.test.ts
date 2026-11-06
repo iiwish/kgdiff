@@ -377,6 +377,12 @@ describe('persistence', () => {
     expect([third.theme, third.palette, third.locale]).toEqual(['dark', 'colorblind', 'en']);
   });
 
+  it('applies the report’s theme and language as soon as the payload is set', () => {
+    const el = mount();
+    el.payload = payload({ theme: 'light', locale: 'zh-CN', panels: { detail: 'collapsed' } });
+    expect([el.theme, el.locale, el.panels.detail]).toEqual(['light', 'zh-CN', 'collapsed']);
+  });
+
   it('remembered preferences win over the report’s view', async () => {
     remember({ panels: {}, theme: 'light', locale: 'zh-CN' });
     const el = mount();

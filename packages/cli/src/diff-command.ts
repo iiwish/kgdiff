@@ -260,6 +260,7 @@ export async function runDiff(o: DiffCommandOptions, io: CliIO): Promise<number>
           ...(o.scope ? { scope: o.scope } : {}),
           ...(o.theme ? { theme: o.theme } : {}),
           locale: ctx.locale,
+          ...(o.panels ? { panels: o.panels } : {}),
         },
       },
       { main: bundle, compute: () => loadCompute(o, io, ctx) },

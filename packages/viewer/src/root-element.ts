@@ -23,6 +23,7 @@ import { assertPayload } from './payload.js';
 import {
   DEFAULT_LOOP_DELAY,
   LEGACY_CHANGES_MODE,
+  sanitizeView,
   toDelay,
   toLocale,
   toMode,
@@ -347,6 +348,13 @@ export abstract class RootElement extends HTMLElement {
       this.controller.fail(error as Error);
       return;
     }
+    // The report's theme, palette and language apply at once (the loading steps show in
+    // them), unless the host or the user chose (validated, and warned about, when it loads).
+    const view = sanitizeView(payload.view, true);
+    const c = this.controller;
+    if (view?.theme && !c.explicit.has('theme')) c.setThemePreference(view.theme);
+    if (view?.palette && !c.explicit.has('palette')) c.setPalette(view.palette);
+    if (view?.locale && !c.explicit.has('locale')) c.setLocale(view.locale);
     this.payloadSet(payload);
     this.controller.loadPayload(payload).catch(() => {
       // Already surfaced: error state + `kgdiff-error`.

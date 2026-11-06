@@ -111,6 +111,10 @@ const MAIN: readonly Section[] = [
         default: 'changes for large graphs, else all',
       },
       {
+        flags: '--panels <spec>',
+        text: 'Initial panel states, e.g. "detail:collapsed minimap:hidden" (repeatable)',
+      },
+      {
         flags: '--reproducible',
         text: 'Omit the timestamp: byte-identical reports for identical input',
       },
