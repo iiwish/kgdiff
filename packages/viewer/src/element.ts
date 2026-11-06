@@ -1,10 +1,13 @@
 /**
- * `<kgdiff-viewer>`: attribute / property reflection, lifecycle, public methods and events
- * around a `ViewerController` and the Shadow-DOM UI.
+ * `<kgdiff-viewer>`, the default layout (RFC 0001 §4): a root (the session, keyboard map, live
+ * region, events and theme tokens; `root.ts`) and the regions bound to it, the stage with its
+ * chrome, the change list, the search, the family filters and the detail panel, placed as they
+ * always were (a 360 px sidebar; a bottom sheet below 760 px). Around them: attribute /
+ * property reflection, lifecycle, the public methods and deep links.
  */
 import { type Delta, KgdiffError, type Locale } from '@kgdiff/core';
-import type { PaletteName, Theme } from '@kgdiff/scene';
-import { type ControllerHost, type Topic, ViewerController } from './controller.js';
+import type { PaletteName } from '@kgdiff/scene';
+import type { ViewerController } from './controller.js';
 import { h } from './dom.js';
 import { formatHash, parseHash } from './hash-sync.js';
 import { detectLocale, translate, translator } from './i18n.js';
@@ -20,12 +23,10 @@ import type {
   ViewerMode,
   ViewerScope,
 } from './index.js';
-import { isTypingTarget, keyAction } from './keyboard.js';
 import { assertPayload } from './payload.js';
 import {
   DEFAULT_LOOP_DELAY,
   LEGACY_CHANGES_MODE,
-  THEME_PREFERENCES,
   toChrome,
   toDelay,
   toLegend,
@@ -35,13 +36,15 @@ import {
   toScope,
   toTheme,
 } from './prefs.js';
-import { defaultStorage } from './review-store.js';
-import { cancelFrame, nextPaint, requestFrame } from './schedule.js';
-import { stylesheet } from './styles.js';
-import { themeFromStyle, tokenSheet } from './theme.js';
-import type { UiContext } from './ui/context.js';
+import { bindRegion, uiContext, ViewerRoot } from './root.js';
+import { ALL_TOPICS, type Topic } from './session.js';
+import { ChangeList } from './ui/change-list.js';
+import type { UiActions } from './ui/context.js';
+import { Detail } from './ui/detail.js';
+import { Filters } from './ui/filters.js';
 import { Header } from './ui/header.js';
 import { HelpDialog, Menu } from './ui/popovers.js';
+import { Search } from './ui/search.js';
 import { Sidebar } from './ui/sidebar.js';
 import { Stage } from './ui/stage.js';
 
@@ -103,12 +106,6 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
-function media(query: string): MediaQueryList | null {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-    ? window.matchMedia(query)
-    : null;
-}
-
 export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
   static get observedAttributes(): readonly string[] {
     return OBSERVED;
@@ -117,17 +114,17 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
   /** @internal */
   readonly controller: ViewerController;
   readonly #shadow: ShadowRoot;
+  readonly #root: ViewerRoot;
   #ui: {
     root: HTMLElement;
     header: Header;
     stage: Stage;
+    list: ChangeList;
     sidebar: Sidebar;
     menu: Menu;
     help: HelpDialog;
-    live: HTMLElement;
   } | null = null;
   #currentPayload: ReportPayload | null = null;
-  #renderFailed = false;
   #reflecting = false;
   #compact = false;
   readonly #cleanup: (() => void)[] = [];
@@ -139,38 +136,13 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
   constructor() {
     super();
     this.#shadow = this.attachShadow({ mode: 'open' });
-    const host: ControllerHost = {
-      ready: (stats) => this.#emit('kgdiff-ready', { stats }),
-      select: (hunk, node) => {
-        this.#emit('kgdiff-select', { hunk, node });
-        this.#writeHash();
-      },
-      mode: (mode, scope) => {
-        this.#emit('kgdiff-mode', { mode, scope });
-        this.#writeHash();
-      },
-      review: (hunk, reviewed, progress) =>
-        this.#emit('kgdiff-review', { hunk, reviewed, progress }),
-      error: (error) => this.#emit('kgdiff-error', { error }),
-      announce: (text) => this.#announce(text),
-      replayEnd: (loop) => this.#emit('kgdiff-replay-end', { loop }),
-    };
-    this.controller = new ViewerController(host, {
-      now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
-      requestFrame,
-      cancelFrame,
-      yieldToPaint: nextPaint,
-      storage: defaultStorage(),
-      // The canvas draws with the tokens as computed on the element (page CSS wins).
-      theme: (base) => {
-        this.#tokens(base);
-        return typeof getComputedStyle === 'function'
-          ? themeFromStyle(base, getComputedStyle(this))
-          : base;
-      },
+    this.#root = new ViewerRoot(this, this.#shadow, this.#actions(), (type) => {
+      if (type === 'kgdiff-select' || type === 'kgdiff-mode') this.#writeHash();
     });
+    this.controller = this.#root.controller;
     this.controller.locale = toLocale(this.getAttribute('locale')) ?? detectLocale();
-    this.controller.subscribe((topics) => this.#render(topics));
+    // The layout renders first, then the regions in the order they bound to the root.
+    this.#root.attach({ update: (topics) => this.#update(topics) });
   }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
@@ -187,12 +159,12 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
         }
       }
     }
+    // Provide the session (the regions bind to it) and follow the system's preferences.
+    this.#cleanup.push(this.#root.connect());
     if (!this.#ui) this.#build();
     connected.push(this);
     const ui = this.#ui;
     if (!ui) return;
-    // Page styles may override tokens now that the element is in the document.
-    this.controller.refreshTheme();
     this.controller.attach(ui.stage.canvasHost, ui.stage.minimapHost);
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
     const canvas = ui.stage.canvasHost.querySelector('canvas');
@@ -204,36 +176,17 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       canvas.addEventListener('pointerdown', focusCanvas);
       this.#cleanup.push(() => canvas.removeEventListener('pointerdown', focusCanvas));
     }
-    this.#watchMedia();
     this.#watchSize();
     const onKey = (e: KeyboardEvent): void => this.#onKeyDown(e);
     document.addEventListener('keydown', onKey);
     this.#cleanup.push(() => document.removeEventListener('keydown', onKey));
-    const onStorage = (e: StorageEvent): void => this.controller.syncReview(e.key);
-    window.addEventListener('storage', onStorage);
-    this.#cleanup.push(() => window.removeEventListener('storage', onStorage));
     const onHash = (): void => this.#readHash();
     window.addEventListener('hashchange', onHash);
     this.#cleanup.push(() => window.removeEventListener('hashchange', onHash));
     this.controller.setChrome(() => ui.stage.chromeLayout());
     document.fonts?.ready?.then(() => this.#ui?.stage.layout()).catch(() => undefined);
     this.#readHash();
-    this.#render(
-      new Set<Topic>([
-        'status',
-        'data',
-        'mode',
-        'theme',
-        'locale',
-        'filters',
-        'review',
-        'selection',
-        'focus',
-        'swipe',
-        'replay',
-        'overview',
-      ]),
-    );
+    this.#root.render(ALL_TOPICS);
   }
 
   disconnectedCallback(): void {
@@ -501,17 +454,6 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
-  /** Apply the token set of `base` (a built-in theme) to the shadow root. */
-  #tokens(base: Theme): void {
-    const sheets = this.#shadow.adoptedStyleSheets;
-    const tokens = tokenSheet(base);
-    if (sheets[1] !== tokens) this.#shadow.adoptedStyleSheets = [stylesheet(), tokens];
-  }
-
-  #emit(type: string, detail: unknown): void {
-    this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
-  }
-
   #reflect(name: string, value: string | null): void {
     if (this.getAttribute(name) === value) return;
     this.#reflecting = true;
@@ -521,16 +463,6 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     } finally {
       this.#reflecting = false;
     }
-  }
-
-  #announce(text: string): void {
-    const live = this.#ui?.live;
-    if (!live) return;
-    live.textContent = '';
-    // A fresh text node in a later task makes screen readers announce repeats too.
-    setTimeout(() => {
-      live.textContent = text;
-    }, 30);
   }
 
   get #sidebarOpen(): boolean {
@@ -572,17 +504,12 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     this.controller.hold(this.#pointerOver && this.loop && this.pauseOnHover);
   }
 
-  #build(): void {
-    const ctx: UiContext = {
-      controller: this.controller,
+  /** What the layout does for the regions: preferences reflect as attributes, panels open. */
+  #actions(): UiActions {
+    return {
       tr: () => translator(this.controller.locale),
-      root: this.#shadow,
-      setMode: (mode) => {
-        this.controller.setMode(mode);
-      },
-      toggleScope: () => {
-        this.controller.toggleScope();
-      },
+      setMode: (mode) => this.controller.setMode(mode),
+      toggleScope: () => this.controller.toggleScope(),
       setThemePreference: (pref) => {
         this.theme = pref;
       },
@@ -598,24 +525,27 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       openHelp: () => this.#ui?.help.show(),
       focusSearch: () => this.#focusSearch(),
     };
-    const header = new Header(ctx);
-    const stage = new Stage(ctx);
-    const sidebar = new Sidebar(ctx);
-    const menu = new Menu(ctx);
-    const help = new HelpDialog(ctx);
-    const live = h('div', { class: 'sr-only', 'aria-live': 'polite', 'aria-atomic': 'true' });
+  }
+
+  #build(): void {
+    const root = h('div', { class: 'root' });
+    this.#shadow.append(root);
+    // Each region binds to the root on its own (context protocol); the layout only places them.
+    const header = bindRegion(root, (ui) => new Header(ui));
+    const list = bindRegion(root, (ui) => new ChangeList(ui));
+    const search = bindRegion(root, (ui) => new Search(ui));
+    const filters = bindRegion(root, (ui) => new Filters(ui));
+    const detail = bindRegion(root, (ui) => new Detail(ui));
+    const stage = bindRegion(root, (ui) => new Stage(ui));
+    const ui = uiContext(this.#root, this.#shadow);
+    const menu = new Menu(ui);
+    const help = new HelpDialog(ui);
+    const sidebar = new Sidebar(ui.tr, list, search, filters, detail);
     // The title and the actions float over the canvas; the menu drops from the actions.
     header.attachMenu(menu.el);
     stage.el.appendChild(header.el);
-    const root = h(
-      'div',
-      { class: 'root' },
-      h('div', { class: 'body' }, stage.el, sidebar.el),
-      help.el,
-      live,
-    );
-    this.#shadow.append(root);
-    this.#ui = { root, header, stage, sidebar, menu, help, live };
+    root.append(h('div', { class: 'body' }, stage.el, sidebar.el), help.el, this.#root.live);
+    this.#ui = { root, header, stage, list, sidebar, menu, help };
     // Close the menu on outside clicks.
     root.addEventListener('pointerdown', (e) => {
       if (!menu.open) return;
@@ -633,24 +563,8 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     this.#applyChrome();
   }
 
-  /** Render, never throwing: a failure shows the error state with safe appearance defaults. */
-  #render(topics: ReadonlySet<Topic>): void {
-    try {
-      this.#renderTopics(topics);
-      this.#renderFailed = false;
-    } catch (error) {
-      console.error('[kgdiff] render failed:', error);
-      if (this.#renderFailed) return;
-      this.#renderFailed = true;
-      const c = this.controller;
-      c.explicit.clear();
-      c.setThemePreference('auto');
-      c.setPalette('default');
-      c.fail(error instanceof Error ? error : new Error(String(error)));
-    }
-  }
-
-  #renderTopics(topics: ReadonlySet<Topic>): void {
+  /** The layout's part of a render (the root renders the regions after it). */
+  #update(topics: ReadonlySet<Topic>): void {
     const ui = this.#ui;
     const c = this.controller;
     if (topics.has('mode')) {
@@ -664,19 +578,14 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       );
     }
     if (!ui) return;
-    if (topics.has('theme') || topics.has('status')) {
-      this.#tokens(c.builtinTheme);
-      ui.root.dataset.theme = c.themeName;
-    }
+    if (topics.has('theme') || topics.has('status')) ui.root.dataset.theme = c.themeName;
     if (topics.has('locale') || topics.has('status')) {
       ui.root.setAttribute('lang', c.locale);
       if (ui.menu.open) ui.menu.render();
       if (ui.help.open) ui.help.render();
     }
     if (topics.has('theme') && ui.menu.open) ui.menu.render();
-    ui.header.update(topics);
     ui.sidebar.update(topics);
-    ui.stage.update(topics);
     if (topics.has('mode') || topics.has('status')) {
       ui.root.dataset.mode = c.mode;
       ui.root.dataset.scope = c.scope;
@@ -700,22 +609,7 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
 
   #focusSearch(): void {
     if (!this.#sidebarOpen) this.#toggleSidebar(true);
-    this.#ui?.sidebar.focusSearch();
-  }
-
-  #watchMedia(): void {
-    const dark = media('(prefers-color-scheme: light)');
-    const motion = media('(prefers-reduced-motion: reduce)');
-    const apply = (): void => {
-      this.controller.setSystemDark(!(dark?.matches ?? false));
-      this.controller.setReducedMotion(motion?.matches ?? false);
-    };
-    apply();
-    for (const q of [dark, motion]) {
-      if (!q) continue;
-      q.addEventListener?.('change', apply);
-      this.#cleanup.push(() => q.removeEventListener?.('change', apply));
-    }
+    this.#root.focus('search');
   }
 
   #watchSize(): void {
@@ -731,7 +625,7 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
         ui.root.dataset.compact = String(compact);
       }
       ui.stage.layout();
-      ui.sidebar.renderWindow();
+      ui.list.renderWindow();
       if (compact) ui.sidebar.syncSheet();
       this.controller.layoutChanged();
     });
@@ -762,85 +656,7 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       }
       return;
     }
-    const target = path[0] ?? null;
-    if (isTypingTarget(target)) return;
-    const c = this.controller;
-    const action = keyAction(e, c.mode, c.scope);
-    if (!action) return;
-    // Enter / Space on a focused control activate that control.
-    const el = target as Element | null;
-    if (
-      (e.key === 'Enter' || e.key === ' ') &&
-      el?.closest?.('button, a, summary, [role="radio"], [role="menuitemradio"]')
-    ) {
-      return;
-    }
-    if (c.status !== 'ready' && !['help', 'theme', 'sidebar', 'escape'].includes(action.type))
-      return;
-    e.preventDefault();
-    switch (action.type) {
-      case 'mode':
-        c.setMode(action.mode);
-        break;
-      case 'scope':
-        c.toggleScope();
-        break;
-      case 'next':
-        c.next();
-        break;
-      case 'prev':
-        c.prev();
-        break;
-      case 'first':
-        c.first();
-        break;
-      case 'last':
-        c.last();
-        break;
-      case 'fly':
-        c.flyToSelection();
-        break;
-      case 'escape':
-        if (!ui.sidebar.escape()) c.clearSelection();
-        break;
-      case 'play-pause':
-        c.togglePlay();
-        break;
-      case 'step':
-        c.stepReplay(action.direction);
-        break;
-      case 'divider':
-        c.setSplit(c.split + action.delta);
-        break;
-      case 'fit':
-        void c.fit();
-        break;
-      case 'zoom':
-        c.zoom(action.direction);
-        break;
-      case 'search':
-        this.#focusSearch();
-        break;
-      case 'review':
-        c.toggleReviewed();
-        break;
-      case 'sidebar':
-        this.#toggleSidebar();
-        break;
-      case 'theme': {
-        const i = THEME_PREFERENCES.indexOf(c.themePreference);
-        this.theme = THEME_PREFERENCES[(i + 1) % THEME_PREFERENCES.length] as ThemePreference;
-        break;
-      }
-      case 'help':
-        ui.help.show();
-        break;
-      case 'expand':
-        c.expandNearest();
-        break;
-      default:
-        action satisfies never;
-    }
+    this.#root.handleKey(e);
   }
 
   // ─── Deep links ───────────────────────────────────────────────────────────
