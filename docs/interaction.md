@@ -79,7 +79,10 @@ the zoom buttons (`zoom`), the minimap (`minimap`), the title (`title`) and the 
 - **Defaults.** Everything open, the legend collapsed (as it always was).
 - **Syntax.** `region:state` pairs separated by spaces or commas; regions not named keep their
   state; pairs that name no region or state are ignored with a console warning. Reading
-  `panels` gives every region's state.
+  `panels` gives the page's declaration back as an object (the attribute's value); `layout`
+  gives every region's state now and the sizes (`{ panels, sidebarWidth, detailShare }`).
+  Declaring the same panels again, as a framework does on every render, keeps what the user
+  did; only a region whose declared value changed gives way.
 - **Presets.** The older switches are panel states:
 
   | Attribute        | Means                                                                           |
@@ -232,7 +235,8 @@ object and is not reflected). Attributes only: `sidebar` (`open|closed`, a prese
 sidebar's state after `\`), `header` (`compact` leaves the brand and the compared names out,
 for hosts that show their own), `sync-hash` (deep links
 `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`; old `mode:changes` links still work) and
-`global-shortcuts`. Property only: `payload` (a precomputed report).
+`global-shortcuts`. Properties only: `payload` (a precomputed report) and `layout` (read only:
+every region's state and the sizes, see [Panels](#panels)).
 Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`, `play()`, `pause()`,
 `fit({ animate, padding })` (labels included), `exportDelta()`, `reviewState()`,
 `setReviewed(id, reviewed)` and `refreshTheme()` (draw the canvas with the tokens as computed

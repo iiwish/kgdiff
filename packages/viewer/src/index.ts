@@ -279,17 +279,21 @@ export interface KgdiffViewerElement extends KgdiffRootElement {
    */
   chrome: ViewerChrome;
   /**
-   * Panel states of the layout, as the `panels` attribute (`"detail:collapsed minimap:hidden"`)
-   * or an object (`{ detail: 'collapsed' }`). Regions not named keep their state; entries that
-   * name no region or state are ignored with a warning. Set by the page, they win over what
-   * the user chose before (remembered) and a report's `view.panels`; the user can still open
-   * and close collapsed regions. Reading it gives every region's current state. The presets
-   * `sidebar="closed"` (list, detail, search and filters collapsed), `header="compact"` (title
-   * hidden) and `chrome="none"` (everything but the canvas and the legend hidden) are panel
-   * states too; `panels` wins over them for the regions it names.
+   * The page's declaration of panel states, reflected to the `panels` attribute: a string
+   * (`"detail:collapsed minimap:hidden"`) or an object (`{ detail: 'collapsed' }`); reading it
+   * gives the object. Regions not named keep their state; entries that name no region or
+   * state are ignored with a warning. It wins over what the user chose before (remembered) and
+   * a report's `view.panels`; the user can still open and close collapsed regions, and
+   * declaring the same again keeps what they did. The presets `sidebar="closed"` (list,
+   * detail, search and filters collapsed), `header="compact"` (title hidden) and
+   * `chrome="none"` (everything but the canvas and the legend hidden) are panel states too;
+   * `panels` wins over them for the regions it names. The states every region has now are in
+   * `layout`.
    */
-  get panels(): PanelStates;
+  get panels(): ViewerPanels;
   set panels(value: ViewerPanels | string | null);
+  /** Every region's state and the sizes now (what `kgdiff-layout` reports, without `source`). */
+  readonly layout: ViewerLayout;
   /**
    * Reflected to the `persist` attribute. `local` (the default): the layout remembers the
    * user's panel states, sizes, theme, palette and language in `localStorage`, for every

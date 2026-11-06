@@ -55,7 +55,8 @@ Every region can be open, collapsed or hidden: `list`, `detail`, `search`, `filt
 <kgdiff-viewer panels="detail:collapsed minimap:hidden"></kgdiff-viewer>
 ```
 
-The viewer remembers what the reader changes (panels, sizes, theme, palette, language) per
+`viewer.panels` is your page's declaration (as the attribute); `viewer.layout` has every
+region's state and the sizes now. The viewer remembers what the reader changes (panels, sizes, theme, palette, language) per
 origin; what the page sets wins over it, and `persist="none"` turns it off. Colors and fonts are
 `--kgdiff-*` CSS custom properties: override them on the element.
 

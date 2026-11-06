@@ -83,7 +83,7 @@ viewer.play();
 <kgdiff-viewer panels="detail:collapsed" style="height: 640px"></kgdiff-viewer>
 ```
 
-变更列表占满侧栏的高度；读者点详情栏即可展开。也可以用 JavaScript 属性设置：`viewer.panels = { detail: 'collapsed' }`。
+变更列表占满侧栏的高度；读者点详情栏即可展开。也可以用 JavaScript 属性设置：`viewer.panels = { detail: 'collapsed' }`。读取 `panels` 得到你的页面声明的内容；`viewer.layout.panels` 给出每个区域当前的状态，包括读者的改动。再次设置同样的 `panels`（React 或 Vue 重新渲染时）会保留读者的改动。
 
 ### 只看回放
 

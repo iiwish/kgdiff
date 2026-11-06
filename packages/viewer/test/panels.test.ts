@@ -135,7 +135,7 @@ describe('panels syntax', () => {
 describe('<kgdiff-viewer panels>', () => {
   it('opens with today’s layout and reads every region’s state back', async () => {
     const el = await loaded();
-    expect(el.panels).toEqual(DEFAULT_PANELS);
+    expect(el.layout.panels).toEqual(DEFAULT_PANELS);
     expect($(el, '.sidebar').dataset.open).toBe('true');
     expect($(el, '.detail-wrap').dataset.state).toBe('open');
   });
@@ -143,7 +143,7 @@ describe('<kgdiff-viewer panels>', () => {
   it('collapses the detail panel to its bar, inert, and opens it from the bar', async () => {
     const el = await loaded({ panels: 'detail:collapsed' });
     const seen = layouts(el);
-    expect(el.panels.detail).toBe('collapsed');
+    expect(el.layout.panels.detail).toBe('collapsed');
     const bar = $<HTMLButtonElement>(el, '.detail-bar');
     expect($(el, '.detail-wrap').dataset.state).toBe('collapsed');
     expect($(el, '.detail').inert).toBe(true);
@@ -155,7 +155,7 @@ describe('<kgdiff-viewer panels>', () => {
     el.controller.flush();
     expect($(el, '.d-title').textContent).not.toBe('');
     bar.click();
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     expect($(el, '.detail').inert).toBe(false);
     expect(seen).toHaveLength(1);
     expect(seen[0]?.source).toBe('user');
@@ -169,14 +169,16 @@ describe('<kgdiff-viewer panels>', () => {
     el.panels = { detail: 'collapsed', minimap: 'hidden', nope: 'open' } as never;
     expect(warn).toHaveBeenCalledOnce();
     expect(el.getAttribute('panels')).toBe('detail:collapsed minimap:hidden');
-    expect(el.panels).toEqual({ ...DEFAULT_PANELS, detail: 'collapsed', minimap: 'hidden' });
+    // The property and the attribute say the same: the page's declaration.
+    expect(el.panels).toEqual({ detail: 'collapsed', minimap: 'hidden' });
+    expect(el.layout.panels).toEqual({ ...DEFAULT_PANELS, detail: 'collapsed', minimap: 'hidden' });
     expect(seen.map((e) => e.source)).toEqual(['host']);
     // Regions not named keep their default.
     el.panels = 'zoom:hidden';
-    expect(el.panels).toEqual({ ...DEFAULT_PANELS, zoom: 'hidden' });
+    expect(el.layout.panels).toEqual({ ...DEFAULT_PANELS, zoom: 'hidden' });
     el.panels = null;
     expect(el.hasAttribute('panels')).toBe(false);
-    expect(el.panels).toEqual(DEFAULT_PANELS);
+    expect(el.layout.panels).toEqual(DEFAULT_PANELS);
   });
 
   it('folds the sidebar when its four regions are collapsed, and \\ restores what was open', async () => {
@@ -185,7 +187,7 @@ describe('<kgdiff-viewer panels>', () => {
     expect($(el, '.sidebar').dataset.open).toBe('false');
     expect($(el, '.sidebar').inert).toBe(true);
     expect(el.getAttribute('sidebar')).toBe('closed');
-    expect(el.panels).toMatchObject({
+    expect(el.layout.panels).toMatchObject({
       list: 'collapsed',
       detail: 'collapsed',
       search: 'collapsed',
@@ -193,7 +195,7 @@ describe('<kgdiff-viewer panels>', () => {
     });
     press(el, '\\');
     expect(el.getAttribute('sidebar')).toBe('open');
-    expect(el.panels).toMatchObject({ list: 'open', detail: 'collapsed', search: 'open' });
+    expect(el.layout.panels).toMatchObject({ list: 'open', detail: 'collapsed', search: 'open' });
   });
 
   it('folds the list to its title and the search and filters to buttons', async () => {
@@ -212,7 +214,7 @@ describe('<kgdiff-viewer panels>', () => {
     el.controller.setQuery('');
     expect($(el, '.list-wrap').hidden).toBe(true);
     $<HTMLButtonElement>(el, '.list-toggle').click();
-    expect(el.panels.list).toBe('open');
+    expect(el.layout.panels.list).toBe('open');
     expect($(el, '.list-wrap').hidden).toBe(false);
   });
 
@@ -223,9 +225,9 @@ describe('<kgdiff-viewer panels>', () => {
       true,
     );
     press(el, '\\');
-    expect(el.panels.list).toBe('hidden');
+    expect(el.layout.panels.list).toBe('hidden');
     press(el, '/');
-    expect(el.panels.search).toBe('hidden');
+    expect(el.layout.panels.search).toBe('hidden');
   });
 
   it('applies the chrome regions to the canvas chrome', async () => {
@@ -236,7 +238,7 @@ describe('<kgdiff-viewer panels>', () => {
     expect($(el, '.legend').dataset.open).toBe('true');
     const seen = layouts(el);
     $<HTMLButtonElement>(el, '.legend-head').click();
-    expect(el.panels.legend).toBe('collapsed');
+    expect(el.layout.panels.legend).toBe('collapsed');
     expect(seen.map((e) => [e.source, e.panels.legend])).toEqual([['user', 'collapsed']]);
   });
 
@@ -257,7 +259,7 @@ describe('<kgdiff-viewer panels>', () => {
   it('opens a collapsed search on / and focuses it', async () => {
     const el = await loaded({ panels: 'search:collapsed' });
     press(el, '/');
-    expect(el.panels.search).toBe('open');
+    expect(el.layout.panels.search).toBe('open');
     expect(el.shadowRoot?.activeElement).toBe($(el, '.search input'));
   });
 });
@@ -265,29 +267,55 @@ describe('<kgdiff-viewer panels>', () => {
 describe('presets', () => {
   it('sidebar, header and chrome set panel states; panels wins for the regions it names', async () => {
     const el = await loaded({ sidebar: 'closed', header: 'compact' });
-    expect(el.panels).toMatchObject({ list: 'collapsed', detail: 'collapsed', title: 'hidden' });
+    expect(el.layout.panels).toMatchObject({
+      list: 'collapsed',
+      detail: 'collapsed',
+      title: 'hidden',
+    });
     el.setAttribute('panels', 'detail:open');
-    expect(el.panels).toMatchObject({ list: 'collapsed', detail: 'open' });
+    expect(el.layout.panels).toMatchObject({ list: 'collapsed', detail: 'open' });
     expect($(el, '.sidebar').dataset.open).toBe('true');
     el.removeAttribute('header');
-    expect(el.panels.title).toBe('open');
+    expect(el.layout.panels.title).toBe('open');
     el.chrome = 'none';
-    const { legend: _legend, detail: _detail, ...bare } = el.panels;
+    const { legend: _legend, detail: _detail, ...bare } = el.layout.panels;
     expect(Object.values(bare).every((s) => s === 'hidden')).toBe(true);
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     el.chrome = 'full';
-    expect(el.panels).toMatchObject({ dock: 'open', list: 'collapsed', detail: 'open' });
+    expect(el.layout.panels).toMatchObject({ dock: 'open', list: 'collapsed', detail: 'open' });
   });
 
   it('the host re-stating a preset leaves the user’s change; changing it overrides it', async () => {
     const el = await loaded({ sidebar: 'closed' });
     press(el, '\\');
-    expect(el.panels.list).toBe('open');
+    expect(el.layout.panels.list).toBe('open');
     el.setAttribute('sidebar', 'closed');
-    expect(el.panels.list).toBe('open');
+    expect(el.layout.panels.list).toBe('open');
     el.setAttribute('sidebar', 'open');
     el.setAttribute('sidebar', 'closed');
-    expect(el.panels.list).toBe('collapsed');
+    expect(el.layout.panels.list).toBe('collapsed');
+  });
+});
+
+describe('panels is the page’s declaration, layout what is shown', () => {
+  it('reads back what the page declared, not the resolved states', async () => {
+    remember({ panels: { zoom: 'hidden' } });
+    const el = await loaded({ sidebar: 'closed' });
+    expect(el.panels).toEqual({});
+    expect(el.layout.panels).toMatchObject({ list: 'collapsed', zoom: 'hidden' });
+    expect(el.layout.sidebarWidth).toBe(360);
+    expect(el.layout.detailShare).toBeNull();
+    el.setAttribute('panels', 'detail:open');
+    expect(el.panels).toEqual({ detail: 'open' });
+  });
+
+  it('spreading panels to change one region pins only that region', async () => {
+    remember({ panels: { zoom: 'hidden' } });
+    const el = await loaded({ panels: 'minimap:hidden' });
+    el.panels = { ...el.panels, detail: 'collapsed' };
+    expect(el.getAttribute('panels')).toBe('detail:collapsed minimap:hidden');
+    // The remembered choice still applies to the regions the page did not name.
+    expect(el.layout.panels.zoom).toBe('hidden');
   });
 });
 
@@ -296,13 +324,13 @@ describe('re-stating panels (frameworks render again)', () => {
     const el = await loaded();
     el.panels = { detail: 'collapsed' };
     $<HTMLButtonElement>(el, '.detail-bar').click();
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     el.panels = { detail: 'collapsed' };
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     el.panels = { detail: 'collapsed', zoom: 'hidden' };
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     el.panels = { detail: 'hidden', zoom: 'hidden' };
-    expect(el.panels.detail).toBe('hidden');
+    expect(el.layout.panels.detail).toBe('hidden');
   });
 
   it('the attribute set again to the same string keeps it too', async () => {
@@ -310,7 +338,7 @@ describe('re-stating panels (frameworks render again)', () => {
     const seen = layouts(el);
     $<HTMLButtonElement>(el, '.detail-bar').click();
     el.setAttribute('panels', 'detail:collapsed');
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     expect(seen.map((e) => e.source)).toEqual(['user']);
   });
 });
@@ -395,7 +423,7 @@ describe('persistence', () => {
     expect(readRemembered(localStorage).panels).toEqual({ detail: 'collapsed' });
     first.remove();
     const second = await loaded();
-    expect(second.panels.detail).toBe('collapsed');
+    expect(second.layout.panels.detail).toBe('collapsed');
   });
 
   it('opens at the remembered sizes, without animating to them', async () => {
@@ -418,7 +446,7 @@ describe('persistence', () => {
       el,
       payload({ panels: { detail: 'collapsed', minimap: 'hidden', list: 'nope' } as never }),
     );
-    expect(el.panels).toMatchObject({
+    expect(el.layout.panels).toMatchObject({
       zoom: 'open', // the host
       detail: 'open', // remembered, over the report
       minimap: 'hidden', // the report, over the default
@@ -431,7 +459,7 @@ describe('persistence', () => {
   it('keeps an older payload without panels at today’s layout', async () => {
     const el = mount();
     await ready(el, payload({ mode: 'replay' }));
-    expect(el.panels).toEqual(DEFAULT_PANELS);
+    expect(el.layout.panels).toEqual(DEFAULT_PANELS);
   });
 
   it('remembers theme, palette and language; the host’s attributes win over them', async () => {
@@ -453,7 +481,7 @@ describe('persistence', () => {
   it('applies the report’s theme and language as soon as the payload is set', () => {
     const el = mount();
     el.payload = payload({ theme: 'light', locale: 'zh-CN', panels: { detail: 'collapsed' } });
-    expect([el.theme, el.locale, el.panels.detail]).toEqual(['light', 'zh-CN', 'collapsed']);
+    expect([el.theme, el.locale, el.layout.panels.detail]).toEqual(['light', 'zh-CN', 'collapsed']);
   });
 
   it('remembered preferences win over the report’s view', async () => {
@@ -468,7 +496,7 @@ describe('persistence', () => {
     const before = localStorage.getItem(LAYOUT_KEY);
     const el = await loaded({ persist: 'none' });
     expect(el.persist).toBe('none');
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     expect(el.theme).toBe('auto');
     expect($(el, '.sb-resize').getAttribute('aria-valuenow')).toBe('360');
     $<HTMLButtonElement>(el, '.detail-bar').click();
@@ -481,12 +509,12 @@ describe('persistence', () => {
     remember({ panels: { detail: 'collapsed' } });
     const el = await loaded({ persist: 'none' });
     const seen = layouts(el);
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     el.persist = 'local';
-    expect(el.panels.detail).toBe('collapsed');
+    expect(el.layout.panels.detail).toBe('collapsed');
     expect(seen.map((e) => [e.source, e.panels.detail])).toEqual([['host', 'collapsed']]);
     el.persist = 'none';
-    expect(el.panels.detail).toBe('open');
+    expect(el.layout.panels.detail).toBe('open');
     expect(seen).toHaveLength(2);
   });
 
@@ -508,7 +536,7 @@ describe('persistence', () => {
       const el = await loaded();
       $<HTMLButtonElement>(el, '.detail-bar').click();
       press(el, 't');
-      expect(el.panels.detail).toBe('collapsed');
+      expect(el.layout.panels.detail).toBe('collapsed');
       expect(reads).toBeGreaterThan(1);
     } finally {
       vi.unstubAllGlobals();
@@ -523,7 +551,7 @@ describe('persistence', () => {
     document.body.append(el);
     await el.load(zoo());
     expect(seen).toEqual([]);
-    expect(el.panels).toMatchObject({ detail: 'collapsed', zoom: 'hidden' });
+    expect(el.layout.panels).toMatchObject({ detail: 'collapsed', zoom: 'hidden' });
     el.setAttribute('panels', 'zoom:open');
     expect(seen.map((e) => [e.source, e.panels.zoom])).toEqual([['host', 'open']]);
   });
