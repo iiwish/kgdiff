@@ -1,9 +1,10 @@
 # RFC 0001: Composable viewer components
 
-- **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)). Phases 1 and 2
+- **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)). Phases 1 to 3
   are implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13;
-  [PR #37](https://github.com/iiwish/kgdiff/pull/37), merged as 22f28c6); phase 3 is in review
-  ([PR #39](https://github.com/iiwish/kgdiff/pull/39); see [Phase 3 results](#phase-3-results)).
+  [PR #37](https://github.com/iiwish/kgdiff/pull/37), merged as 22f28c6;
+  [PR #39](https://github.com/iiwish/kgdiff/pull/39), merged as 3c1c16b); phase 4 is in
+  progress. The elements ship experimental in 0.6 and become stable in 0.7 (decision 7).
 - **Date:** 2026-11-06
 - **Prototype:** the branch `spike/viewer-components` was never merged and was deleted on
   2026-11-06; its findings are in [Prototype results](#prototype-results)
@@ -316,7 +317,9 @@ Svelte usage.
    `panels`, persistence, `--panels`, `refreshTheme()`; recipes.
 3. **View split and chrome elements:** `StageView`; dock, transport, legend, zoom, minimap,
    title and actions as elements; a side-by-side before / after recipe.
-4. **Stable:** experimental marks removed, manifest-generated reference docs, framework recipes.
+4. **Manifest and docs:** the Custom Elements Manifest, reference docs and editor data
+   generated from it, framework recipes. The experimental marks stay: the elements become
+   stable in 0.7, after a minor of real use (decision 7).
 
 Viewer bundle-size work (PR #32) is coordinated with phase 1: it is the phase that adds or
 removes the most bytes.
@@ -375,6 +378,10 @@ Recorded 2026-11-06 by the maintainer.
    `<kgdiff-filters>` ([Granularity](#granularity)).
 6. **`StageView` is split in phase 3,** after the first public elements prove the protocol; the
    session / view boundary is respected from phase 1 on.
+7. **Experimental in 0.6, stable in 0.7** (recorded 2026-11-07). Every element and API marked
+   `@experimental` ships as experimental in 0.6 and becomes stable in 0.7, after one minor of
+   real use ([Compatibility](#compatibility)); phase 4 removes no marks. The CSS `::part()`
+   names are decided with the stabilization, and stay open until then.
 
 ## Risks
 
