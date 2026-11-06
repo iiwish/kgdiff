@@ -306,6 +306,12 @@ export interface KgdiffRootElement extends HTMLElement {
  *
  * A small looping replay for another page: `mode="replay" chrome="none" loop` (with a height of
  * your choosing, such as 320px).
+ *
+ * The canvas has the slots of `<kgdiff-stage>` (`top-start`, `top-end`, `bottom-start`,
+ * `bottom-center`, `bottom-end`; the top ones under the title and the actions): a child with
+ * `slot="top-end"` goes over the canvas, kept clear of fits and flights. A chrome element
+ * slotted in replaces the built-in region; `<kgdiff-zoom>` and `<kgdiff-minimap>` inside the
+ * viewer act on its canvas.
  */
 export interface KgdiffViewerElement extends KgdiffRootElement {
   /**
@@ -406,8 +412,11 @@ export interface KgdiffStageBoundElement extends HTMLElement {
    * around the element. Changing it binds again.
    */
   stageId: string;
-  /** The stage this element acts on, or null while it waits for one. */
-  readonly stageElement: KgdiffStageElement | null;
+  /**
+   * The stage this element acts on, or null while it waits for one. Inside a `<kgdiff-viewer>`
+   * (or naming one) it is the viewer, whose built-in stage it acts on.
+   */
+  readonly stageElement: KgdiffStageElement | KgdiffViewerElement | null;
 }
 
 /**
@@ -427,7 +436,11 @@ export interface KgdiffMinimapElement extends KgdiffStageBoundElement {
 /**
  * `<kgdiff-stage>` (experimental): the canvas, with five named slots for the page's content
  * over it (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`). Every
- * slotted element is kept clear of fits and flights. *
+ * slotted element is kept clear of fits and flights. A chrome element slotted in
+ * (`<kgdiff-view-dock>`, `<kgdiff-transport>`, `<kgdiff-legend>`, `<kgdiff-zoom>`,
+ * `<kgdiff-minimap>`) replaces the built-in region; `panels` keeps applying to the rest. Content
+ * placed anywhere else over the canvas is no obstacle unless registered (`registerObstacle`).
+ *
  * @experimental The elements are experimental in 0.6: names, attributes and markup may change
  * in a minor release before they are stable.
  */

@@ -299,3 +299,50 @@ describe('the session’s chrome', () => {
     expect(() => press(root.querySelector('kgdiff-stage') as Element, '?')).not.toThrow();
   });
 });
+
+describe('in <kgdiff-viewer>', () => {
+  type Viewer = Root & { readonly shadowRoot: ShadowRoot };
+
+  it('takes the page’s content in the stage’s slots, as obstacles', async () => {
+    let provider: (() => ChromeLayout) | null = null;
+    vi.spyOn(StageView.prototype, 'setChrome').mockImplementation((p) => {
+      if (p) provider = p;
+    });
+    const viewer = place<Viewer>(
+      '<kgdiff-viewer><aside slot="top-end" id="card">card</aside></kgdiff-viewer>',
+      'kgdiff-viewer',
+    );
+    await loaded(viewer);
+    const card = document.getElementById('card') as HTMLElement;
+    const slot = viewer.shadowRoot.querySelector('slot[name="top-end"]') as HTMLSlotElement;
+    expect(slot.assignedElements()).toEqual([card]);
+    $(viewer, '.stage-wrap').getBoundingClientRect = () => new DOMRect(0, 0, 1000, 700);
+    card.getBoundingClientRect = () => new DOMRect(700, 64, 288, 100);
+    const chrome = provider as (() => ChromeLayout) | null;
+    if (!chrome) throw new Error('no chrome layout');
+    expect(chrome().obstacles).toContainEqual({ x: 700, y: 64, width: 288, height: 100 });
+  });
+
+  it('lets a chrome element replace a built-in region; panels keeps applying to the rest', async () => {
+    const viewer = place<Viewer>(
+      `<kgdiff-viewer panels="dock:collapsed">
+        <kgdiff-legend slot="bottom-start" variant="mini"></kgdiff-legend>
+        <kgdiff-zoom slot="bottom-end"></kgdiff-zoom>
+      </kgdiff-viewer>`,
+      'kgdiff-viewer',
+    );
+    await loaded(viewer);
+    expect($(viewer, '.legend').dataset.panel).toBe('hidden');
+    expect($(viewer, '.zoom-bar').dataset.panel).toBe('hidden');
+    expect($(viewer, '.minimap-host').dataset.panel).toBe('open');
+    expect($(viewer, '.dock-bar').dataset.panel).toBe('collapsed');
+    const legend = viewer.querySelector('kgdiff-legend') as KgdiffLegendElement;
+    expect(legend.root).toBe(viewer);
+    expect($(legend, '.mini-legend')).not.toBeNull();
+    // The zoom buttons act on the viewer's built-in stage.
+    const zoom = viewer.querySelector('kgdiff-zoom') as KgdiffStageBoundElement;
+    expect(zoom.stageElement).toBe(viewer);
+    $<HTMLButtonElement>(zoom, '.zoom-bar button').click();
+    expect(backend.last().camera.zooms).toHaveLength(1);
+  });
+});
