@@ -226,6 +226,18 @@ describe('<kgdiff-stage>', () => {
     expect(chrome().obstacles).toEqual([]);
   });
 
+  it('releases what it added to the canvas when it unbinds', async () => {
+    const added = vi.spyOn(HTMLCanvasElement.prototype, 'addEventListener');
+    const removed = vi.spyOn(HTMLCanvasElement.prototype, 'removeEventListener');
+    const root = place<Root>('<kgdiff-root><kgdiff-stage></kgdiff-stage></kgdiff-root>');
+    const stage = root.querySelector('kgdiff-stage') as Element;
+    const downs = (spy: typeof added): unknown[] =>
+      spy.mock.calls.filter(([type]) => type === 'pointerdown').map(([, fn]) => fn);
+    expect(downs(added)).toHaveLength(1);
+    stage.remove();
+    expect(downs(removed)).toEqual(downs(added));
+  });
+
   it('draws one stage per root for now; a second stays empty', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const root = place<Root>(
