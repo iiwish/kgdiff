@@ -1,7 +1,8 @@
 # kgdiff viewer interaction design
 
-Behaviour of `<kgdiff-viewer>` (package `@kgdiff/viewer`). Visual tokens and encodings come
-from [visual-language.md](visual-language.md).
+Behaviour of `<kgdiff-viewer>` (package `@kgdiff/viewer`) and of the elements it is made of.
+Visual tokens and encodings come from [visual-language.md](visual-language.md); the design of
+the elements is [RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md).
 
 ## Layout
 
@@ -18,8 +19,16 @@ from [visual-language.md](visual-language.md).
 └──────────────────────────────────────────────────────────────────┴─────────────────────┘
 ```
 
-- Sidebar 360 px, full height (collapsible with `\` or the sidebar button). Below 760 px wide it
-  becomes a bottom sheet (40% height, draggable handle).
+- Sidebar 360 px, full height (folds away with `\` or the sidebar button). Its left edge drags
+  its width (280 px up to the width that leaves the canvas 320 px; ← / → on the focused edge,
+  Shift for larger steps, Home / End; double click: 360 px). Below 760 px wide it becomes a
+  bottom sheet (40% height, draggable handle).
+- In the sidebar, the change list's title row has a chevron that folds the list to that row,
+  and the detail panel has a bar ("Change details") that folds it to the bar. Between the two,
+  a split drags the detail panel's height (↑ / ↓ on the focused split, Home / End; double
+  click: back to the content's height, up to 58%). Both separators are `role="separator"` with
+  values. Every region can be opened, collapsed or hidden by the page too: see
+  [Panels](#panels).
 - Everything else floats over the canvas on overlay surfaces and never covers the current hunk:
   fits and flights frame it in the free part of the canvas.
 
@@ -43,6 +52,59 @@ from [visual-language.md](visual-language.md).
   swatches.
 - **Zoom** (+ / − / fit) bottom right. The **minimap** next to it appears only while part of
   the content is out of view.
+
+## Panels
+
+Every region of `<kgdiff-viewer>` is `open`, `collapsed` or `hidden`: the change list
+(`list`), the detail panel (`detail`), the node search (`search`), the family filters
+(`filters`), the view dock (`dock`), the replay transport (`transport`), the legend (`legend`),
+the zoom buttons (`zoom`), the minimap (`minimap`), the title (`title`) and the actions
+(`actions`).
+
+```html
+<kgdiff-viewer panels="detail:collapsed minimap:hidden"></kgdiff-viewer>
+<script>
+  viewer.panels = { detail: 'collapsed' }; // the same, as a property
+</script>
+```
+
+- **States.** `open`. `collapsed`: folded to the control that opens it again — the list to its
+  title row, the detail panel to its bar, the search and the filters to a button in the list's
+  title row, the legend to its head — and `inert`; the sidebar (or the bottom sheet) folds away
+  when all four of its regions are collapsed. Regions without a fold of their own (dock,
+  transport, zoom, minimap, title, actions) are not shown while collapsed. `hidden`: not shown,
+  and no control brings it back (`\` does nothing once all four sidebar regions are hidden).
+  Focus moves out of a region before it folds or hides: to its control, else to the sidebar
+  button or the canvas.
+- **Defaults.** Everything open, the legend collapsed (as it always was).
+- **Syntax.** `region:state` pairs separated by spaces or commas; regions not named keep their
+  state; pairs that name no region or state are ignored with a console warning. Reading
+  `panels` gives every region's state.
+- **Presets.** The older switches are panel states:
+
+  | Attribute        | Means                                                                           |
+  | ---------------- | ------------------------------------------------------------------------------- |
+  | `sidebar=closed` | `list:collapsed detail:collapsed search:collapsed filters:collapsed`            |
+  | `sidebar=open`   | the same four open                                                              |
+  | `header=compact` | `title:hidden`                                                                  |
+  | `chrome=none`    | every region but the legend hidden, the legend one line; no clicks or shortcuts |
+  | `legend=…`       | the legend's style (`full`, `mini`, `none`), as before                          |
+
+  `panels` wins over the presets for the regions it names.
+- **Who decides.** A region's state comes from the first of: what the user did in this page;
+  the page's `panels`, then the presets; what the user chose before (remembered); the report's
+  `view.panels` ([`--panels`](cli.md#report-options)); the default. When the page sets a region
+  again, its value replaces what the user did there in this page.
+- **Remembered.** The default layout remembers the user's panel states, the sidebar's width,
+  the list / detail split, theme, palette and language, in `localStorage` (one entry,
+  `kgdiff:viewer`, for every viewer of the origin; storage that is blocked or full is ignored).
+  Theme, palette and language follow the same order: the page's attribute or property, then
+  what the user chose before, then the report's `view`, then the default. `persist="none"`
+  turns remembering off. The elements below (`<kgdiff-root>` and the rest) remember nothing:
+  the page owns their layout.
+- **`kgdiff-layout`** reports every change of a panel state or size (once a drag ends), by the
+  user (`source: 'user'`) or the page or a report (`source: 'host'`):
+  `{ panels, sidebarWidth, detailShare, source }`. The first states are not reported.
 
 ## Modes
 
@@ -125,6 +187,21 @@ For the selected hunk (or node), what changed comes first and the unchanged rest
 
 Shortcuts are ignored while typing in an input.
 
+**Where they apply** (`shortcuts`): `scoped` (the default) while focus is inside the viewer;
+`global` also when nothing on the page has focus (full-page viewers such as HTML reports), for
+the first such viewer on the page and never the keys pages scroll with (arrows, Home / End,
+Page Up / Down, Space) — the boolean `global-shortcuts` attribute means the same; `none`: no
+shortcuts, though a focused change list keeps ↑ / ↓, Home / End and Enter. A key pressed inside
+nested roots acts on the nearest one only.
+
+**Rebinding** (`keymap`): single keys can be bound to another shortcut or unbound, as data:
+`keymap="x:none r:review"` or `viewer.keymap = { x: null, r: 'review' }` (keys are
+`KeyboardEvent.key` values, `Space` names the space bar in the attribute). Shortcuts:
+`overlay`, `swipe`, `replay`, `scope`, `expand`, `next`, `prev`, `first`, `last`, `fly`,
+`escape`, `play-pause`, `left`, `right` (step in replay, move the divider in swipe, larger with
+Shift), `fit`, `zoom-in`, `zoom-out`, `search`, `review`, `sidebar`, `theme`, `help`. The help
+dialog lists the default keys.
+
 ## Embedding API
 
 ```html
@@ -137,24 +214,98 @@ Shortcuts are ignored while typing in an input.
 </script>
 ```
 
-Attributes / properties: `mode` (`overlay|swipe|replay`; the legacy `changes` reads as
-`overlay` + `scope="changes"`), `scope` (`all|changes`, default `changes` for large graphs),
-`theme` (`auto|light|dark`), `palette`, `locale` (`en|zh-CN`, default from
-`navigator.language`), `sidebar` (`open|closed`), `sync-hash` (deep links
-`#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`; old `mode:changes` links still work), `header`
-(`compact` leaves the brand and the compared names out, for hosts that show their own),
-`chrome` (`none` shows the graph alone for small embeds: no title, actions, view dock with its
-step caption and playback bar, change list, zoom buttons, minimap or legend card; the hover
-tooltip and a one-line legend stay, clicks and shortcuts do nothing, the minimum height drops
-to 120px and the view stays fitted on resize and at each loop), `legend`
-(`auto|full|mini|none`), `loop` (the replay plays by itself and starts again after `loop-delay`
-ms, default 1200), `pause-on-hover` (`false` keeps a looping replay playing under the mouse).
+Attributes, reflected by properties of the same name: `mode` (`overlay|swipe|replay`; the
+legacy `changes` reads as `overlay` + `scope="changes"`), `scope` (`all|changes`, default
+`changes` for large graphs), `theme` (`auto|light|dark`), `palette` (`default|colorblind`),
+`locale` (`en|zh-CN`, default from `navigator.language`), `panels` (see [Panels](#panels)),
+`persist` (`none` remembers nothing), `chrome` (`none` shows the graph alone for small embeds:
+no title, actions, view dock with its step caption and playback bar, change list, zoom
+buttons, minimap or legend card; the hover tooltip and a one-line legend stay, clicks and
+shortcuts do nothing, the minimum height drops to 120px and the view stays fitted on resize
+and at each loop), `legend` (`auto|full|mini|none`), `loop` (the replay plays by itself and
+starts again after `loop-delay` ms, default 1200; `loopDelay`), `pause-on-hover` (`false`
+keeps a looping replay playing under the mouse; `pauseOnHover`), `shortcuts`
+(`scoped|global|none`) and `keymap` (see [Keyboard map](#keyboard-map); the property takes an
+object and is not reflected). Attributes only: `sidebar` (`open|closed`, a preset; reflects the
+sidebar's state after `\`), `header` (`compact` leaves the brand and the compared names out,
+for hosts that show their own), `sync-hash` (deep links
+`#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`; old `mode:changes` links still work) and
+`global-shortcuts`. Property only: `payload` (a precomputed report).
 Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`, `play()`, `pause()`,
-`fit({ animate, padding })` (labels included), `exportDelta()`, `reviewState()`. Events
-(`CustomEvent`, bubbling, composed): `kgdiff-ready` `{ stats }`, `kgdiff-select`
-`{ hunk, node }`, `kgdiff-mode` `{ mode, scope }`, `kgdiff-review`
-`{ hunk, reviewed, progress }`, `kgdiff-error` `{ error }`, `kgdiff-replay-end` `{ loop }`
-(playback reached the end; `loop`: it starts again).
+`fit({ animate, padding })` (labels included), `exportDelta()`, `reviewState()`,
+`setReviewed(id, reviewed)` and `refreshTheme()` (draw the canvas with the tokens as computed
+now, after the page changed them in a way the viewer cannot observe). Events (`CustomEvent`,
+bubbling, composed): `kgdiff-ready` `{ stats }`, `kgdiff-select` `{ hunk, node }`,
+`kgdiff-mode` `{ mode, scope }`, `kgdiff-review` `{ hunk, reviewed, progress }`,
+`kgdiff-error` `{ error }`, `kgdiff-replay-end` `{ loop }` (playback reached the end; `loop`:
+it starts again) and `kgdiff-layout` `{ panels, sidebarWidth, detailShare, source }`.
+
+## Elements (experimental)
+
+`<kgdiff-viewer>` is a default layout of elements that can also be placed one by one. They are
+experimental in 0.6: names, attributes and markup may change in a minor release before they
+are stable.
+
+| Element                  | What it shows                                                             |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `<kgdiff-root>`          | nothing: the session, keyboard map, live region, events and theme tokens  |
+| `<kgdiff-stage>`         | the canvas, with its chrome (view dock, transport, legend, zoom, minimap) |
+| `<kgdiff-change-list>`   | the "Changes" title, count, review progress and the change rows           |
+| `<kgdiff-change-detail>` | the selected change or node                                               |
+| `<kgdiff-search>`        | node search: a combobox with its own results list                         |
+| `<kgdiff-filters>`       | the family filter chips with their counts, and "Show all"                 |
+
+- **`<kgdiff-root>`** has the attributes, properties, methods and events of `<kgdiff-viewer>`
+  except the layout's (`panels`, `persist`, `sidebar`, `header`, `chrome`, `legend` and
+  `kgdiff-layout`). It renders as `display: contents`: the page lays out its children.
+- **Binding.** An element shows the session of the nearest `<kgdiff-root>` (or
+  `<kgdiff-viewer>`) around it, also across shadow roots, or of the one its `for="<id>"` names
+  anywhere on the page. Order does not matter: a root defined or connected later, or an id that
+  appears later, is found then. Two roots on a page never share selection, keys or
+  announcements.
+- **The stage** has five named slots, `top-start`, `top-end`, `bottom-start`, `bottom-center`
+  and `bottom-end`, for the page's content over the canvas: the stage positions it (stacked
+  further from the corner than the chrome there), and every slotted element is kept clear of
+  fits and flights, as the chrome is. Content positioned some other way registers itself:
+  `stage.registerObstacle(element)` (returns the function that stops it), also offered to the
+  stage's descendants as a context (`Symbol.for('kgdiff.stage/1')`). A root draws one stage for
+  now; a second stays empty. In this release the stage brings its canvas chrome along; it
+  becomes elements of its own later.
+- **Search** opens its results below the box while the query is not blank. The query lives in
+  the session: a change list bound to the same root steps aside meanwhile. `/` focuses the
+  search registered last that is shown.
+- **Keyboard.** The root owns the keyboard map (`shortcuts`, `keymap`). Keys pressed in an
+  element inside the root reach it by bubbling; an element bound with `for` forwards its keys.
+- **Accessibility.** The change list and the detail panel are labelled regions; ARIA id
+  references stay inside one element (the list's options, the search's results); across
+  elements only focus moves (choosing a result focuses the change list) and the root's single
+  live region announce.
+- **Theme.** Tokens set on the root are inherited by the elements inside it; an element bound
+  with `for` outside the root's subtree adopts the root's built-in token set; page overrides on
+  the root do not reach it, so set them on that element too.
+- **Packages.** `import '@kgdiff/viewer'` defines every element. Each also has a subpath that
+  defines only it: `@kgdiff/viewer/elements/root`, `…/stage`, `…/change-list`,
+  `…/change-detail`, `…/search`, `…/filters`. `@kgdiff/viewer/session` is the headless session
+  (`createSession`, `DiffSession`), without DOM.
+
+## Theming
+
+Colors and fonts are CSS custom properties, `--kgdiff-*`, set on the root (`<kgdiff-viewer>`
+or `<kgdiff-root>`) for the built-in theme (light, dark, color-blind palette) and inherited by
+everything inside, the canvas included. They are public API from 0.6; the list is in
+[visual-language.md](visual-language.md#css-tokens). Override any of them with ordinary CSS on
+the root (page styles win over the built-in set), at your own responsibility for contrast:
+
+```css
+kgdiff-viewer {
+  --kgdiff-accent: #e8590c;
+  --kgdiff-font: "IBM Plex Sans", system-ui, sans-serif;
+}
+```
+
+The viewer follows its theme, palette and system color scheme by itself. After changing tokens
+in a way it cannot observe (a class on an ancestor, a stylesheet added later), call
+`refreshTheme()`. A value the canvas cannot draw is ignored there with a console warning.
 
 ## States
 

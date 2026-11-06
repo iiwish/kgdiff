@@ -385,3 +385,73 @@ Recorded 2026-11-06 by the maintainer.
 | Accessibility regressions across components  | ARIA references within a component; root-owned live region; a11y snapshots  |
 | Theming inconsistencies (canvas vs panels)   | CSS is the single source of truth (decision 1); the canvas reads the tokens |
 | Search split breaking the combobox semantics | Results stay inside `<kgdiff-search>`; the list steps aside via the session |
+
+## Phase 2 results
+
+Phase 2 shipped `panels`, persistence, `--panels`, `refreshTheme()` and the first public
+elements, marked experimental. Where it departs from the design above, or decides what the
+design left open:
+
+- **The default layout renders the region classes in its own shadow root**, as in phase 1,
+  not nested public elements. Its DOM, its tests (the parity gate) and its single stylesheet
+  stay as they are; the public elements wrap the same classes in shadow roots of their own.
+  So `<kgdiff-viewer>` exposes no stage slots yet: left open.
+- **`<kgdiff-stage>` brings its canvas chrome along** (view dock, transport, legend, zoom,
+  minimap; not the title or actions) until those become elements in phase 3. Slotted content
+  stacks further from the corner than the chrome there, and stays shown while a diff loads.
+  Until `StageView` is split, a root draws one stage; a second stays empty, with a warning.
+- **What `collapsed` means, per region.** The list folds to its title row, the detail panel to
+  a new "Change details" bar, the search and the filters to buttons in the list's title row,
+  the legend to its head; the sidebar (and the bottom sheet) folds away when all four of its
+  regions are collapsed. Regions without a fold of their own (dock, transport, zoom, minimap,
+  title, actions) are not shown while collapsed. The legend's default is `collapsed`, as the
+  card always started folded.
+- **Precedence has one more level on top: what the user did in this page.** The order is the
+  user in this page > the host (`panels`, then the presets) > remembered > the report's
+  `view.panels` > default; the host restating a region replaces the user's change there.
+  `sidebar="open"` is a preset too (the four regions open), so a host that says open wins over
+  a remembered fold. `panels` wins over the presets for the regions it names.
+- **Persistence** is one `localStorage` entry per origin, `kgdiff:viewer`: panel states the
+  user changed, the sidebar width, the list / detail split, theme, palette, language. Writes
+  merge with what other viewers of the origin wrote. `kgdiff-layout` carries
+  `{ panels, sidebarWidth, detailShare, source }`, with `source` `user` or `host`, and is not
+  fired for the first states.
+- **Reports no longer write `theme` and `locale` as attributes** of their `<kgdiff-viewer>`:
+  an attribute is the host's and outranked what the reader chose before, so a remembered theme
+  never applied in a report. They travel in `view`, and the viewer applies a payload's theme,
+  palette and language as soon as the payload is set. A gzip-encoded (large) report with an
+  explicit `--theme` that differs from the system's may show the system theme until the
+  payload is decoded.
+- **Keyboard.** `keymap` names 22 shortcuts (`next`, `zoom-in`, `left`, …; `left` / `right`
+  step in replay and move the divider in swipe); the help dialog still lists the default keys
+  (left open). With `shortcuts="none"` a focused change list keeps ↑ / ↓, Home / End and Enter,
+  its listbox keys. A key inside nested roots acts on the nearest one.
+- **Tokens for `for=` elements.** An element outside its root's subtree adopts the root's
+  built-in token set; page overrides set on the root do not reach it.
+- **`@kgdiff/viewer/session`** exports `DiffSession`, `createSession` (browser clock, frames,
+  storage) and the topics, as experimental. The read-only snapshot / commands / `subscribe`
+  surface of §1 is not done yet; the `session` property that lets frameworks inject a session
+  into elements is not either. Both are left open.
+- **Not done in phase 2:** a11y snapshots of each region (the Testing section) and the Custom
+  Elements Manifest (phase 4).
+
+Measured in Chrome (the desktop app's browser pane) on `examples/datasets/enterprise-kg`
+(75 nodes, 12 changes) with the dev harness's new `/components/` page, three layouts on one
+page as in the prototype:
+
+| Check                                  | Result                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Host card in `top-end` (246 × 39)      | Nodes under it after a fit: 0 of 75                                                      |
+| Larger card (450 × 320)                | 0 of 75 registered (slotted), 53 when taken out of the slot                              |
+| 12 flights, both card sizes            | 0 of the flown change's nodes under the card                                             |
+| Keys from a `for` list (B's list in C) | `j j` selected B's change 2, B's live region announced it, A did not move                |
+| `/` and choosing a result              | `/` focused the search bound to that root; Enter selected the node and focused the list  |
+| Default layout                         | Detail bar folds and opens; ← / → on the sidebar edge and ↑ / ↓ on the split; remembered |
+| Reload with a remembered width         | Opens at it (a first version animated from 360 px: fixed)                                |
+
+Size (`kgdiff-viewer.js`, min + gzip, local zlib): 105.54 kB after phase 1, 112.62 kB after
+phase 2 (ceiling 130 kB): panel states, presets, splitters and persistence +4.2 kB, the
+elements, keyboard configuration and slots +2.5 kB. Each subpath bundled on its own (min +
+gzip): root 88.0 kB (the session and the canvas), stage 17.4, change-list 13.1, change-detail
+16.4, search 11.8, filters 10.1, session 49.6; the elements other than root leave the session
+out.

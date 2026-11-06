@@ -38,11 +38,35 @@ ESM only. Runs in evergreen browsers.
   `@kgdiff/viewer/standalone/compute` add-on brings the diff engine and force layout for `load()`.
 
 Attributes: `mode` (`overlay` | `swipe` | `replay`), `scope` (`all` | `changes`), `theme`,
-`palette`, `locale`, `sidebar`, `sync-hash`, `global-shortcuts`, `header`, `chrome`, `legend`,
-`loop`, `loop-delay`, `pause-on-hover`. The legacy `mode="changes"` still works: it means
-`overlay` with `scope="changes"`. Methods: `load`, `selectHunk`, `next`, `prev`, `play`, `pause`, `fit`,
-`exportDelta`, `reviewState`, `setReviewed`. Events: `kgdiff-ready`, `kgdiff-select`,
-`kgdiff-mode`, `kgdiff-review`, `kgdiff-error`, `kgdiff-replay-end`.
+`palette`, `locale`, `panels`, `persist`, `sidebar`, `sync-hash`, `shortcuts`,
+`global-shortcuts`, `keymap`, `header`, `chrome`, `legend`, `loop`, `loop-delay`,
+`pause-on-hover`. The legacy `mode="changes"` still works: it means `overlay` with
+`scope="changes"`. Methods: `load`, `selectHunk`, `next`, `prev`, `play`, `pause`, `fit`,
+`exportDelta`, `reviewState`, `setReviewed`, `refreshTheme`. Events: `kgdiff-ready`,
+`kgdiff-select`, `kgdiff-mode`, `kgdiff-review`, `kgdiff-error`, `kgdiff-replay-end`,
+`kgdiff-layout`.
+
+## Arrange the layout
+
+Every region can be open, collapsed or hidden: `list`, `detail`, `search`, `filters`, `dock`,
+`transport`, `legend`, `zoom`, `minimap`, `title`, `actions`.
+
+```html
+<kgdiff-viewer panels="detail:collapsed minimap:hidden"></kgdiff-viewer>
+```
+
+The viewer remembers what the reader changes (panels, sizes, theme, palette, language) per
+origin; what the page sets wins over it, and `persist="none"` turns it off. Colors and fonts are
+`--kgdiff-*` CSS custom properties: override them on the element.
+
+## Compose your own layout (experimental)
+
+`<kgdiff-root>` holds the session; `<kgdiff-stage>` (the canvas, with five slots for your own
+content over it), `<kgdiff-change-list>`, `<kgdiff-change-detail>`, `<kgdiff-search>` and
+`<kgdiff-filters>` show its parts, inside it or anywhere with `for="<root id>"`. Importing
+`@kgdiff/viewer` defines them all; `@kgdiff/viewer/elements/<name>` defines one, and
+`@kgdiff/viewer/session` is the headless session. See
+[the guide](../../docs/guide/viewer.md#compose-your-own-layout).
 
 ## Embed a small looping replay
 
@@ -86,8 +110,8 @@ viewer.addEventListener('kgdiff-replay-end', (event) => {
 
 ## Learn more
 
-- [Interaction](../../docs/interaction.md): views, change list, keyboard map and the
-  [embedding API](../../docs/interaction.md#embedding-api).
+- [Interaction](../../docs/interaction.md): views, change list, panels, keyboard map, the
+  [embedding API](../../docs/interaction.md#embedding-api) and the elements.
 - [Visual language](../../docs/visual-language.md): what every color, ring and glyph means.
 
 ## License
