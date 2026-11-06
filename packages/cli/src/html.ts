@@ -107,8 +107,8 @@ export function renderReportHtml(options: ReportHtmlOptions): string {
     `id="${VIEWER_ID}"`,
     // The report page is the viewer: its keyboard shortcuts apply to the whole page.
     'global-shortcuts',
-    `theme="${escapeHtml(theme)}"`,
-    `locale="${escapeHtml(locale)}"`,
+    // Theme, language and panels travel in the payload's `view`, not as attributes: what the
+    // reader chose in an earlier report (remembered by the viewer) wins over them.
     ...(view.mode ? [`mode="${escapeHtml(view.mode)}"`] : []),
     ...(view.scope ? [`scope="${escapeHtml(view.scope)}"`] : []),
   ].join(' ');

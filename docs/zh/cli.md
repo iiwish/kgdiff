@@ -58,15 +58,20 @@ kgdiff --help | --version | help [apply]
 
 ### 报告选项
 
-| 选项                              | 含义                                                             |
-| --------------------------------- | ---------------------------------------------------------------- |
-| `--title <text>`                  | 报告标题（默认为 `<before> → <after>`）                          |
-| `--theme <auto\|light\|dark>`     | 初始主题（默认 auto）                                            |
-| `--locale <en\|zh-CN>`            | 界面和变更组标题的语言（默认取自 `LANG`，否则为 `en`）           |
-| `--mode <overlay\|swipe\|replay>` | 查看器的初始对比方式（`changes` 等于叠加加 `--scope changes`）   |
-| `--scope <all\|changes>`          | 显示整张图还是只看变更，可配合任意对比方式（大图默认 `changes`） |
-| `--reproducible`                  | 不写生成时间（输入相同时，报告逐字节相同）                       |
-| `--no-compute`                    | 从不内联查看器的计算插件（见 §HTML 报告）                        |
+| 选项                              | 含义                                                                 |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `--title <text>`                  | 报告标题（默认为 `<before> → <after>`）                              |
+| `--theme <auto\|light\|dark>`     | 初始主题（默认 auto）                                                |
+| `--locale <en\|zh-CN>`            | 界面和变更组标题的语言（默认取自 `LANG`，否则为 `en`）               |
+| `--mode <overlay\|swipe\|replay>` | 查看器的初始对比方式（`changes` 等于叠加加 `--scope changes`）       |
+| `--scope <all\|changes>`          | 显示整张图还是只看变更，可配合任意对比方式（大图默认 `changes`）     |
+| `--panels <spec>`                 | 各面板的初始状态，例如 `"detail:collapsed minimap:hidden"`（见下文） |
+| `--reproducible`                  | 不写生成时间（输入相同时，报告逐字节相同）                           |
+| `--no-compute`                    | 从不内联查看器的计算插件（见 §HTML 报告）                            |
+
+`--panels` 的写法与查看器的 [`panels` 属性](interaction.md#panels)相同：若干 `区域:状态`，用空格或逗号分隔；可以重复给出（同一区域以最后一次为准）。区域有 `list`、`detail`、`search`、`filters`、`dock`、`transport`、`legend`、`zoom`、`minimap`、`title` 和 `actions`；状态有 `open`（展开）、`collapsed`（收起）和 `hidden`（隐藏）。没写到的区域保持默认布局。写错的区域或状态是用法错误（退出码 2），并给出建议，例如 `Unknown panel region "detials" in --panels. Did you mean "detail"?`。
+
+`--theme`、`--locale`、`--mode`、`--scope` 和 `--panels` 是报告的初始视图。查看器会记住读者自己的选择（主题、配色、语言、面板和尺寸；按源保存在 `localStorage` 里），读者再打开报告时，这些选择优先于报告的主题、语言和面板。
 
 ### 行为
 
@@ -144,4 +149,6 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
 
 当布局只覆盖变化部分时（图超过布局的大图阈值，`layout.scope: "changes"`），命令行还会在查看器之后内联查看器的计算插件（`@kgdiff/viewer/standalone/compute`，设置 `globalThis.KgdiffCompute`），这样折叠的分组可以在浏览器里展开并布局。布局完整的报告不内联它，以保持体积小；`--no-compute` 则始终不内联。缺少计算插件只是警告（报告照常写出），缺少查看器则是错误（退出码 2）。
 
-文档结构：`<!doctype html>`；`lang` 取自语言设置；字符集、视口和 `<title>`；一段内联样式先画出主题背景（按 `prefers-color-scheme`，`--theme` 指定时以它为准），避免白屏闪烁；一个视觉上隐藏的 `<h1>`；`<main>` 里铺满视口的 `<kgdiff-viewer global-shortcuts>`（整个页面就是查看器，所以它的快捷键在整页生效）；一段 `<noscript>` 摘要；数据脚本；最后是查看器脚本。内联的 JSON 和 JavaScript 中从不出现 `</script` 和 `<!--`。
+文档结构：`<!doctype html>`；`lang` 取自语言设置；字符集、视口和 `<title>`；一段内联样式先画出主题背景（按 `prefers-color-scheme`，`--theme` 指定时以它为准），避免白屏闪烁；一个视觉上隐藏的 `<h1>`；`<main>` 里铺满视口的 `<kgdiff-viewer global-shortcuts>`（整个页面就是查看器，所以它的快捷键在整页生效）；一段 `<noscript>` 摘要；数据脚本；最后是查看器脚本。内联的 JSON 和 JavaScript 中从不出现 `</script` 和 `<!--`。查看器元素上只在给出时带 `mode` 和 `scope`；主题、语言和面板状态只放在数据的 `view` 里（写成属性会压过读者之前的选择），查看器读到数据后立即应用。
+
+数据（`ReportPayload`，`format: "kgdiff.report"`，`version: 1`）包含打包的 diff、布局、`meta`（标题、生成器、时间戳、两侧的名称和格式）和 `view`：`mode`、`scope`、`theme`、`locale`，以及从 kgdiff 0.6 起的 `panels`（区域到状态的对象，例如 `{ "detail": "collapsed" }`）。`view` 的每个字段都可省略；查看器忽略不认识或无效的字段（在控制台给出警告），所以没有 `panels` 的旧报告按默认布局打开。

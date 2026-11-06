@@ -60,9 +60,11 @@ describe('HTML report', () => {
       /<meta name="description" content="2 组共 \d+ 处变化 · 节点 2 → 3 · 关系 1 → 2">/,
     );
     expect(html).toContain('<main>\n<h1 class="kgdiff-sr">kg 1 → 2</h1>');
-    expect(html).toContain(
-      '<kgdiff-viewer id="kgdiff" global-shortcuts theme="auto" locale="zh-CN"></kgdiff-viewer>',
-    );
+    // Theme and language travel in the payload's view (a reader's earlier choice wins).
+    expect(html).toContain('<kgdiff-viewer id="kgdiff" global-shortcuts></kgdiff-viewer>');
+    expect((extractPayload(html) as { payload: ReportPayload }).payload.view).toEqual({
+      locale: 'zh-CN',
+    });
     expect(html).toContain('<noscript>');
     expect(html).toContain('<script type="application/kgdiff+json" data-for="kgdiff">');
     expect(html).toContain(`<script>${FAKE_BUNDLE}</script>`);
@@ -79,7 +81,8 @@ describe('HTML report', () => {
     const light = await report(['--theme', 'light']);
     expect(light).toContain(':root{color-scheme:light}html,body{background:#F7F8FA');
     expect(light).not.toContain('#0B0E14');
-    expect(light).toContain('theme="light"');
+    expect(light).not.toContain('theme=');
+    expect((extractPayload(light) as { payload: ReportPayload }).payload.view?.theme).toBe('light');
     const dark = await report(['--theme', 'dark', '--mode', 'replay']);
     expect(dark).not.toContain('prefers-color-scheme');
     expect(dark).toContain('mode="replay"');
@@ -123,6 +126,15 @@ describe('HTML report', () => {
     expect(payload.meta.generator).toMatch(/^kgdiff \d+\.\d+\.\d+$/);
     expect(payload.view).toEqual({ mode: 'swipe', locale: 'en' });
     expect(html).toContain('<title>Release &lt;2&gt; · kgdiff</title>');
+  });
+
+  it('embeds --panels in the view, not as an attribute', async () => {
+    const html = await report(['--panels', 'detail:collapsed', '--panels', 'minimap:hidden']);
+    expect(html).not.toContain('panels=');
+    expect((extractPayload(html) as { payload: ReportPayload }).payload.view).toEqual({
+      locale: 'en',
+      panels: { detail: 'collapsed', minimap: 'hidden' },
+    });
   });
 
   it('cannot be broken out of by labels', async () => {
