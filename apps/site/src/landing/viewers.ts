@@ -76,7 +76,13 @@ export interface LiveViewer {
   setLocale(locale: Locale): void;
 }
 
-/** Wrap a `<kgdiff-viewer>` that sits in a `.window` frame (state drives the skeleton). */
+/**
+ * Wrap a `<kgdiff-viewer>` that sits in a `.window` frame (state drives the skeleton).
+ *
+ * The landing page's demos carry `persist="none"` (index.html): viewers of one origin share
+ * what they remember, and folding the sidebar or opening the legend in a demo must not change
+ * the playground the visitor opens next.
+ */
 export function liveViewer(
   element: KgdiffViewerElement,
   frame: HTMLElement,
