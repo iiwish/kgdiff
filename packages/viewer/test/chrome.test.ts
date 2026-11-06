@@ -293,6 +293,26 @@ describe('the session’s chrome', () => {
     expect($(actions, '[role="dialog"]').getAttribute('aria-modal')).toBe('true');
   });
 
+  it('lists the keys bound after keymap in the shortcuts dialog, and no sidebar key', async () => {
+    const root = place<Root>(
+      '<kgdiff-root keymap="x:none r:review 2:none"><kgdiff-actions></kgdiff-actions></kgdiff-root>',
+    );
+    const actions = root.querySelector('kgdiff-actions') as Element;
+    await loaded(root);
+    press(actions, '?');
+    const rows = [...(actions.shadowRoot?.querySelectorAll('.key-row') ?? [])].map((row) => [
+      row.firstElementChild?.textContent,
+      [...row.querySelectorAll('kbd')].map((k) => k.textContent).join(' '),
+    ]);
+    expect(rows).toContainEqual(['Mark as reviewed', 'r']);
+    // The modes, one key each no longer: a row each, swipe left out.
+    expect(rows).toContainEqual(['Overlay', '1']);
+    expect(rows).toContainEqual(['Replay', '3']);
+    expect(rows.some(([label]) => label?.includes('Swipe'))).toBe(false);
+    expect(rows.some(([, keys]) => keys === '\\')).toBe(false);
+    expect(rows).toContainEqual(['Zoom in / Zoom out', '+ −']);
+  });
+
   it('? does nothing in a composed root without <kgdiff-actions>', async () => {
     const root = place<Root>('<kgdiff-root><kgdiff-stage></kgdiff-stage></kgdiff-root>');
     await loaded(root);

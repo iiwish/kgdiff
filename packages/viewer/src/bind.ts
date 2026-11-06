@@ -4,6 +4,7 @@
  * imports of the session: an element's subpath does not pull the session in through here.
  */
 import { createContext, requestContext } from './context.js';
+import type { Keymap } from './keyboard.js';
 import type { DiffSession, Topic } from './session.js';
 import type { FocusTarget, UiActions, UiContext } from './ui/context.js';
 
@@ -22,6 +23,8 @@ export interface ViewerContext {
   attach(region: Region): () => void;
   target(name: FocusTarget, focus: () => void, available?: () => boolean): () => void;
   focus(name: FocusTarget): boolean;
+  /** The keys bound over the default map (the root's `keymap`), or null for the default. */
+  readonly keymap: Keymap | null;
   /** The keyboard map, for a key event that reached the root. */
   handleKey(e: KeyboardEvent): void;
   /** A key pressed in an element bound with `for` (outside the root): the root's rules apply. */
@@ -56,6 +59,7 @@ export function uiContext(ctx: ViewerContext, root: ShadowRoot): UiContext {
     root,
     target: (name, focus, available) => ctx.target(name, focus, available),
     focus: (name) => ctx.focus(name),
+    keymap: () => ctx.keymap,
   };
 }
 

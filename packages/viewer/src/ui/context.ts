@@ -6,6 +6,7 @@ import type { AttrValue, HunkKind, Locale } from '@kgdiff/core';
 import type { ChangeFamily, PaletteName, SceneHunk } from '@kgdiff/scene';
 import type { Translator } from '../i18n.js';
 import type { PanelRegion, PanelState, ThemePreference, ViewerMode } from '../index.js';
+import type { Keymap } from '../keyboard.js';
 import type { DiffSession } from '../session.js';
 
 /**
@@ -45,6 +46,8 @@ export interface UiContext extends UiActions {
   target(name: FocusTarget, focus: () => void, available?: () => boolean): () => void;
   /** Focus the root's available `name` target registered last; false when there is none. */
   focus(name: FocusTarget): boolean;
+  /** The root's `keymap` now (the keys bound over the default map), or null. */
+  keymap(): Keymap | null;
 }
 
 /** One-character glyph of a hunk (docs/interaction.md §Change list): `+ − ~ ⇄ ⊕ ⑂`. */

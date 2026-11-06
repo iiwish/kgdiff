@@ -181,6 +181,40 @@ export function keyAction(
   return name ? resolve(name, e, mode, scope) : null;
 }
 
+/**
+ * Keys the default map binds for another key's sake: listed only when they do something else
+ * (the `+` key unshifted, `-` with Shift, the minus sign, the legacy name of the space bar).
+ */
+const ALIASES: Readonly<Record<string, string>> = { '=': '+', _: '-', '−': '-', Spacebar: ' ' };
+
+/**
+ * The keys bound to each shortcut with `keymap` over the default map, in the default map's
+ * order then `keymap`'s (what the shortcuts dialog lists). A letter is listed once for both its
+ * cases; a shortcut no key is bound to is absent.
+ */
+export function shortcutKeys(keymap: Keymap | null): ReadonlyMap<ShortcutName, readonly string[]> {
+  const candidates = new Set([...Object.keys(DEFAULT_KEYMAP), ...Object.keys(keymap ?? {})]);
+  const bound = (key: string): ShortcutName | null | undefined => {
+    const custom = keymap === null ? undefined : lookup(keymap, key);
+    return custom === undefined ? lookup(DEFAULT_KEYMAP, key) : custom;
+  };
+  const out = new Map<ShortcutName, string[]>();
+  for (const key of candidates) {
+    const name = bound(key);
+    if (!name) continue;
+    const lower = key.toLowerCase();
+    if (key.length === 1 && key !== lower && candidates.has(lower) && bound(lower) === name) {
+      continue;
+    }
+    const alias = ALIASES[key];
+    if (alias !== undefined && bound(alias) === name) continue;
+    const keys = out.get(name) ?? [];
+    keys.push(key);
+    out.set(name, keys);
+  }
+  return out;
+}
+
 /** `Space` names the space bar in a `keymap` attribute. */
 const KEY_NAMES: Readonly<Record<string, string>> = { Space: ' ' };
 
