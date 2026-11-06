@@ -570,6 +570,23 @@ one root side by side (D) and a replay of a stage and a transport alone (E):
 The browser tool's key events carry no `key`, so `?` was dispatched from the page; Tab moved
 focus natively.
 
+After the review round (the renames, the minimap's state, one replacement rule, no hidden
+minimap, one binding helper), checked again in Chrome on a page of two stages of one root, a
+zoom and a minimap the page places outside them (`stage="s2"`), a minimap slotted into the
+first stage, and a `<kgdiff-viewer>` with a title and actions in its slots:
+
+| Check                                    | Result                                                                                        |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `stage` / `stageElement` / `rootElement` | The page's zoom and minimap: `s2`, the stage, the root; the slotted minimap: `''`, `s1`, root |
+| `stage = ''`                             | The attribute went; outside any stage it waits (`stageElement` and `rootElement` null)        |
+| The page's zoom                          | Zoomed `s2` alone (k 0.38 → 0.47; `s1` stayed at 0.38)                                        |
+| Page-placed minimap in overview          | `:state(overview)` matched, shown at 184 × 128, no attribute of its own                       |
+| … with the page's opt-in rule            | `visibility: hidden`, still 184 × 128: the layout did not move                                |
+| Slotted minimap in overview              | `display: none` (the stage's `::slotted` rule); shown once zoomed in                          |
+| Replaced built-in minimap                | `s1`'s own host empty (no canvas); a canvas again once the slotted one was removed            |
+| Slotted title and actions in the viewer  | The HUD's hidden (the actions inert); the elements at 12 px from the top corners              |
+| The actions' sidebar toggle              | Folded and opened the viewer's sidebar; `aria-pressed` followed (`kgdiff-layout`)             |
+
 Size (min + gzip, local zlib; `kgdiff-viewer.js` under the 130 kB ceiling), per commit:
 
 | Commit                                          | Standalone | root | stage |
@@ -581,9 +598,14 @@ Size (min + gzip, local zlib; `kgdiff-viewer.js` under the 130 kB ceiling), per 
 | the stage's slots on `<kgdiff-viewer>`          |      115.5 | 64.3 |  44.0 |
 | the shortcuts dialog lists the keys bound       |      115.9 | 64.3 |  44.0 |
 | name every region and announce once             |      116.0 | 64.4 |  44.1 |
+| review: one helper binds to a root or a stage   |      116.0 | 64.4 |  44.2 |
+| review: element references, `…Element`          |      116.0 | 64.4 |  44.2 |
+| review: the minimap's overview, a custom state  |      116.1 | 64.4 |  44.2 |
+| review: a slotted title or actions replaces     |      116.3 | 64.4 |  44.2 |
+| review: no hidden built-in minimap              |      116.3 | 64.4 |  44.3 |
 
-Each subpath bundled on its own, at the end (min + gzip, kB): root 64.4, stage 44.1,
-change-list 13.5, change-detail 16.8, search 12.2, filters 10.5, view-dock 12.1, transport 12.8,
-legend 11.9, zoom 11.2, minimap 9.9, title 10.4, actions 16.0, panels 0.6. The renderer comes
+Each subpath bundled on its own, at the end (min + gzip, kB): root 64.4, stage 44.3,
+change-list 13.6, change-detail 16.8, search 12.3, filters 10.5, view-dock 12.2, transport 12.9,
+legend 11.9, zoom 11.3, minimap 10.0, title 10.4, actions 16.2, panels 0.6. The renderer comes
 with a stage only, the session with the root only: the subpath test checks both for every
 element.
