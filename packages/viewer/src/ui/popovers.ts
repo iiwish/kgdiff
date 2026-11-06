@@ -7,6 +7,7 @@ import { attr, h, icon, iconButton, replaceKeepingFocus } from '../dom.js';
 import type { MessageKey } from '../i18n.js';
 import type { IconName } from '../icons.js';
 import type { ThemePreference } from '../index.js';
+import { type Keymap, type ShortcutName, shortcutKeys } from '../keyboard.js';
 import { FAMILIES } from '../styles.js';
 import type { UiContext } from './context.js';
 
@@ -143,39 +144,79 @@ export class Menu {
 
 type Label = MessageKey | readonly MessageKey[];
 
-/** Shortcut rows; labels reuse the controls' own names where they exist. */
-const SHORTCUTS: readonly (readonly [readonly (readonly string[])[], Label])[] = [
+/**
+ * Shortcut rows, by the shortcuts they list; labels reuse the controls' own names where they
+ * exist. A row of several labels names one shortcut each.
+ */
+const SHORTCUTS: readonly (readonly [readonly ShortcutName[], Label])[] = [
   [
-    [['1'], ['2'], ['3']],
+    ['overlay', 'swipe', 'replay'],
     ['mode.overlay', 'mode.swipe', 'mode.replay'],
   ],
-  [[['4']], 'mode.changes'],
-  [[['j'], ['↓']], 'detail.next'],
-  [[['k'], ['↑']], 'detail.prev'],
-  [[['Home'], ['End']], 'help.homeEnd'],
-  [[['Enter']], 'help.enter'],
-  [[['Esc']], 'help.esc'],
-  [[['Space']], 'help.space'],
-  [[['←'], ['→']], 'help.arrows'],
-  [[['f']], 'action.fit'],
+  [['scope'], 'mode.changes'],
+  [['next'], 'detail.next'],
+  [['prev'], 'detail.prev'],
+  [['first', 'last'], 'help.homeEnd'],
+  [['fly'], 'help.enter'],
+  [['escape'], 'help.esc'],
+  [['play-pause'], 'help.space'],
+  [['left', 'right'], 'help.arrows'],
+  [['fit'], 'action.fit'],
   [
-    [['+'], ['−']],
+    ['zoom-in', 'zoom-out'],
     ['action.zoomIn', 'action.zoomOut'],
   ],
-  [[['/']], 'sidebar.search'],
-  [[['x']], 'review.mark'],
-  [[['\\']], 'action.sidebar'],
-  [[['t']], 'help.theme'],
-  [[['e']], 'help.expand'],
-  [[['?']], 'action.help'],
+  [['search'], 'sidebar.search'],
+  [['review'], 'review.mark'],
+  [['sidebar'], 'action.sidebar'],
+  [['theme'], 'help.theme'],
+  [['expand'], 'help.expand'],
+  [['help'], 'action.help'],
 ];
+
+/** How a key shows in the dialog. */
+const KEY_LABELS: Readonly<Record<string, string>> = {
+  ArrowDown: '↓',
+  ArrowUp: '↑',
+  ArrowLeft: '←',
+  ArrowRight: '→',
+  ' ': 'Space',
+  Escape: 'Esc',
+  '-': '−',
+};
+
+/** The dialog's rows for the keys bound now: a shortcut with no key is left out. */
+function shortcutRows(
+  keymap: Keymap | null,
+  omit: ReadonlySet<ShortcutName>,
+): { keys: string[]; label: Label }[] {
+  const bound = shortcutKeys(keymap);
+  const keysOf = (name: ShortcutName): string[] =>
+    omit.has(name) ? [] : (bound.get(name) ?? []).map((k) => KEY_LABELS[k] ?? k);
+  const rows: { keys: string[]; label: Label }[] = [];
+  for (const [names, label] of SHORTCUTS) {
+    const keys = names.map(keysOf);
+    if (typeof label !== 'string' && keys.some((k) => k.length !== 1)) {
+      // Not one key each: a row per shortcut.
+      names.forEach((_, i) => {
+        const k = keys[i] ?? [];
+        if (k.length > 0) rows.push({ keys: k, label: label[i] as MessageKey });
+      });
+    } else if (keys.flat().length > 0) rows.push({ keys: keys.flat(), label });
+  }
+  return rows;
+}
+
 export class HelpDialog {
   readonly el: HTMLElement;
   #returnFocus: Element | null = null;
   readonly #ctx: UiContext;
+  readonly #omit: ReadonlySet<ShortcutName>;
 
-  constructor(ctx: UiContext) {
+  /** `omit`: shortcuts that do nothing in this layout (`sidebar` without a sidebar). */
+  constructor(ctx: UiContext, omit: readonly ShortcutName[] = []) {
     this.#ctx = ctx;
+    this.#omit = new Set(omit);
     this.el = h('div', { class: 'overlay-scrim', hidden: true });
     this.el.addEventListener('click', (e) => {
       if (e.target === this.el) this.hide();
@@ -212,18 +253,19 @@ export class HelpDialog {
 
   render(): void {
     const tr = this.#ctx.tr();
-    const keys = (combos: readonly (readonly string[])[]): HTMLElement =>
+    const keys = (list: readonly string[]): HTMLElement =>
       h(
         'span',
         { class: 'ks' },
-        combos.map((combo, i) => [
+        list.map((k, i) => [
           i > 0 ? h('span', { 'aria-hidden': 'true', text: '/' }) : null,
-          combo.map((k) => h('kbd', { text: k })),
+          h('kbd', { text: k }),
         ]),
       );
-    const rows = SHORTCUTS.map(([combos, label]) => {
+    // The keys bound now, after the root's `keymap`.
+    const rows = shortcutRows(this.#ctx.keymap(), this.#omit).map(({ keys: list, label }) => {
       const text = typeof label === 'string' ? tr.t(label) : label.map((k) => tr.t(k)).join(' / ');
-      return h('div', { class: 'key-row' }, h('span', { text }), keys(combos));
+      return h('div', { class: 'key-row' }, h('span', { text }), keys(list));
     });
     replaceKeepingFocus(
       this.#ctx.root,

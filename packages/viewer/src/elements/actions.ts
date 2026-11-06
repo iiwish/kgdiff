@@ -36,7 +36,8 @@ export class KgdiffActions extends BoundElement implements KgdiffBoundElement {
       sidebarOpen: () => false,
     };
     menu = new Menu(local);
-    help = new HelpDialog(local);
+    // No sidebar in a composed root: `\` does nothing there.
+    help = new HelpDialog(local, ['sidebar']);
     actions = new Actions(local, false);
     actions.attachMenu(menu.el);
     this.shadow.append(actions.el, help.el);
