@@ -156,7 +156,12 @@ export interface ReviewState {
   readonly total: number;
 }
 
-export interface KgdiffViewerEventMap {
+/**
+ * The events of `<kgdiff-viewer>` and `<kgdiff-root>` (`CustomEvent`s that bubble and are
+ * composed). Merged into the global event maps, so `addEventListener('kgdiff-select', …)` on
+ * any element, the document or the window types `event.detail`.
+ */
+export interface KgdiffEventMap {
   'kgdiff-ready': CustomEvent<{ readonly stats: DiffStats }>;
   'kgdiff-select': CustomEvent<{ readonly hunk: string | null; readonly node: string | null }>;
   'kgdiff-mode': CustomEvent<{ readonly mode: ViewerMode; readonly scope: ViewerScope }>;
@@ -188,7 +193,7 @@ export interface FitOptions {
 
 /**
  * What `<kgdiff-viewer>` and `<kgdiff-root>` share: a root of a diff session, its preferences,
- * methods and events (`KgdiffViewerEventMap`, but `kgdiff-layout`).
+ * methods and events (`KgdiffEventMap`, but `kgdiff-layout`).
  *
  * Boolean attribute `sync-hash`: deep links `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`.
  */
@@ -383,10 +388,15 @@ export function hydrateEmbeddedPayloads(root?: ParentNode): Promise<void> {
   return scope ? hydrate(scope) : Promise.resolve();
 }
 
+/** @deprecated Use `KgdiffEventMap` (the same map, for the viewer and its elements). */
+export type KgdiffViewerEventMap = KgdiffEventMap;
+
 declare global {
   interface HTMLElementTagNameMap {
     'kgdiff-viewer': KgdiffViewerElement;
   }
+  // The events bubble and are composed: elements, the document and the window all see them.
+  interface GlobalEventHandlersEventMap extends KgdiffEventMap {}
 }
 
 defineViewer();
