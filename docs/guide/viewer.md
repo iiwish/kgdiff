@@ -199,8 +199,7 @@ the page with `for="<root id>"`.
   bound to it, and `/` focuses the search. `shortcuts` and `keymap` go on the root.
 - Composed elements remember nothing: your page owns the layout.
 - Each element has a subpath that defines only it: `@kgdiff/viewer/elements/root`, `/stage`,
-  `/change-list`, `/change-detail`, `/search`, `/filters`. `@kgdiff/viewer/session` is the
-  headless session, without any element.
+  `/change-list`, `/change-detail`, `/search`, `/filters`.
 
 ## Theme it with CSS
 

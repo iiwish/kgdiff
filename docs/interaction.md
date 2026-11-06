@@ -297,9 +297,9 @@ are stable.
   the root do not reach it, so set them on that element too.
 - **Packages.** `import '@kgdiff/viewer'` defines every element. Each also has a subpath that
   defines only it: `@kgdiff/viewer/elements/root`, `…/stage`, `…/change-list`,
-  `…/change-detail`, `…/search`, `…/filters`. `@kgdiff/viewer/session` is the headless session
-  (`createSession`, `DiffSession`), without DOM, and `@kgdiff/viewer/panels` the panels syntax
-  (`parsePanels`, `PANEL_REGIONS`, `PANEL_STATES`), which the CLI's `--panels` uses too.
+  `…/change-detail`, `…/search`, `…/filters`. `@kgdiff/viewer/panels` is the panels syntax
+  (`parsePanels`, `PANEL_REGIONS`, `PANEL_STATES`), without DOM, which the CLI's `--panels`
+  uses too.
 
 ## Theming
 
