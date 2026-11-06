@@ -1,6 +1,6 @@
 # kgdiff 查看器交互设计
 
-`<kgdiff-viewer>`（`@kgdiff/viewer` 包）的行为。视觉令牌和编码见 [visual-language.md](../visual-language.md)（英文）。
+`<kgdiff-viewer>`（`@kgdiff/viewer` 包）以及组成它的各个元素的行为。视觉令牌和编码见 [visual-language.md](../visual-language.md)（英文）；元素的设计见 [RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md)（英文）。
 
 ## 布局
 
@@ -17,7 +17,8 @@
 └──────────────────────────────────────────────────────────────────┴─────────────────────┘
 ```
 
-- 侧栏宽 360 px，占满整个高度（可以用 `\` 或侧栏按钮收起）。宽度小于 760 px 时变成底部抽屉（高度 40%，可拖动把手）。
+- 侧栏宽 360 px，占满整个高度（可以用 `\` 或侧栏按钮收起）。拖动侧栏左边缘可以调整宽度（280 px 到给画布留出 320 px 的宽度；边缘获得焦点时按 ← / →，按住 Shift 步长更大，Home / End；双击恢复 360 px）。宽度小于 760 px 时变成底部抽屉（高度 40%，可拖动把手）。
+- 侧栏里，变更列表的标题行有一个箭头，可以把列表收起到这一行；详情面板有一条“变更详情”栏，可以把面板收起到这条栏。两者之间的分隔线可以拖动调整详情面板的高度（分隔线获得焦点时按 ↑ / ↓，Home / End；双击恢复按内容决定高度，最多 58%）。两条分隔线都是带数值的 `role="separator"`。页面也可以把每个区域设为展开、收起或隐藏：见[面板](#panels)。
 - 其余控件都浮在画布上，使用浮层样式，并且从不遮挡当前变更组：适配视图和飞行时，都会把目标放在画布没被遮住的部分。
 
 ## 画布上的控件
@@ -31,6 +32,37 @@
   - 画布较窄时只显示图标（每个控件仍以提示文字显示名称）。
 - **图例**（左下），默认收起：侧栏的筛选标签使用同样的图形。
 - **缩放**（放大 / 缩小 / 适配）在右下。旁边的**小地图**只在部分内容不在视野内时出现。
+
+<a id="panels"></a>
+
+## 面板
+
+`<kgdiff-viewer>` 的每个区域都处于 `open`（展开）、`collapsed`（收起）或 `hidden`（隐藏）之一：变更列表（`list`）、详情面板（`detail`）、节点搜索（`search`）、类别筛选（`filters`）、视图坞（`dock`）、回放控制条（`transport`）、图例（`legend`）、缩放按钮（`zoom`）、小地图（`minimap`）、标题（`title`）和操作按钮（`actions`）。
+
+```html
+<kgdiff-viewer panels="detail:collapsed minimap:hidden"></kgdiff-viewer>
+<script>
+  viewer.panels = { detail: 'collapsed' }; // 同上，用属性设置
+</script>
+```
+
+- **状态。** `open` 即展开。`collapsed`：收起到能再次展开它的控件——列表收起到标题行，详情面板收起到它的栏，搜索和筛选收起成列表标题行里的按钮，图例收起到标题——并且是 `inert` 的；侧栏的四个区域都收起时，侧栏（或底部抽屉）整个收起。没有自己的收起形态的区域（视图坞、控制条、缩放、小地图、标题、操作按钮）收起时不显示。`hidden`：不显示，也没有控件能让它重新出现（侧栏的四个区域都隐藏后，`\` 不起作用）。区域收起或隐藏之前，焦点先移出：移到它的控件上，否则移到侧栏按钮或画布上。
+- **默认值。** 全部展开，图例收起（和以前一样）。
+- **写法。** 若干 `区域:状态`，用空格或逗号分隔；没写到的区域保持原状态；写错的区域或状态会被忽略，并在控制台给出警告。读取 `panels` 得到每个区域的当前状态。
+- **预设。** 原有的开关都是面板状态：
+
+  | 属性             | 含义                                                                 |
+  | ---------------- | -------------------------------------------------------------------- |
+  | `sidebar=closed` | `list:collapsed detail:collapsed search:collapsed filters:collapsed` |
+  | `sidebar=open`   | 这四个区域展开                                                       |
+  | `header=compact` | `title:hidden`                                                       |
+  | `chrome=none`    | 除图例外全部隐藏，图例显示为一行；点击和快捷键不起作用               |
+  | `legend=…`       | 图例的样式（`full`、`mini`、`none`），和以前一样                     |
+
+  对于 `panels` 写到的区域，`panels` 优先于预设。
+- **谁说了算。** 一个区域的状态取下列第一个给出它的来源：用户在本页的操作；页面的 `panels`，然后是预设；用户之前的选择（记住的）；报告的 `view.panels`（[`--panels`](cli.md#报告选项)）；默认值。页面再次设置某个区域时，它的值取代用户在本页对该区域的操作。
+- **记住。** 默认布局会把用户的面板状态、侧栏宽度、列表与详情的分隔位置、主题、配色和语言记在 `localStorage` 里（同一个源下的所有查看器共用一条记录 `kgdiff:viewer`；存储被阻止或已满时忽略）。主题、配色和语言的顺序相同：页面的属性，然后是用户之前的选择，然后是报告的 `view`，最后是默认值。`persist="none"` 关闭记住。下面的元素（`<kgdiff-root>` 等）什么也不记：它们的布局归页面所有。
+- **`kgdiff-layout`** 报告面板状态或尺寸（拖动结束时）的每次变化，无论来自用户（`source: 'user'`）还是页面或报告（`source: 'host'`）：`{ panels, sidebarWidth, detailShare, source }`。最初的状态不报告。
 
 ## 视图
 
@@ -88,6 +120,10 @@
 
 在输入框中打字时，快捷键不生效。
 
+**生效范围**（`shortcuts`）：`scoped`（默认）在焦点位于查看器内时生效；`global` 在页面上没有任何元素获得焦点时也生效（适合整页的查看器，例如 HTML 报告），只对页面上第一个这样的查看器生效，并且不接管页面滚动用的按键（方向键、Home / End、Page Up / Down、空格）——布尔属性 `global-shortcuts` 的含义相同；`none`：没有快捷键，但获得焦点的变更列表仍然响应 ↑ / ↓、Home / End 和 Enter。在嵌套的根元素里按键，只有最近的那个根元素响应。
+
+**重新绑定**（`keymap`）：可以把单个按键绑定到别的快捷操作或解除绑定，写成数据：`keymap="x:none r:review"` 或 `viewer.keymap = { x: null, r: 'review' }`（按键取 `KeyboardEvent.key` 的值，在属性里用 `Space` 表示空格）。快捷操作有：`overlay`、`swipe`、`replay`、`scope`、`expand`、`next`、`prev`、`first`、`last`、`fly`、`escape`、`play-pause`、`left`、`right`（回放时单步，滑动对比时移动分隔线，按住 Shift 步长更大）、`fit`、`zoom-in`、`zoom-out`、`search`、`review`、`sidebar`、`theme`、`help`。帮助对话框列出的是默认按键。
+
 ## 嵌入 API
 
 ```html
@@ -100,7 +136,42 @@
 </script>
 ```
 
-属性：`mode`（`overlay|swipe|replay`；旧值 `changes` 按 `overlay` + `scope="changes"` 处理）、`scope`（`all|changes`，大图默认 `changes`）、`theme`（`auto|light|dark`）、`palette`、`locale`（`en|zh-CN`，默认取自 `navigator.language`）、`sidebar`（`open|closed`）、`sync-hash`（深链接 `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`；旧的 `mode:changes` 链接仍然有效）、`header`（`compact` 时不显示品牌和比较的图名，适合宿主页面自己显示这些信息的场合）、`chrome`（`none` 时只显示图本身，适合嵌入小块区域：不显示标题、操作按钮、视图坞（连同步骤说明和播放条）、变化列表、缩放按钮、小地图和图例卡片，保留悬停提示和一行图例；点击和快捷键不起作用，最小高度降到 120px，画布尺寸变化时和每轮循环开始时都重新放进画布）、`legend`（`auto|full|mini|none`）、`loop`（回放自动播放，播完停 `loop-delay` 毫秒后重新开始，默认 1200）、`pause-on-hover`（`false` 时鼠标停在图上也不暂停循环回放）。方法：`load()`、`selectHunk(id)`、`next()`、`prev()`、`play()`、`pause()`、`fit({ animate, padding })`（连同节点名称一起放进画布）、`exportDelta()`、`reviewState()`。事件（`CustomEvent`，冒泡，composed）：`kgdiff-ready` `{ stats }`、`kgdiff-select` `{ hunk, node }`、`kgdiff-mode` `{ mode, scope }`、`kgdiff-review` `{ hunk, reviewed, progress }`、`kgdiff-error` `{ error }`、`kgdiff-replay-end` `{ loop }`（回放播到结尾；`loop` 表示之后会重新开始）。
+以下属性同时有同名的反射属性：`mode`（`overlay|swipe|replay`；旧值 `changes` 按 `overlay` + `scope="changes"` 处理）、`scope`（`all|changes`，大图默认 `changes`）、`theme`（`auto|light|dark`）、`palette`（`default|colorblind`）、`locale`（`en|zh-CN`，默认取自 `navigator.language`）、`panels`（见[面板](#panels)）、`persist`（`none` 时什么也不记）、`chrome`（`none` 时只显示图本身，适合嵌入小块区域：不显示标题、操作按钮、视图坞（连同步骤说明和播放条）、变化列表、缩放按钮、小地图和图例卡片，保留悬停提示和一行图例；点击和快捷键不起作用，最小高度降到 120px，画布尺寸变化时和每轮循环开始时都重新放进画布）、`legend`（`auto|full|mini|none`）、`loop`（回放自动播放，播完停 `loop-delay` 毫秒后重新开始，默认 1200；属性名 `loopDelay`）、`pause-on-hover`（`false` 时鼠标停在图上也不暂停循环回放；属性名 `pauseOnHover`）、`shortcuts`（`scoped|global|none`）和 `keymap`（见[快捷键](#快捷键)；属性接受对象，不反射）。只有 HTML 属性：`sidebar`（`open|closed`，一个预设；按 `\` 后反映侧栏的状态）、`header`（`compact` 时不显示品牌和比较的图名，适合宿主页面自己显示这些信息的场合）、`sync-hash`（深链接 `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`；旧的 `mode:changes` 链接仍然有效）和 `global-shortcuts`。只有 JavaScript 属性：`payload`（预先计算好的报告）。方法：`load()`、`selectHunk(id)`、`next()`、`prev()`、`play()`、`pause()`、`fit({ animate, padding })`（连同节点名称一起放进画布）、`exportDelta()`、`reviewState()`、`setReviewed(id, reviewed)` 和 `refreshTheme()`（页面以查看器无法察觉的方式改了令牌之后，让画布按当前计算出的令牌重画）。事件（`CustomEvent`，冒泡，composed）：`kgdiff-ready` `{ stats }`、`kgdiff-select` `{ hunk, node }`、`kgdiff-mode` `{ mode, scope }`、`kgdiff-review` `{ hunk, reviewed, progress }`、`kgdiff-error` `{ error }`、`kgdiff-replay-end` `{ loop }`（回放播到结尾；`loop` 表示之后会重新开始）和 `kgdiff-layout` `{ panels, sidebarWidth, detailShare, source }`。
+
+## 元素（实验性）
+
+`<kgdiff-viewer>` 是由若干元素组成的默认布局，这些元素也可以单独摆放。它们在 0.6 中是实验性的：在稳定之前，名称、属性和结构可能在次版本中变化。
+
+| 元素                     | 显示的内容                                         |
+| ------------------------ | -------------------------------------------------- |
+| `<kgdiff-root>`          | 不显示：会话、键盘映射、实时区域、事件和主题令牌   |
+| `<kgdiff-stage>`         | 画布及其控件（视图坞、控制条、图例、缩放、小地图） |
+| `<kgdiff-change-list>`   | “变更”标题、数量、审阅进度和变更列表               |
+| `<kgdiff-change-detail>` | 选中的变更或节点                                   |
+| `<kgdiff-search>`        | 节点搜索：一个自带结果列表的组合框                 |
+| `<kgdiff-filters>`       | 带数量的类别筛选标签，以及“显示全部”               |
+
+- **`<kgdiff-root>`** 拥有 `<kgdiff-viewer>` 的属性、方法和事件，布局相关的除外（`panels`、`persist`、`sidebar`、`header`、`chrome`、`legend` 和 `kgdiff-layout`）。它以 `display: contents` 渲染：子元素由页面布局。
+- **绑定。** 元素显示离它最近的外层 `<kgdiff-root>`（或 `<kgdiff-viewer>`）的会话，也可以跨越 shadow root；或者显示页面上任意位置、由它的 `for="<id>"` 指定的那个根元素。顺序无关：之后才定义或连接的根元素、之后才出现的 id，到时都会找到。同一页面上的两个根元素从不共享选择、按键或播报。
+- **画布**有五个具名插槽 `top-start`、`top-end`、`bottom-start`、`bottom-center` 和 `bottom-end`，用来在画布上放页面自己的内容：由画布负责定位（在同一角落里比内置控件离角落更远），每个插入的元素都像内置控件一样，在适配视图和飞行时被避开。用其他方式定位的内容自己登记：`stage.registerObstacle(element)`（返回取消登记的函数），也以上下文（`Symbol.for('kgdiff.stage/1')`）的形式提供给画布的后代元素。目前一个根元素只绘制一块画布，第二块保持空白。在这个版本里，画布自带它的控件；这些控件以后会成为独立的元素。
+- **搜索**在查询不为空时，在输入框下方弹出结果。查询保存在会话里：绑定到同一根元素的变更列表这时让位。`/` 聚焦最后登记、且正在显示的那个搜索。
+- **键盘。** 键盘映射归根元素所有（`shortcuts`、`keymap`）。在根元素内部的元素里按键，通过冒泡到达根元素；用 `for` 绑定的元素会转发它的按键。
+- **无障碍。** 变更列表和详情面板是带标签的区域；ARIA 的 id 引用都在同一个元素内部（列表的选项、搜索的结果）；跨元素只用焦点移动（选择搜索结果会聚焦变更列表）和根元素唯一的实时区域播报。
+- **主题。** 根元素上的令牌由它内部的元素继承；在根元素子树之外、用 `for` 绑定的元素采用根元素的内置令牌集；页面在根元素上的覆盖不会到达它，需要在该元素上也设置一遍。
+- **包。** `import '@kgdiff/viewer'` 定义所有元素。每个元素还有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`…/stage`、`…/change-list`、`…/change-detail`、`…/search`、`…/filters`。`@kgdiff/viewer/session` 是不带 DOM 的无界面会话（`createSession`、`DiffSession`）。
+
+## 主题
+
+颜色和字体是 CSS 自定义属性 `--kgdiff-*`，由根元素（`<kgdiff-viewer>` 或 `<kgdiff-root>`）按内置主题（浅色、深色、色盲友好配色）设置，其内部的一切（包括画布）都继承它们。它们从 0.6 起是公开 API，列表见 [visual-language.md](../visual-language.md#css-tokens)（英文）。可以在根元素上用普通 CSS 覆盖其中任何一个（页面样式优先于内置令牌集），对比度由你负责：
+
+```css
+kgdiff-viewer {
+  --kgdiff-accent: #e8590c;
+  --kgdiff-font: "IBM Plex Sans", system-ui, sans-serif;
+}
+```
+
+查看器自己会跟随主题、配色和系统配色方案的变化。以它无法察觉的方式修改令牌之后（祖先元素上的类、之后加载的样式表），调用 `refreshTheme()`。画布无法绘制的值会被忽略，并在控制台给出警告。
 
 ## 状态
 

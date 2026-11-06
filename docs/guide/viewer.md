@@ -59,9 +59,13 @@ viewer.play();
 | `theme`            | `auto`, `light`, `dark`                                       | `auto`                     |
 | `palette`          | `default`, `colorblind`                                       | `default`                  |
 | `locale`           | `en`, `zh-CN`                                                 | from `navigator.language`  |
-| `sidebar`          | `open`, `closed`                                              |                            |
+| `panels`           | region states, e.g. `detail:collapsed minimap:hidden`         | all open, legend collapsed |
+| `persist`          | `none`: remember nothing                                      | remembers (per origin)     |
+| `sidebar`          | `open`, `closed` (a preset of `panels`)                       |                            |
 | `sync-hash`        | boolean: deep links `#kgdiff=hunk:<id>;mode:<m>;scope:<s>`    |                            |
-| `global-shortcuts` | boolean: shortcuts work when nothing on the page has focus    |                            |
+| `shortcuts`        | `scoped`, `global` (also when nothing has focus), `none`      | `scoped`                   |
+| `global-shortcuts` | boolean: the same as `shortcuts="global"`                     |                            |
+| `keymap`           | keys rebound or unbound, e.g. `x:none r:review`               |                            |
 | `header`           | `compact`: no brand or graph names, when your page shows them |                            |
 | `chrome`           | `none`: the graph alone, for small embeds                     | `full`                     |
 | `legend`           | `auto`, `full`, `mini` (one line), `none`                     | `auto`                     |
@@ -72,13 +76,59 @@ viewer.play();
 `mode="changes"`, from before scopes existed, still works: it means `overlay` with
 `scope="changes"`, and the attributes are rewritten to say so.
 
-`mode`, `scope`, `theme`, `palette`, `locale`, `chrome`, `legend`, `loop`, `loopDelay` and
-`pauseOnHover` are also properties. Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`,
-`play()`, `pause()`, `fit({ animate, padding })`, `exportDelta()`, `reviewState()` and
-`setReviewed(id, reviewed)`. Events, all bubbling and composed: `kgdiff-ready` `{ stats }`,
-`kgdiff-select` `{ hunk, node }`, `kgdiff-mode` `{ mode, scope }`, `kgdiff-review`
-`{ hunk, reviewed, progress }`, `kgdiff-error` `{ error }` and `kgdiff-replay-end` `{ loop }`.
+`mode`, `scope`, `theme`, `palette`, `locale`, `panels`, `persist`, `chrome`, `legend`, `loop`,
+`loopDelay`, `pauseOnHover`, `shortcuts` and `keymap` are also properties (`panels` and
+`keymap` take objects too). Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`, `play()`,
+`pause()`, `fit({ animate, padding })`, `exportDelta()`, `reviewState()`,
+`setReviewed(id, reviewed)` and `refreshTheme()`. Events, all bubbling and composed:
+`kgdiff-ready` `{ stats }`, `kgdiff-select` `{ hunk, node }`, `kgdiff-mode` `{ mode, scope }`,
+`kgdiff-review` `{ hunk, reviewed, progress }`, `kgdiff-error` `{ error }`,
+`kgdiff-replay-end` `{ loop }` and `kgdiff-layout` `{ panels, sidebarWidth, detailShare, source }`.
 [Viewer: interaction and API](../interaction.md#embedding-api) has the details.
+
+## Arrange the layout
+
+Every region of the viewer can be open, collapsed (folded to the control that opens it again)
+or hidden, with one attribute: the change list (`list`), the detail panel (`detail`), the
+search (`search`), the filters (`filters`), the view dock (`dock`), the replay transport
+(`transport`), the legend (`legend`), the zoom buttons (`zoom`), the minimap (`minimap`), the
+title (`title`) and the actions (`actions`). The viewer remembers what the reader changes
+(panels, the sidebar's width and the split between the list and the details, theme, palette,
+language) for the next visit; what your page sets wins over that. `persist="none"` turns it
+off. [Panels](../interaction.md#panels) has the rules.
+
+### The detail panel collapsed by default
+
+```html
+<kgdiff-viewer panels="detail:collapsed" style="height: 640px"></kgdiff-viewer>
+```
+
+The change list gets the sidebar's height; the reader opens the details from their bar. Set it
+as a property just as well: `viewer.panels = { detail: 'collapsed' }`.
+
+### Watch the replay only
+
+```html
+<kgdiff-viewer
+  mode="replay"
+  panels="list:hidden detail:hidden search:hidden filters:hidden"
+  style="height: 480px"
+></kgdiff-viewer>
+```
+
+The canvas takes the whole width, with the dock and the replay transport. Add
+`dock:hidden zoom:hidden minimap:hidden` for the transport alone, or use `chrome="none" loop`
+for an embed without any control ([below](#embed-a-small-looping-replay)).
+
+### React to layout changes
+
+```js
+viewer.addEventListener('kgdiff-layout', (event) => {
+  const { panels, sidebarWidth, source } = event.detail;
+  if (source === 'user') saveLayout({ panels, sidebarWidth }); // e.g. per user, on your server
+});
+```
+
 
 ## Embed a small looping replay
 
@@ -94,6 +144,75 @@ list, step caption, playback bar, zoom buttons and minimap go, clicks and shortc
 and the view stays fitted, labels included: no name is cut at the edge. `loop` replays the changes, pausing
 `loop-delay` ms (1.2 s) between rounds and while the mouse is over the graph.
 `kgdiff-replay-end` fires at the end of every round.
+
+## Compose your own layout
+
+The viewer is made of elements you can also place yourself (experimental in 0.6: they may
+change in a minor release before they are stable). `<kgdiff-root>` holds the diff session and
+shows nothing; the other elements show its parts wherever they are: inside it, or anywhere on
+the page with `for="<root id>"`.
+
+| Element                  | Shows                                                       |
+| ------------------------ | ----------------------------------------------------------- |
+| `<kgdiff-root>`          | nothing: it has the viewer's attributes, methods and events |
+| `<kgdiff-stage>`         | the graph, with the view dock, transport, legend and zoom   |
+| `<kgdiff-change-list>`   | the list of changes, with review progress                   |
+| `<kgdiff-change-detail>` | the selected change                                         |
+| `<kgdiff-search>`        | node search, its results in a popup                         |
+| `<kgdiff-filters>`       | the filter chips                                            |
+
+### The change list in your own sidebar
+
+```html
+<div class="app">
+  <aside class="my-sidebar">
+    <kgdiff-search for="diff"></kgdiff-search>
+    <kgdiff-change-list for="diff"></kgdiff-change-list>
+  </aside>
+  <kgdiff-root id="diff">
+    <kgdiff-stage>
+      <my-legend-card slot="top-end"></my-legend-card>
+    </kgdiff-stage>
+  </kgdiff-root>
+  <kgdiff-change-detail for="diff" class="my-drawer"></kgdiff-change-detail>
+</div>
+
+<script type="module">
+  import '@kgdiff/viewer'; // or only what you use: '@kgdiff/viewer/elements/root', …/stage, …
+  await document.getElementById('diff').load({ before, after });
+</script>
+```
+
+- Lay the elements out with your own CSS; give the stage and the list a height.
+  `<kgdiff-root>` renders as `display: contents`, so its children take part in your layout.
+- The stage's slots (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`)
+  place your content over the canvas, and the graph is framed clear of it. For content you
+  position yourself, call `stage.registerObstacle(element)`.
+- The keyboard map belongs to the root: `j` / `k`, `x`, `/` and the rest work in every element
+  bound to it, and `/` focuses the search. `shortcuts` and `keymap` go on the root.
+- Composed elements remember nothing: your page owns the layout.
+- Each element has a subpath that defines only it: `@kgdiff/viewer/elements/root`, `/stage`,
+  `/change-list`, `/change-detail`, `/search`, `/filters`. `@kgdiff/viewer/session` is the
+  headless session, without any element.
+
+## Theme it with CSS
+
+Colors and fonts are CSS custom properties, set on `<kgdiff-viewer>` (or `<kgdiff-root>`) and
+inherited by the canvas and every panel. Override them with ordinary CSS:
+
+```css
+kgdiff-viewer {
+  --kgdiff-accent: #e8590c;
+  --kgdiff-accent-soft: rgb(232 89 12 / 0.16);
+  --kgdiff-font: "IBM Plex Sans", system-ui, sans-serif;
+}
+```
+
+The [token list](../visual-language.md#css-tokens) is public API from 0.6. Light, dark and the
+color-blind palette stay available underneath (`theme`, `palette`); your values win over them,
+and keeping them readable is up to you. When tokens change in a way the viewer cannot see (a
+class on an ancestor, a stylesheet loaded later), call `viewer.refreshTheme()` so the canvas
+follows.
 
 ## Keep review progress
 
