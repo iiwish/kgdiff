@@ -27,6 +27,7 @@ jobs:
   build:
     name: Build site
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       pages: read # configure-pages reads the site's base URL and path
@@ -56,6 +57,7 @@ jobs:
     name: Deploy
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       pages: write # deploy the artifact
       id-token: write # prove to Pages that the deployment comes from this workflow

@@ -27,13 +27,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: action-${{ github.ref }}
+  group: action-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
 jobs:
   run:
     name: Run the action (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     permissions:
       contents: read
       pull-requests: write # the comment
@@ -134,6 +135,7 @@ jobs:
   read-only:
     name: Run the action with a read-only token and Node.js 20
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: read # what a pull request from a fork gets

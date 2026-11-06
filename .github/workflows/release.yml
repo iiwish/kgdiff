@@ -26,6 +26,7 @@ jobs:
     # (docs/releasing.md).
     if: github.repository == 'iiwish/kgdiff' && vars.RELEASE_ENABLED == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Restrict the environment to the main branch in the repository settings and name it in the
     # trusted publisher configuration on npmjs.com.
     environment: npm
