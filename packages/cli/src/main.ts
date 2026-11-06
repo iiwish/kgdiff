@@ -4,7 +4,7 @@
  * load the diff engine.
  */
 import { parseCommandLine, peekColorMode } from './args.js';
-import { debugEnabled, formatError } from './errors.js';
+import { bugReportUrl, debugEnabled, formatError } from './errors.js';
 import { renderHelp } from './help.js';
 import type { CliIO } from './io.js';
 import { createPainter, isLightBackground, resolveColorLevel } from './style.js';
@@ -50,16 +50,10 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
       resolveColorLevel(peekColorMode(argv), io.env, io.stderrIsTTY),
       light,
     );
-    // Only public runtime metadata belongs in the URL. Error messages and input paths can
-    // contain private data; the person reporting decides what to paste into the form.
-    const report = new URL('https://github.com/iiwish/kgdiff/issues/new');
-    report.searchParams.set('template', 'bug_report.yml');
-    report.searchParams.set('version', `kgdiff ${cliVersion()}`);
-    report.searchParams.set(
-      'environment',
-      `${process.platform} ${process.arch}, Node.js ${process.version}`,
-    );
-    io.stderr.write(formatError(error, paint, debugEnabled(io.env.DEBUG), report.href));
+    // The platform comes from `io` like every other side effect, so `main` stays runnable
+    // in-process and its output deterministic in tests.
+    const report = bugReportUrl(cliVersion(), io.runtime);
+    io.stderr.write(formatError(error, paint, debugEnabled(io.env.DEBUG), report));
     return 2;
   }
 }

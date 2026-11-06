@@ -78,6 +78,22 @@ const KGDIFF_HINTS: Readonly<Record<string, string>> = {
   'dangling-edge': 'An edge refers to a node the graph does not define.',
 };
 
+/** The bug report form an unexpected error links to. */
+const BUG_REPORT_FORM = 'https://github.com/iiwish/kgdiff/issues/new';
+
+/**
+ * Link to the bug report form, prefilled through the form's field ids (`version`,
+ * `environment`). Only public metadata goes into it: error messages and input paths can contain
+ * private data, and the person reporting decides what to paste into the form.
+ */
+export function bugReportUrl(version: string, runtime?: string): string {
+  const url = new URL(BUG_REPORT_FORM);
+  url.searchParams.set('template', 'bug_report.yml');
+  url.searchParams.set('version', `kgdiff ${version}`);
+  if (runtime) url.searchParams.set('environment', runtime);
+  return url.href;
+}
+
 /** User-facing message and hint for any thrown value. */
 export function describeError(
   error: unknown,
