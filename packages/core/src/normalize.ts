@@ -22,7 +22,7 @@ import type {
   NormalizeOptions,
   Point,
 } from './types.js';
-import { compareStrings, EMPTY, isRecord, pushTo, sortedUnique } from './util.js';
+import { compareStrings, EMPTY, isRecord, sortedUnique } from './util.js';
 
 /**
  * Untrusted input record: every field is validated before use. Besides `NodeInput`, the
@@ -227,7 +227,23 @@ function positionOf(value: unknown): Point | undefined {
     : undefined;
 }
 
-function draftNode(raw: RawRecord, id: Id, issues: GraphIssue[]): NodeDraft {
+/** The fields `normalize` reads from a node record (a `KGNode` has them too). */
+type NodeFields = {
+  readonly [K in
+    | 'id'
+    | 'label'
+    | 'type'
+    | 'types'
+    | 'aliases'
+    | 'attrs'
+    | 'deprecated'
+    | 'replaces'
+    | 'replacedBy'
+    | 'implicit'
+    | 'position']?: unknown;
+};
+
+function draftNode(raw: NodeFields, id: Id, issues: GraphIssue[]): NodeDraft {
   const types = stringArray(raw.type, id, 'type');
   const extraTypes = stringArray(raw.types, id, 'types');
   const aliases = stringArray(raw.aliases, id, 'aliases');
@@ -510,26 +526,61 @@ export function normalize(input: GraphInput, options: NormalizeOptions = {}): KG
     else for (const edge of group.edges ?? []) edges.set(edge.key, edge);
   }
 
-  // ── Adjacency ──
-  const outgoing = new Map<Id, readonly EdgeKey[]>();
-  const incoming = new Map<Id, readonly EdgeKey[]>();
-  for (const edge of edges.values()) {
-    pushTo(outgoing as Map<Id, EdgeKey[]>, edge.source, edge.key);
-    pushTo(incoming as Map<Id, EdgeKey[]>, edge.target, edge.key);
-  }
-  for (const id of nodes.keys()) {
-    if (!outgoing.has(id)) outgoing.set(id, EMPTY);
-    if (!incoming.has(id)) incoming.set(id, EMPTY);
-  }
-
   issues.sort(
     (a, b) =>
       compareStrings(a.code, b.code) ||
       compareStrings(a.ref ?? '', b.ref ?? '') ||
       compareStrings(a.message, b.message),
   );
+  return indexGraph(input.meta, nodes, edges, edgeIdentity, issues);
+}
+
+/** Edge keys by source and by target node id, in edge order. */
+export interface Adjacency {
+  readonly outgoing: Map<Id, readonly EdgeKey[]>;
+  readonly incoming: Map<Id, readonly EdgeKey[]>;
+}
+
+/**
+ * The adjacency of `edges`, which lists the nodes that have edges; undefined when `nodes` is
+ * given and an edge has an end that is not one of them.
+ */
+export function adjacencyOf(
+  edges: ReadonlyMap<EdgeKey, KGEdge>,
+  nodes?: ReadonlyMap<Id, KGNode>,
+): Adjacency | undefined {
+  const outgoing = new Map<Id, EdgeKey[]>();
+  const incoming = new Map<Id, EdgeKey[]>();
+  const link = (adjacent: Map<Id, EdgeKey[]>, id: Id, key: EdgeKey): boolean => {
+    const list = adjacent.get(id);
+    if (list) list.push(key);
+    else if (!nodes || nodes.has(id)) adjacent.set(id, [key]);
+    else return false;
+    return true;
+  };
+  for (const edge of edges.values()) {
+    if (!link(outgoing, edge.source, edge.key) || !link(incoming, edge.target, edge.key)) {
+      return undefined;
+    }
+  }
+  return { outgoing, incoming };
+}
+
+/** The graph of indexed nodes and keyed edges, with their adjacency (built when not given). */
+export function indexGraph(
+  meta: unknown,
+  nodes: Map<Id, KGNode>,
+  edges: Map<EdgeKey, KGEdge>,
+  edgeIdentity: EdgeIdentity,
+  issues: GraphIssue[],
+  { outgoing, incoming } = adjacencyOf(edges) as Adjacency,
+): KGraph {
+  for (const id of nodes.keys()) {
+    if (!outgoing.has(id)) outgoing.set(id, EMPTY);
+    if (!incoming.has(id)) incoming.set(id, EMPTY);
+  }
   return {
-    meta: isRecord(input.meta) ? { ...input.meta } : {},
+    meta: isRecord(meta) ? { ...meta } : {},
     nodes,
     edges,
     outgoing,
@@ -537,6 +588,47 @@ export function normalize(input: GraphInput, options: NormalizeOptions = {}): KG
     edgeIdentity,
     issues,
   };
+}
+
+// ─── Single declarations ─────────────────────────────────────────────────────
+// `diffFromJSON` reads graphs in which every node and edge is declared once (`canonicalGraphs`
+// in json.ts). These make one the way `normalize` does, reporting into `issues`; merging
+// repeats and dangling ends are the caller's to rule out.
+
+/** The node `normalize` makes of `raw` declared once, under `rawId` (`raw.id` by default). */
+export function nodeOf(
+  raw: NodeFields,
+  issues: GraphIssue[],
+  rawId: unknown = raw.id,
+): KGNode | undefined {
+  const id = coerceId(rawId);
+  return id === undefined ? undefined : finishNode(draftNode(raw, id, issues));
+}
+
+/**
+ * The edge `normalize` makes of `raw` when no other edge has its identity and both ends are
+ * nodes; undefined for an empty end. `key`: known already (it saves building it again).
+ */
+export function edgeOf(
+  raw: RawRecord,
+  edgeIdentity: EdgeIdentity,
+  issues: GraphIssue[],
+  key?: EdgeKey,
+): KGEdge | undefined {
+  const source = coerceId(raw.source);
+  const target = coerceId(raw.target);
+  if (source === undefined || target === undefined) return undefined;
+  const predicate = optionalString(raw.predicate, source, target, 'predicate') ?? '';
+  const explicitLabel = optionalString(raw.label, source, target, 'label');
+  const label = explicitLabel === undefined ? predicateLabel(predicate) : nfc(explicitLabel);
+  const id = coerceId(raw.id);
+  const attrs = attrsOf(raw.attrs, source, target, issues) ?? EMPTY_ATTRS;
+  const k =
+    key ?? (edgeIdentity === 'id' && id !== undefined ? id : tripleKey(source, predicate, target));
+  // The draft `normalize` makes, keyed.
+  return id === undefined
+    ? { key: k, source, target, predicate, label, attrs }
+    : { key: k, id, source, target, predicate, label, attrs };
 }
 
 /** Applies the dangling-endpoint policy to an edge with at least one undeclared endpoint. */

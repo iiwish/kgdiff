@@ -5,7 +5,7 @@
  * (unchanged elements are stored once). Everything else derived from the graphs — labels,
  * types, degrees, edge keys, `hierarchical`, the index — is rebuilt by `diffFromJSON`.
  */
-import { attrsEqual, canonicalJSON, tripleKey } from './canonical.js';
+import { attrsEqual, canonicalJSON, isEmptyAttrs, tripleKey } from './canonical.js';
 import { checkConsistency } from './consistency.js';
 import { nodeInput } from './delta.js';
 import { toUnionEdge, toUnionNode } from './diff.js';
@@ -13,7 +13,7 @@ import { createDiffIndex } from './diff-index.js';
 import { KgdiffError } from './errors.js';
 import { edgeToJSON, nodeContentEquals, nodeToJSON } from './graph-json.js';
 import type { EdgeRecord, NodeRecord } from './model.js';
-import { normalize } from './normalize.js';
+import { adjacencyOf, edgeOf, indexGraph, nodeOf, normalize } from './normalize.js';
 import { resolveOptions } from './options.js';
 import { predicateLabel } from './text.js';
 import type {
@@ -22,8 +22,12 @@ import type {
   EdgeIdentity,
   EdgeInput,
   EdgeJSON,
+  EdgeKey,
+  GraphIssue,
   Hunk,
+  Id,
   KGEdge,
+  KGNode,
   KGraph,
   NodeInput,
   NodeJSON,
@@ -186,7 +190,9 @@ function sameFingerprint(edge: KGEdge, json: EdgeJSON, mode: EdgeIdentity): bool
     edge.target === json.target &&
     edge.predicate === predicate &&
     edge.label === (json.label ?? predicateLabel(predicate)) &&
-    attrsEqual(edge.attrs, json.attrs ?? {})
+    (json.attrs === undefined || json.attrs === null
+      ? isEmptyAttrs(edge.attrs)
+      : attrsEqual(edge.attrs, json.attrs))
   );
 }
 
@@ -213,33 +219,24 @@ function edgeFinder(graph: KGraph): (json: EdgeJSON) => KGEdge | undefined {
   };
 }
 
-/**
- * Inverse of `diffToJSON`: rebuilds both graphs from the union snapshots, the union
- * elements and the index. `diffToJSON(diffFromJSON(j))` equals `j`.
- *
- * @throws KgdiffError `unsupported-version` for an unknown format or version,
- *   `invalid-input` for a malformed document.
- */
-export function diffFromJSON(json: DiffJSON): DiffResult {
-  if (!isRecord(json) || json.format !== 'kgdiff.diff') {
-    throw new KgdiffError(
-      'unsupported-version',
-      'Not a kgdiff diff (expected format "kgdiff.diff")',
-    );
-  }
-  if (json.version !== 1) {
-    throw new KgdiffError(
-      'unsupported-version',
-      `Unsupported diff version ${String(json.version)}; this reader supports version 1`,
-      { version: json.version },
-    );
-  }
-  checkEnvelope(json);
-  const options = resolveOptions(json.options);
-  const mode = options.edgeIdentity;
-  const hasBefore = (status: string): boolean => status !== 'added';
-  const hasAfter = (status: string): boolean => status !== 'removed';
+const hasBefore = (status: string): boolean => status !== 'added';
+const hasAfter = (status: string): boolean => status !== 'removed';
 
+/** Both graphs of a diff document, and the version of each union edge in them. */
+export interface RebuiltGraphs {
+  readonly before: KGraph;
+  readonly after: KGraph;
+  /** The before version of `json.edges[i]` (`e`), if its status has one. */
+  beforeEdge(e: UnionEdgeJSON, i: number): KGEdge | undefined;
+  /** The after version of `json.edges[i]` (`e`), if its status has one. */
+  afterEdge(e: UnionEdgeJSON, i: number): KGEdge | undefined;
+}
+
+/**
+ * The graphs as `normalize` rebuilds them from the snapshots (any document): the reference that
+ * `canonicalGraphs` must match.
+ */
+export function normalizedGraphs(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs {
   const afterNodes: NodeInput[] = [];
   for (const n of json.nodes) {
     if (!hasAfter(n.status)) continue;
@@ -280,6 +277,130 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
     { edgeIdentity: mode },
   );
 
+  const findBefore = edgeFinder(before);
+  const findAfter = edgeFinder(after);
+  return {
+    before,
+    after,
+    beforeEdge(e) {
+      const snapshot = e.before ?? e.after;
+      return hasBefore(e.status) && snapshot ? findBefore(snapshot) : undefined;
+    },
+    afterEdge: (e) => (hasAfter(e.status) && e.after ? findAfter(e.after) : undefined),
+  };
+}
+
+/**
+ * Fast path of `diffFromJSON`: the graphs read straight from the snapshots, keeping the edge each
+ * union edge becomes instead of looking it up. `diffToJSON` writes each node and edge once and
+ * canonical, so normalizing them only re-makes each the same way (`nodeOf`, `edgeOf`). Anything
+ * more `normalize` would do — merge a repeated id or key, add a node for a dangling end, report
+ * an issue — or a snapshot `edgeFinder` would not find gives up with undefined, and the caller
+ * normalizes. When it succeeds, the graphs equal `normalizedGraphs` field for field, in order.
+ */
+export function canonicalGraphs(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs | undefined {
+  try {
+    return readCanonical(json, mode);
+  } catch {
+    // Something `normalize` rejects: it reports it, in its own order.
+    return undefined;
+  }
+}
+
+function readCanonical(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs | undefined {
+  // A repeated id or key is caught by the size of the map not growing (the overwritten entry
+  // does not matter: the whole read is given up).
+  const issues: GraphIssue[] = [];
+  const afterNodes = new Map<Id, KGNode>();
+  for (const n of json.nodes) {
+    if (!hasAfter(n.status)) continue;
+    const node = isRecord(n.after) ? nodeOf(n.after, issues) : undefined;
+    if (!node || afterNodes.size === afterNodes.set(node.id, node).size) return undefined;
+  }
+  const beforeNodes = new Map<Id, KGNode>();
+  for (const n of json.nodes) {
+    if (!hasBefore(n.status)) continue;
+    let node: KGNode | undefined;
+    if (n.before) node = isRecord(n.before) ? nodeOf(n.before, issues) : undefined;
+    else {
+      // Stored once: the after node under its before id.
+      const twin = n.afterId === undefined ? undefined : afterNodes.get(n.afterId);
+      if (twin && n.beforeId !== undefined) node = nodeOf(twin, issues, n.beforeId);
+    }
+    if (!node || beforeNodes.size === beforeNodes.set(node.id, node).size) return undefined;
+  }
+
+  const afterEdges = new Map<EdgeKey, KGEdge>();
+  const beforeEdges = new Map<EdgeKey, KGEdge>();
+  const read = (
+    snapshot: unknown,
+    edges: Map<EdgeKey, KGEdge>,
+    key?: EdgeKey,
+  ): KGEdge | undefined => {
+    if (!isRecord(snapshot)) return undefined;
+    const edge = edgeOf(snapshot, mode, issues, key);
+    return edge &&
+      sameFingerprint(edge, snapshot as unknown as EdgeJSON, mode) &&
+      edges.size < edges.set(edge.key, edge).size
+      ? edge
+      : undefined;
+  };
+  const afterOf: (KGEdge | undefined)[] = [];
+  const beforeOf: (KGEdge | undefined)[] = [];
+  for (const e of json.edges) {
+    let a: KGEdge | undefined;
+    if (hasAfter(e.status)) {
+      a = read(e.after, afterEdges);
+      if (!a) return undefined;
+    }
+    let b: KGEdge | undefined;
+    if (hasBefore(e.status)) {
+      const snapshot = e.before ?? e.after;
+      // Stored once: the same record, so the same key.
+      b = read(snapshot, beforeEdges, snapshot === e.after ? a?.key : undefined);
+      if (!b) return undefined;
+    }
+    afterOf.push(a);
+    beforeOf.push(b);
+  }
+  const afterAdjacency = adjacencyOf(afterEdges, afterNodes);
+  const beforeAdjacency = afterAdjacency && adjacencyOf(beforeEdges, beforeNodes);
+  if (issues.length > 0 || !beforeAdjacency || !afterAdjacency) return undefined;
+  return {
+    before: indexGraph(json.meta.before, beforeNodes, beforeEdges, mode, [], beforeAdjacency),
+    after: indexGraph(json.meta.after, afterNodes, afterEdges, mode, [], afterAdjacency),
+    beforeEdge: (_, i) => beforeOf[i],
+    afterEdge: (_, i) => afterOf[i],
+  };
+}
+
+/**
+ * Inverse of `diffToJSON`: rebuilds both graphs from the union snapshots, the union
+ * elements and the index. `diffToJSON(diffFromJSON(j))` equals `j`.
+ *
+ * @throws KgdiffError `unsupported-version` for an unknown format or version,
+ *   `invalid-input` for a malformed document.
+ */
+export function diffFromJSON(json: DiffJSON): DiffResult {
+  if (!isRecord(json) || json.format !== 'kgdiff.diff') {
+    throw new KgdiffError(
+      'unsupported-version',
+      'Not a kgdiff diff (expected format "kgdiff.diff")',
+    );
+  }
+  if (json.version !== 1) {
+    throw new KgdiffError(
+      'unsupported-version',
+      `Unsupported diff version ${String(json.version)}; this reader supports version 1`,
+      { version: json.version },
+    );
+  }
+  checkEnvelope(json);
+  const options = resolveOptions(json.options);
+  const mode = options.edgeIdentity;
+  const graphs = canonicalGraphs(json, mode) ?? normalizedGraphs(json, mode);
+  const { before, after } = graphs;
+
   // A version a node or edge must not have is left out here, so `toUnionNode` / `toUnionEdge`
   // report it (a removed node with an afterId, …).
   const nodes = json.nodes.map((n) => {
@@ -299,12 +420,9 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
   });
 
   const hierarchy = new Set(options.hierarchyPredicates);
-  const findBefore = edgeFinder(before);
-  const findAfter = edgeFinder(after);
-  const edges = json.edges.map((e) => {
-    const snapshot = e.before ?? e.after;
-    const b = hasBefore(e.status) && snapshot ? findBefore(snapshot) : undefined;
-    const a = hasAfter(e.status) && e.after ? findAfter(e.after) : undefined;
+  const edges = json.edges.map((e, i) => {
+    const b = graphs.beforeEdge(e, i);
+    const a = graphs.afterEdge(e, i);
     const shown = a ?? b;
     if (!shown) invalid(`Union edge ${e.id} could not be rebuilt`);
     const record: Mutable<EdgeRecord> = {
