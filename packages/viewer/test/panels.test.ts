@@ -285,13 +285,15 @@ describe('presets', () => {
     expect(el.layout.panels).toMatchObject({ dock: 'open', list: 'collapsed', detail: 'open' });
   });
 
-  it('the host re-stating a preset leaves the user’s change; changing it overrides it', async () => {
-    const el = await loaded({ sidebar: 'closed' });
+  it('a preset set to what it says leaves the user’s change; set to another, it overrides it', async () => {
+    const el = await loaded({ sidebar: 'closed', header: 'compact' });
     press(el, '\\');
     expect(el.layout.panels.list).toBe('open');
-    el.setAttribute('sidebar', 'closed');
-    expect(el.layout.panels.list).toBe('open');
+    // The sidebar attribute reflects the user's change; setting that again is no command.
     el.setAttribute('sidebar', 'open');
+    expect(el.layout.panels.list).toBe('open');
+    el.setAttribute('header', 'compact');
+    expect(el.layout.panels.list).toBe('open');
     el.setAttribute('sidebar', 'closed');
     expect(el.layout.panels.list).toBe('collapsed');
   });
@@ -316,6 +318,36 @@ describe('panels is the page’s declaration, layout what is shown', () => {
     expect(el.getAttribute('panels')).toBe('detail:collapsed minimap:hidden');
     // The remembered choice still applies to the regions the page did not name.
     expect(el.layout.panels.zoom).toBe('hidden');
+  });
+});
+
+describe('the sidebar attribute, which the layout reflects', () => {
+  it('reopens the sidebar the user folded when the page sets it open again', async () => {
+    const el = await loaded({ sidebar: 'open' });
+    press(el, '\\');
+    expect(el.getAttribute('sidebar')).toBe('closed');
+    expect($(el, '.sidebar').dataset.open).toBe('false');
+    el.setAttribute('sidebar', 'open');
+    expect($(el, '.sidebar').dataset.open).toBe('true');
+    expect(el.layout.panels.list).toBe('open');
+  });
+
+  it('folds the sidebar the user opened when the page sets it closed again', async () => {
+    const el = await loaded({ sidebar: 'closed' });
+    press(el, '\\');
+    expect(el.getAttribute('sidebar')).toBe('open');
+    el.setAttribute('sidebar', 'closed');
+    expect($(el, '.sidebar').dataset.open).toBe('false');
+    expect(el.layout.panels.list).toBe('collapsed');
+  });
+
+  it('setting what the attribute already says changes nothing', async () => {
+    const el = await loaded({ sidebar: 'open' });
+    press(el, '\\');
+    const seen = layouts(el);
+    el.setAttribute('sidebar', 'closed');
+    expect($(el, '.sidebar').dataset.open).toBe('false');
+    expect(seen).toEqual([]);
   });
 });
 

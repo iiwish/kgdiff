@@ -142,9 +142,18 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     this.controller.detach();
   }
 
-  protected override attributeChanged(name: string, value: string | null): void {
+  protected override attributeChanged(
+    name: string,
+    value: string | null,
+    old: string | null,
+  ): void {
     switch (name) {
       case 'sidebar':
+        // The layout reflects the sidebar's state here (after `\`): the page changing the
+        // attribute from what it says now is a command, even back to what the page said
+        // before; setting what it already says is not.
+        this.#preset(name, value, value !== old);
+        break;
       case 'header':
         this.#preset(name, value);
         break;
@@ -311,13 +320,19 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     this.#resolve('host');
   }
 
-  #preset(name: Preset, value: string | null): void {
+  /**
+   * A preset attribute changed. `commanded` (`sidebar`, which the layout reflects): the
+   * sidebar's regions yield even when the preset the page set last is the same.
+   */
+  #preset(name: Preset, value: string | null, commanded = false): void {
     this.#presetAttrs[name] = value;
     const { sidebar, header, chrome } = this.#presetAttrs;
     const next = presetPanels(sidebar, header, chrome);
-    if (this.#yield(this.#presets, next).some((r) => SIDEBAR_REGIONS.includes(r))) {
-      this.#folded = null;
+    const yielded = this.#yield(this.#presets, next);
+    if (commanded) {
+      for (const r of SIDEBAR_REGIONS) delete this.#runtime[r];
     }
+    if (commanded || yielded.some((r) => SIDEBAR_REGIONS.includes(r))) this.#folded = null;
     this.#presets = next;
     this.#resolve('host');
   }
