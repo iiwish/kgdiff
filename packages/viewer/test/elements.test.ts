@@ -140,6 +140,25 @@ describe('binding', () => {
     expect(title()).toBeTruthy();
   });
 
+  it('reflects for as htmlFor, and names the root it is bound to (null while waiting)', async () => {
+    place('<kgdiff-change-list></kgdiff-change-list>', 'kgdiff-change-list');
+    const list = document.querySelector(
+      'kgdiff-change-list',
+    ) as HTMLElementTagNameMap['kgdiff-change-list'];
+    expect(list.htmlFor).toBe('');
+    list.htmlFor = 'two';
+    expect(list.getAttribute('for')).toBe('two');
+    expect(list.root).toBeNull();
+    const two = place<Root>('<kgdiff-root id="two"></kgdiff-root>', '#two');
+    expect(list.root).toBe(two);
+    const one = place<Root>('<kgdiff-root id="one"></kgdiff-root>', '#one');
+    list.setAttribute('for', 'one');
+    expect(list.htmlFor).toBe('one');
+    expect(list.root).toBe(one);
+    list.remove();
+    expect(list.root).toBeNull();
+  });
+
   it('gives elements outside the root its token set; inside they inherit it', async () => {
     place(`<kgdiff-root id="t" theme="light"><kgdiff-filters></kgdiff-filters></kgdiff-root>
       <kgdiff-filters for="t" id="out"></kgdiff-filters>`);

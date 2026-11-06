@@ -97,7 +97,7 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   }
 
   protected override upgradedProperties(): readonly string[] {
-    return ['panels'];
+    return [...super.upgradedProperties(), 'panels'];
   }
 
   /** A region the page declares another state for gives way; the same again changes nothing. */

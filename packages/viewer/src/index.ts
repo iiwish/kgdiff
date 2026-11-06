@@ -319,20 +319,28 @@ export interface KgdiffViewerElement extends KgdiffRootElement {
 }
 
 /**
- * An element bound to a root (experimental): `<kgdiff-change-list>`, `<kgdiff-change-detail>`,
- * `<kgdiff-search>`, `<kgdiff-filters>`. It shows the session of the nearest `<kgdiff-root>` or
- * `<kgdiff-viewer>` around it (across shadow roots), or of the one named by its `for`
- * attribute (an element id) anywhere on the page; a root defined or connected later is found
- * then.
+ * An element bound to a root (experimental): `<kgdiff-stage>`, `<kgdiff-change-list>`,
+ * `<kgdiff-change-detail>`, `<kgdiff-search>`, `<kgdiff-filters>`. It shows the session of the
+ * nearest `<kgdiff-root>` or `<kgdiff-viewer>` around it (across shadow roots), or of the one
+ * named by its `for` attribute (an element id) anywhere on the page; a root defined or
+ * connected later is found then.
  */
-export type KgdiffBoundElement = HTMLElement;
+export interface KgdiffBoundElement extends HTMLElement {
+  /**
+   * Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show,
+   * or '' for the nearest one around the element. Changing it binds again.
+   */
+  htmlFor: string;
+  /** The root this element shows, or null while it waits for one. */
+  readonly root: KgdiffRootElement | null;
+}
 
 /**
  * `<kgdiff-stage>` (experimental): the canvas, with five named slots for the page's content
  * over it (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`). Every
  * slotted element is kept clear of fits and flights.
  */
-export interface KgdiffStageElement extends HTMLElement {
+export interface KgdiffStageElement extends KgdiffBoundElement {
   /**
    * The states of the built-in chrome (`dock`, `transport`, `legend`, `zoom`, `minimap`),
    * reflected to the `panels` attribute, in the syntax of `<kgdiff-viewer>`'s `panels`:

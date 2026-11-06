@@ -268,7 +268,8 @@ are stable.
   `<kgdiff-viewer>`) around it, also across shadow roots, or of the one its `for="<id>"` names
   anywhere on the page. Order does not matter: a root defined or connected later, or an id that
   appears later, is found then. Two roots on a page never share selection, keys or
-  announcements.
+  announcements. The `htmlFor` property reflects `for` (as on `<label>`), and `root` is the
+  root an element is bound to, or null while it waits for one.
 - **The stage** has five named slots, `top-start`, `top-end`, `bottom-start`, `bottom-center`
   and `bottom-end`, for the page's content over the canvas: the stage positions it (stacked
   further from the corner than the chrome there), and every slotted element is kept clear of
