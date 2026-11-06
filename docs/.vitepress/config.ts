@@ -143,7 +143,7 @@ export default defineConfig({
   // Every page lives under docs/, so the landing page and the playground are plain root-relative
   // links (`/playground.html`) whatever the base, and the build output drops into apps/site/dist.
   rewrites: (page) => `docs/${page}`,
-  srcExclude: ['releasing.md', 'review-checklist.md'],
+  srcExclude: ['releasing.md', 'review-checklist.md', 'rfcs/**'],
   assetsDir: 'docs/assets',
   title: 'kgdiff',
   titleTemplate: ':title · kgdiff',
