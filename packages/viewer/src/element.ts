@@ -361,9 +361,8 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     writeRemembered(this.#storage, next);
   }
 
-  /** The user resized the sidebar or moved the split (reported and remembered once done). */
-  #resized(width: number, detailShare: number | null, done: boolean): void {
-    if (!done) return;
+  /** The user resized the sidebar or moved the split (once the drag or key press ended). */
+  #resized(width: number, detailShare: number | null): void {
     this.#remember({ sidebarWidth: width, detailShare });
     this.#emitLayout('user');
   }
@@ -455,7 +454,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
       ui,
       {
         setPanel: (region, state) => this.#userPanels({ [region]: state }),
-        resized: (width, share, done) => this.#resized(width, share, done),
+        resized: (width, share) => this.#resized(width, share),
         focusOutside: () => (header.sidebarButton.hidden ? this.#canvas() : header.sidebarButton),
       },
       list,
