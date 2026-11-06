@@ -506,7 +506,7 @@ export class Stage {
     for (const [fam, d] of paths) {
       const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       p.setAttribute('d', d.join(''));
-      p.setAttribute('stroke', `var(--kg-${fam})`);
+      p.setAttribute('stroke', `var(--kgdiff-${fam})`);
       p.setAttribute('stroke-width', '2');
       p.setAttribute('stroke-linecap', 'round');
       p.setAttribute('vector-effect', 'non-scaling-stroke');

@@ -277,13 +277,17 @@ export class DiffSession {
     return this.#theme;
   }
 
-  #resolveTheme(): Theme {
-    let base: Theme;
+  /** The built-in theme of the current theme and palette (what the root's tokens start from). */
+  get builtinTheme(): Theme {
     try {
-      base = getTheme(this.themeName, this.palette);
+      return getTheme(this.themeName, this.palette);
     } catch {
-      base = getTheme('dark', 'default');
+      return getTheme('dark', 'default');
     }
+  }
+
+  #resolveTheme(): Theme {
+    const base = this.builtinTheme;
     return this.#deps.theme?.(base) ?? base;
   }
 

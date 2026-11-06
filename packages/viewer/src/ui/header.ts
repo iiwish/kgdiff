@@ -13,8 +13,8 @@ function brandMark(): SVGSVGElement {
   tpl.innerHTML =
     '<svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">' +
     '<rect x="4.1" y="4.1" width="11.8" height="11.8" rx="3.2" transform="rotate(45 10 10)" ' +
-    'fill="var(--kg-accent-soft)" stroke="var(--kg-accent)" stroke-width="1.5"/>' +
-    '<circle cx="10" cy="10" r="2.4" fill="var(--kg-accent)"/></svg>';
+    'fill="var(--kgdiff-accent-soft)" stroke="var(--kgdiff-accent)" stroke-width="1.5"/>' +
+    '<circle cx="10" cy="10" r="2.4" fill="var(--kgdiff-accent)"/></svg>';
   return tpl.content.firstElementChild as SVGSVGElement;
 }
 
