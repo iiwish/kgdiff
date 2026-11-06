@@ -82,6 +82,8 @@ export class Stage {
   /** The chrome's panel states, and the regions a slotted chrome element replaces. */
   #states: ChromeStates | null = null;
   readonly #replaced = new Set<StageRegion>();
+  /** Whether the stage is a named region (`asRegion`) rather than the main landmark. */
+  #region = false;
   /** The legend's state applied last: the user's toggle stands until it changes. */
   #legendState: PanelState | null = null;
 
@@ -185,15 +187,16 @@ export class Stage {
       bottomEnd = h('div', { class: 'corner bottom-end' }, slot('bottom-end'), this.#mapCluster);
       this.#dockWrap.prepend(slot('bottom-center'));
     }
+    // The top corners first: the chrome reads and tabs from the top down.
     this.#chrome = h(
       'div',
       { class: 'chrome' },
+      ...corners,
       this.#swipe,
       bottomStart,
       this.legend.mini,
       bottomEnd,
       this.#dockWrap,
-      ...corners,
       this.tooltip,
     );
     this.el = h(
@@ -339,8 +342,22 @@ export class Stage {
 
   #renderVersion(tr: Translator): void {
     const v = this.#version;
+    const version = v ? tr.t(v === 'before' ? 'detail.before' : 'detail.after') : '';
     this.#versionChip.hidden = v === null;
-    if (v) setText(this.#versionChip, tr.t(v === 'before' ? 'detail.before' : 'detail.after'));
+    if (v) setText(this.#versionChip, version);
+    if (this.#region) {
+      attr(this.el, 'aria-label', v ? `${tr.t('stage.label')} · ${version}` : tr.t('stage.label'));
+    }
+  }
+
+  /**
+   * A region named after the graph (and its version), not the page's main landmark: for a
+   * `<kgdiff-stage>`, one of several on a page that has its own.
+   */
+  asRegion(): void {
+    this.#region = true;
+    this.el.setAttribute('role', 'region');
+    this.#renderVersion(this.#ctx.tr());
   }
 
   /** Legend style, and whether clicks select (the tooltip only hints at clicking then). */

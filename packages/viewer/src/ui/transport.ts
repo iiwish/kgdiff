@@ -75,7 +75,8 @@ export class Transport {
       this.#pos,
       this.#speed,
     );
-    this.finished = h('div', { class: 'finished card', role: 'status', hidden: true });
+    // Not a status: the root's live region announces the end, once however many transports.
+    this.finished = h('div', { class: 'finished card', hidden: true });
   }
 
   update(topics: ReadonlySet<Topic>): void {

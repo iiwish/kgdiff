@@ -50,6 +50,7 @@ export class Menu {
   render(): void {
     const tr = this.#ctx.tr();
     const c = this.#ctx.controller;
+    attr(this.el, 'aria-label', tr.t('action.settings'));
     const t = (key: MessageKey) => () => tr.t(key);
     const swatches = (p: PaletteName): string[] => {
       const family = getTheme(c.themeName, p).family;
