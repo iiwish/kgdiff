@@ -243,8 +243,9 @@ export interface KgdiffRootElement extends HTMLElement {
   /**
    * Single keys of the keyboard map bound to another shortcut, or unbound with `null`:
    * `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text,
-   * `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; keys
-   * not named keep the default map; entries naming no shortcut are ignored with a warning.
+   * `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a
+   * letter stands for both its cases unless the other case is named too; keys not named keep the
+   * default map; entries naming no shortcut are ignored with a warning.
    */
   get keymap(): Keymap | null;
   set keymap(value: Keymap | string | null);
