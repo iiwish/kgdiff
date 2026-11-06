@@ -3,7 +3,7 @@
 - **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)). Phases 1 and 2
   are implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13;
   [PR #37](https://github.com/iiwish/kgdiff/pull/37), merged as 22f28c6); phase 3 is in review
-  (see [Phase 3 results](#phase-3-results)).
+  ([PR #39](https://github.com/iiwish/kgdiff/pull/39); see [Phase 3 results](#phase-3-results)).
 - **Date:** 2026-11-06
 - **Prototype:** the branch `spike/viewer-components` was never merged and was deleted on
   2026-11-06; its findings are in [Prototype results](#prototype-results)
