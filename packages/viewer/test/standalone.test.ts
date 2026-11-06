@@ -76,9 +76,12 @@ const SUBPATHS: Readonly<Record<string, string>> = {
 describe('ESM subpaths', () => {
   it('bundle on their own; an element without the root leaves the session out', async () => {
     // `.` defines everything: the standalone build, less starting the hydration.
-    const sizes = await Promise.all(
-      Object.entries(SUBPATHS).map(async ([name, entry]) => {
-        const dir = join(outDir, 'esm', name.replace('/', '-'));
+    // One build after another: concurrent builds of one config are not worth a rare race, and
+    // a failure names its subpath.
+    const sizes: { name: string; text: string; min: number; gzip: number }[] = [];
+    for (const [name, entry] of Object.entries(SUBPATHS)) {
+      const dir = join(outDir, 'esm', name.replace('/', '-'));
+      try {
         await build({
           configFile,
           logLevel: 'silent',
@@ -94,15 +97,17 @@ describe('ESM subpaths', () => {
             },
           },
         });
-        const text = readFileSync(join(dir, 'entry.js'), 'utf8');
-        return {
-          name,
-          text,
-          min: Buffer.byteLength(text),
-          gzip: gzipSync(text, { level: 9 }).length,
-        };
-      }),
-    );
+      } catch (error) {
+        throw new Error(`building the ${name} subpath failed`, { cause: error });
+      }
+      const text = readFileSync(join(dir, 'entry.js'), 'utf8');
+      sizes.push({
+        name,
+        text,
+        min: Buffer.byteLength(text),
+        gzip: gzipSync(text, { level: 9 }).length,
+      });
+    }
     const kb = (n: number) => `${(n / 1024).toFixed(1)} kB`;
     console.info(
       `[subpaths] ${sizes.map((s) => `${s.name} ${kb(s.min)} min, ${kb(s.gzip)} gzip`).join(' · ')}`,
