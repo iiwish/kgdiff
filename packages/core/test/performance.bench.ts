@@ -3,7 +3,15 @@
  * the budget, so they catch complexity regressions on any machine; the bench tables show the
  * actual times. Correctness at these sizes is tested in performance.test.ts.
  */
-import { applyDelta, diff, diffToJSON, matchNodes, normalize } from '@kgdiff/core';
+import {
+  applyDelta,
+  type DiffJSON,
+  diff,
+  diffFromJSON,
+  diffToJSON,
+  matchNodes,
+  normalize,
+} from '@kgdiff/core';
 import { expect, test } from 'vitest';
 import { editGraph, extractionPair, syntheticGraph } from './support/synthetic.js';
 
@@ -19,6 +27,8 @@ test('diff, 10k nodes / 30k edges, exact ids (budget 150 ms)', async ({ bench })
   await bench('from normalized graphs', () => diff(a, b)).run(WHOLE_RUN);
   const result = diff(a, b);
   await bench('diffToJSON', () => JSON.stringify(diffToJSON(result))).run(WHOLE_RUN);
+  const json = JSON.parse(JSON.stringify(diffToJSON(result))) as DiffJSON;
+  await bench('diffFromJSON', () => diffFromJSON(json)).run(WHOLE_RUN);
   expect(fromInputs.latency.p50).toBeLessThan(1500);
 });
 

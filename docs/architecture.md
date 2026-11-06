@@ -78,7 +78,10 @@ renders. Reports are reproducible and open instantly. The packed diff stores the
 elements (most of a large diff) as tables of indices into one string table: for 100k nodes /
 300k edges, 28% of the bytes and 46% once gzipped (edges with a label or attributes of their own
 are not packed, so diffs of such graphs shrink less). The viewer unpacks it and reads it with `diffFromJSON`,
-which checks that the document is consistent before anything is drawn.
+which checks that the document is consistent before anything is drawn. Rebuilding the two graphs
+is most of that read: the snapshots are already canonical, so they are read straight into graphs
+(each checked to be what `normalize` would keep as it is), and only a document that is not, such
+as one with parallel edges, is normalized again.
 
 ## Package contracts (summary)
 
