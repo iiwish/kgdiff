@@ -1,34 +1,27 @@
 /**
- * The canvas area and its floating chrome: the view dock (with replay's caption and transport
- * stacked above it), swipe divider, legend (a card, or one line of dots for chrome-less embeds),
- * zoom controls + minimap (shown only while part of the content is out of view), hover tooltip
- * and the loading / identical / error / empty states. Overlays never cover the current hunk:
- * fits and flights frame it in the free part of the canvas.
+ * The canvas area and its floating chrome: the view dock (`dock.ts`, with replay's caption and
+ * transport stacked above it), swipe divider, legend (`legend.ts`: a card, or one line of dots
+ * for chrome-less embeds), zoom controls (`zoom.ts`) + minimap (shown only while part of the
+ * content is out of view), hover tooltip and the loading / identical / error / empty states.
+ * Overlays never cover the current hunk: fits and flights frame it in the free part of the
+ * canvas. The view (`view` once attached) draws the canvas; the chrome reads the session.
+ *
+ * With slots (`<kgdiff-stage>`, and `<kgdiff-viewer>` for the page's content), a chrome element
+ * slotted in (`<kgdiff-transport slot="bottom-center">`) replaces the built-in one.
  */
 import { KgdiffError, type Rect } from '@kgdiff/core';
-import type { ChangeFamily, Family } from '@kgdiff/scene';
+import type { Family } from '@kgdiff/scene';
 import type { Topic } from '../controller.js';
-import {
-  attr,
-  h,
-  icon,
-  iconButton,
-  moveFocusOut,
-  relabel,
-  replace,
-  replaceKeepingFocus,
-  setText,
-} from '../dom.js';
+import { attr, h, icon, moveFocusOut, replace, setText } from '../dom.js';
 import type { ChromeLayout } from '../framing.js';
 import type { Translator } from '../i18n.js';
-import type { PanelState, PanelStates, StageVersion } from '../index.js';
-import { FAMILIES } from '../styles.js';
+import type { PanelState, PanelStates, StageRegion, StageVersion } from '../index.js';
 import type { StageView } from '../view.js';
 import { sceneHunkGlyph, type UiContext } from './context.js';
 import { Dock } from './dock.js';
-import { swatch } from './swatch.js';
-
-const TICK_W = 1000;
+import { Legend } from './legend.js';
+import { Transport } from './transport.js';
+import { ZoomBar } from './zoom.js';
 
 /** How the legend shows: the card, one line of dots, or not at all. */
 export type LegendStyle = 'full' | 'mini' | 'none';
@@ -42,6 +35,17 @@ export const STAGE_SLOTS = [
   'bottom-end',
 ] as const;
 
+/** The chrome elements, by the stage region a slotted one replaces. */
+const CHROME_TAGS: Readonly<Record<string, StageRegion>> = {
+  'kgdiff-view-dock': 'dock',
+  'kgdiff-transport': 'transport',
+  'kgdiff-legend': 'legend',
+  'kgdiff-zoom': 'zoom',
+  'kgdiff-minimap': 'minimap',
+};
+
+type ChromeStates = Pick<PanelStates, StageRegion>;
+
 export class Stage {
   readonly el: HTMLElement;
   readonly canvasHost: HTMLElement;
@@ -52,18 +56,7 @@ export class Stage {
   readonly #liveCanvasLabel: HTMLElement;
   // Replay
   readonly #caption: HTMLElement;
-  readonly #transport: HTMLElement;
-  readonly #playButton: HTMLButtonElement;
-  readonly #prevButton: HTMLButtonElement;
-  readonly #nextButton: HTMLButtonElement;
-  readonly #scrubber: HTMLElement;
-  readonly #fill: HTMLElement;
-  readonly #knob: HTMLElement;
-  readonly #ticks: SVGSVGElement;
-  readonly #scrubTip: HTMLElement;
-  readonly #pos: HTMLElement;
-  readonly #speed: HTMLButtonElement;
-  readonly #finished: HTMLElement;
+  readonly transport: Transport;
   // Swipe
   readonly #swipe: HTMLElement;
   readonly #divider: HTMLElement;
@@ -73,33 +66,28 @@ export class Stage {
   readonly dock: Dock;
   readonly #dockWrap: HTMLElement;
   // Chrome
-  readonly #legend: HTMLElement;
-  readonly #legendHead: HTMLButtonElement;
-  readonly #legendBody: HTMLElement;
-  readonly #miniLegend: HTMLElement;
-  readonly #zoomIn: HTMLButtonElement;
-  readonly #zoomOut: HTMLButtonElement;
-  readonly #fitButton: HTMLButtonElement;
+  readonly legend: Legend;
+  readonly zoom: ZoomBar;
   readonly #mapCluster: HTMLElement;
-  readonly #zoomBar: HTMLElement;
   readonly tooltip: HTMLElement;
   readonly #state: HTMLElement;
   #pointer: { x: number; y: number } | null = null;
-  #scrubbing: number | null = null;
   #dragging: number | null = null;
-  #legendOpen = false;
   #stateKey = '';
   readonly #slots: HTMLSlotElement[] = [];
   /** Elements over the canvas that registered themselves (`registerObstacle`). */
   readonly #obstacles = new Set<Element>();
   #version: StageVersion | null = null;
   readonly #versionChip = h('div', { class: 'version-chip chip card', hidden: true });
+  /** The chrome's panel states, and the regions a slotted chrome element replaces. */
+  #states: ChromeStates | null = null;
+  readonly #replaced = new Set<StageRegion>();
 
   readonly #ctx: UiContext;
 
   /**
-   * `slots`: the stage is `<kgdiff-stage>`, with named slots for the page's content (stacked
-   * with the built-in chrome in its corner). The default layout's stage has none.
+   * `slots`: the stage has named slots for the page's content (stacked with the built-in chrome
+   * in its corner).
    */
   constructor(ctx: UiContext, slots = false) {
     this.#ctx = ctx;
@@ -113,48 +101,7 @@ export class Stage {
       'aria-hidden': 'true',
       'data-empty': 'true',
     });
-    this.#prevButton = iconButton('skip-back', '', () => c.stepReplay(-1), { class: 'icon-btn' });
-    this.#playButton = iconButton('play', '', () => c.togglePlay(), { class: 'icon-btn play' });
-    this.#nextButton = iconButton('skip-forward', '', () => c.stepReplay(1), { class: 'icon-btn' });
-    this.#fill = h('div', { class: 'fill' });
-    this.#knob = h('div', { class: 'knob' });
-    this.#ticks = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    this.#ticks.setAttribute('class', 'ticks');
-    this.#ticks.setAttribute('viewBox', `0 0 ${TICK_W} 14`);
-    this.#ticks.setAttribute('preserveAspectRatio', 'none');
-    this.#ticks.setAttribute('aria-hidden', 'true');
-    this.#scrubTip = h('div', { class: 'scrub-tip card', hidden: true });
-    this.#scrubber = h(
-      'div',
-      {
-        class: 'scrubber',
-        role: 'slider',
-        tabindex: '0',
-        'aria-valuemin': '0',
-      },
-      h('div', { class: 'track' }, this.#fill),
-      this.#ticks,
-      this.#knob,
-      this.#scrubTip,
-    );
-    this.#bindScrubber();
-    this.#pos = h('span', { class: 'pos', 'aria-hidden': 'true' });
-    this.#speed = h('button', {
-      type: 'button',
-      class: 'speed',
-      onclick: () => c.cycleSpeed(),
-    });
-    this.#transport = h(
-      'div',
-      { class: 'transport card', role: 'toolbar' },
-      this.#prevButton,
-      this.#playButton,
-      this.#nextButton,
-      this.#scrubber,
-      this.#pos,
-      this.#speed,
-    );
-    this.#finished = h('div', { class: 'finished card', role: 'status', hidden: true });
+    this.transport = new Transport(ctx);
 
     // Swipe
     this.#chipBefore = h('div', { class: 'side-chip before chip card' });
@@ -190,66 +137,35 @@ export class Stage {
     this.#dockWrap = h(
       'div',
       { class: 'dock' },
-      this.#finished,
+      this.transport.finished,
       this.#caption,
-      this.#transport,
+      this.transport.el,
       this.dock.el,
     );
 
     // Legend
-    this.#legendHead = h(
-      'button',
-      {
-        type: 'button',
-        class: 'legend-head',
-        'aria-expanded': 'false',
-        onclick: () => {
-          this.#setLegend(!this.#legendOpen);
-          ctx.setPanel?.('legend', this.#legendOpen ? 'open' : 'collapsed');
-        },
-      },
-      h('span', { class: 'lbl' }),
-      icon('chevron-down'),
-    );
-    this.#legendBody = h('div', { class: 'legend-body', id: 'kg-legend' });
-    attr(this.#legendHead, 'aria-controls', 'kg-legend');
-    this.#legend = h(
-      'div',
-      { class: 'legend card float bottom-left', 'data-open': 'false' },
-      this.#legendHead,
-      this.#legendBody,
-    );
-    this.#miniLegend = h('div', { class: 'mini-legend float bottom-left', role: 'list' });
+    this.legend = new Legend(ctx, (open) => ctx.setPanel?.('legend', open ? 'open' : 'collapsed'));
 
-    // Zoom + minimap
-    this.#zoomIn = iconButton('plus', '', () => c.zoom(1));
-    this.#zoomOut = iconButton('minus', '', () => c.zoom(-1));
-    this.#fitButton = iconButton('fit', '', () => void c.fit());
+    // Zoom + minimap: the buttons act on this stage's view.
+    this.zoom = new ZoomBar(ctx, () => this.view);
     this.minimapHost = h('div', { class: 'minimap-host' });
-    this.#zoomBar = h(
-      'div',
-      { class: 'zoom-bar card', role: 'toolbar' },
-      this.#zoomIn,
-      this.#zoomOut,
-      this.#fitButton,
-    );
     this.#mapCluster = h(
       'div',
       { class: 'map-cluster float bottom-right' },
-      this.#zoomBar,
+      this.zoom.el,
       this.minimapHost,
     );
 
     this.tooltip = h('div', { class: 'tooltip card', role: 'tooltip', 'data-open': 'false' });
     this.#state = h('div', { class: 'state', hidden: true });
-    let bottomStart: HTMLElement = this.#legend;
+    let bottomStart: HTMLElement = this.legend.card;
     let bottomEnd: HTMLElement = this.#mapCluster;
     const corners: HTMLElement[] = [];
     if (slots) {
       const slot = (name: string): HTMLSlotElement => {
         const el = document.createElement('slot');
         el.name = name;
-        el.addEventListener('slotchange', () => this.view?.layoutChanged());
+        el.addEventListener('slotchange', () => this.#slotted());
         this.#slots.push(el);
         return el;
       };
@@ -258,7 +174,12 @@ export class Stage {
         h('div', { class: 'corner top-start' }, this.#versionChip, slot('top-start')),
         h('div', { class: 'corner top-end' }, slot('top-end')),
       );
-      bottomStart = h('div', { class: 'corner bottom-start' }, slot('bottom-start'), this.#legend);
+      bottomStart = h(
+        'div',
+        { class: 'corner bottom-start' },
+        slot('bottom-start'),
+        this.legend.card,
+      );
       bottomEnd = h('div', { class: 'corner bottom-end' }, slot('bottom-end'), this.#mapCluster);
       this.#dockWrap.prepend(slot('bottom-center'));
     }
@@ -267,7 +188,7 @@ export class Stage {
       { class: 'chrome' },
       this.#swipe,
       bottomStart,
-      this.#miniLegend,
+      this.legend.mini,
       bottomEnd,
       this.#dockWrap,
       ...corners,
@@ -300,12 +221,12 @@ export class Stage {
     const r = this.el.getBoundingClientRect();
     const obstacles: Rect[] = [];
     const parts: Element[] = [
-      this.#legend,
-      this.#miniLegend,
-      this.#zoomBar,
+      this.legend.card,
+      this.legend.mini,
+      this.zoom.el,
       this.dock.el,
-      this.#transport,
-      this.#finished,
+      this.transport.el,
+      this.transport.finished,
       this.#chipBefore,
       this.#chipAfter,
     ];
@@ -342,36 +263,59 @@ export class Stage {
     this.dock.layout();
   }
 
+  /** The page's slotted content changed: a chrome element replaces the built-in one. */
+  #slotted(): void {
+    const replaced = new Set<StageRegion>();
+    for (const slot of this.#slots) {
+      for (const el of slot.assignedElements({ flatten: true })) {
+        const region = CHROME_TAGS[el.localName];
+        if (region) replaced.add(region);
+      }
+    }
+    const same =
+      replaced.size === this.#replaced.size && [...replaced].every((r) => this.#replaced.has(r));
+    if (!same) {
+      this.#replaced.clear();
+      for (const r of replaced) this.#replaced.add(r);
+      this.#applyPanels();
+    }
+    this.view?.layoutChanged();
+  }
+
   /**
    * Follow the panel states of the chrome over the canvas: the dock, the replay transport, the
    * legend (collapsed: folded to its head), the zoom buttons and the minimap. A region that is
-   * not open is not shown (and inert); focus inside it moves to the canvas first.
+   * not open is not shown (and inert); focus inside it moves to the canvas first. A region a
+   * slotted chrome element replaces is not shown either, whatever its state.
    */
-  setPanels(states: Pick<PanelStates, 'dock' | 'transport' | 'legend' | 'zoom' | 'minimap'>): void {
-    const canvas = (): HTMLElement | null => this.canvasHost.querySelector('canvas');
-    const set = (state: PanelState, ...els: HTMLElement[]): void => {
-      for (const el of els) {
-        if (state !== 'open') moveFocusOut(this.#ctx.root, el, canvas);
-        attr(el, 'data-panel', state);
-        el.inert = state !== 'open';
-      }
-    };
-    set(states.dock, this.dock.el);
-    set(states.transport, this.#transport, this.#finished);
-    set(states.zoom, this.#zoomBar);
-    set(states.minimap, this.minimapHost);
-    const legend = states.legend;
-    if (legend === 'hidden') moveFocusOut(this.#ctx.root, this.#legend, canvas);
-    attr(this.#legend, 'data-panel', legend);
-    attr(this.#miniLegend, 'data-panel', legend);
-    this.#legend.inert = legend === 'hidden';
-    if (legend !== 'hidden') this.#setLegend(legend === 'open');
+  setPanels(states: ChromeStates): void {
+    this.#states = states;
+    this.#applyPanels();
   }
 
-  #setLegend(open: boolean): void {
-    this.#legendOpen = open;
-    attr(this.#legend, 'data-open', String(open));
-    attr(this.#legendHead, 'aria-expanded', String(open));
+  #applyPanels(): void {
+    const given = this.#states;
+    const state = (r: StageRegion): PanelState =>
+      this.#replaced.has(r) ? 'hidden' : (given?.[r] ?? (r === 'legend' ? 'collapsed' : 'open'));
+    if (!given && this.#replaced.size === 0) return;
+    const canvas = (): HTMLElement | null => this.canvasHost.querySelector('canvas');
+    const set = (s: PanelState, ...els: HTMLElement[]): void => {
+      for (const el of els) {
+        if (s !== 'open') moveFocusOut(this.#ctx.root, el, canvas);
+        attr(el, 'data-panel', s);
+        el.inert = s !== 'open';
+      }
+    };
+    set(state('dock'), this.dock.el);
+    set(state('transport'), this.transport.el, this.transport.finished);
+    set(state('zoom'), this.zoom.el);
+    set(state('minimap'), this.minimapHost);
+    const legend = state('legend');
+    if (legend === 'hidden') moveFocusOut(this.#ctx.root, this.legend.card, canvas);
+    attr(this.legend.card, 'data-panel', legend);
+    attr(this.legend.mini, 'data-panel', legend);
+    this.legend.card.inert = legend === 'hidden';
+    if (legend !== 'hidden') this.legend.setOpen(legend === 'open');
   }
 
   /**
@@ -405,79 +349,32 @@ export class Stage {
     if (all) {
       this.#renderVersion(tr);
       this.#renderLabels(tr);
-      this.#renderMiniLegend(tr);
       this.#renderState(tr);
-      this.#renderTicks();
       this.#renderCanvasLabel(tr);
     }
+    this.legend.update(topics);
+    this.zoom.update(topics);
+    this.transport.update(topics);
     this.dock.update(topics);
     if (all || topics.has('mode')) this.#renderMode();
     if (all || topics.has('overview')) {
       attr(this.minimapHost, 'data-hidden', String(this.view?.overview ?? true));
     }
-    if (all || topics.has('mode') || topics.has('replay')) this.#renderReplay(tr);
+    if (all || topics.has('mode') || topics.has('replay')) this.#renderCaption(tr);
     if (all || topics.has('mode') || topics.has('swipe')) this.#renderSwipe();
     if (all || topics.has('hover') || topics.has('selection') || topics.has('focus')) {
       this.#renderTooltip(tr);
     }
-    if (topics.has('theme')) this.#renderTicks();
     // Until a diff is ready the built-in chrome waits; the page's slotted content stays.
     attr(this.#chrome, 'data-ready', String(c.status === 'ready'));
   }
 
   #renderLabels(tr: Translator): void {
-    relabel(this.#prevButton, `${tr.t('detail.prev')} (←)`);
-    relabel(this.#nextButton, `${tr.t('detail.next')} (→)`);
-    attr(this.#transport, 'aria-label', tr.t('replay.label'));
-    attr(this.#scrubber, 'aria-label', tr.t('replay.scrubber'));
     setText(this.#chipBefore, tr.t('detail.before'));
     setText(this.#chipAfter, tr.t('detail.after'));
     attr(this.#divider, 'aria-label', tr.t('swipe.divider'));
-    setText(this.#legendHead.querySelector('.lbl') as Element, tr.t('legend.title'));
-    attr(this.#legendHead, 'aria-label', tr.t('legend.toggle'));
-    relabel(this.#zoomIn, `${tr.t('action.zoomIn')} (+)`);
-    relabel(this.#zoomOut, `${tr.t('action.zoomOut')} (−)`);
-    relabel(this.#fitButton, `${tr.t('action.fit')} (F)`);
     attr(this.minimapHost, 'aria-label', tr.t('minimap.label'));
     attr(this.minimapHost, 'title', tr.t('minimap.label'));
-    const fams: Family[] = [...FAMILIES, 'neutral'];
-    replace(
-      this.#legendBody,
-      fams.map((f) =>
-        h(
-          'div',
-          { class: 'legend-row', 'data-family': f, title: tr.t(`familyHint.${f}`) },
-          swatch(f),
-          h('span', { class: 'name', text: tr.t(`family.${f}`) }),
-        ),
-      ),
-    );
-  }
-
-  /** One line: the families this diff has, then the unchanged context. */
-  #renderMiniLegend(tr: Translator): void {
-    const scene = this.#ctx.controller.scene;
-    const present = new Set<Family>(scene?.hunks.map((x) => x.family));
-    if (scene?.nodes.some((n) => n.status === 'unchanged')) present.add('neutral');
-    attr(this.#miniLegend, 'aria-label', tr.t('legend.title'));
-    replace(
-      this.#miniLegend,
-      [...FAMILIES, 'neutral' as const]
-        .filter((f) => present.has(f))
-        .map((f) =>
-          h(
-            'span',
-            {
-              class: 'mini-item',
-              role: 'listitem',
-              'data-family': f,
-              title: tr.t(`familyHint.${f}`),
-            },
-            h('span', { class: 'dot', 'aria-hidden': 'true' }),
-            tr.t(`family.${f}`),
-          ),
-        ),
-    );
   }
 
   #renderCanvasLabel(tr: Translator): void {
@@ -498,41 +395,18 @@ export class Stage {
   #renderMode(): void {
     const mode = this.#ctx.controller.mode;
     const pinned = this.#version !== null;
-    this.#transport.hidden = mode !== 'replay';
     this.#caption.hidden = mode !== 'replay' || pinned;
     this.#swipe.hidden = mode !== 'swipe' || pinned;
   }
 
-  #renderReplay(tr: Translator): void {
+  /** The replay caption: the playing hunk (or chapter), else the last one played. */
+  #renderCaption(tr: Translator): void {
     const c = this.#ctx.controller;
     const clock = c.clock;
     const scene = c.scene;
-    if (c.mode !== 'replay' || !clock || !scene) {
-      this.#finished.hidden = true;
-      return;
-    }
-    const p = clock.progress;
-    this.#fill.style.transform = `scaleX(${p})`;
-    this.#knob.style.left = `${p * 100}%`;
+    if (c.mode !== 'replay' || !clock || !scene) return;
     const position = clock.position();
     const total = clock.total;
-    setText(this.#pos, tr.t('replay.position', { i: position, n: total }));
-    attr(this.#scrubber, 'aria-valuemax', String(Math.round(clock.duration)));
-    attr(this.#scrubber, 'aria-valuenow', String(Math.round(clock.t)));
-    attr(this.#scrubber, 'aria-valuetext', tr.t('replay.position', { i: position, n: total }));
-    const playing = clock.playing;
-    const playLabel = `${tr.t(playing ? 'replay.pause' : 'replay.play')} (Space)`;
-    if (this.#playButton.dataset.state !== String(playing)) {
-      this.#playButton.dataset.state = String(playing);
-      replace(this.#playButton, icon(playing ? 'pause' : 'play'));
-    }
-    relabel(this.#playButton, playLabel);
-    setText(this.#speed, `${clock.speed}×`);
-    relabel(this.#speed, tr.t('replay.speed', { s: `${clock.speed}×` }));
-    this.#prevButton.disabled = clock.t <= 0;
-    this.#nextButton.disabled = clock.t >= clock.duration;
-
-    // Caption: the playing hunk (or chapter), else the last one played.
     let key = '';
     let content: (Node | string)[] = [];
     if (clock.t <= 0) {
@@ -571,123 +445,8 @@ export class Stage {
       attr(this.#caption, 'data-empty', String(key === ''));
       replace(this.#caption, ...content);
     }
-    const finished = clock.finished;
-    this.#finished.hidden = !finished;
     // The finished pill takes the caption's place above the transport.
-    this.#caption.hidden = finished;
-    if (finished && this.#finished.childElementCount === 0) {
-      replace(
-        this.#finished,
-        icon('check-circle'),
-        h('span', { text: tr.t('replay.finished') }),
-        h(
-          'button',
-          { type: 'button', class: 'btn', onclick: () => c.restart() },
-          icon('restart'),
-          tr.t('replay.restart'),
-        ),
-      );
-    } else if (!finished && this.#finished.childElementCount > 0) {
-      // Restart was pressed from the pill: keep focus in the transport.
-      replaceKeepingFocus(this.#ctx.root, this.#finished, this.#playButton);
-    }
-  }
-
-  #renderTicks(): void {
-    const c = this.#ctx.controller;
-    const clock = c.clock;
-    const scene = c.scene;
-    while (this.#ticks.firstChild) this.#ticks.removeChild(this.#ticks.firstChild);
-    if (!clock || !scene || clock.duration <= 0) return;
-    const paths = new Map<ChangeFamily, string[]>();
-    for (const w of clock.timeline.windows) {
-      const fam = scene.hunks[w.hunk]?.family;
-      if (!fam) continue;
-      const x = ((w.start / clock.duration) * TICK_W).toFixed(1);
-      let list = paths.get(fam);
-      if (!list) {
-        list = [];
-        paths.set(fam, list);
-      }
-      list.push(`M${x} 2V12`);
-    }
-    for (const [fam, d] of paths) {
-      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      p.setAttribute('d', d.join(''));
-      p.setAttribute('stroke', `var(--kgdiff-${fam})`);
-      p.setAttribute('stroke-width', '2');
-      p.setAttribute('stroke-linecap', 'round');
-      p.setAttribute('vector-effect', 'non-scaling-stroke');
-      this.#ticks.appendChild(p);
-    }
-  }
-
-  #bindScrubber(): void {
-    const timeAt = (clientX: number): number => {
-      const clock = this.#ctx.controller.clock;
-      const r = this.#scrubber.getBoundingClientRect();
-      if (!clock || r.width <= 0) return 0;
-      return Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * clock.duration;
-    };
-    this.#scrubber.addEventListener('pointerdown', (e) => {
-      this.#scrubbing = e.pointerId;
-      this.#scrubber.setPointerCapture?.(e.pointerId);
-      this.#ctx.controller.pause();
-      this.#ctx.controller.seek(timeAt(e.clientX));
-    });
-    this.#scrubber.addEventListener('pointermove', (e) => {
-      if (this.#scrubbing === e.pointerId) this.#ctx.controller.seek(timeAt(e.clientX));
-      this.#showScrubTip(e.clientX, timeAt(e.clientX));
-    });
-    const end = (e: PointerEvent): void => {
-      if (this.#scrubbing === e.pointerId) this.#scrubbing = null;
-    };
-    this.#scrubber.addEventListener('pointerup', end);
-    this.#scrubber.addEventListener('pointercancel', end);
-    this.#scrubber.addEventListener('pointerleave', () => {
-      this.#scrubTip.hidden = true;
-    });
-    this.#scrubber.addEventListener('keydown', (e) => {
-      const c = this.#ctx.controller;
-      if (e.key === 'Home') c.seek(0);
-      else if (e.key === 'End') c.seek(c.clock?.duration ?? 0);
-      else return;
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  }
-
-  #showScrubTip(clientX: number, t: number): void {
-    const c = this.#ctx.controller;
-    const clock = c.clock;
-    const scene = c.scene;
-    if (!clock || !scene) return;
-    // Nearest window start: the tick under the pointer.
-    let best = -1;
-    let bestD = Number.POSITIVE_INFINITY;
-    for (const w of clock.timeline.windows) {
-      const d = Math.abs(w.start - t);
-      if (d < bestD) {
-        bestD = d;
-        best = w.hunk;
-      }
-    }
-    const hunk = scene.hunks[best];
-    if (!hunk) {
-      this.#scrubTip.hidden = true;
-      return;
-    }
-    const r = this.#scrubber.getBoundingClientRect();
-    this.#scrubTip.hidden = false;
-    this.#scrubTip.style.left = `${clientX - r.left}px`;
-    if (this.#scrubTip.dataset.hunk !== hunk.id) {
-      this.#scrubTip.dataset.hunk = hunk.id;
-      replace(
-        this.#scrubTip,
-        h('span', { class: 'glyph-box', 'data-family': hunk.family, text: sceneHunkGlyph(hunk) }),
-        h('span', { text: hunk.title }),
-      );
-    }
+    if (this.#version === null) this.#caption.hidden = clock.finished;
   }
 
   #renderSwipe(): void {
