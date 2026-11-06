@@ -23,10 +23,11 @@ report payload ties core, layout and scene together, so "kgdiff 0.3.1" names one
    with the packages it changed, and leave out the "Updated dependencies" entries. Releases up to
    0.4.0 were created per package (`@kgdiff/cli@0.4.0`, …).
 
-The version pull request is opened with the workflow's `GITHUB_TOKEN`, and GitHub does not run
-other workflows for pull requests created that way, so CI does not start on it by itself. Its diff
-only touches versions and changelogs; close and reopen it to run CI, or give
-`changesets/action` a GitHub App token through `github-token`.
+The version pull request is opened with the workflow's `GITHUB_TOKEN`, and GitHub holds the CI
+run of a pull request created that way until a maintainer approves it (the run shows "action
+required"). `main` requires the `CI passed` check (see [Repository settings](#repository-settings)),
+so approve the run on the pull request before merging it, close and reopen the pull request, or
+give `changesets/action` a GitHub App token through `github-token`.
 
 ## The GitHub Action
 
@@ -54,8 +55,17 @@ tag names one action and one CLI version:
   git push origin v0.1.0 v0
   ```
 
-The action is not listed on GitHub Marketplace: listing goes through a GitHub release of the
-action, and GitHub expects a repository that holds only the action.
+### GitHub Marketplace
+
+The repository meets GitHub Marketplace's requirements: it is public, has one action metadata
+file at its root, and the action's `name`, `kgdiff`, is not a GitHub user or organization. Listing
+is done by hand in the web UI, by the repository owner with 2FA on, once the GitHub Marketplace
+Developer Agreement is accepted: under Releases, edit the newest `v<version>` release (or open
+`action.yml` and follow the banner), tick "Publish this Action to the GitHub Marketplace", pick
+the categories (for example Code review and Utilities) and update the release. GitHub's
+documentation does not say whether a later release that `release.yml` creates through the API is
+listed on its own: after a release, check the listing, and edit the release the same way if it
+still shows the previous version. To unlist the action, untick the box on every listed release.
 
 ## Publishing: npm trusted publishing
 
@@ -101,6 +111,24 @@ num2048@163.com.
    `main` before the first publish do not try to publish.
 6. **Lock it down.** Once a release from CI has gone through, set each package to require 2FA and
    disallow tokens, and revoke publish tokens that are no longer needed.
+
+## Repository settings
+
+- **Ruleset `main`** (Settings → Rules → Rulesets) on the default branch: no deletion, no force
+  push, linear history, changes through a pull request (no approval required, squash or rebase),
+  and the `CI passed` check from GitHub Actions. That job of [`ci.yml`](../.github/workflows/ci.yml)
+  passes only when every job of the matrix passed, so the matrix can change without touching the
+  ruleset; the path-filtered Action and Pages workflows are not required. Repository admins can
+  bypass the ruleset only when merging a pull request, for example a version pull request whose
+  CI run is still held.
+- **Pull requests**: squash and rebase merges only, head branches deleted after the merge, and an
+  "Update branch" button on pull requests that are behind `main`.
+- **Actions** (Settings → Actions → General): actions must be pinned to a full commit SHA, which
+  every workflow and `action.yml` do (Dependabot keeps the pins current); the default token is
+  read-only, and GitHub Actions may create pull requests (the version pull request).
+- **Code security**: Dependabot alerts and security updates, CodeQL default setup (Actions and
+  JavaScript/TypeScript), secret scanning with push protection, and private vulnerability
+  reporting.
 
 ## Website
 
