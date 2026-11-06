@@ -307,10 +307,17 @@ export interface KgdiffViewerElement extends KgdiffRootElement {
   readonly layout: ViewerLayout;
   /**
    * Reflected to the `persist` attribute. `local` (the default): the layout remembers the
-   * user's panel states, sizes, theme, palette and language in `localStorage`, for every
-   * viewer of this origin. `none`: it remembers nothing.
+   * user's panel states, sizes, theme, palette and language in `localStorage` (under
+   * `persistKey`, shared by the viewers of the origin with the same key). `none`: it remembers
+   * nothing.
    */
   persist: 'local' | 'none';
+  /**
+   * Reflected to the `persist-key` attribute: the `localStorage` key the layout remembers
+   * under. Viewers with the same key share what they remember; give each app on a shared origin
+   * (a GitHub Pages user site, say) a key of its own. Default `kgdiff:viewer`.
+   */
+  persistKey: string;
   /**
    * Reflected to the `legend` attribute: `full` (the card), `mini` (one line: the families this
    * diff has, then unchanged), `none`. Default `auto`: `full`, or `mini` with `chrome="none"`.

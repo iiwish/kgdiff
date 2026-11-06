@@ -420,7 +420,8 @@ design left open:
   (what `kgdiff-layout` reports, without `source`). Declaring the same panels again, as React
   and Vue do on every render, keeps what the user did: only a region whose declared (or
   preset) value changed gives way.
-- **Persistence** is one `localStorage` entry per origin, `kgdiff:viewer`: panel states the
+- **Persistence** is one `localStorage` entry, `kgdiff:viewer` unless `persist-key` names
+  another (apps sharing an origin, such as a GitHub Pages user site, each take their own): panel states the
   user changed, the sidebar width, the list / detail split, theme, palette, language. Writes
   merge with what other viewers of the origin wrote. `kgdiff-layout` carries
   `{ panels, sidebarWidth, detailShare, source }`, with `source` `user` or `host`, and is not

@@ -99,8 +99,10 @@ the zoom buttons (`zoom`), the minimap (`minimap`), the title (`title`) and the 
   `view.panels` ([`--panels`](cli.md#report-options)); the default. When the page sets a region
   again, its value replaces what the user did there in this page.
 - **Remembered.** The default layout remembers the user's panel states, the sidebar's width,
-  the list / detail split, theme, palette and language, in `localStorage` (one entry,
-  `kgdiff:viewer`, for every viewer of the origin; storage that is blocked or full is ignored).
+  the list / detail split, theme, palette and language, in `localStorage` (one entry, shared
+  by the viewers of the origin with the same key: `persist-key`, `kgdiff:viewer` by default;
+  give each app on a shared origin, such as a GitHub Pages user site, a key of its own; storage
+  that is blocked or full is ignored).
   Theme, palette and language follow the same order: the page's attribute or property, then
   what the user chose before, then the report's `view`, then the default. `persist="none"`
   turns remembering off. The elements below (`<kgdiff-root>` and the rest) remember nothing:
@@ -223,7 +225,8 @@ Attributes, reflected by properties of the same name: `mode` (`overlay|swipe|rep
 legacy `changes` reads as `overlay` + `scope="changes"`), `scope` (`all|changes`, default
 `changes` for large graphs), `theme` (`auto|light|dark`), `palette` (`default|colorblind`),
 `locale` (`en|zh-CN`, default from `navigator.language`), `panels` (see [Panels](#panels)),
-`persist` (`none` remembers nothing), `chrome` (`none` shows the graph alone for small embeds:
+`persist` (`none` remembers nothing), `persist-key` (the `localStorage` key, `kgdiff:viewer`
+by default; `persistKey`), `chrome` (`none` shows the graph alone for small embeds:
 no title, actions, view dock with its step caption and playback bar, change list, zoom
 buttons, minimap or legend card; the hover tooltip and a one-line legend stay, clicks and
 shortcuts do nothing, the minimum height drops to 120px and the view stays fitted on resize

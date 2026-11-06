@@ -518,6 +518,23 @@ describe('persistence', () => {
     expect(seen).toHaveLength(2);
   });
 
+  it('remembers under persist-key, apart from viewers with another key', async () => {
+    remember({ panels: { detail: 'collapsed' } });
+    const app = await loaded({ 'persist-key': 'my-app:layout' });
+    expect(app.persistKey).toBe('my-app:layout');
+    // Nothing remembered under this key yet: the default key's choice does not apply.
+    expect(app.layout.panels.detail).toBe('open');
+    $<HTMLButtonElement>(app, '.list-toggle').click();
+    expect(readRemembered(localStorage, 'my-app:layout').panels).toEqual({ list: 'collapsed' });
+    expect(readRemembered(localStorage).panels).toEqual({ detail: 'collapsed' });
+    // Switching the key in the page reads that store.
+    const seen = layouts(app);
+    app.persistKey = 'kgdiff:viewer';
+    expect(app.hasAttribute('persist-key')).toBe(false);
+    expect(app.layout.panels.detail).toBe('collapsed');
+    expect(seen.map((e) => e.source)).toEqual(['host']);
+  });
+
   it('survives storage that throws', async () => {
     let reads = 0;
     const blocked = {
