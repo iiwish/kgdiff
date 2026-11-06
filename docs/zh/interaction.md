@@ -122,7 +122,7 @@
 
 **生效范围**（`shortcuts`）：`scoped`（默认）在焦点位于查看器内时生效；`global` 在页面上没有任何元素获得焦点时也生效（适合整页的查看器，例如 HTML 报告），只对页面上第一个这样的查看器生效，并且不接管页面滚动用的按键（方向键、Home / End、Page Up / Down、空格）——布尔属性 `global-shortcuts` 的含义相同；`none`：没有快捷键，但获得焦点的变更列表仍然响应 ↑ / ↓、Home / End 和 Enter。在嵌套的根元素里按键，只有最近的那个根元素响应。
 
-**重新绑定**（`keymap`）：可以把单个按键绑定到别的快捷操作或解除绑定，写成数据：`keymap="x:none r:review"` 或 `viewer.keymap = { x: null, r: 'review' }`（按键取 `KeyboardEvent.key` 的值，在属性里用 `Space` 表示空格）。快捷操作有：`overlay`、`swipe`、`replay`、`scope`、`expand`、`next`、`prev`、`first`、`last`、`fly`、`escape`、`play-pause`、`left`、`right`（回放时单步，滑动对比时移动分隔线，按住 Shift 步长更大）、`fit`、`zoom-in`、`zoom-out`、`search`、`review`、`sidebar`、`theme`、`help`。帮助对话框列出的是默认按键。
+**重新绑定**（`keymap`）：可以把单个按键绑定到别的快捷操作或解除绑定，写成数据：`keymap="x:none r:review"` 或 `viewer.keymap = { x: null, r: 'review' }`（按键取 `KeyboardEvent.key` 的值，在属性里用 `Space` 表示空格）。字母同时代表大小写两种情况，在这里和默认映射里都是如此：`x:none` 同时解除 Shift+X，除非也写了 `X`。快捷操作有：`overlay`、`swipe`、`replay`、`scope`、`expand`、`next`、`prev`、`first`、`last`、`fly`、`escape`、`play-pause`、`left`、`right`（回放时单步，滑动对比时移动分隔线，按住 Shift 步长更大）、`fit`、`zoom-in`、`zoom-out`、`search`、`review`、`sidebar`、`theme`、`help`。帮助对话框列出的是默认按键。
 
 ## 嵌入 API
 

@@ -196,7 +196,9 @@ nested roots acts on the nearest one only.
 
 **Rebinding** (`keymap`): single keys can be bound to another shortcut or unbound, as data:
 `keymap="x:none r:review"` or `viewer.keymap = { x: null, r: 'review' }` (keys are
-`KeyboardEvent.key` values, `Space` names the space bar in the attribute). Shortcuts:
+`KeyboardEvent.key` values, `Space` names the space bar in the attribute). A letter stands for
+both its cases, here and in the default map: `x:none` also unbinds Shift+X, unless `X` is named
+too. Shortcuts:
 `overlay`, `swipe`, `replay`, `scope`, `expand`, `next`, `prev`, `first`, `last`, `fly`,
 `escape`, `play-pause`, `left`, `right` (step in replay, move the divider in swipe, larger with
 Shift), `fit`, `zoom-in`, `zoom-out`, `search`, `review`, `sidebar`, `theme`, `help`. The help

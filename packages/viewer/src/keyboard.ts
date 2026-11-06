@@ -66,10 +66,14 @@ export type ShortcutName =
   | 'theme'
   | 'help';
 
-/** Keys (as `KeyboardEvent.key`) bound to a shortcut, or to `null` to leave the key unbound. */
+/**
+ * Keys (as `KeyboardEvent.key`) bound to a shortcut, or to `null` to leave the key unbound. A
+ * letter stands for both its cases (`x` also binds Shift+x, `X`) unless the other case is named
+ * too.
+ */
 export type Keymap = Readonly<Record<string, ShortcutName | null>>;
 
-/** The default keyboard map (docs/interaction.md §Keyboard map). */
+/** The default keyboard map (docs/interaction.md §Keyboard map); each letter once. */
 export const DEFAULT_KEYMAP: Keymap = {
   '1': 'overlay',
   '2': 'swipe',
@@ -88,7 +92,6 @@ export const DEFAULT_KEYMAP: Keymap = {
   ArrowLeft: 'left',
   ArrowRight: 'right',
   f: 'fit',
-  F: 'fit',
   '+': 'zoom-in',
   '=': 'zoom-in',
   '-': 'zoom-out',
@@ -96,12 +99,9 @@ export const DEFAULT_KEYMAP: Keymap = {
   '−': 'zoom-out',
   '/': 'search',
   x: 'review',
-  X: 'review',
   '\\': 'sidebar',
   t: 'theme',
-  T: 'theme',
   e: 'expand',
-  E: 'expand',
   '?': 'help',
 };
 
@@ -149,9 +149,21 @@ function resolve(
 }
 
 /**
+ * What `map` binds `key` to: the key itself, else the other case of a letter; undefined when
+ * `map` names neither.
+ */
+function lookup(map: Keymap, key: string): ShortcutName | null | undefined {
+  if (Object.hasOwn(map, key)) return map[key];
+  const lower = key.toLowerCase();
+  const other = key === lower ? key.toUpperCase() : lower;
+  return key.length === 1 && other !== key && Object.hasOwn(map, other) ? map[other] : undefined;
+}
+
+/**
  * Map a key press to an action in `mode` and `scope`, or null when the key means nothing here.
- * `keymap` overrides single keys of the default map (null unbinds one). Chords with Ctrl / Meta
- * / Alt are never handled (they belong to the browser and the host page).
+ * `keymap` overrides single keys of the default map (null unbinds one); a letter in either map
+ * stands for both its cases unless the other case is named too. Chords with Ctrl / Meta / Alt
+ * are never handled (they belong to the browser and the host page).
  */
 export function keyAction(
   e: KeyLike,
@@ -160,8 +172,8 @@ export function keyAction(
   keymap: Keymap | null = null,
 ): KeyAction | null {
   if (e.ctrlKey || e.metaKey || e.altKey) return null;
-  const name =
-    keymap !== null && Object.hasOwn(keymap, e.key) ? keymap[e.key] : DEFAULT_KEYMAP[e.key];
+  const custom = keymap === null ? undefined : lookup(keymap, e.key);
+  const name = custom === undefined ? lookup(DEFAULT_KEYMAP, e.key) : custom;
   return name ? resolve(name, e, mode, scope) : null;
 }
 

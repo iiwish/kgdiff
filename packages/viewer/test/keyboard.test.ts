@@ -46,6 +46,24 @@ describe('keyboard map', () => {
     expect(keyAction({ key: 'ArrowLeft' }, 'overlay')).toBeNull();
   });
 
+  it('binds a letter in both cases, also in a keymap, unless the other case is named', () => {
+    for (const key of ['F', 'X', 'T', 'J', 'K'])
+      expect(keyAction({ key }, 'overlay'), key).not.toBeNull();
+    expect(keyAction({ key: 'E' }, 'overlay', 'changes')).toEqual({ type: 'expand' });
+    // Unbinding a letter unbinds Shift+letter too.
+    for (const key of ['x', 'X'])
+      expect(keyAction({ key }, 'overlay', 'all', { x: null })).toBeNull();
+    expect(keyAction({ key: 'T' }, 'overlay', 'all', { t: null })).toBeNull();
+    // An upper-case entry covers the lower case the same way.
+    expect(keyAction({ key: 'r' }, 'overlay', 'all', { R: 'review' })).toEqual({ type: 'review' });
+    // Naming the other case keeps them apart.
+    const apart = { x: null, X: 'review' } as const;
+    expect(keyAction({ key: 'x' }, 'overlay', 'all', apart)).toBeNull();
+    expect(keyAction({ key: 'X' }, 'overlay', 'all', apart)).toEqual({ type: 'review' });
+    // Keys that are not single letters are taken as they are.
+    expect(keyAction({ key: 'arrowdown' }, 'overlay')).toBeNull();
+  });
+
   it('leaves browser chords alone', () => {
     expect(keyAction({ key: 'f', metaKey: true }, 'overlay')).toBeNull();
     expect(keyAction({ key: '1', ctrlKey: true }, 'overlay')).toBeNull();
