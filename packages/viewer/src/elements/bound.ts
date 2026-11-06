@@ -184,17 +184,22 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
     return ['htmlFor'];
   }
 
-  /** Reflects `for`, as on `<label>` and `<output>`: the id of the root to show ('' for the nearest). */
+  /**
+   * Reflects `for`, as on `<label>` and `<output>`: the id of the root to show; '' (no
+   * attribute) for the nearest one.
+   */
   get htmlFor(): string {
     return this.getAttribute('for') ?? '';
   }
 
   set htmlFor(value: string) {
-    this.setAttribute('for', String(value));
+    const id = String(value);
+    if (id === '') this.removeAttribute('for');
+    else this.setAttribute('for', id);
   }
 
   /** The root this element shows, or null while it waits for one. */
-  get root(): KgdiffRootElement | null {
+  get rootElement(): KgdiffRootElement | null {
     return (this.#ctx?.host as KgdiffRootElement | undefined) ?? null;
   }
 

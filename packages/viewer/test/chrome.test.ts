@@ -120,10 +120,13 @@ describe('<kgdiff-zoom> and <kgdiff-minimap>', () => {
     await loaded(root);
     const near = s1.querySelector('kgdiff-zoom') as KgdiffStageBoundElement;
     const far = document.getElementById('far') as KgdiffStageBoundElement;
-    expect(near.stageId).toBe('');
+    expect(near.stage).toBe('');
     expect(near.stageElement).toBe(s1);
-    expect(far.stageId).toBe('s2');
+    expect(far.stage).toBe('s2');
     expect(far.stageElement).toBe(s2);
+    // Every element says which root it shows: the stage's.
+    expect(near.rootElement).toBe(root);
+    expect(far.rootElement).toBe(root);
     const zoomIn = (el: Element) => $<HTMLButtonElement>(el, '.zoom-bar button').click();
     zoomIn(near);
     expect(rendererOf(s1).camera.zooms).toHaveLength(1);
@@ -134,15 +137,20 @@ describe('<kgdiff-zoom> and <kgdiff-minimap>', () => {
     zoomIn(s2);
     expect(rendererOf(s2).camera.zooms).toHaveLength(2);
     expect(rendererOf(s1).camera.zooms).toHaveLength(1);
-    // stageId and stage are one: changing either binds again.
-    far.stageId = 's1';
+    // The property and the attribute are one: changing either binds again.
+    far.stage = 's1';
     expect(far.getAttribute('stage')).toBe('s1');
     expect(far.stageElement).toBe(s1);
     zoomIn(far);
     expect(rendererOf(s1).camera.zooms).toHaveLength(2);
     far.removeAttribute('stage');
-    expect(far.stageId).toBe('');
+    expect(far.stage).toBe('');
     expect(far.stageElement).toBeNull();
+    expect(far.rootElement).toBeNull();
+    // '' is the nearest stage: no attribute.
+    far.stage = 's2';
+    far.stage = '';
+    expect(far.hasAttribute('stage')).toBe(false);
     expect(far.shadowRoot?.childElementCount).toBe(0);
   });
 
@@ -357,7 +365,7 @@ describe('in <kgdiff-viewer>', () => {
     expect($(viewer, '.minimap-host').dataset.panel).toBe('open');
     expect($(viewer, '.dock-bar').dataset.panel).toBe('collapsed');
     const legend = viewer.querySelector('kgdiff-legend') as KgdiffLegendElement;
-    expect(legend.root).toBe(viewer);
+    expect(legend.rootElement).toBe(viewer);
     expect($(legend, '.mini-legend')).not.toBeNull();
     // The zoom buttons act on the viewer's built-in stage.
     const zoom = viewer.querySelector('kgdiff-zoom') as KgdiffStageBoundElement;

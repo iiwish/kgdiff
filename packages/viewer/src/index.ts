@@ -364,18 +364,20 @@ export interface KgdiffViewerElement extends KgdiffRootElement {
  * `<kgdiff-change-detail>`, `<kgdiff-search>`, `<kgdiff-filters>`. It shows the session of the
  * nearest `<kgdiff-root>` or `<kgdiff-viewer>` around it (across shadow roots), or of the one
  * named by its `for` attribute (an element id) anywhere on the page; a root defined or
- * connected later is found then. *
+ * connected later is found then.
+ *
  * @experimental The elements are experimental in 0.6: names, attributes and markup may change
  * in a minor release before they are stable.
  */
 export interface KgdiffBoundElement extends HTMLElement {
   /**
    * Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show,
-   * or '' for the nearest one around the element. Changing it binds again.
+   * or '' (no attribute; setting '' removes it) for the nearest one around the element.
+   * Changing it binds again.
    */
   htmlFor: string;
-  /** The root this element shows, or null while it waits for one. */
-  readonly root: KgdiffRootElement | null;
+  /** The root this element shows, or null while it waits for one (`for`'s element, resolved). */
+  readonly rootElement: KgdiffRootElement | null;
 }
 
 /**
@@ -408,15 +410,17 @@ export interface KgdiffLegendElement extends KgdiffBoundElement {
  */
 export interface KgdiffStageBoundElement extends HTMLElement {
   /**
-   * Reflects the `stage` attribute: the id of the stage to act on, or '' for the nearest one
-   * around the element. Changing it binds again.
+   * Reflects the `stage` attribute: the id of the stage to act on, or '' (no attribute;
+   * setting '' removes it) for the nearest one around the element. Changing it binds again.
    */
-  stageId: string;
+  stage: string;
   /**
    * The stage this element acts on, or null while it waits for one. Inside a `<kgdiff-viewer>`
    * (or naming one) it is the viewer, whose built-in stage it acts on.
    */
   readonly stageElement: KgdiffStageElement | KgdiffViewerElement | null;
+  /** The root whose session the stage shows, or null while the element or the stage waits. */
+  readonly rootElement: KgdiffRootElement | null;
 }
 
 /**

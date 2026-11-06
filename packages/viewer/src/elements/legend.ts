@@ -3,7 +3,7 @@
  * default): a card of every family's swatch and name, folded to its head until opened; `open`
  * reflects whether it is (the user's toggle included, as on `<details>`). `variant="mini"`: one
  * line of dots for the families the root's diff has, then the unchanged context. Binds to a
- * root (`for`, `htmlFor`, `root`). Slotted into a `<kgdiff-stage>` it replaces the stage's
+ * root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's
  * built-in legend; placed anywhere else it is not kept clear of fits and flights unless
  * registered. Importing this module defines it.
  */

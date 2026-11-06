@@ -499,15 +499,19 @@ open:
   commit, the viewer suite unchanged), then wrapped in `<kgdiff-view-dock>`,
   `<kgdiff-transport>`, `<kgdiff-legend>`, `<kgdiff-zoom>`, `<kgdiff-minimap>`,
   `<kgdiff-title>` and `<kgdiff-actions>`, each with its subpath.
-- **Binding to a view: `stage="<id>"`, `stageId`, `stageElement`.** Zoom and the minimap bind
-  to the nearest stage (the stage context, `kgdiff.stage/1`) or to the one `stage` names.
-  Not a second `for`: `for` binds a root everywhere else, and an element inside one root's
-  layout may act on a stage of another. The property is `stageId`, as `htmlFor` mirrors `for`,
-  because a `stage` property would read as the element; the read-only `stageElement` is the
-  stage found (or null while it waits), as `popoverTargetElement` resolves `popovertarget`. A
-  `<kgdiff-viewer>` provides the stage context too: zoom and minimap elements inside it (or
-  naming it) act on its built-in view, so `stageElement` is a stage or a viewer.
-- **The other chrome elements bind to the session** (`for`, `htmlFor`, `root`). The legend has
+- **Element references follow the DOM's scheme**: an id-reference attribute reflects as a
+  string property of its name and resolves as `<name>Element` (`popovertarget`,
+  `popoverTargetElement`). So `for` ⇄ `htmlFor` (`for` is reserved) with a read-only
+  `rootElement`, which renames phase 2's `root`; and `stage` ⇄ `stage` with a read-only
+  `stageElement`. Setting either to '' removes the attribute (the nearest root or stage).
+- **Binding to a view: `stage="<id>"`.** Zoom and the minimap bind to the nearest stage (the
+  stage context, `kgdiff.stage/1`) or to the one `stage` names. Not a second `for`: `for` binds
+  a root everywhere else, and an element inside one root's layout may act on a stage of
+  another. Their `rootElement` is the stage's root, so every element says which root it shows.
+  A `<kgdiff-viewer>` provides the stage context too: zoom and minimap elements inside it (or
+  naming it) act on its built-in view, so `stageElement` is a stage or a viewer. One helper
+  (`bindContext`) finds a root or a stage, now or once an id appears.
+- **The other chrome elements bind to the session** (`for`, `htmlFor`, `rootElement`). The legend has
   `variant="full|mini"` (one attribute, not a boolean `mini`) and a boolean `open` that
   reflects the reader's toggle, as `<details>` does; the minimap carries `overview` while the
   whole graph is in view and hides then, which a page can override in CSS; the transport shows

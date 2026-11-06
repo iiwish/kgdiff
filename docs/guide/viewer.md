@@ -223,7 +223,7 @@ the page with `for="<root id>"`.
 - Anywhere else, over the canvas or not, an element is not kept clear of fits and flights
   unless you register it: `stage.registerObstacle(element)`.
 - `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one stage: the nearest one around them, or the
-  one `stage="<id>"` names anywhere on the page (`zoom.stageId`, and `zoom.stageElement` for
+  one `stage="<id>"` names anywhere on the page (`zoom.stage`, and `zoom.stageElement` for
   the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements
   show the root's session, like the change list.
 - The keyboard map belongs to the root: `j` / `k`, `x`, `/` and the rest work in every element

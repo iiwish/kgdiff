@@ -149,15 +149,18 @@ describe('binding', () => {
     expect(list.htmlFor).toBe('');
     list.htmlFor = 'two';
     expect(list.getAttribute('for')).toBe('two');
-    expect(list.root).toBeNull();
+    expect(list.rootElement).toBeNull();
     const two = place<Root>('<kgdiff-root id="two"></kgdiff-root>', '#two');
-    expect(list.root).toBe(two);
+    expect(list.rootElement).toBe(two);
     const one = place<Root>('<kgdiff-root id="one"></kgdiff-root>', '#one');
     list.setAttribute('for', 'one');
     expect(list.htmlFor).toBe('one');
-    expect(list.root).toBe(one);
+    expect(list.rootElement).toBe(one);
+    // '' is the nearest root: no attribute.
+    list.htmlFor = '';
+    expect(list.hasAttribute('for')).toBe(false);
     list.remove();
-    expect(list.root).toBeNull();
+    expect(list.rootElement).toBeNull();
   });
 
   it('gives elements outside the root its token set; inside they inherit it', async () => {

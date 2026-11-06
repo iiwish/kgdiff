@@ -291,8 +291,10 @@ are stable.
   `<kgdiff-viewer>`) around it, also across shadow roots, or of the one its `for="<id>"` names
   anywhere on the page. Order does not matter: a root defined or connected later, or an id that
   appears later, is found then. Two roots on a page never share selection, keys or
-  announcements. The `htmlFor` property reflects `for` (as on `<label>`), and `root` is the
-  root an element is bound to, or null while it waits for one.
+  announcements. The `htmlFor` property reflects `for` (as on `<label>`; setting '' removes the
+  attribute), and the read-only `rootElement` is the root an element is bound to, or null while
+  it waits for one: an id reference reflects as a string and resolves as `…Element`, as
+  `popovertarget` does (`popoverTargetElement`).
 - **The stage** has five named slots, `top-start`, `top-end`, `bottom-start`, `bottom-center`
   and `bottom-end`, for the page's content over the canvas: the stage positions it (stacked
   further from the corner than the chrome there), and every slotted element is kept clear of
@@ -311,13 +313,13 @@ are stable.
   stage to one version whatever the mode: no swipe divider or replay caption then, and a chip
   names the version. It is the one setting of a view; everything else is the session's.
 - **Chrome elements.** `<kgdiff-view-dock>`, `<kgdiff-transport>`, `<kgdiff-legend>`,
-  `<kgdiff-title>` and `<kgdiff-actions>` show the root's session (`for`, `htmlFor`, `root`, as
-  above). `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one view: the nearest `<kgdiff-stage>`
-  around them, or the one `stage="<id>"` names anywhere on the page (a `<kgdiff-viewer>` is the
-  stage of the ones inside it, and can be named too). The `stageId` property reflects `stage`
-  (`for` would bind a root, and `stage` alone would read as the element it finds); the
-  read-only `stageElement` is the stage found, or null while it waits, as
-  `popoverTargetElement` resolves `popovertarget`.
+  `<kgdiff-title>` and `<kgdiff-actions>` show the root's session (`for`, `htmlFor`,
+  `rootElement`, as above). `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one view: the nearest
+  `<kgdiff-stage>` around them, or the one `stage="<id>"` names anywhere on the page (a
+  `<kgdiff-viewer>` is the stage of the ones inside it, and can be named too). By the same
+  scheme the `stage` property reflects the attribute (setting '' removes it), the read-only
+  `stageElement` is the stage found, or null while it waits, and `rootElement` is that stage's
+  root.
 - **Replacing the built-in chrome.** Slotted into a stage (or a `<kgdiff-viewer>`), the view
   dock, transport, legend, zoom or minimap element replaces the stage's own region; the stage's
   `panels` keeps applying to the regions it still draws, and the element is kept clear of fits
