@@ -400,6 +400,10 @@ design left open:
   minimap; not the title or actions) until those become elements in phase 3. Slotted content
   stacks further from the corner than the chrome there, and stays shown while a diff loads.
   Until `StageView` is split, a root draws one stage; a second stays empty, with a warning.
+  The stage's `panels` (its regions `dock`, `transport`, `legend`, `zoom`, `minimap`, in the
+  default layout's syntax) opens, collapses or hides that chrome. Phase 3 continues from it: a
+  chrome element slotted into the stage (`<kgdiff-transport slot="bottom-center">`) replaces
+  the built-in one, and `panels` keeps applying to the built-in chrome a page keeps.
 - **What `collapsed` means, per region.** The list folds to its title row, the detail panel to
   a new "Change details" bar, the search and the filters to buttons in the list's title row,
   the legend to its head; the sidebar (and the bottom sheet) folds away when all four of its

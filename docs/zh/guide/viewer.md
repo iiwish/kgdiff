@@ -95,7 +95,7 @@ viewer.play();
 ></kgdiff-viewer>
 ```
 
-画布占满整个宽度，保留视图坞和回放控制条。再加上 `dock:hidden zoom:hidden minimap:hidden` 只留控制条；完全不要控件时，用 `chrome="none" loop`（[见下文](#嵌入一段循环回放)）。
+画布占满整个宽度，保留视图坞和回放控制条。再加上 `dock:hidden zoom:hidden minimap:hidden` 只留控制条；完全不要控件时，用 `chrome="none" loop`（[见下文](#嵌入一段循环回放)）。用元素组合时，同样的效果只需一个根元素和一块画布：`<kgdiff-root mode="replay"><kgdiff-stage panels="zoom:hidden minimap:hidden"></kgdiff-stage></kgdiff-root>`。
 
 ### 响应布局变化
 

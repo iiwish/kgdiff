@@ -11,12 +11,18 @@
  * the chrome. Content positioned some other way registers itself with `registerObstacle`, on the
  * element or on the stage context (`kgdiff.stage/1`) it provides to its descendants.
  *
+ * `panels` turns the built-in chrome's regions (`dock`, `transport`, `legend`, `zoom`,
+ * `minimap`) open, collapsed or hidden, in the syntax of `<kgdiff-viewer>`'s `panels`; the
+ * user's changes (opening the legend) hold until the page declares another state for that
+ * region. Nothing is remembered.
+ *
  * A root draws one stage for now; a second one bound to the same root stays empty. Importing
  * this module defines it.
  */
 import type { Region, ViewerContext } from '../bind.js';
 import { createContext, provideContext } from '../context.js';
-import type { KgdiffStageElement } from '../index.js';
+import type { KgdiffStageElement, PanelState, StagePanels, StageRegion } from '../index.js';
+import { DEFAULT_PANELS, formatPanels, toPanels } from '../panels.js';
 import type { UiContext } from '../ui/context.js';
 import { Stage } from '../ui/stage.js';
 import { BoundElement, define } from './bound.js';
@@ -29,11 +35,82 @@ export interface StageContext {
 
 export const stageContext = createContext<StageContext>('kgdiff.stage/1');
 
+/** The regions of the built-in chrome a stage has. */
+export const STAGE_REGIONS: readonly StageRegion[] = [
+  'dock',
+  'transport',
+  'legend',
+  'zoom',
+  'minimap',
+];
+
+type MutableStagePanels = { -readonly [R in StageRegion]?: PanelState };
+
+/** Panels from an attribute or a property, keeping the stage's regions (warning about the rest). */
+function stagePanels(value: unknown): StagePanels {
+  const { panels, invalid } = toPanels(value);
+  const out: MutableStagePanels = {};
+  for (const [region, state] of Object.entries(panels)) {
+    if (STAGE_REGIONS.includes(region as StageRegion)) out[region as StageRegion] = state;
+    else invalid.push(`${region}:${state}`);
+  }
+  if (invalid.length > 0) {
+    console.warn(`[kgdiff] <kgdiff-stage> ignoring invalid panels: ${invalid.join(' ')}`);
+  }
+  return out;
+}
+
 export class KgdiffStage extends BoundElement implements KgdiffStageElement {
+  static override get observedAttributes(): readonly string[] {
+    return ['for', 'panels'];
+  }
+
   protected readonly name = 'stage';
   #stage: Stage | null = null;
+  /** The page's `panels`, and what the user changed since (the legend's head). */
+  #declared: StagePanels = {};
+  readonly #runtime: MutableStagePanels = {};
+  #reflecting = false;
   /** Registered obstacles, kept across rebinding (the stage is rebuilt then). */
   readonly #obstacles = new Map<Element, () => void>();
+
+  get panels(): StagePanels {
+    return { ...this.#declared };
+  }
+
+  set panels(value: StagePanels | string | null) {
+    const panels = stagePanels(value);
+    this.#reflecting = true;
+    try {
+      const text = formatPanels(panels);
+      if (text) this.setAttribute('panels', text);
+      else this.removeAttribute('panels');
+    } finally {
+      this.#reflecting = false;
+    }
+    this.#declare(panels);
+  }
+
+  override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
+    if (name !== 'panels') super.attributeChangedCallback(name, old, value);
+    else if (!this.#reflecting) this.#declare(stagePanels(value ?? ''));
+  }
+
+  protected override upgradedProperties(): readonly string[] {
+    return ['panels'];
+  }
+
+  /** A region the page declares another state for gives way; the same again changes nothing. */
+  #declare(panels: StagePanels): void {
+    for (const r of STAGE_REGIONS) if (panels[r] !== this.#declared[r]) delete this.#runtime[r];
+    this.#declared = panels;
+    this.#applyPanels();
+  }
+
+  #applyPanels(): void {
+    const states = { ...DEFAULT_PANELS, ...this.#declared, ...this.#runtime };
+    this.#stage?.setPanels(states);
+  }
 
   registerObstacle(element: Element): () => void {
     if (!this.#obstacles.has(element)) {
@@ -56,8 +133,20 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
       return { update: () => undefined };
     }
     release(() => ctx.releaseStage(this));
-    const stage = new Stage(ui, true);
+    // The user opening or folding the legend holds until the page declares the legend again.
+    const stage = new Stage(
+      {
+        ...ui,
+        setPanel: (region, state) => {
+          if (STAGE_REGIONS.includes(region as StageRegion)) {
+            this.#runtime[region as StageRegion] = state;
+          }
+        },
+      },
+      true,
+    );
     this.#stage = stage;
+    this.#applyPanels();
     for (const el of this.#obstacles.keys()) this.#obstacles.set(el, stage.registerObstacle(el));
     release(() => {
       this.#stage = null;
