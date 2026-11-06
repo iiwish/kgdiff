@@ -70,6 +70,7 @@ export class Search {
       this.input.placeholder = tr.t('sidebar.searchPlaceholder');
       attr(this.input, 'aria-label', tr.t('sidebar.search'));
       attr(this.#clear, 'aria-label', tr.t('sidebar.searchClear'));
+      attr(this.results, 'aria-label', tr.t('sidebar.searchResults'));
       this.input.disabled = this.#ctx.controller.status !== 'ready';
     }
     if (all || topics.has('search')) this.#render();

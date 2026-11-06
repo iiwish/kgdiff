@@ -227,6 +227,8 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
       this.#stage = null;
     });
     stage.setChrome('full', true);
+    // One of the page's regions, not its main landmark.
+    stage.asRegion();
     this.shadow.append(stage.el);
     // Content slotted before the stage was built.
     stage.slotted();
