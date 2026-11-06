@@ -92,7 +92,7 @@ as one with parallel edges, is normalized again.
 | layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                         |
 | scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                                                         |
 | renderer | `createRenderer`, `createMinimap`                                                                                                                                                                         |
-| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; experimental elements (`<kgdiff-root>`, `<kgdiff-stage>`, …) and `@kgdiff/viewer/session`       |
+| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; experimental elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                    |
 | g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                             |
 | cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                       |
 

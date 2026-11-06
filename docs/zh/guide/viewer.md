@@ -156,7 +156,7 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 - 画布的插槽（`top-start`、`top-end`、`bottom-start`、`bottom-center`、`bottom-end`）把你的内容放在画布上，图会避开它来取景。你自己定位的内容，调用 `stage.registerObstacle(element)`。
 - 键盘映射属于根元素：`j` / `k`、`x`、`/` 等在绑定到它的每个元素里都有效，`/` 聚焦搜索。`shortcuts` 和 `keymap` 设在根元素上。
 - 组合出来的元素什么也不记：布局归你的页面所有。
-- 每个元素都有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`/stage`、`/change-list`、`/change-detail`、`/search`、`/filters`。`@kgdiff/viewer/session` 是不带任何元素的无界面会话。
+- 每个元素都有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`/stage`、`/change-list`、`/change-detail`、`/search`、`/filters`。
 
 ## 用 CSS 定制主题
 

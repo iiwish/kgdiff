@@ -61,10 +61,6 @@
       "types": "./dist/elements/filters.d.ts",
       "default": "./dist/elements/filters.js"
     },
-    "./session": {
-      "types": "./dist/headless.d.ts",
-      "default": "./dist/headless.js"
-    },
     "./panels": {
       "types": "./dist/panels.d.ts",
       "default": "./dist/panels.js"

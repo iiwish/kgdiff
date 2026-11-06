@@ -66,8 +66,7 @@ storage entry (`kgdiff:viewer` by default) for apps that share an origin. Colors
 `<kgdiff-root>` holds the session; `<kgdiff-stage>` (the canvas, with five slots for your own
 content over it), `<kgdiff-change-list>`, `<kgdiff-change-detail>`, `<kgdiff-search>` and
 `<kgdiff-filters>` show its parts, inside it or anywhere with `for="<root id>"`. Importing
-`@kgdiff/viewer` defines them all; `@kgdiff/viewer/elements/<name>` defines one, and
-`@kgdiff/viewer/session` is the headless session. See
+`@kgdiff/viewer` defines them all, and `@kgdiff/viewer/elements/<name>` defines one. See
 [the guide](../../docs/guide/viewer.md#compose-your-own-layout).
 
 ## Embed a small looping replay

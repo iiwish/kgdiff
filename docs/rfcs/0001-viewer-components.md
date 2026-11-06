@@ -438,10 +438,10 @@ design left open:
   its listbox keys. A key inside nested roots acts on the nearest one.
 - **Tokens for `for=` elements.** An element outside its root's subtree adopts the root's
   built-in token set; page overrides set on the root do not reach it.
-- **`@kgdiff/viewer/session`** exports `DiffSession`, `createSession` (browser clock, frames,
-  storage) and the topics, as experimental. The read-only snapshot / commands / `subscribe`
-  surface of §1 is not done yet; the `session` property that lets frameworks inject a session
-  into elements is not either. Both are left open.
+- **No `@kgdiff/viewer/session` in 0.6.** §7's headless subpath waits for the reduced surface
+  of §1 (a read-only snapshot, commands, `subscribe`): exporting today's whole `DiffSession`
+  and shrinking it later would be churn, while adding the subpath later breaks nothing. The
+  `session` property that lets frameworks inject a session into elements waits with it.
 - **Not done in phase 2:** a11y snapshots of each region (the Testing section) and the Custom
   Elements Manifest (phase 4).
 
@@ -463,6 +463,5 @@ Size (`kgdiff-viewer.js`, min + gzip, local zlib): 105.54 kB after phase 1, 112.
 phase 2 (ceiling 130 kB): panel states, presets, splitters and persistence +4.2 kB, the
 elements, keyboard configuration and slots +2.5 kB. Each subpath bundled on its own (min +
 gzip): root 88.0 kB (the session and the canvas), stage 17.4, change-list 13.1, change-detail
-16.4, search 11.8, filters 10.1, session 49.6; the elements other than root leave the session
-out. `@kgdiff/viewer/panels` (0.6 kB) is the panels syntax without DOM, which the CLI's
+16.4, search 11.8, filters 10.1; the elements other than root leave the session out. `@kgdiff/viewer/panels` (0.6 kB) is the panels syntax without DOM, which the CLI's
 `--panels` reads with too. After review fixes the standalone bundle is 112.77 kB.
