@@ -1,9 +1,11 @@
 # RFC 0001: Composable viewer components
 
-- **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)); ready for phase 1
+- **Status:** Accepted design, decisions recorded (see [Decisions](#decisions)). Phase 1 is
+  implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13); phase 2 is
+  in progress.
 - **Date:** 2026-11-06
-- **Prototype:** branch `spike/viewer-components`, `packages/viewer/dev/components/` (run the viewer
-  dev server and open `/components/`)
+- **Prototype:** the branch `spike/viewer-components` was never merged and was deleted on
+  2026-11-06; its findings are in [Prototype results](#prototype-results)
 - **Affects:** `@kgdiff/viewer` (public API), `@kgdiff/renderer` (theme input), the CLI's HTML
   report (unchanged output), docs
 
@@ -263,7 +265,7 @@ strict-CSP sites put on inline `<style>`.
   plus `@kgdiff/viewer/session` for the headless core. ESM hosts that compose a stage and a
   transport do not ship the change list. `sideEffects` lists the defining modules.
 - The standalone IIFE still contains everything; reports are unchanged.
-- **Size.** The prototype's glue (protocol, root, stage with slots, list, detail, overlay) is
+- **Size.** The prototype's glue (protocol, root, stage with slots, list, detail, overlay) was
   3.5 kB min + gzip on top of the existing UI classes. That is an upper bound: the rebuilt
   `<kgdiff-viewer>` replaces most of today's wiring in `element.ts`. Phase 1 measures the net
   cost against the standalone budget in docs/architecture.md (105 kB today; PR #32 proposes
@@ -297,8 +299,8 @@ Svelte usage.
   precedence, keyboard forwarding, the `search` focus target, the list stepping aside while a
   search is active.
 - Parity: the existing viewer test suite runs unchanged against the rebuilt `<kgdiff-viewer>`.
-- Browser: obstacle avoidance measured as in the prototype (nodes under slotted content after
-  fits and flights); keyboard and live-region checks; a11y snapshots of each region.
+- Browser: obstacle avoidance measured as in the [prototype](#prototype-results) (nodes under
+  slotted content after fits and flights); keyboard and live-region checks; a11y snapshots of each region.
 - Size: the standalone budget test, plus per-subpath size reports.
 
 ## Rollout
@@ -340,7 +342,7 @@ the stage's `top-end` slot, detail in its own column collapsed by default; (B) r
 | Hidden container                 | Loading stalled (no animation frames); a frame / timer race fixed it                                         |
 | Glue size                        | 3.5 kB min + gzip (upper bound)                                                                              |
 
-The prototype reuses the existing `Stage`, `Sidebar` and `Detail` classes unchanged: they only
+The prototype reused the existing `Stage`, `Sidebar` and `Detail` classes unchanged: they only
 depend on a `UiContext`, which confirms that the UI is already cut along region lines.
 
 Not prototyped: search and filters as elements of their own (decided after the prototype,
