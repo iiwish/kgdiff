@@ -19,6 +19,7 @@ import { datasetScene } from './support/scene.js';
 
 const DATASETS = [
   'enterprise-kg',
+  'enterprise-kg-en',
   'data-lineage',
   'llm-extraction',
   'ontology-release',

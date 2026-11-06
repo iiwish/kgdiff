@@ -1,0 +1,14 @@
+{
+  "id": "enterprise-kg-en",
+  "title": { "en": "Enterprise credit KG ontology", "zh-CN": "企业信用知识图谱本体（英文版）" },
+  "description": {
+    "en": "Catalog of an enterprise-credit knowledge graph: 8 business domains, entity / relation / event concepts with attribute-to-column mappings. Release v13 merges Legal person representative into Legal representative, adds Beneficial owner, drops Spot check, moves Equity pledge to the equity domain, retargets Top 10 shareholders to Listed company and more.",
+    "zh-CN": "企业信用知识图谱本体目录的英文版，与“企业信用知识图谱本体”的节点、关系和变更完全相同，只是文本译成了英文：8 个业务领域，主体、关系、事件等概念及其属性到物理字段的映射。"
+  },
+  "format": "json",
+  "files": { "before": "before.json", "after": "after.json" },
+  "versions": { "before": "v12", "after": "v13" },
+  "options": { "match": { "strategy": "auto" }, "hierarchyPredicates": ["is_a"] },
+  "featured": true,
+  "license": "CC0-1.0"
+}

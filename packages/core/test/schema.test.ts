@@ -94,19 +94,23 @@ describe('JSON Schemas', () => {
     expectAllValid(extractionBefore, extractionAfter, { match: { strategy: 'similarity' } });
   });
 
-  it.each(['enterprise-kg', 'llm-extraction', 'data-lineage', 'ontology-release', 'schema-vocab'])(
-    'accept everything kgdiff writes for the example dataset %s',
-    (dataset) => {
-      const root = new URL(`../../../examples/datasets/${dataset}/`, import.meta.url);
-      const read = (file: string) => readFileSync(new URL(file, root), 'utf8');
-      const meta = JSON.parse(read('meta.json')) as {
-        readonly options: DiffOptions;
-        readonly files: { readonly before: string; readonly after: string };
-      };
-      const parse = (file: string) => parseGraph(read(file), { filename: file }).graph;
-      expectAllValid(parse(meta.files.before), parse(meta.files.after), meta.options);
-    },
-  );
+  it.each([
+    'enterprise-kg',
+    'enterprise-kg-en',
+    'llm-extraction',
+    'data-lineage',
+    'ontology-release',
+    'schema-vocab',
+  ])('accept everything kgdiff writes for the example dataset %s', (dataset) => {
+    const root = new URL(`../../../examples/datasets/${dataset}/`, import.meta.url);
+    const read = (file: string) => readFileSync(new URL(file, root), 'utf8');
+    const meta = JSON.parse(read('meta.json')) as {
+      readonly options: DiffOptions;
+      readonly files: { readonly before: string; readonly after: string };
+    };
+    const parse = (file: string) => parseGraph(read(file), { filename: file }).graph;
+    expectAllValid(parse(meta.files.before), parse(meta.files.after), meta.options);
+  });
 });
 
 describe('the graph schema', () => {

@@ -12,12 +12,15 @@ Listed in display order in [`datasets/index.json`](datasets/index.json).
 | Dataset                                            | Format             | Nodes (before → after) | What it shows                                                                                                                                                                                       |
 | -------------------------------------------------- | ------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`enterprise-kg`](datasets/enterprise-kg/) ★       | kgdiff JSON (中文) | 74 → 74                | Enterprise-credit KG ontology v12 → v13: hinted merge 法人代表 → 法定代表人, domain move, retarget, rename, added / removed concepts, attribute-to-column mapping edits, predicate and type changes |
+| [`enterprise-kg-en`](datasets/enterprise-kg-en/) ★ | kgdiff JSON        | 74 → 74                | `enterprise-kg` in English: the same graphs and changes with every text translated (merge Legal person representative → Legal representative, …)                                                    |
 | [`ontology-release`](datasets/ontology-release/) ★ | OBO 1.4            | 179 → 184              | Monthly release of a mini disease ontology: obsoletion with `replaced_by` (2 → 1 and 1 → 1 merges), a `consider:` split, renames, `is_a` moves, namespace / synonym / definition / xref edits       |
 | [`llm-extraction`](datasets/llm-extraction/) ★     | kgdiff JSON        | 39 → 40                | Two LLM extraction runs with random ids: similarity matching, label variants, a hallucination, new entities, an ambiguous pair left as a suggestion                                                 |
 | [`data-lineage`](datasets/data-lineage/)           | kgdiff JSON        | 43 → 44                | dbt lineage refactor: rekeyed model (`stg_orders` → `stg_orders_v2`), model split, removed / new models, dependency retargets, `table` → `incremental`, tag changes                                 |
 | [`schema-vocab`](datasets/schema-vocab/)           | Turtle             | 66 → 71                | schema.org-style vocabulary: new intermediate classes, class moves, `owl:deprecated` + `IAO:0100001` replacements, label / comment edits, an OWL existential restriction                            |
 
-★ featured on the demo site.
+★ featured on the demo site. `enterprise-kg` and `enterprise-kg-en` are one dataset in two
+languages: the site shows the one in the reader's language, and a test keeps them identical
+apart from their texts.
 
 Every dataset folder contains:
 
@@ -31,7 +34,7 @@ Every dataset folder contains:
 Try one with the CLI (`kgdiff <before> <after>`, see `packages/cli`):
 
 ```sh
-kgdiff examples/datasets/enterprise-kg/before.json examples/datasets/enterprise-kg/after.json
+kgdiff examples/datasets/enterprise-kg-en/before.json examples/datasets/enterprise-kg-en/after.json
 ```
 
 ## expected.json
@@ -53,7 +56,7 @@ In short, after `diff(parse(before), parse(after), meta.options)`:
 - `matches` lists hint and similarity matches. `rekeys` lists `rekey` facets, which exist only
   under strategies `id` / `auto`: with `similarity` ids are meaningless, so a node that differs
   only by its id is unchanged.
-- `counts` are the node / edge counts of the parsed versions; `hunks` (enterprise-kg only) are in
+- `counts` are the node / edge counts of the parsed versions; `hunks` (enterprise-kg and enterprise-kg-en only) are in
   the default review order of docs/algorithms.md §7.
 - `notes` record the parser conventions each file relies on.
 

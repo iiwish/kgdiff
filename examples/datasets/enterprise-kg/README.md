@@ -2,7 +2,8 @@
 
 The ontology catalog behind a Chinese enterprise-credit knowledge graph, the kind of model that
 powers business-registration, risk-monitoring and due-diligence products. It is the featured
-dataset of the demo site.
+dataset of the demo site in Chinese; [`enterprise-kg-en`](../enterprise-kg-en/) is the same
+dataset in English, and a test keeps the two identical apart from their texts.
 
 企业信用知识图谱的本体目录：8 个业务领域下的主体、关系、事件、文书、名单、资产等概念，
 以及每个概念的属性到物理表字段的映射（如 `统一社会信用代码 → ent_basic_info.credit_code`）。

@@ -1,0 +1,21 @@
+kgdiff  Enterprise credit KG ontology v12 → v13                                 74 nodes · 171 edges
+
+  +1 added   −1 removed   ~6 modified   ⇄4 restructured                       23 changes in 12 hunks
+  ++++−−−~~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+  Removed 1
+  − Removed “Spot check” and 2 relations                             removed · type Event · was lin…
+  Restructured 4
+  ⊕ Merged “Legal person representative” into “Legal representati…   identity · via replacement hin…
+  ⇄ Moved “Equity pledge” under “Equity and investment”              structure · from “Operational…
+  ⇄ Added “Actual control” —tracedThrough→ “Investment”              structure · new relation
+  ⇄ “Top 10 shareholders”: holdsSharesIn now points to “Listed co…   structure · relation retargeted
+  Modified 6
+  ~ Edited “Enterprise”                                              content · +2 −1 attributes · ~…
+  ~ Renamed “Executive tenure” → “Board and executive tenure”        content · +1 synonym
+  ~ Changed the type of “Consumption restriction”                    content · +1 −1 types
+  ~ Updated synonyms of “Defaulting judgment debtor”                 content · +1 −1 synonyms
+  ~ Deprecated “Sino-foreign joint venture”                          content
+  ~ Updated attributes of “Trademark”                                content · ~1 attribute
+  Added 1
+  + Added “Beneficial owner” and 3 relations                         added · type Role · linked to…

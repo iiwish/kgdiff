@@ -912,6 +912,7 @@ describe('apply', () => {
   it('round-trips every example dataset: diff → delta → apply equals after', async () => {
     for (const id of [
       'enterprise-kg',
+      'enterprise-kg-en',
       'ontology-release',
       'schema-vocab',
       'llm-extraction',

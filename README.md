@@ -189,8 +189,8 @@ pnpm check                      # lint + typecheck + tests
 pnpm bench                      # performance budgets
 pnpm dev:site                   # landing page and playground
 pnpm dev:docs                   # documentation site (docs/)
-pnpm tsx packages/cli/src/bin.ts examples/datasets/enterprise-kg/before.json \
-  examples/datasets/enterprise-kg/after.json
+pnpm tsx packages/cli/src/bin.ts examples/datasets/enterprise-kg-en/before.json \
+  examples/datasets/enterprise-kg-en/after.json
 ```
 
 Start with [docs/architecture.md](docs/architecture.md) and [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "kgdiff example datasets, in display order. Each folder holds before.*, after.*, meta.json, expected.json and README.md.",
+  "description": "kgdiff example datasets, in display order. Each folder holds before.*, after.*, meta.json, expected.json and README.md. A dataset with a translation names the language of its data (`language`); the translation also names the dataset it translates (`translationOf`), and the demo site shows the one in the reader's language.",
   "datasets": [
     {
       "id": "enterprise-kg",
@@ -10,7 +10,20 @@
       "title": { "en": "Enterprise credit KG ontology", "zh-CN": "企业信用知识图谱本体" },
       "versions": { "before": "v12", "after": "v13" },
       "size": { "before": { "nodes": 74, "edges": 171 }, "after": { "nodes": 74, "edges": 171 } },
-      "tags": ["ontology", "zh-CN", "merge", "move", "retarget"]
+      "tags": ["ontology", "zh-CN", "merge", "move", "retarget"],
+      "language": "zh-CN"
+    },
+    {
+      "id": "enterprise-kg-en",
+      "path": "enterprise-kg-en/",
+      "format": "json",
+      "featured": true,
+      "title": { "en": "Enterprise credit KG ontology", "zh-CN": "企业信用知识图谱本体（英文版）" },
+      "versions": { "before": "v12", "after": "v13" },
+      "size": { "before": { "nodes": 74, "edges": 171 }, "after": { "nodes": 74, "edges": 171 } },
+      "tags": ["ontology", "merge", "move", "retarget"],
+      "language": "en",
+      "translationOf": "enterprise-kg"
     },
     {
       "id": "ontology-release",
