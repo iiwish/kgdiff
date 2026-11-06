@@ -27,7 +27,6 @@ interface Phrasebook {
   readonly names: (names: readonly string[], total: number) => string;
   /** `+2 −1 ~1 attributes` style change counts. */
   readonly delta: (noun: Noun, added: number, removed: number, modified: number) => string;
-  readonly facets: Readonly<Record<FacetKind, string>>;
   readonly title: {
     readonly merged: (sources: string, target: string) => string;
     readonly split: (source: string, targets: string) => string;
@@ -156,24 +155,6 @@ const en: Phrasebook = (() => {
       const total = a + r + m;
       return total ? `${deltaParts(a, r, m)} ${EN_NOUNS[noun][total === 1 ? 0 : 1]}` : '';
     },
-    facets: {
-      rekey: 'Re-keyed',
-      rename: 'Renamed',
-      mergedInto: 'Merged into',
-      mergeTarget: 'Merge target',
-      splitFrom: 'Split from',
-      splitInto: 'Split into',
-      move: 'Moved',
-      deprecate: 'Deprecated',
-      replacement: 'Replacement links',
-      types: 'Types changed',
-      aliases: 'Synonyms changed',
-      attrs: 'Attributes changed',
-      retarget: 'Retargeted',
-      predicate: 'Relation type changed',
-      label: 'Relabeled',
-      collapsed: 'Collapsed duplicate',
-    },
     title: {
       merged: (sources, target) => `Merged ${sources} into ${target}`,
       split: (source, targets) => `Split ${source} into ${targets}`,
@@ -267,24 +248,6 @@ const zh: Phrasebook = (() => {
     quote: q,
     names,
     delta: (noun, a, r, m) => (a + r + m ? `${ZH_NOUNS[noun][1]} ${deltaParts(a, r, m)}` : ''),
-    facets: {
-      rekey: 'ID 变更',
-      rename: '改名',
-      mergedInto: '合并入',
-      mergeTarget: '合并目标',
-      splitFrom: '拆分自',
-      splitInto: '拆分为',
-      move: '移动',
-      deprecate: '弃用',
-      replacement: '替代关系',
-      types: '类型变更',
-      aliases: '别名变更',
-      attrs: '属性变更',
-      retarget: '改为指向',
-      predicate: '关系类型变更',
-      label: '标签变更',
-      collapsed: '重复合并',
-    },
     title: {
       merged: (sources, target) => `${sources}合并入${target}`,
       split: (source, targets) => `${source}拆分为${targets}`,
@@ -355,6 +318,53 @@ const PHRASEBOOKS: Readonly<Record<Locale, Phrasebook>> = { en, 'zh-CN': zh };
 function phrasebook(locale: Locale | undefined): Phrasebook {
   return PHRASEBOOKS[locale ?? 'en'] ?? en;
 }
+
+type FacetLabels = Readonly<Record<FacetKind, string>>;
+
+/**
+ * Facet names for `facetLabel`. Kept apart from the phrasebooks, which only `formatHunk` reads,
+ * so bundles that format hunks without naming facets (the standalone viewer) leave them out.
+ */
+const EN_FACETS: FacetLabels = {
+  rekey: 'Re-keyed',
+  rename: 'Renamed',
+  mergedInto: 'Merged into',
+  mergeTarget: 'Merge target',
+  splitFrom: 'Split from',
+  splitInto: 'Split into',
+  move: 'Moved',
+  deprecate: 'Deprecated',
+  replacement: 'Replacement links',
+  types: 'Types changed',
+  aliases: 'Synonyms changed',
+  attrs: 'Attributes changed',
+  retarget: 'Retargeted',
+  predicate: 'Relation type changed',
+  label: 'Relabeled',
+  collapsed: 'Collapsed duplicate',
+};
+
+const FACET_LABELS: Readonly<Record<Locale, FacetLabels>> = {
+  en: EN_FACETS,
+  'zh-CN': {
+    rekey: 'ID 变更',
+    rename: '改名',
+    mergedInto: '合并入',
+    mergeTarget: '合并目标',
+    splitFrom: '拆分自',
+    splitInto: '拆分为',
+    move: '移动',
+    deprecate: '弃用',
+    replacement: '替代关系',
+    types: '类型变更',
+    aliases: '别名变更',
+    attrs: '属性变更',
+    retarget: '改为指向',
+    predicate: '关系类型变更',
+    label: '标签变更',
+    collapsed: '重复合并',
+  },
+};
 
 const MAX_NAME = 40;
 
@@ -774,7 +784,7 @@ export function formatHunk(
 
 /** Localized short name of a facet kind, e.g. `rename` → “Renamed” / “改名”. Default locale `en`. */
 export function facetLabel(kind: FacetKind, locale?: Locale): string {
-  const label = phrasebook(locale).facets[kind];
+  const label = (FACET_LABELS[locale ?? 'en'] ?? EN_FACETS)[kind];
   if (label === undefined)
     throw new KgdiffError('invalid-input', `Unknown facet kind "${String(kind)}"`);
   return label;

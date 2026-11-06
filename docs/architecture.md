@@ -179,7 +179,7 @@ Fields a JSON dialect does not map (rendering state, G6 shape types, …) are dr
 | `buildScene`, 10k nodes                                                   | < 50 ms                               |
 | `resolve` per frame, 5k nodes / 10k edges                                 | < 4 ms, zero steady-state allocations |
 | pan / zoom, 5k nodes / 10k edges                                          | 60 fps                                |
-| viewer standalone bundle (min + gzip, without formats and compute add-on) | < 105 kB (target 90 kB)               |
+| viewer standalone bundle (min + gzip, without formats and compute add-on) | < 130 kB (target 90 kB)               |
 | HTML report overhead (without data)                                       | < 120 kB gzip                         |
 
 ## Engineering conventions

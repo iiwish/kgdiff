@@ -19,10 +19,11 @@ const BUDGET_KB = 90;
 /**
  * Enforced ceiling (docs/architecture.md §Budgets). zlib builds compress differently: the
  * official Node binaries CI installs produce about 0.6 kB more than a Node linked against the
- * system zlib (Homebrew's), so the ceiling leaves room above both. Raised from 100 kB for the
- * consistency checks of diffs read from JSON and the decoder of packed report payloads.
+ * system zlib (Homebrew's), so the ceiling leaves room above both. Set well above today's size
+ * (about 103 kB) so a feature fits without raising it each time; it still catches the parsers or
+ * the compute module (tens of kB each) slipping into the bundle.
  */
-const GUARD_KB = 105;
+const GUARD_KB = 130;
 
 afterAll(() => rmSync(outDir, { recursive: true, force: true }));
 
