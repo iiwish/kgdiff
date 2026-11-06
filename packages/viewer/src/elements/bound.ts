@@ -72,7 +72,18 @@ export abstract class BoundElement extends HTMLElement {
     return this.#ctx;
   }
 
+  /** Properties a page may set before the element is defined (they shadow the accessors). */
+  protected upgradedProperties(): readonly string[] {
+    return [];
+  }
+
   connectedCallback(): void {
+    for (const prop of this.upgradedProperties()) {
+      if (!Object.hasOwn(this, prop)) continue;
+      const value = (this as unknown as Record<string, unknown>)[prop];
+      delete (this as unknown as Record<string, unknown>)[prop];
+      (this as unknown as Record<string, unknown>)[prop] = value;
+    }
     this.#bind();
   }
 

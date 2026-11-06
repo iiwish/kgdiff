@@ -121,7 +121,9 @@ changes.
 
 The canvas takes the whole width, with the dock and the replay transport. Add
 `dock:hidden zoom:hidden minimap:hidden` for the transport alone, or use `chrome="none" loop`
-for an embed without any control ([below](#embed-a-small-looping-replay)).
+for an embed without any control ([below](#embed-a-small-looping-replay)). Composed from the
+elements, the same is a root and a stage alone:
+`<kgdiff-root mode="replay"><kgdiff-stage panels="zoom:hidden minimap:hidden"></kgdiff-stage></kgdiff-root>`.
 
 ### React to layout changes
 

@@ -153,7 +153,7 @@
 
 - **`<kgdiff-root>`** 拥有 `<kgdiff-viewer>` 的属性、方法和事件，布局相关的除外（`panels`、`persist`、`sidebar`、`header`、`chrome`、`legend` 和 `kgdiff-layout`）。它以 `display: contents` 渲染：子元素由页面布局。
 - **绑定。** 元素显示离它最近的外层 `<kgdiff-root>`（或 `<kgdiff-viewer>`）的会话，也可以跨越 shadow root；或者显示页面上任意位置、由它的 `for="<id>"` 指定的那个根元素。顺序无关：之后才定义或连接的根元素、之后才出现的 id，到时都会找到。同一页面上的两个根元素从不共享选择、按键或播报。
-- **画布**有五个具名插槽 `top-start`、`top-end`、`bottom-start`、`bottom-center` 和 `bottom-end`，用来在画布上放页面自己的内容：由画布负责定位（在同一角落里比内置控件离角落更远），每个插入的元素都像内置控件一样，在适配视图和飞行时被避开。用其他方式定位的内容自己登记：`stage.registerObstacle(element)`（返回取消登记的函数），也以上下文（`Symbol.for('kgdiff.stage/1')`）的形式提供给画布的后代元素。目前一个根元素只绘制一块画布，第二块保持空白。在这个版本里，画布自带它的控件；这些控件以后会成为独立的元素。
+- **画布**有五个具名插槽 `top-start`、`top-end`、`bottom-start`、`bottom-center` 和 `bottom-end`，用来在画布上放页面自己的内容：由画布负责定位（在同一角落里比内置控件离角落更远），每个插入的元素都像内置控件一样，在适配视图和飞行时被避开。用其他方式定位的内容自己登记：`stage.registerObstacle(element)`（返回取消登记的函数），也以上下文（`Symbol.for('kgdiff.stage/1')`）的形式提供给画布的后代元素。目前一个根元素只绘制一块画布，第二块保持空白。在这个版本里，画布自带它的控件（以后会成为独立的元素）：它的 `panels` 属性用上面的写法，展开、收起或隐藏画布的区域 `dock`、`transport`、`legend`、`zoom` 和 `minimap`（`<kgdiff-stage panels="zoom:hidden minimap:hidden">`）。
 - **搜索**在查询不为空时，在输入框下方弹出结果。查询保存在会话里：绑定到同一根元素的变更列表这时让位。`/` 聚焦最后登记、且正在显示的那个搜索。
 - **键盘。** 键盘映射归根元素所有（`shortcuts`、`keymap`）。在根元素内部的元素里按键，通过冒泡到达根元素；用 `for` 绑定的元素会转发它的按键。
 - **无障碍。** 变更列表和详情面板是带标签的区域；ARIA 的 id 引用都在同一个元素内部（列表的选项、搜索的结果）；跨元素只用焦点移动（选择搜索结果会聚焦变更列表）和根元素唯一的实时区域播报。

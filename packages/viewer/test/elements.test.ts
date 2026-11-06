@@ -238,6 +238,44 @@ describe('<kgdiff-stage>', () => {
     expect(downs(removed)).toEqual(downs(added));
   });
 
+  it('turns its chrome regions open, collapsed or hidden with panels', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-stage panels="minimap:hidden zoom:hidden list:hidden"></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    const $s = (sel: string): HTMLElement => stage.shadowRoot?.querySelector(sel) as HTMLElement;
+    expect(warn).toHaveBeenCalledOnce();
+    expect(String(warn.mock.calls[0]?.[0])).toContain('list:hidden');
+    expect(stage.panels).toEqual({ minimap: 'hidden', zoom: 'hidden' });
+    expect($s('.minimap-host').dataset.panel).toBe('hidden');
+    expect($s('.zoom-bar').dataset.panel).toBe('hidden');
+    expect($s('.dock-bar').dataset.panel).toBe('open');
+    expect($s('.legend').dataset.open).toBe('false');
+    stage.panels = { dock: 'hidden', transport: 'hidden' };
+    expect(stage.getAttribute('panels')).toBe('dock:hidden transport:hidden');
+    expect($s('.dock-bar').dataset.panel).toBe('hidden');
+    expect($s('.minimap-host').dataset.panel).toBe('open');
+  });
+
+  it('keeps the user’s legend while the page declares the same panels again', async () => {
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-stage panels="legend:collapsed"></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    const legend = stage.shadowRoot?.querySelector('.legend') as HTMLElement;
+    const head = stage.shadowRoot?.querySelector('.legend-head') as HTMLButtonElement;
+    head.click();
+    expect(legend.dataset.open).toBe('true');
+    stage.setAttribute('panels', 'legend:collapsed');
+    stage.panels = { legend: 'collapsed' };
+    expect(legend.dataset.open).toBe('true');
+    stage.panels = { legend: 'hidden' };
+    expect(legend.dataset.panel).toBe('hidden');
+  });
+
   it('draws one stage per root for now; a second stays empty', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const root = place<Root>(

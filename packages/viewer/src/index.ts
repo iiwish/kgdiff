@@ -85,6 +85,12 @@ export type PanelStates = { readonly [R in PanelRegion]: PanelState };
 /** The states of some regions; the others keep theirs. */
 export type ViewerPanels = { readonly [R in PanelRegion]?: PanelState };
 
+/** The regions of `<kgdiff-stage>`'s built-in chrome (its `panels`). */
+export type StageRegion = 'dock' | 'transport' | 'legend' | 'zoom' | 'minimap';
+
+/** The states of some of the stage's chrome regions; the others keep theirs. */
+export type StagePanels = { readonly [R in StageRegion]?: PanelState };
+
 /** The default layout's panel states and sizes (`kgdiff-layout`). */
 export interface ViewerLayout {
   readonly panels: PanelStates;
@@ -322,6 +328,14 @@ export type KgdiffBoundElement = HTMLElement;
  * slotted element is kept clear of fits and flights.
  */
 export interface KgdiffStageElement extends HTMLElement {
+  /**
+   * The states of the built-in chrome (`dock`, `transport`, `legend`, `zoom`, `minimap`),
+   * reflected to the `panels` attribute, in the syntax of `<kgdiff-viewer>`'s `panels`:
+   * `"minimap:hidden zoom:hidden"` or `{ minimap: 'hidden' }`; reading it gives the object.
+   * Other regions are ignored with a warning. Default: all open, the legend collapsed.
+   */
+  get panels(): StagePanels;
+  set panels(value: StagePanels | string | null);
   /**
    * Keep `element` (content over the canvas the stage does not place) clear of fits and
    * flights; returns the function that stops it. Also on the stage context descendants can

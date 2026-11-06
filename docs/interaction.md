@@ -275,8 +275,10 @@ are stable.
   fits and flights, as the chrome is. Content positioned some other way registers itself:
   `stage.registerObstacle(element)` (returns the function that stops it), also offered to the
   stage's descendants as a context (`Symbol.for('kgdiff.stage/1')`). A root draws one stage for
-  now; a second stays empty. In this release the stage brings its canvas chrome along; it
-  becomes elements of its own later.
+  now; a second stays empty. In this release the stage brings its canvas chrome along (it
+  becomes elements of its own later): its `panels` attribute or property, in the syntax above,
+  opens, collapses or hides the stage's regions `dock`, `transport`, `legend`, `zoom` and
+  `minimap` (`<kgdiff-stage panels="zoom:hidden minimap:hidden">`).
 - **Search** opens its results below the box while the query is not blank. The query lives in
   the session: a change list bound to the same root steps aside meanwhile. `/` focuses the
   search registered last that is shown.
