@@ -3,7 +3,7 @@
  * around a `ViewerController` and the Shadow-DOM UI.
  */
 import { type Delta, KgdiffError, type Locale } from '@kgdiff/core';
-import type { PaletteName } from '@kgdiff/scene';
+import type { PaletteName, Theme } from '@kgdiff/scene';
 import { type ControllerHost, type Topic, ViewerController } from './controller.js';
 import { h } from './dom.js';
 import { formatHash, parseHash } from './hash-sync.js';
@@ -37,7 +37,8 @@ import {
 } from './prefs.js';
 import { defaultStorage } from './review-store.js';
 import { cancelFrame, nextPaint, requestFrame } from './schedule.js';
-import { STYLES, themeVariables } from './styles.js';
+import { stylesheet } from './styles.js';
+import { themeFromStyle, tokenSheet } from './theme.js';
 import type { UiContext } from './ui/context.js';
 import { Header } from './ui/header.js';
 import { HelpDialog, Menu } from './ui/popovers.js';
@@ -118,7 +119,6 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
   readonly #shadow: ShadowRoot;
   #ui: {
     root: HTMLElement;
-    vars: HTMLStyleElement;
     header: Header;
     stage: Stage;
     sidebar: Sidebar;
@@ -161,6 +161,13 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       cancelFrame,
       yieldToPaint: nextPaint,
       storage: defaultStorage(),
+      // The canvas draws with the tokens as computed on the element (page CSS wins).
+      theme: (base) => {
+        this.#tokens(base);
+        return typeof getComputedStyle === 'function'
+          ? themeFromStyle(base, getComputedStyle(this))
+          : base;
+      },
     });
     this.controller.locale = toLocale(this.getAttribute('locale')) ?? detectLocale();
     this.controller.subscribe((topics) => this.#render(topics));
@@ -184,6 +191,8 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     connected.push(this);
     const ui = this.#ui;
     if (!ui) return;
+    // Page styles may override tokens now that the element is in the document.
+    this.controller.refreshTheme();
     this.controller.attach(ui.stage.canvasHost, ui.stage.minimapHost);
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
     const canvas = ui.stage.canvasHost.querySelector('canvas');
@@ -492,6 +501,13 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
+  /** Apply the token set of `base` (a built-in theme) to the shadow root. */
+  #tokens(base: Theme): void {
+    const sheets = this.#shadow.adoptedStyleSheets;
+    const tokens = tokenSheet(base);
+    if (sheets[1] !== tokens) this.#shadow.adoptedStyleSheets = [stylesheet(), tokens];
+  }
+
   #emit(type: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
   }
@@ -557,8 +573,6 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
   }
 
   #build(): void {
-    const style = h('style', { text: STYLES });
-    const vars = h('style');
     const ctx: UiContext = {
       controller: this.controller,
       tr: () => translator(this.controller.locale),
@@ -600,8 +614,8 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       help.el,
       live,
     );
-    this.#shadow.append(style, vars, root);
-    this.#ui = { root, vars, header, stage, sidebar, menu, help, live };
+    this.#shadow.append(root);
+    this.#ui = { root, header, stage, sidebar, menu, help, live };
     // Close the menu on outside clicks.
     root.addEventListener('pointerdown', (e) => {
       if (!menu.open) return;
@@ -651,7 +665,7 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     }
     if (!ui) return;
     if (topics.has('theme') || topics.has('status')) {
-      ui.vars.textContent = `:host { ${themeVariables(c.theme)} }`;
+      this.#tokens(c.builtinTheme);
       ui.root.dataset.theme = c.themeName;
     }
     if (topics.has('locale') || topics.has('status')) {

@@ -69,6 +69,12 @@ async function ready(el: KgdiffViewer, p: ReportPayload): Promise<void> {
 const $ = <T extends Element = HTMLElement>(el: Element, sel: string): T =>
   el.shadowRoot?.querySelector<T>(sel) as T;
 
+/** The CSS of the stylesheets the shadow root adopted. */
+const css = (el: Element): string =>
+  (el.shadowRoot?.adoptedStyleSheets ?? [])
+    .flatMap((sheet) => [...sheet.cssRules].map((rule) => rule.cssText))
+    .join('\n');
+
 const press = (target: EventTarget, key: string): KeyboardEvent => {
   const e = new KeyboardEvent('keydown', { key, bubbles: true, composed: true, cancelable: true });
   target.dispatchEvent(e);
@@ -234,9 +240,7 @@ describe('8 · bottom sheet handle', () => {
     expect(handle.getAttribute('aria-valuenow')).not.toBeNull();
     expect(handle.getAttribute('aria-valuemin')).not.toBeNull();
     expect(handle.getAttribute('aria-valuemax')).not.toBeNull();
-    expect(el.shadowRoot?.querySelector('style')?.textContent).toMatch(
-      /sheet-handle \{[^}]*height: 28px/,
-    );
+    expect(css(el)).toMatch(/sheet-handle \{[^}]*height: 28px/);
   });
 });
 
@@ -327,13 +331,11 @@ describe('12 · contrast tokens', () => {
   it('exposes the control border and uses it for review circles; focus uses solid accent', async () => {
     const el = mount();
     await ready(el, payload());
-    const styles = [...(el.shadowRoot?.querySelectorAll('style') ?? [])]
-      .map((s) => s.textContent)
-      .join('\n');
-    expect(styles).toContain('--kg-control-border:');
-    expect(styles).toMatch(/\.rv \.ring \{[^}]*var\(--kg-control-border\)/);
+    const styles = css(el);
+    expect(styles).toContain('--kgdiff-control-border:');
+    expect(styles).toMatch(/\.rv \.ring \{[^}]*var\(--kgdiff-control-border\)/);
     expect(styles).toMatch(
-      /\.list:focus-visible \.row\[aria-selected="true"\] \{ box-shadow: inset 0 0 0 2px var\(--kg-accent\)/,
+      /\.list:focus-visible \.row\[aria-selected="true"\] \{ box-shadow: inset 0 0 0 2px var\(--kgdiff-accent\)/,
     );
   });
 });

@@ -5,7 +5,7 @@
 import type { Family } from '@kgdiff/scene';
 
 export function swatch(family: Family): SVGSVGElement {
-  const v = (name: string) => `var(--kg-${name})`;
+  const v = (name: string) => `var(--kgdiff-${name})`;
   const c = family === 'neutral' ? v('neutral') : v(family);
   let body: string;
   switch (family) {
