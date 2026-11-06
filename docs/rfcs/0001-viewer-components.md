@@ -454,4 +454,5 @@ phase 2 (ceiling 130 kB): panel states, presets, splitters and persistence +4.2 
 elements, keyboard configuration and slots +2.5 kB. Each subpath bundled on its own (min +
 gzip): root 88.0 kB (the session and the canvas), stage 17.4, change-list 13.1, change-detail
 16.4, search 11.8, filters 10.1, session 49.6; the elements other than root leave the session
-out.
+out. `@kgdiff/viewer/panels` (0.6 kB) is the panels syntax without DOM, which the CLI's
+`--panels` reads with too. After review fixes the standalone bundle is 112.77 kB.
