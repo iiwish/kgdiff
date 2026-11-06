@@ -261,6 +261,10 @@ export function GraphDiff({ before, after, onSelect }) {
 In TypeScript, declare `kgdiff-viewer` in `JSX.IntrinsicElements`; the package exports the
 element's type as `KgdiffViewerElement`.
 
+The `kgdiff-*` events are in TypeScript's global event maps (`KgdiffEventMap`), so a listener on
+any element, the document or the window gets a typed `detail` without a cast:
+`viewer.addEventListener('kgdiff-select', (event) => event.detail.hunk)`.
+
 ## Vue
 
 Tell Vue that `kgdiff-*` tags are custom elements, in `vite.config.js`:

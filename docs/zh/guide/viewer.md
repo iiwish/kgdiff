@@ -210,6 +210,8 @@ export function GraphDiff({ before, after, onSelect }) {
 
 在 TypeScript 中，需要在 `JSX.IntrinsicElements` 里声明 `kgdiff-viewer`；包里导出了这个元素的类型 `KgdiffViewerElement`。
 
+`kgdiff-*` 事件已加入 TypeScript 的全局事件映射（`KgdiffEventMap`），所以在任何元素、document 或 window 上监听，`detail` 都有类型，不需要类型断言：`viewer.addEventListener('kgdiff-select', (event) => event.detail.hunk)`。
+
 ## Vue
 
 先在 `vite.config.js` 里告诉 Vue，`kgdiff-*` 标签是自定义元素：
