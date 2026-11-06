@@ -50,7 +50,16 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
       resolveColorLevel(peekColorMode(argv), io.env, io.stderrIsTTY),
       light,
     );
-    io.stderr.write(formatError(error, paint, debugEnabled(io.env.DEBUG)));
+    // Only public runtime metadata belongs in the URL. Error messages and input paths can
+    // contain private data; the person reporting decides what to paste into the form.
+    const report = new URL('https://github.com/iiwish/kgdiff/issues/new');
+    report.searchParams.set('template', 'bug_report.yml');
+    report.searchParams.set('version', `kgdiff ${cliVersion()}`);
+    report.searchParams.set(
+      'environment',
+      `${process.platform} ${process.arch}, Node.js ${process.version}`,
+    );
+    io.stderr.write(formatError(error, paint, debugEnabled(io.env.DEBUG), report.href));
     return 2;
   }
 }

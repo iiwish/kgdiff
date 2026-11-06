@@ -79,7 +79,10 @@ const KGDIFF_HINTS: Readonly<Record<string, string>> = {
 };
 
 /** User-facing message and hint for any thrown value. */
-export function describeError(error: unknown): { message: string; hint?: string } {
+export function describeError(
+  error: unknown,
+  bugReportUrl?: string,
+): { message: string; hint?: string } {
   if (error instanceof CliError) {
     return error.hint ? { message: error.message, hint: error.hint } : { message: error.message };
   }
@@ -91,7 +94,9 @@ export function describeError(error: unknown): { message: string; hint?: string 
   if (code) return { message: systemReason(error) };
   return {
     message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
-    hint: 'This is a bug in kgdiff. Run again with DEBUG=kgdiff and report the output.',
+    hint: bugReportUrl
+      ? `This is a bug in kgdiff. Run again with DEBUG=kgdiff and report it: ${bugReportUrl}`
+      : 'This is a bug in kgdiff. Run again with DEBUG=kgdiff and report the output.',
   };
 }
 
@@ -103,10 +108,15 @@ export function debugEnabled(debug: string | undefined): boolean {
 }
 
 /** The text written to stderr for an error (ends with a newline). */
-export function formatError(error: unknown, paint: Painter, debug: boolean): string {
+export function formatError(
+  error: unknown,
+  paint: Painter,
+  debug: boolean,
+  bugReportUrl?: string,
+): string {
   // Messages quote user input (paths, parser snippets, JSON.parse excerpts): never let it
   // carry escape sequences or bidi controls to the terminal.
-  const { message, hint } = describeError(error);
+  const { message, hint } = describeError(error, bugReportUrl);
   const lines = [`${paint.bold(paint.tone('removed', 'error:'))} ${sanitize(message)}`];
   if (hint) lines.push(`${paint.tone('accent', 'hint:')} ${sanitize(hint)}`);
   if (debug) {
