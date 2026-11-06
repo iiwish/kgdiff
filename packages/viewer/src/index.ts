@@ -85,10 +85,18 @@ export type PanelStates = { readonly [R in PanelRegion]: PanelState };
 /** The states of some regions; the others keep theirs. */
 export type ViewerPanels = { readonly [R in PanelRegion]?: PanelState };
 
-/** The regions of `<kgdiff-stage>`'s built-in chrome (its `panels`). */
+/**
+ * The regions of `<kgdiff-stage>`'s built-in chrome (its `panels`).
+ *
+ * @experimental Like the elements, in 0.6.
+ */
 export type StageRegion = 'dock' | 'transport' | 'legend' | 'zoom' | 'minimap';
 
-/** The states of some of the stage's chrome regions; the others keep theirs. */
+/**
+ * The states of some of the stage's chrome regions; the others keep theirs.
+ *
+ * @experimental Like the elements, in 0.6.
+ */
 export type StagePanels = { readonly [R in StageRegion]?: PanelState };
 
 /** The default layout's panel states and sizes (`kgdiff-layout`). */
@@ -196,6 +204,9 @@ export interface FitOptions {
  * methods and events (`KgdiffEventMap`, but `kgdiff-layout`).
  *
  * Boolean attribute `sync-hash`: deep links `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`.
+ *
+ * `<kgdiff-viewer>` is stable; `<kgdiff-root>`, the element of this type on its own, is
+ * experimental in 0.6 (its tag name map entry says so).
  */
 export interface KgdiffRootElement extends HTMLElement {
   /** Reflected to the `mode` attribute. Default `overlay`. */
@@ -257,6 +268,8 @@ export interface KgdiffRootElement extends HTMLElement {
    * `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a
    * letter stands for both its cases unless the other case is named too; keys not named keep the
    * default map; entries naming no shortcut are ignored with a warning.
+   *
+   * @experimental The shortcut names (`ShortcutName`) are new in 0.6.
    */
   get keymap(): Keymap | null;
   set keymap(value: Keymap | string | null);
@@ -330,7 +343,9 @@ export interface KgdiffViewerElement extends KgdiffRootElement {
  * `<kgdiff-change-detail>`, `<kgdiff-search>`, `<kgdiff-filters>`. It shows the session of the
  * nearest `<kgdiff-root>` or `<kgdiff-viewer>` around it (across shadow roots), or of the one
  * named by its `for` attribute (an element id) anywhere on the page; a root defined or
- * connected later is found then.
+ * connected later is found then. *
+ * @experimental The elements are experimental in 0.6: names, attributes and markup may change
+ * in a minor release before they are stable.
  */
 export interface KgdiffBoundElement extends HTMLElement {
   /**
@@ -345,7 +360,9 @@ export interface KgdiffBoundElement extends HTMLElement {
 /**
  * `<kgdiff-stage>` (experimental): the canvas, with five named slots for the page's content
  * over it (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`). Every
- * slotted element is kept clear of fits and flights.
+ * slotted element is kept clear of fits and flights. *
+ * @experimental The elements are experimental in 0.6: names, attributes and markup may change
+ * in a minor release before they are stable.
  */
 export interface KgdiffStageElement extends KgdiffBoundElement {
   /**
