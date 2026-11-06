@@ -416,6 +416,19 @@ describe('persistence', () => {
     expect(localStorage.getItem(LAYOUT_KEY)).toBe(before);
   });
 
+  it('applies what was remembered once persist is turned on in the page, reporting it', async () => {
+    remember({ panels: { detail: 'collapsed' } });
+    const el = await loaded({ persist: 'none' });
+    const seen = layouts(el);
+    expect(el.panels.detail).toBe('open');
+    el.persist = 'local';
+    expect(el.panels.detail).toBe('collapsed');
+    expect(seen.map((e) => [e.source, e.panels.detail])).toEqual([['host', 'collapsed']]);
+    el.persist = 'none';
+    expect(el.panels.detail).toBe('open');
+    expect(seen).toHaveLength(2);
+  });
+
   it('survives storage that throws', async () => {
     let reads = 0;
     const blocked = {
