@@ -92,12 +92,12 @@ export class ViewerRoot implements ViewerContext {
       cancelFrame,
       yieldToPaint: nextPaint,
       storage: defaultStorage(),
-      // The canvas draws with the tokens as computed on the host (page styles win).
+      // The one place the token set is applied: the canvas then draws with the tokens as
+      // computed on the host (page styles win).
       theme: (base) => {
         this.#tokens(base);
-        return typeof getComputedStyle === 'function'
-          ? themeFromStyle(base, getComputedStyle(host))
-          : base;
+        const view = host.ownerDocument.defaultView;
+        return view ? themeFromStyle(base, view.getComputedStyle(host)) : base;
       },
     });
     this.controller.subscribe((topics) => this.render(topics));
@@ -167,7 +167,6 @@ export class ViewerRoot implements ViewerContext {
   /** Render every region, never throwing: a failure shows the error state with safe defaults. */
   render(topics: ReadonlySet<Topic>): void {
     try {
-      if (topics.has('theme') || topics.has('status')) this.#tokens(this.controller.builtinTheme);
       for (const region of this.#regions) region.update(topics);
       this.#renderFailed = false;
     } catch (error) {
@@ -182,11 +181,12 @@ export class ViewerRoot implements ViewerContext {
     }
   }
 
-  /** Apply the token set of `base` (a built-in theme) on the host. */
+  /** Apply the token set of `base` (a built-in theme) on the host, in the host's document. */
   #tokens(base: Theme): void {
-    const tokens = tokenSheet(base);
+    const doc = this.host.ownerDocument;
+    const tokens = tokenSheet(base, doc);
     if (this.#shadow.adoptedStyleSheets[1] !== tokens) {
-      this.#shadow.adoptedStyleSheets = [stylesheet(), tokens];
+      this.#shadow.adoptedStyleSheets = [stylesheet(doc), tokens];
     }
   }
 

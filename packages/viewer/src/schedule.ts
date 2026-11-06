@@ -1,43 +1,43 @@
 /**
- * Frames for the session's loop and its loading steps (RFC 0001 §1, Scheduling): an animation
- * frame raced against a timer. A hidden embedding container (an inactive tab panel, a collapsed
- * notebook output, a background pane) can pause `requestAnimationFrame` without the page
- * reporting itself hidden; with frames alone, loading stalled there forever.
+ * Frames (RFC 0001 §1, Scheduling).
+ *
+ * The session's frame loop runs on animation frames only (`requestFrame`). It pauses where the
+ * browser pauses them, so a looping replay in a background tab costs nothing, and under load it
+ * never draws a frame that is not presented.
+ *
+ * One-off work that must not wait forever races a frame against a timer (`frameOrTimeout`):
+ * the loading steps and the change list's window. A hidden embedding container (an inactive
+ * tab panel, a collapsed notebook output, a background pane) can pause animation frames without
+ * the page reporting itself hidden; with frames alone, loading stalled there.
  */
 
-/** A frame comes at the latest this long after it was asked for (ms). */
+/** One-off work waits at most this long for a frame (ms). */
 export const FRAME_TIMEOUT = 32;
 
-const pending = new Map<number, () => void>();
-let lastId = 0;
-
-const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-
-/** Call `cb` on the next animation frame, or after `FRAME_TIMEOUT` ms if none comes first. */
+/** The next animation frame (0, and no call, where there are none). */
 export function requestFrame(cb: (time: number) => void): number {
-  const id = ++lastId;
-  let raf = 0;
-  const run = (time: number): void => {
-    if (!pending.delete(id)) return;
-    if (raf) cancelAnimationFrame(raf);
-    clearTimeout(timer);
-    cb(time);
-  };
-  const timer = setTimeout(() => run(now()), FRAME_TIMEOUT);
-  if (typeof requestAnimationFrame === 'function') raf = requestAnimationFrame(run);
-  pending.set(id, () => {
-    if (raf) cancelAnimationFrame(raf);
-    clearTimeout(timer);
-  });
-  return id;
+  return typeof requestAnimationFrame === 'function' ? requestAnimationFrame(cb) : 0;
 }
 
 export function cancelFrame(id: number): void {
-  pending.get(id)?.();
-  pending.delete(id);
+  if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(id);
+}
+
+/** Call `cb` once: on the next animation frame, or after `FRAME_TIMEOUT` ms if none came. */
+export function frameOrTimeout(cb: () => void): void {
+  let done = false;
+  const run = (): void => {
+    if (done) return;
+    done = true;
+    cancelFrame(raf);
+    clearTimeout(timer);
+    cb();
+  };
+  const timer = setTimeout(run, FRAME_TIMEOUT);
+  const raf = requestFrame(run);
 }
 
 /** Resolve once the browser had a chance to paint (between loading steps). */
 export function nextPaint(): Promise<void> {
-  return new Promise((resolve) => requestFrame(() => setTimeout(resolve, 0)));
+  return new Promise((resolve) => frameOrTimeout(() => setTimeout(resolve, 0)));
 }

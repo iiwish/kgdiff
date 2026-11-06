@@ -9,7 +9,7 @@
  * tokens too, for the panels; the canvas keeps the theme's own (they stay in JavaScript).
  */
 import { contrastRatio, type Theme } from '@kgdiff/scene';
-import { FAMILIES } from './styles.js';
+import { FAMILIES, sheetFor } from './styles.js';
 
 /** Token (after `--kgdiff-`) → where its value lives in a `Theme`. */
 const TOKENS: readonly (readonly [token: string, path: string])[] = [
@@ -84,15 +84,19 @@ export function themeVariables(theme: Theme): string {
   return vars.map(([k, v]) => `${k === 'color-scheme' ? k : `--kgdiff-${k}`}: ${v};`).join(' ');
 }
 
-const sheets = new Map<Theme, CSSStyleSheet>();
+const sheets = new WeakMap<Document, Map<Theme, CSSStyleSheet>>();
 
-/** The built-in `theme` as a token set on `:host`, parsed once and shared by every root. */
-export function tokenSheet(theme: Theme): CSSStyleSheet {
-  let sheet = sheets.get(theme);
+/** The built-in `theme` as a token set on `:host`, parsed once per document. */
+export function tokenSheet(theme: Theme, doc: Document): CSSStyleSheet {
+  let byTheme = sheets.get(doc);
+  if (!byTheme) {
+    byTheme = new Map();
+    sheets.set(doc, byTheme);
+  }
+  let sheet = byTheme.get(theme);
   if (!sheet) {
-    sheet = new CSSStyleSheet();
-    sheet.replaceSync(`:host { ${themeVariables(theme)} }`);
-    sheets.set(theme, sheet);
+    sheet = sheetFor(doc, `:host { ${themeVariables(theme)} }`);
+    byTheme.set(theme, sheet);
   }
   return sheet;
 }

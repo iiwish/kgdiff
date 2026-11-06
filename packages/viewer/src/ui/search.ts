@@ -127,8 +127,7 @@ export class Search {
             : hit.node.status === 'modified'
               ? 'content'
               : 'neutral');
-      const sub =
-        hit.field === 'label' ? hit.node.id : hit.field === 'alias' ? hit.matched : hit.matched;
+      const sub = hit.field === 'label' ? hit.node.id : hit.matched;
       return h(
         'button',
         {

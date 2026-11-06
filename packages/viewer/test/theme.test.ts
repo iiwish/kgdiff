@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { KgdiffViewer } from '../src/element.js';
 import '../src/index.js';
 import { setRenderBackend } from '../src/renderer-port.js';
+import { stylesheet } from '../src/styles.js';
 import { themeFromStyle, themeVariables, tokenSheet } from '../src/theme.js';
 import { mockBackend, tick, zoo } from './support.js';
 
@@ -54,8 +55,20 @@ describe.each(COMBOS)('the %s / %s token set', (name, palette) => {
   });
 
   it('is one shared stylesheet on :host', () => {
-    expect(tokenSheet(theme)).toBe(tokenSheet(theme));
-    expect(tokenSheet(theme).cssRules[0]?.cssText).toMatch(/^:host \{/);
+    expect(tokenSheet(theme, document)).toBe(tokenSheet(theme, document));
+    expect(tokenSheet(theme, document).cssRules[0]?.cssText).toMatch(/^:host \{/);
+  });
+});
+
+describe('stylesheets', () => {
+  it('are made once per document (a sheet can only be adopted where it was made)', () => {
+    const other = document.implementation.createHTMLDocument('popup');
+    const theme = getTheme('dark');
+    expect(stylesheet(document)).toBe(stylesheet(document));
+    expect(stylesheet(other)).not.toBe(stylesheet(document));
+    expect(stylesheet(other)).toBe(stylesheet(other));
+    expect(tokenSheet(theme, other)).not.toBe(tokenSheet(theme, document));
+    expect(tokenSheet(theme, other)).toBe(tokenSheet(theme, other));
   });
 });
 
@@ -116,15 +129,26 @@ describe('<kgdiff-viewer> theming', () => {
     return el;
   }
 
+  it('has its token set from the start, before any diff is loaded', () => {
+    const el = document.createElement('kgdiff-viewer') as KgdiffViewer;
+    el.setAttribute('theme', 'light');
+    document.body.append(el);
+    expect(el.shadowRoot?.adoptedStyleSheets[1]).toBe(tokenSheet(getTheme('light'), document));
+    el.theme = 'dark';
+    expect(el.shadowRoot?.adoptedStyleSheets[1]).toBe(tokenSheet(getTheme('dark'), document));
+  });
+
   it('sets the built-in token set on :host and draws with the built-in theme', async () => {
     const el = await loaded({ theme: 'light' });
     const sheets = el.shadowRoot?.adoptedStyleSheets ?? [];
     expect(sheets).toHaveLength(2);
-    expect(sheets[1]).toBe(tokenSheet(getTheme('light')));
+    expect(sheets[1]).toBe(tokenSheet(getTheme('light'), document));
     expect(getComputedStyle(el).getPropertyValue('--kgdiff-accent')).toBe('#3B5BDB');
     expect(backend.last().theme).toBe(getTheme('light'));
     el.palette = 'colorblind';
-    expect(el.shadowRoot?.adoptedStyleSheets[1]).toBe(tokenSheet(getTheme('light', 'colorblind')));
+    expect(el.shadowRoot?.adoptedStyleSheets[1]).toBe(
+      tokenSheet(getTheme('light', 'colorblind'), document),
+    );
     expect(backend.last().theme).toBe(getTheme('light', 'colorblind'));
   });
 
