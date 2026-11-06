@@ -38,6 +38,20 @@ export interface ViewerContext {
 
 export const viewerContext = createContext<ViewerContext>('kgdiff.viewer/1');
 
+/** Key events an element forwarded to its root: they belong to that root alone. */
+const forwarded = new WeakSet<Event>();
+
+/** Forward `e` to `ctx`'s root; no other root acts on it, whether it was handled or not. */
+export function forwardKey(ctx: ViewerContext, e: KeyboardEvent): void {
+  forwarded.add(e);
+  ctx.forwardKey(e);
+}
+
+/** Whether `e` was forwarded to a root by an element bound with `for`. */
+export function wasForwarded(e: Event): boolean {
+  return forwarded.has(e);
+}
+
 /** The UI context of a region placed in `root` (its shadow tree), bound to `ctx`. */
 export function uiContext(ctx: ViewerContext, root: ShadowRoot): UiContext {
   return {

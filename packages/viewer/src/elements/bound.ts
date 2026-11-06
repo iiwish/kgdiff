@@ -12,7 +12,7 @@
  *   tokens are inherited, page overrides on the root included) and forwards its key presses to
  *   the root, which owns the keyboard map.
  */
-import { type Region, uiContext, type ViewerContext, viewerContext } from '../bind.js';
+import { forwardKey, type Region, uiContext, type ViewerContext, viewerContext } from '../bind.js';
 import { requestContext } from '../context.js';
 import { type ElementName, elementSheet, stylesheet } from '../styles.js';
 import { ALL_TOPICS } from '../topics.js';
@@ -141,8 +141,9 @@ export abstract class BoundElement extends HTMLElement {
       }),
     );
     if (this.#outside) {
-      // The root owns the keyboard map; keys pressed here would not reach it.
-      const forward = (e: KeyboardEvent): void => ctx.forwardKey(e);
+      // The root owns the keyboard map; keys pressed here would not reach it (and a root this
+      // element sits in must leave them alone).
+      const forward = (e: KeyboardEvent): void => forwardKey(ctx, e);
       this.addEventListener('keydown', forward);
       release(() => this.removeEventListener('keydown', forward));
     }
