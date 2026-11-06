@@ -8,7 +8,7 @@ import stats from 'virtual:kgdiff/stats';
 import type { Locale } from '@kgdiff/core';
 import type { ChangeFamily } from '@kgdiff/scene';
 import type { KgdiffViewerElement } from '@kgdiff/viewer';
-import { DATASETS, type Dataset, featuredFor, formatLabel } from '../shared/datasets.js';
+import { type Dataset, datasetsFor, featuredFor, formatLabel } from '../shared/datasets.js';
 import {
   byId,
   h,
@@ -244,7 +244,7 @@ function datasetCard(d: Dataset): HTMLLIElement {
 }
 
 function renderDatasets(): void {
-  byId('dataset-list').replaceChildren(...DATASETS.map(datasetCard));
+  byId('dataset-list').replaceChildren(...datasetsFor(state.locale).map(datasetCard));
 }
 
 // ── Language, theme, chrome ────────────────────────────────────────────────

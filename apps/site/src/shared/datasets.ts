@@ -21,10 +21,16 @@ interface IndexEntry {
   readonly format: string;
   readonly featured?: boolean;
   readonly tags?: readonly string[];
+  readonly language?: Locale;
+  readonly translationOf?: string;
 }
 
 export interface Dataset extends DatasetMeta {
   readonly tags: readonly string[];
+  /** Language of the data itself (labels, descriptions), given when it has a translation. */
+  readonly language?: Locale;
+  /** The dataset this one translates: the same graphs and changes, every text translated. */
+  readonly translationOf?: string;
 }
 
 const index = import.meta.glob<{ readonly datasets: readonly IndexEntry[] }>(
@@ -43,7 +49,13 @@ function load(): Dataset[] {
   const out: Dataset[] = [];
   for (const entry of entries) {
     const meta = byId.get(entry.id);
-    if (meta) out.push({ ...meta, tags: entry.tags ?? [] });
+    if (!meta) continue;
+    out.push({
+      ...meta,
+      tags: entry.tags ?? [],
+      ...(entry.language ? { language: entry.language } : {}),
+      ...(entry.translationOf ? { translationOf: entry.translationOf } : {}),
+    });
   }
   return out;
 }
@@ -55,13 +67,23 @@ export function datasetById(id: string | null | undefined): Dataset | undefined 
   return id ? DATASETS.find((d) => d.id === id) : undefined;
 }
 
-/** The dataset featured first for a language: Chinese → enterprise KG, English → schema.org-style
- * vocabulary (small, with labels anyone can read). */
+/** `d` with its data in the language of `locale`: its translation when it has one, else `d`. */
+export function inLanguage(d: Dataset, locale: Locale): Dataset {
+  if (d.language === undefined || d.language === locale) return d;
+  const original = d.translationOf ?? d.id;
+  return DATASETS.find((x) => (x.translationOf ?? x.id) === original && x.language === locale) ?? d;
+}
+
+/** The datasets to list for `locale`, in display order: one per translation, in `locale`. */
+export function datasetsFor(locale: Locale): Dataset[] {
+  return DATASETS.filter((d) => inLanguage(d, locale) === d);
+}
+
+/** The dataset featured first: the enterprise KG, with its data in the language of `locale`. */
 export function featuredFor(locale: Locale): Dataset {
-  const id = locale === 'zh-CN' ? 'enterprise-kg' : 'schema-vocab';
-  const d = datasetById(id) ?? DATASETS[0];
+  const d = datasetById('enterprise-kg') ?? DATASETS[0];
   if (!d) throw new Error('No example datasets were bundled.');
-  return d;
+  return inLanguage(d, locale);
 }
 
 /** Human label of a dataset's file format. */

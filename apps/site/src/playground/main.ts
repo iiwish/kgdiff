@@ -17,7 +17,14 @@ import {
 } from '@kgdiff/core';
 import { layoutToJSON } from '@kgdiff/layout';
 import type { KgdiffViewerElement, ReportPayload, ViewerMode, ViewerScope } from '@kgdiff/viewer';
-import { DATASETS, type Dataset, datasetById, featuredFor } from '../shared/datasets.js';
+import {
+  DATASETS,
+  type Dataset,
+  datasetById,
+  datasetsFor,
+  featuredFor,
+  inLanguage,
+} from '../shared/datasets.js';
 import { byId, copyText, h, toast } from '../shared/dom.js';
 import { applyDocumentLocale, format, translateDom } from '../shared/i18n.js';
 import {
@@ -214,7 +221,9 @@ const LOCAL = '__local';
 function renderDatasetSelect(): void {
   const locale = state.locale;
   const examples = h('optgroup', { label: t().examples });
+  const listed = new Set(datasetsFor(locale));
   for (const d of DATASETS) {
+    if (!listed.has(d) && d.id !== state.dataset) continue;
     examples.append(h('option', { value: d.id }, d.title[locale] ?? d.title.en));
   }
   const children: HTMLElement[] = [examples];
@@ -225,11 +234,17 @@ function renderDatasetSelect(): void {
   datasetSelect.value = state.dataset ?? LOCAL;
 }
 
-async function selectDataset(id: string, fromUrl = false): Promise<void> {
+/**
+ * Loads an example. `url`: options, swap and change from the address; `translation`: the same
+ * graphs in another language, so options, swap and the selected change carry over.
+ */
+async function selectDataset(id: string, from?: 'url' | 'translation'): Promise<void> {
+  const fromUrl = from === 'url';
+  const keep = from === 'translation';
   const d = datasetById(id) ?? featuredFor(state.locale);
   const [before, after] = await Promise.all([datasetText(d, 'before'), datasetText(d, 'after')]);
   state.dataset = d.id;
-  state.swapped = fromUrl && params.get('swap') === '1';
+  if (!keep) state.swapped = fromUrl && params.get('swap') === '1';
   const b: Side = {
     name: d.files.before,
     parseName: d.files.before,
@@ -240,8 +255,9 @@ async function selectDataset(id: string, fromUrl = false): Promise<void> {
   state.before = state.swapped ? a : b;
   state.after = state.swapped ? b : a;
   state.defaults = fromDiffOptions(d.options);
-  state.options = fromUrl ? optionsFromUrl(params, state.defaults) : state.defaults;
-  if (!fromUrl) state.hunk = null;
+  if (!keep) state.options = fromUrl ? optionsFromUrl(params, state.defaults) : state.defaults;
+  if (keep) pendingHunk = state.hunk;
+  else if (!fromUrl) state.hunk = null;
   renderDatasetSelect();
   renderSlots();
   syncUrl();
@@ -747,6 +763,13 @@ function setLocale(locale: Locale): void {
   storeLocale(locale);
   viewer.locale = locale;
   applyLocale();
+  // An example with a translation switches to it, so its data reads in the new language.
+  const d = datasetById(state.dataset);
+  const translated = d ? inLanguage(d, locale) : undefined;
+  if (translated && translated !== d) {
+    void selectDataset(translated.id, 'translation');
+    return;
+  }
   syncUrl();
   // Dataset titles are localized: reload so the header shows the right one.
   if (state.dataset) void run();
@@ -779,4 +802,4 @@ new MutationObserver(() => {
 
 applyTheme(state.theme);
 applyLocale();
-void selectDataset(params.get('dataset') ?? featuredFor(state.locale).id, true);
+void selectDataset(params.get('dataset') ?? featuredFor(state.locale).id, 'url');
