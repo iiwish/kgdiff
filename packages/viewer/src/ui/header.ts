@@ -1,7 +1,8 @@
 /**
- * The canvas HUD: the title (brand and compared versions) floating top-left, the actions
- * (appearance menu, help, sidebar toggle) floating top-right. Both stay up while loading and on
- * errors. How the diff is viewed is chosen in the dock at the bottom (`dock.ts`).
+ * The canvas HUD: the title (`Title`, `<kgdiff-title>`: brand and compared versions) floating
+ * top-left, the actions (`Actions`, `<kgdiff-actions>`: appearance menu, help, sidebar toggle)
+ * floating top-right. Both stay up while loading and on errors. How the diff is viewed is
+ * chosen in the dock at the bottom (`dock.ts`).
  */
 import type { Topic } from '../controller.js';
 import { attr, h, iconButton, moveFocusOut, relabel, replace } from '../dom.js';
@@ -19,17 +20,11 @@ function brandMark(): SVGSVGElement {
   return tpl.content.firstElementChild as SVGSVGElement;
 }
 
-export class Header {
+/** The title card: the brand, then the compared names and versions. */
+export class Title {
   readonly el: HTMLElement;
-  readonly menuButton: HTMLButtonElement;
   readonly #brand: HTMLElement;
   readonly #versions: HTMLElement;
-  readonly #actions: HTMLElement;
-  readonly #title: HTMLElement;
-  readonly #end: HTMLElement;
-  readonly #helpButton: HTMLButtonElement;
-  readonly sidebarButton: HTMLButtonElement;
-
   readonly #ctx: UiContext;
 
   constructor(ctx: UiContext) {
@@ -41,72 +36,19 @@ export class Header {
       h('span', { class: 'brand-name', text: 'kgdiff' }),
     );
     this.#versions = h('div', { class: 'versions' });
-    this.menuButton = iconButton('contrast', '', () => ctx.toggleMenu(), {
-      'aria-haspopup': 'menu',
-      'aria-expanded': 'false',
-    });
-    this.#helpButton = iconButton('help', '', () => ctx.openHelp());
-    this.sidebarButton = iconButton('sidebar', '', () => ctx.toggleSidebar());
-    this.#actions = h(
-      'div',
-      { class: 'hud-actions card', role: 'group' },
-      this.menuButton,
-      this.#helpButton,
-      this.sidebarButton,
-    );
-    // The menu is a sibling of the actions card, not inside it: a backdrop filter would clip
-    // the menu's own blur to the card.
-    this.#end = h('div', { class: 'hud-end' }, this.#actions);
-    this.#title = h(
+    this.el = h(
       'div',
       { class: 'hud-title card' },
       this.#brand,
       h('span', { class: 'header-sep', 'aria-hidden': 'true' }),
       this.#versions,
     );
-    this.el = h('header', { class: 'hud' }, this.#title, this.#end);
-  }
-
-  /** Place the appearance menu under the actions. */
-  attachMenu(menu: HTMLElement): void {
-    this.#end.appendChild(menu);
   }
 
   update(topics: ReadonlySet<Topic>): void {
     if (!(topics.has('locale') || topics.has('data') || topics.has('status'))) return;
-    const tr = this.#ctx.tr();
-    attr(this.#brand, 'title', `kgdiff — ${tr.t('brand.tagline')}`);
-    attr(this.#actions, 'aria-label', tr.t('header.actions'));
-    relabel(this.menuButton, tr.t('action.settings'));
-    relabel(this.#helpButton, `${tr.t('action.help')} (?)`);
-    relabel(this.sidebarButton, `${tr.t('action.sidebar')} (\\)`);
+    attr(this.#brand, 'title', `kgdiff — ${this.#ctx.tr().t('brand.tagline')}`);
     this.#renderVersions();
-  }
-
-  setSidebarState(open: boolean): void {
-    attr(this.sidebarButton, 'aria-pressed', String(open));
-  }
-
-  /**
-   * Follow the panel states of the title and the actions (not shown unless open); the sidebar
-   * button goes when the sidebar has nothing to show. Focus in the actions moves to `outside`.
-   */
-  setPanels(
-    title: PanelState,
-    actions: PanelState,
-    sidebar: boolean,
-    outside: () => HTMLElement | null,
-  ): void {
-    attr(this.#title, 'data-panel', title);
-    if (actions !== 'open') moveFocusOut(this.#ctx.root, this.#end, outside);
-    attr(this.#end, 'data-panel', actions);
-    this.#end.inert = actions !== 'open';
-    if (!sidebar) moveFocusOut(this.#ctx.root, this.sidebarButton, outside);
-    this.sidebarButton.hidden = !sidebar;
-  }
-
-  setMenuState(open: boolean): void {
-    attr(this.menuButton, 'aria-expanded', String(open));
   }
 
   #renderVersions(): void {
@@ -160,5 +102,113 @@ export class Header {
         tag(versions.after),
       ),
     );
+  }
+}
+
+/**
+ * The actions: the appearance menu's button (the menu itself is placed next to the card with
+ * `attachMenu`: a backdrop filter would clip its blur to the card), help, and, in the default
+ * layout, the sidebar toggle.
+ */
+export class Actions {
+  /** The card and, once attached, the menu next to it. */
+  readonly el: HTMLElement;
+  readonly menuButton: HTMLButtonElement;
+  readonly sidebarButton: HTMLButtonElement | null;
+  readonly #card: HTMLElement;
+  readonly #helpButton: HTMLButtonElement;
+  readonly #ctx: UiContext;
+
+  /** `sidebar`: with the sidebar toggle (the default layout's). */
+  constructor(ctx: UiContext, sidebar = true) {
+    this.#ctx = ctx;
+    this.menuButton = iconButton('contrast', '', () => ctx.toggleMenu(), {
+      'aria-haspopup': 'menu',
+      'aria-expanded': 'false',
+    });
+    this.#helpButton = iconButton('help', '', () => ctx.openHelp());
+    this.sidebarButton = sidebar ? iconButton('sidebar', '', () => ctx.toggleSidebar()) : null;
+    this.#card = h(
+      'div',
+      { class: 'hud-actions card', role: 'group' },
+      this.menuButton,
+      this.#helpButton,
+      this.sidebarButton,
+    );
+    this.el = h('div', { class: 'hud-end' }, this.#card);
+  }
+
+  /** Place the appearance menu under the actions. */
+  attachMenu(menu: HTMLElement): void {
+    this.el.appendChild(menu);
+  }
+
+  update(topics: ReadonlySet<Topic>): void {
+    if (!(topics.has('locale') || topics.has('data') || topics.has('status'))) return;
+    const tr = this.#ctx.tr();
+    attr(this.#card, 'aria-label', tr.t('header.actions'));
+    relabel(this.menuButton, tr.t('action.settings'));
+    relabel(this.#helpButton, `${tr.t('action.help')} (?)`);
+    if (this.sidebarButton) relabel(this.sidebarButton, `${tr.t('action.sidebar')} (\\)`);
+  }
+
+  setMenuState(open: boolean): void {
+    attr(this.menuButton, 'aria-expanded', String(open));
+  }
+}
+
+/** The default layout's HUD: the title and the actions over the canvas. */
+export class Header {
+  readonly el: HTMLElement;
+  readonly title: Title;
+  readonly actions: Actions;
+  readonly menuButton: HTMLButtonElement;
+  readonly sidebarButton: HTMLButtonElement;
+  readonly #ctx: UiContext;
+
+  constructor(ctx: UiContext) {
+    this.#ctx = ctx;
+    this.title = new Title(ctx);
+    this.actions = new Actions(ctx);
+    this.menuButton = this.actions.menuButton;
+    this.sidebarButton = this.actions.sidebarButton as HTMLButtonElement;
+    this.el = h('header', { class: 'hud' }, this.title.el, this.actions.el);
+  }
+
+  /** Place the appearance menu under the actions. */
+  attachMenu(menu: HTMLElement): void {
+    this.actions.attachMenu(menu);
+  }
+
+  update(topics: ReadonlySet<Topic>): void {
+    this.title.update(topics);
+    this.actions.update(topics);
+  }
+
+  setSidebarState(open: boolean): void {
+    attr(this.sidebarButton, 'aria-pressed', String(open));
+  }
+
+  /**
+   * Follow the panel states of the title and the actions (not shown unless open); the sidebar
+   * button goes when the sidebar has nothing to show. Focus in the actions moves to `outside`.
+   */
+  setPanels(
+    title: PanelState,
+    actions: PanelState,
+    sidebar: boolean,
+    outside: () => HTMLElement | null,
+  ): void {
+    attr(this.title.el, 'data-panel', title);
+    const end = this.actions.el;
+    if (actions !== 'open') moveFocusOut(this.#ctx.root, end, outside);
+    attr(end, 'data-panel', actions);
+    end.inert = actions !== 'open';
+    if (!sidebar) moveFocusOut(this.#ctx.root, this.sidebarButton, outside);
+    this.sidebarButton.hidden = !sidebar;
+  }
+
+  setMenuState(open: boolean): void {
+    this.actions.setMenuState(open);
   }
 }

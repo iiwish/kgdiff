@@ -114,7 +114,7 @@ kbd {
   position: absolute; top: 12px; left: 12px; max-width: calc(100% - 184px); height: 40px;
   display: flex; align-items: center; gap: 10px; padding: 0 14px 0 10px;
 }
-.hud[data-titled="false"] .header-sep { display: none; }
+.hud-title[data-titled="false"] .header-sep { display: none; }
 .hud-end { position: absolute; top: 12px; right: 12px; }
 .hud-actions { display: flex; align-items: center; gap: 2px; padding: 4px; }
 .brand { display: flex; align-items: center; gap: 8px; flex: none; color: var(--kgdiff-text); }
