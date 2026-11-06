@@ -527,7 +527,8 @@ open:
   in the state `panels` gives it. In `<kgdiff-viewer>` that includes the title and the actions,
   which a stage does not have; the top corners then move up into their place, and a
   `<kgdiff-actions>` bound to a viewer has its sidebar toggle (kept up through
-  `kgdiff-layout`). Placed anywhere else, over the canvas or not, a chrome element is
+  `kgdiff-layout`). A replaced minimap is not created or drawn at all while it is replaced.
+  Placed anywhere else, over the canvas or not, a chrome element is
   no obstacle unless registered: the stage cannot tell a card floated over it from one beside
   it.
 - **`<kgdiff-viewer>` has the stage's slots.** Its built-in stage is built with them: the
@@ -548,7 +549,7 @@ open:
   cannot check is listed in [interaction.md](../interaction.md#accessibility).
 - **Not done:** the Custom Elements Manifest and generated docs, framework recipes, the
   experimental marks, the reduced session surface (`@kgdiff/viewer/session`, the `session`
-  property): phase 4. A stage whose minimap is replaced still draws its own, hidden.
+  property): phase 4.
 
 Measured in Chrome (the desktop app's browser pane) on `examples/datasets/enterprise-kg`
 (75 nodes, 12 changes), with the dev harness's `/components/` page, which gained two stages of
