@@ -10,14 +10,8 @@ import type { KgdiffViewer } from '../src/element.js';
 import '../src/index.js';
 import type { ReportPayload, ViewerLayout } from '../src/index.js';
 import { LAYOUT_KEY, readRemembered } from '../src/layout-store.js';
-import {
-  DEFAULT_PANELS,
-  formatPanels,
-  parsePanels,
-  presetPanels,
-  resolvePanels,
-  toPanels,
-} from '../src/panels.js';
+import { presetPanels, resolvePanels } from '../src/panel-levels.js';
+import { DEFAULT_PANELS, formatPanels, parsePanels, toPanels } from '../src/panels.js';
 import { setRenderBackend } from '../src/renderer-port.js';
 import { mockBackend, tick, until, zoo } from './support.js';
 

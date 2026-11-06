@@ -65,6 +65,10 @@
       "types": "./dist/headless.d.ts",
       "default": "./dist/headless.js"
     },
+    "./panels": {
+      "types": "./dist/panels.d.ts",
+      "default": "./dist/panels.js"
+    },
     "./compute": {
       "types": "./dist/compute.d.ts",
       "default": "./dist/compute.js"

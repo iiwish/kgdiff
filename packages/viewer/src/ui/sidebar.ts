@@ -10,7 +10,7 @@
  */
 import { attr, h, icon, iconButton, moveFocusOut, relabel } from '../dom.js';
 import type { PanelRegion, PanelState, PanelStates } from '../index.js';
-import { SIDEBAR_REGIONS } from '../panels.js';
+import { SIDEBAR_REGIONS } from '../panel-levels.js';
 import { frameOrTimeout } from '../schedule.js';
 import type { Topic } from '../session.js';
 import type { ChangeList } from './change-list.js';

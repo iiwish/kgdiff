@@ -24,17 +24,8 @@ import type {
   ViewerPanels,
 } from './index.js';
 import { type Remembered, readRemembered, writeRemembered } from './layout-store.js';
-import {
-  DEFAULT_PANELS,
-  formatPanels,
-  PANEL_REGIONS,
-  parsePanels,
-  presetPanels,
-  resolvePanels,
-  SIDEBAR_REGIONS,
-  samePanels,
-  toPanels,
-} from './panels.js';
+import { presetPanels, resolvePanels, SIDEBAR_REGIONS, samePanels } from './panel-levels.js';
+import { DEFAULT_PANELS, formatPanels, PANEL_REGIONS, parsePanels, toPanels } from './panels.js';
 import { sanitizeView, toChrome, toLegend } from './prefs.js';
 import { defaultStorage } from './review-store.js';
 import { bindRegion, uiContext } from './root.js';

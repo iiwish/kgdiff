@@ -288,7 +288,8 @@ are stable.
 - **Packages.** `import '@kgdiff/viewer'` defines every element. Each also has a subpath that
   defines only it: `@kgdiff/viewer/elements/root`, `…/stage`, `…/change-list`,
   `…/change-detail`, `…/search`, `…/filters`. `@kgdiff/viewer/session` is the headless session
-  (`createSession`, `DiffSession`), without DOM.
+  (`createSession`, `DiffSession`), without DOM, and `@kgdiff/viewer/panels` the panels syntax
+  (`parsePanels`, `PANEL_REGIONS`, `PANEL_STATES`), which the CLI's `--panels` uses too.
 
 ## Theming
 

@@ -1,11 +1,9 @@
 /**
- * Panel states of the default layout (RFC 0001 §4): every region is `open`, `collapsed` or
- * `hidden`. The `panels` attribute (`"detail:collapsed minimap:hidden"`), its object property, a
- * report's `view.panels` and the CLI's `--panels` all go through `parsePanels` / `toPanels`.
- *
- * A region's state comes from the first of these that names it: what the user changed in this
- * page, the host (`panels`, then the presets `sidebar`, `header` and `chrome`), what the user
- * changed before (remembered, `layout-store.ts`), the report's `view.panels`, the default.
+ * `@kgdiff/viewer/panels`: the syntax of the default layout's panel states (RFC 0001 §4), every
+ * region `open`, `collapsed` or `hidden`. The `panels` attribute
+ * (`"detail:collapsed minimap:hidden"`), its object property, a report's `view.panels` and the
+ * CLI's `--panels` all go through `parsePanels` / `toPanels`. No DOM: the CLI imports it.
+ * Which level decides a region's state is `panel-levels.ts`.
  */
 import type { PanelRegion, PanelState, PanelStates, ViewerPanels } from './index.js';
 
@@ -24,9 +22,6 @@ export const PANEL_REGIONS: readonly PanelRegion[] = [
 ];
 
 export const PANEL_STATES: readonly PanelState[] = ['open', 'collapsed', 'hidden'];
-
-/** The regions of the sidebar (the bottom sheet below 760 px). */
-export const SIDEBAR_REGIONS: readonly PanelRegion[] = ['list', 'detail', 'search', 'filters'];
 
 /** Today's layout. The legend card starts folded to its head. */
 export const DEFAULT_PANELS: PanelStates = {
@@ -83,44 +78,4 @@ export function formatPanels(panels: ViewerPanels): string {
   return PANEL_REGIONS.filter((r) => panels[r] !== undefined)
     .map((r) => `${r}:${panels[r]}`)
     .join(' ');
-}
-
-/**
- * What the existing switches stand for: `sidebar="closed"` (and `open`), `header="compact"`,
- * `chrome="none"` (everything but the stage hidden; the legend stays, as one line).
- */
-export function presetPanels(
-  sidebar: string | null,
-  header: string | null,
-  chrome: string | null,
-): ViewerPanels {
-  const out: MutablePanels = {};
-  if (chrome === 'none') {
-    for (const r of PANEL_REGIONS) if (r !== 'legend') out[r] = 'hidden';
-    return out;
-  }
-  if (sidebar === 'closed' || sidebar === 'open') {
-    for (const r of SIDEBAR_REGIONS) out[r] = sidebar === 'open' ? 'open' : 'collapsed';
-  }
-  if (header === 'compact') out.title = 'hidden';
-  return out;
-}
-
-/** Every region's state: the first of `levels` that names it, else the default. */
-export function resolvePanels(levels: readonly ViewerPanels[]): PanelStates {
-  const out = { ...DEFAULT_PANELS };
-  for (const r of PANEL_REGIONS) {
-    for (const level of levels) {
-      const state = level[r];
-      if (state !== undefined) {
-        out[r] = state;
-        break;
-      }
-    }
-  }
-  return out;
-}
-
-export function samePanels(a: PanelStates, b: PanelStates): boolean {
-  return PANEL_REGIONS.every((r) => a[r] === b[r]);
 }
