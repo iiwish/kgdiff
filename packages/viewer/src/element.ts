@@ -11,6 +11,8 @@
  * language per origin (`layout-store.ts`; `persist="none"` turns that off). `kgdiff-layout`
  * reports every change.
  */
+
+import { ViewerController } from './controller.js';
 import { h } from './dom.js';
 import type {
   KgdiffViewerElement,
@@ -30,7 +32,7 @@ import { sanitizeView, toChrome, toLegend } from './prefs.js';
 import { defaultStorage } from './review-store.js';
 import { bindRegion, uiContext } from './root.js';
 import { ROOT_ATTRIBUTES, RootElement } from './root-element.js';
-import type { Topic } from './session.js';
+import type { SessionDeps, SessionHost, Topic } from './session.js';
 import { stylesheet } from './styles.js';
 import { ChangeList } from './ui/change-list.js';
 import type { UiActions } from './ui/context.js';
@@ -65,7 +67,7 @@ function warnPanels(invalid: readonly string[]): void {
   if (invalid.length > 0) console.warn(`[kgdiff] ignoring invalid panels: ${invalid.join(' ')}`);
 }
 
-export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
+export class KgdiffViewer extends RootElement<ViewerController> implements KgdiffViewerElement {
   static get observedAttributes(): readonly string[] {
     return OBSERVED;
   }
@@ -188,6 +190,10 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
 
   protected sheets(doc: Document): readonly CSSStyleSheet[] {
     return [stylesheet(doc)];
+  }
+
+  protected createSession(host: SessionHost, deps: SessionDeps): ViewerController {
+    return new ViewerController(host, deps);
   }
 
   protected override keysEnabled(): boolean {
@@ -478,6 +484,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     const filters = bindRegion(root, (ui) => new Filters(ui));
     const detail = bindRegion(root, (ui) => new Detail(ui));
     const stage = bindRegion(root, (ui) => new Stage(ui));
+    stage.view = this.controller.view;
     const ui = uiContext(this.root, this.shadow);
     const menu = new Menu(ui);
     const help = new HelpDialog(ui);

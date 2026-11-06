@@ -6,9 +6,10 @@
 import { getTheme } from '@kgdiff/scene';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestContext } from '../src/context.js';
-import { ViewerController } from '../src/controller.js';
 import { stageContext } from '../src/elements/stage.js';
 import type { ChromeLayout } from '../src/framing.js';
+import { DiffSession } from '../src/session.js';
+import { StageView } from '../src/view.js';
 import '../src/index.js';
 import type { KgdiffRootElement, KgdiffStageElement } from '../src/index.js';
 import { LAYOUT_KEY } from '../src/layout-store.js';
@@ -30,7 +31,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-type Root = KgdiffRootElement & { controller: ViewerController };
+type Root = KgdiffRootElement & { controller: DiffSession };
 
 /** Build `html` in the body; returns the element of `selector`. */
 function place<T extends Element = HTMLElement>(html: string, selector = 'kgdiff-root'): T {
@@ -180,7 +181,7 @@ describe('<kgdiff-stage>', () => {
   /** The chrome layout the stage gives the controller (framing reads it at every fit). */
   function chromeOf(): () => ChromeLayout {
     let provider: (() => ChromeLayout) | null = null;
-    vi.spyOn(ViewerController.prototype, 'setChrome').mockImplementation((p) => {
+    vi.spyOn(StageView.prototype, 'setChrome').mockImplementation((p) => {
       if (p) provider = p;
     });
     return () => {
@@ -295,21 +296,58 @@ describe('<kgdiff-stage>', () => {
     expect(legend.dataset.panel).toBe('hidden');
   });
 
-  it('draws one stage per root for now; a second stays empty', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('draws several stages of one root, each with its own view of the shared session', async () => {
     const root = place<Root>(
-      '<kgdiff-root><kgdiff-stage></kgdiff-stage><kgdiff-stage></kgdiff-stage></kgdiff-root>',
+      '<kgdiff-root><kgdiff-stage id="s1"></kgdiff-stage><kgdiff-stage id="s2"></kgdiff-stage></kgdiff-root>',
     );
     await loaded(root);
-    const [first, second] = [...root.querySelectorAll('kgdiff-stage')];
-    expect(first?.shadowRoot?.querySelector('canvas')).not.toBeNull();
-    expect(second?.shadowRoot?.childElementCount).toBe(0);
+    // The root itself has no canvas: each stage brings its own.
+    expect(root.controller).toBeInstanceOf(DiffSession);
+    expect(backend.renderers).toHaveLength(2);
+    const [a, b] = backend.renderers;
+    if (!a || !b) throw new Error('two renderers');
+    expect(a.canvas.isConnected && b.canvas.isConnected).toBe(true);
+    // A selection is shared: both canvases bring it into view.
+    root.next();
+    expect(a.camera.flights.length).toBeGreaterThan(0);
+    expect(b.camera.flights.length).toBe(a.camera.flights.length);
+    // fit() reaches every view; a stage that leaves takes its view along.
+    const [fitsA, fitsB] = [a.camera.fits, b.camera.fits];
+    await root.fit({ animate: false });
+    expect([a.camera.fits, b.camera.fits]).toEqual([fitsA + 1, fitsB + 1]);
+    document.getElementById('s2')?.remove();
+    expect(b.destroyed).toBe(true);
+    root.next();
+    expect(b.camera.flights.length).toBeLessThan(a.camera.flights.length);
+  });
+
+  it('pins a stage to one version with version, both ways, whatever the mode', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const layers = vi.spyOn(DiffSession.prototype, 'viewState');
+    const root = place<Root>(
+      '<kgdiff-root mode="swipe"><kgdiff-stage version="before"></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    await tick(20);
+    expect(stage.version).toBe('before');
+    expect(layers.mock.calls.map(([layer]) => layer)).toContain('before');
+    expect(layers.mock.calls.map(([layer]) => layer)).not.toContain('after');
+    const $s = (sel: string): HTMLElement => stage.shadowRoot?.querySelector(sel) as HTMLElement;
+    // No divider on a pinned stage; a chip names the version.
+    expect($s('.swipe').hidden).toBe(true);
+    expect($s('.version-chip').hidden).toBe(false);
+    expect($s('.version-chip').textContent).toBe('Before');
+    stage.version = 'after';
+    expect(stage.getAttribute('version')).toBe('after');
+    expect($s('.version-chip').textContent).toBe('After');
+    stage.setAttribute('version', 'middle');
     expect(warn).toHaveBeenCalledOnce();
-    // The first one leaves: the canvas goes, and a stage connected later takes it.
-    first?.remove();
-    second?.remove();
-    root.append(second as Element);
-    expect(second?.shadowRoot?.querySelector('canvas')).not.toBeNull();
+    expect(stage.version).toBeNull();
+    expect($s('.version-chip').hidden).toBe(true);
+    expect($s('.swipe').hidden).toBe(false);
+    stage.version = null;
+    expect(stage.hasAttribute('version')).toBe(false);
   });
 });
 

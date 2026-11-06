@@ -16,15 +16,24 @@
  * user's changes (opening the legend) hold until the page declares another state for that
  * region. Nothing is remembered.
  *
- * A root draws one stage for now; a second one bound to the same root stays empty. Importing
- * this module defines it.
+ * Each stage has its own view of the root's session (canvas, camera, fits and flights, tooltip,
+ * minimap); several stages of one root share selection, hover, mode, scope, the replay clock,
+ * filters and search. `version` pins a stage to the before or after version (side by side).
+ * Importing this module defines it.
  */
 import type { Region, ViewerContext } from '../bind.js';
 import { createContext, provideContext } from '../context.js';
-import type { KgdiffStageElement, PanelState, StagePanels, StageRegion } from '../index.js';
+import type {
+  KgdiffStageElement,
+  PanelState,
+  StagePanels,
+  StageRegion,
+  StageVersion,
+} from '../index.js';
 import { DEFAULT_PANELS, formatPanels, toPanels } from '../panels.js';
 import type { UiContext } from '../ui/context.js';
 import { Stage } from '../ui/stage.js';
+import { StageView } from '../view.js';
 import { BoundElement, define } from './bound.js';
 
 /**
@@ -35,6 +44,14 @@ import { BoundElement, define } from './bound.js';
 export interface StageContext {
   /** Keep `element` clear of fits and flights; returns the function that stops it. */
   registerObstacle(element: Element): () => void;
+}
+
+/** @internal What the chrome that acts on a view (`<kgdiff-zoom>`, `<kgdiff-minimap>`) gets. */
+export interface StageViewContext extends StageContext {
+  /** The stage's view now, or null while the stage waits for its root. */
+  readonly view: StageView | null;
+  /** Call `listener` with the view now and whenever it changes; returns the stop. */
+  watchView(listener: (view: StageView | null) => void): () => void;
 }
 
 /** @experimental The stage context's key (`Symbol.for('kgdiff.stage/1')`). */
@@ -55,6 +72,16 @@ export const STAGE_REGIONS: readonly StageRegion[] = [
 
 type MutableStagePanels = { -readonly [R in StageRegion]?: PanelState };
 
+const VERSIONS: readonly StageVersion[] = ['before', 'after'];
+
+/** A version from an attribute or a property; anything else follows the mode, with a warning. */
+function toVersion(value: unknown): StageVersion | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (VERSIONS.includes(value as StageVersion)) return value as StageVersion;
+  console.warn(`[kgdiff] <kgdiff-stage> ignoring version ${JSON.stringify(value)} (before, after)`);
+  return null;
+}
+
 /** Panels from an attribute or a property, keeping the stage's regions (warning about the rest). */
 function stagePanels(value: unknown): StagePanels {
   const { panels, invalid } = toPanels(value);
@@ -72,7 +99,7 @@ function stagePanels(value: unknown): StagePanels {
 /** @experimental See the module's description. */
 export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   static override get observedAttributes(): readonly string[] {
-    return ['for', 'panels'];
+    return ['for', 'panels', 'version'];
   }
 
   protected readonly name = 'stage';
@@ -81,6 +108,9 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   #declared: StagePanels = {};
   readonly #runtime: MutableStagePanels = {};
   #reflecting = false;
+  #version: StageVersion | null = null;
+  #view: StageView | null = null;
+  readonly #viewListeners = new Set<(view: StageView | null) => void>();
   /** Registered obstacles, kept across rebinding (the stage is rebuilt then). */
   readonly #obstacles = new Map<Element, () => void>();
 
@@ -101,13 +131,53 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     this.#declare(panels);
   }
 
+  /**
+   * The version this stage draws whatever the mode, reflected to the `version` attribute:
+   * `before` or `after` (side by side with another stage of the same root), or null to follow
+   * the root's mode (overlay, swipe, replay).
+   */
+  get version(): StageVersion | null {
+    return this.#version;
+  }
+
+  set version(value: StageVersion | null) {
+    const v = toVersion(value);
+    this.#reflecting = true;
+    try {
+      if (v) this.setAttribute('version', v);
+      else this.removeAttribute('version');
+    } finally {
+      this.#reflecting = false;
+    }
+    this.#setVersion(v);
+  }
+
   override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
-    if (name !== 'panels') super.attributeChangedCallback(name, old, value);
-    else if (!this.#reflecting) this.#declare(stagePanels(value ?? ''));
+    if (this.#reflecting) return;
+    if (name === 'panels') this.#declare(stagePanels(value ?? ''));
+    else if (name === 'version') this.#setVersion(toVersion(value));
+    else super.attributeChangedCallback(name, old, value);
   }
 
   protected override upgradedProperties(): readonly string[] {
-    return [...super.upgradedProperties(), 'panels'];
+    return [...super.upgradedProperties(), 'panels', 'version'];
+  }
+
+  /** @internal This stage's view (its camera), for the dev harness and tests. */
+  get view(): StageView | null {
+    return this.#view;
+  }
+
+  #setVersion(version: StageVersion | null): void {
+    if (version === this.#version) return;
+    this.#version = version;
+    if (this.#view) this.#view.version = version;
+    this.#stage?.setVersion(version);
+  }
+
+  #setView(view: StageView | null): void {
+    this.#view = view;
+    for (const listener of this.#viewListeners) listener(view);
   }
 
   /** A region the page declares another state for gives way; the same again changes nothing. */
@@ -134,15 +204,23 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
 
   protected build(ui: UiContext, ctx: ViewerContext, release: (fn: () => void) => void): Region {
     release(
-      provideContext(this, stageContext, () => ({
-        registerObstacle: (el) => this.registerObstacle(el),
-      })),
+      provideContext(this, stageContext, (): StageViewContext => {
+        const stage = this;
+        return {
+          registerObstacle: (el) => stage.registerObstacle(el),
+          get view() {
+            return stage.#view;
+          },
+          watchView: (listener) => {
+            stage.#viewListeners.add(listener);
+            listener(stage.#view);
+            return () => {
+              stage.#viewListeners.delete(listener);
+            };
+          },
+        };
+      }),
     );
-    if (!ctx.claimStage(this)) {
-      console.warn('[kgdiff] a root draws one <kgdiff-stage> for now: this one stays empty.');
-      return { update: () => undefined };
-    }
-    release(() => ctx.releaseStage(this));
     // The user opening or folding the legend holds until the page declares the legend again.
     const stage = new Stage(
       {
@@ -163,12 +241,19 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     });
     stage.setChrome('full', true);
     this.shadow.append(stage.el);
-    const c = ctx.controller;
-    c.attach(stage.canvasHost, stage.minimapHost);
-    c.setChrome(() => stage.chromeLayout());
+    // This stage's own view of the shared session: canvas, camera, framing, minimap.
+    const view = new StageView(ctx.controller);
+    view.version = this.#version;
+    stage.view = view;
+    stage.setVersion(this.#version);
+    release(ctx.controller.addView(view));
+    view.attach(stage.canvasHost, stage.minimapHost);
+    view.setChrome(() => stage.chromeLayout());
+    this.#setView(view);
     release(() => {
-      c.setChrome(null);
-      c.detach();
+      this.#setView(null);
+      view.setChrome(null);
+      view.detach();
     });
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
     const canvas = stage.canvasHost.querySelector('canvas');
@@ -187,7 +272,7 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     if (typeof ResizeObserver === 'function') {
       const ro = new ResizeObserver(() => {
         stage.layout();
-        c.layoutChanged();
+        view.layoutChanged();
       });
       ro.observe(stage.el);
       release(() => ro.disconnect());

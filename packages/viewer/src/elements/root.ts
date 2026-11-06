@@ -11,6 +11,7 @@
  */
 import type { KgdiffRootElement } from '../index.js';
 import { ROOT_ATTRIBUTES, RootElement } from '../root-element.js';
+import { DiffSession, type SessionDeps, type SessionHost } from '../session.js';
 import { elementSheet } from '../styles.js';
 import type { UiActions } from '../ui/context.js';
 import { define } from './bound.js';
@@ -37,6 +38,11 @@ export class KgdiffRoot extends RootElement implements KgdiffRootElement {
 
   protected sheets(doc: Document): readonly CSSStyleSheet[] {
     return [elementSheet(doc, 'root')];
+  }
+
+  /** A session without a canvas of its own: each `<kgdiff-stage>` brings its view. */
+  protected createSession(host: SessionHost, deps: SessionDeps): DiffSession {
+    return new DiffSession(host, deps);
   }
 
   /** No layout of its own: `\` and `?` do nothing, `/` focuses the search registered last. */

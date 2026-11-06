@@ -21,8 +21,9 @@ import {
 } from '../dom.js';
 import type { ChromeLayout } from '../framing.js';
 import type { Translator } from '../i18n.js';
-import type { PanelState, PanelStates } from '../index.js';
+import type { PanelState, PanelStates, StageVersion } from '../index.js';
 import { FAMILIES } from '../styles.js';
+import type { StageView } from '../view.js';
 import { sceneHunkGlyph, type UiContext } from './context.js';
 import { Dock } from './dock.js';
 import { swatch } from './swatch.js';
@@ -45,6 +46,8 @@ export class Stage {
   readonly el: HTMLElement;
   readonly canvasHost: HTMLElement;
   readonly minimapHost: HTMLElement;
+  /** The view drawing this stage's canvas (its camera, minimap, framing), once attached. */
+  view: StageView | null = null;
   readonly #chrome: HTMLElement;
   readonly #liveCanvasLabel: HTMLElement;
   // Replay
@@ -89,6 +92,8 @@ export class Stage {
   readonly #slots: HTMLSlotElement[] = [];
   /** Elements over the canvas that registered themselves (`registerObstacle`). */
   readonly #obstacles = new Set<Element>();
+  #version: StageVersion | null = null;
+  readonly #versionChip = h('div', { class: 'version-chip chip card', hidden: true });
 
   readonly #ctx: UiContext;
 
@@ -244,13 +249,13 @@ export class Stage {
       const slot = (name: string): HTMLSlotElement => {
         const el = document.createElement('slot');
         el.name = name;
-        el.addEventListener('slotchange', () => c.layoutChanged());
+        el.addEventListener('slotchange', () => this.view?.layoutChanged());
         this.#slots.push(el);
         return el;
       };
       // Slotted content sits further from the corner than the built-in chrome.
       corners.push(
-        h('div', { class: 'corner top-start' }, slot('top-start')),
+        h('div', { class: 'corner top-start' }, this.#versionChip, slot('top-start')),
         h('div', { class: 'corner top-end' }, slot('top-end')),
       );
       bottomStart = h('div', { class: 'corner bottom-start' }, slot('bottom-start'), this.#legend);
@@ -305,6 +310,7 @@ export class Stage {
       this.#chipAfter,
     ];
     if (this.#caption.dataset.empty !== 'true') parts.push(this.#caption);
+    parts.push(this.#versionChip);
     if (this.minimapHost.dataset.hidden !== 'true') parts.push(this.minimapHost);
     // The HUD (title, actions) floats over the canvas too.
     for (const el of this.el.querySelectorAll<HTMLElement>('.hud .card')) parts.push(el);
@@ -368,6 +374,24 @@ export class Stage {
     attr(this.#legendHead, 'aria-expanded', String(open));
   }
 
+  /**
+   * The version a stage pinned to it draws (`<kgdiff-stage version>`): no swipe divider or
+   * replay caption then, and a chip naming the version; null follows the mode.
+   */
+  setVersion(version: StageVersion | null): void {
+    this.#version = version;
+    if (version) this.el.dataset.version = version;
+    else delete this.el.dataset.version;
+    this.#renderMode();
+    this.#renderVersion(this.#ctx.tr());
+  }
+
+  #renderVersion(tr: Translator): void {
+    const v = this.#version;
+    this.#versionChip.hidden = v === null;
+    if (v) setText(this.#versionChip, tr.t(v === 'before' ? 'detail.before' : 'detail.after'));
+  }
+
   /** Legend style, and whether clicks select (the tooltip only hints at clicking then). */
   setChrome(legend: LegendStyle, selectable: boolean): void {
     this.el.dataset.legend = legend;
@@ -379,6 +403,7 @@ export class Stage {
     const tr = this.#ctx.tr();
     const all = topics.has('status') || topics.has('data') || topics.has('locale');
     if (all) {
+      this.#renderVersion(tr);
       this.#renderLabels(tr);
       this.#renderMiniLegend(tr);
       this.#renderState(tr);
@@ -388,7 +413,7 @@ export class Stage {
     this.dock.update(topics);
     if (all || topics.has('mode')) this.#renderMode();
     if (all || topics.has('overview')) {
-      attr(this.minimapHost, 'data-hidden', String(c.overview));
+      attr(this.minimapHost, 'data-hidden', String(this.view?.overview ?? true));
     }
     if (all || topics.has('mode') || topics.has('replay')) this.#renderReplay(tr);
     if (all || topics.has('mode') || topics.has('swipe')) this.#renderSwipe();
@@ -472,9 +497,10 @@ export class Stage {
 
   #renderMode(): void {
     const mode = this.#ctx.controller.mode;
+    const pinned = this.#version !== null;
     this.#transport.hidden = mode !== 'replay';
-    this.#caption.hidden = mode !== 'replay';
-    this.#swipe.hidden = mode !== 'swipe';
+    this.#caption.hidden = mode !== 'replay' || pinned;
+    this.#swipe.hidden = mode !== 'swipe' || pinned;
   }
 
   #renderReplay(tr: Translator): void {

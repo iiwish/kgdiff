@@ -74,7 +74,7 @@ const SUBPATHS: Readonly<Record<string, string>> = {
 };
 
 describe('ESM subpaths', () => {
-  it('bundle on their own; an element without the root leaves the session out', async () => {
+  it('bundle on their own: the session comes with the root, the renderer with a stage', async () => {
     // `.` defines everything: the standalone build, less starting the hydration.
     // One build after another: concurrent builds of one config are not worth a rare race, and
     // a failure names its subpath.
@@ -119,6 +119,13 @@ describe('ESM subpaths', () => {
       expect(of(name).gzip, name).toBeLessThan(of('elements/root').gzip);
     }
     expect(of('elements/root').text).toContain('kgdiff:review:');
+    // The renderer comes with a stage (each draws its own view), not with the root.
+    const RENDERER = 'device-pixel-content-box';
+    expect(of('elements/stage').text).toContain(RENDERER);
+    expect(of('elements/root').text).not.toContain(RENDERER);
+    for (const name of ['elements/change-list', 'elements/search', 'elements/filters']) {
+      expect(of(name).text, name).not.toContain(RENDERER);
+    }
     // The panels syntax is for the CLI too: no DOM, nothing else.
     expect(of('panels').text).not.toMatch(/customElements|document\.|HTMLElement/);
     expect(of('panels').gzip).toBeLessThan(1024);

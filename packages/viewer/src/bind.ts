@@ -4,8 +4,7 @@
  * imports of the session: an element's subpath does not pull the session in through here.
  */
 import { createContext, requestContext } from './context.js';
-import type { ViewerController } from './controller.js';
-import type { Topic } from './session.js';
+import type { DiffSession, Topic } from './session.js';
 import type { FocusTarget, UiActions, UiContext } from './ui/context.js';
 
 /** Something the root renders: a region, or the layout itself. */
@@ -15,7 +14,7 @@ export interface Region {
 
 /** What a root provides to the regions that bind to it. */
 export interface ViewerContext {
-  readonly controller: ViewerController;
+  readonly controller: DiffSession;
   readonly actions: UiActions;
   /** The element the root's events are dispatched on and its tokens are set on. */
   readonly host: HTMLElement;
@@ -31,9 +30,6 @@ export interface ViewerContext {
   tokens(doc: Document): CSSStyleSheet;
   /** The pointer entered or left the graph (holds a looping replay with `pause-on-hover`). */
   hover(over: boolean): void;
-  /** Claim the root's one canvas for `owner`; false when another stage has it. */
-  claimStage(owner: object): boolean;
-  releaseStage(owner: object): void;
 }
 
 export const viewerContext = createContext<ViewerContext>('kgdiff.viewer/1');
