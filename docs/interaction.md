@@ -280,7 +280,7 @@ are stable.
 | `<kgdiff-transport>`     | the replay transport and "Replay finished · Restart", in replay mode only         |
 | `<kgdiff-legend>`        | the legend: the card (`variant="full"`) or one line (`variant="mini"`)            |
 | `<kgdiff-zoom>`          | zoom in, zoom out and fit, for one stage                                          |
-| `<kgdiff-minimap>`       | one stage's minimap, hidden while the whole graph is in view                      |
+| `<kgdiff-minimap>`       | one stage's minimap, in the state `overview` while the whole graph is in view     |
 | `<kgdiff-title>`         | the brand, the names of the versions compared and their tags                      |
 | `<kgdiff-actions>`       | the appearance menu (theme, palette, language) and the shortcuts dialog           |
 
@@ -330,8 +330,11 @@ are stable.
 - **`<kgdiff-legend>`**: `variant="full"` (the default) is the card, folded to its head until
   opened; the boolean `open` (property `open`) reflects whether it is, the reader's toggle
   included, as on `<details>`. `variant="mini"` is one line of dots. **`<kgdiff-minimap>`**
-  carries the `overview` attribute (read-only property `overview`) while the whole graph is in
-  view and hides then; `kgdiff-minimap[overview] { display: block }` keeps it.
+  is in the custom state `overview` (`:state(overview)`, read-only property `overview`) while
+  the whole graph is in view; it sets no attribute on itself, as the host's attributes are the
+  page's. Placed by the page it stays shown, so the layout around it does not move;
+  `kgdiff-minimap:state(overview) { visibility: hidden }` hides it in place. Slotted into a
+  stage it replaces the stage's own minimap and hides while in overview, as that one does.
   **`<kgdiff-transport>`** shows in replay mode only. **`<kgdiff-actions>`** opens its menu and
   dialog in place.
 - **Search** opens its results below the box while the query is not blank. The query lives in

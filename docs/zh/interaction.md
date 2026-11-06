@@ -159,7 +159,7 @@
 | `<kgdiff-transport>`     | 回放控制条和“回放结束 · 重新开始”，只在回放模式下显示        |
 | `<kgdiff-legend>`        | 图例：卡片（`variant="full"`）或一行（`variant="mini"`）     |
 | `<kgdiff-zoom>`          | 放大、缩小和适配，作用于一块画布                             |
-| `<kgdiff-minimap>`       | 一块画布的小地图，整张图都在视野内时隐藏                     |
+| `<kgdiff-minimap>`       | 一块画布的小地图，整张图都在视野内时处于 `overview` 状态     |
 | `<kgdiff-title>`         | 品牌标志、对比的两个版本名及其标签                           |
 | `<kgdiff-actions>`       | 外观菜单（主题、配色、语言）和快捷键对话框                   |
 
@@ -169,7 +169,7 @@
 - **多块画布。** 根元素绘制绑定到它的每一块画布，每块是一个独立的视图：自己的画布、相机、适配和飞行、悬停提示和小地图。会话属于根元素，由各块共享：选中（每块画布都会把它带进视野）、悬停（每块画布里都高亮）、对比方式和范围、回放时钟、筛选和搜索。`version="before"` 或 `"after"`（`version` 属性；null 跟随对比方式，其他值会被忽略并给出警告）让一块画布无论什么对比方式都只画一个版本：这时没有滑动分隔线和回放说明，有一个标签写明版本。它是视图唯一的设置，其余都属于会话。
 - **界面元素。** `<kgdiff-view-dock>`、`<kgdiff-transport>`、`<kgdiff-legend>`、`<kgdiff-title>` 和 `<kgdiff-actions>` 显示根元素的会话（`for`、`htmlFor`、`rootElement`，同上）。`<kgdiff-zoom>` 和 `<kgdiff-minimap>` 作用于一个视图：离它最近的外层 `<kgdiff-stage>`，或者页面上任意位置、由 `stage="<id>"` 指定的那块（`<kgdiff-viewer>` 是它内部这些元素的画布，也可以被指定）。按同样的约定，`stage` 属性反映这个 HTML 属性（设为 '' 会移除它），只读的 `stageElement` 是找到的画布，等待期间为 null，`rootElement` 是那块画布的根元素。
 - **替换内置控件。** 放进画布（或 `<kgdiff-viewer>`）插槽的视图坞、控制条、图例、缩放或小地图元素，会替换画布自己的那个区域；画布的 `panels` 对它仍在绘制的区域照常生效，这个元素也像其他插入的内容一样，在适配和飞行时被避开。`<kgdiff-title>` 和 `<kgdiff-actions>` 在画布里没有对应的区域；查看器自己的标题和操作按钮由它的 `panels`（`title:hidden`）控制。放在其他任何地方的界面元素，无论是否盖在画布上，都不算障碍，除非用 `stage.registerObstacle(element)` 登记。
-- **`<kgdiff-legend>`**：`variant="full"`（默认）是卡片，展开之前收起到标题；布尔属性 `open`（属性 `open`）反映它是否展开，包括读者的操作，和 `<details>` 一样。`variant="mini"` 是一行色点。**`<kgdiff-minimap>`** 在整张图都在视野内时带有 `overview` 属性（只读属性 `overview`）并隐藏；`kgdiff-minimap[overview] { display: block }` 可以让它保持显示。**`<kgdiff-transport>`** 只在回放模式下显示。**`<kgdiff-actions>`** 在原地打开它的菜单和对话框。
+- **`<kgdiff-legend>`**：`variant="full"`（默认）是卡片，展开之前收起到标题；布尔属性 `open`（属性 `open`）反映它是否展开，包括读者的操作，和 `<details>` 一样。`variant="mini"` 是一行色点。**`<kgdiff-minimap>`** 在整张图都在视野内时处于自定义状态 `overview`（`:state(overview)`，只读属性 `overview`）；它不给自己设置 HTML 属性，因为宿主元素的属性归页面所有。页面自己放置的小地图保持显示，周围的布局不会跳动；`kgdiff-minimap:state(overview) { visibility: hidden }` 让它原地隐藏。放进画布插槽的小地图替换画布自己的那个，并像它一样在 `overview` 时隐藏。**`<kgdiff-transport>`** 只在回放模式下显示。**`<kgdiff-actions>`** 在原地打开它的菜单和对话框。
 - **搜索**在查询不为空时，在输入框下方弹出结果。查询保存在会话里：绑定到同一根元素的变更列表这时让位。`/` 聚焦最后登记、且正在显示的那个搜索。
 - **键盘。** 键盘映射归根元素所有（`shortcuts`、`keymap`）。在根元素内部的元素里按键，通过冒泡到达根元素；用 `for` 绑定的元素会转发它的按键。
 - **无障碍。** 变更列表和详情面板是带标签的区域；ARIA 的 id 引用都在同一个元素内部（列表的选项、搜索的结果）；跨元素只用焦点移动（选择搜索结果会聚焦变更列表）和根元素唯一的实时区域播报。

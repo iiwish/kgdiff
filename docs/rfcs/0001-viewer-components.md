@@ -513,8 +513,11 @@ open:
   (`bindContext`) finds a root or a stage, now or once an id appears.
 - **The other chrome elements bind to the session** (`for`, `htmlFor`, `rootElement`). The legend has
   `variant="full|mini"` (one attribute, not a boolean `mini`) and a boolean `open` that
-  reflects the reader's toggle, as `<details>` does; the minimap carries `overview` while the
-  whole graph is in view and hides then, which a page can override in CSS; the transport shows
+  reflects the reader's toggle, as `<details>` does; the minimap is in the custom state
+  `overview` (`ElementInternals`, `:state(overview)`) while the whole graph is in view, an
+  attribute on the host being the page's: placed by the page it stays shown (the page opts in
+  to hiding it, `visibility: hidden` keeping its place), slotted into a stage it hides as the
+  stage's own did; the transport shows
   in replay mode only; the actions open their menu and dialog in place, and `?` in a composed
   root opens the dialog of a `<kgdiff-actions>` bound to it (a `help` focus target, like `/`
   and the search).

@@ -431,8 +431,10 @@ export interface KgdiffStageBoundElement extends HTMLElement {
  */
 export interface KgdiffMinimapElement extends KgdiffStageBoundElement {
   /**
-   * Whether the whole graph is in view, reflected to the boolean `overview` attribute; the
-   * minimap hides while it is (`kgdiff-minimap[overview] { display: block }` keeps it).
+   * Whether the whole graph is in view: the element is in the custom state `overview` then
+   * (`kgdiff-minimap:state(overview)`). Placed by the page it stays shown
+   * (`kgdiff-minimap:state(overview) { visibility: hidden }` hides it in place); slotted into a
+   * stage it replaces the stage's own minimap and hides as that one does.
    */
   readonly overview: boolean;
 }
