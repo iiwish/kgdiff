@@ -140,8 +140,8 @@ export abstract class RootElement extends HTMLElement {
   /** Disconnected (after the root stopped providing). */
   protected abstract disconnected(): void;
 
-  /** An observed attribute that is not a root attribute changed. */
-  protected attributeChanged(_name: string, _value: string | null): void {}
+  /** An observed attribute that is not a root attribute changed (from `_old`). */
+  protected attributeChanged(_name: string, _value: string | null, _old: string | null): void {}
 
   /** The sheets the shadow root adopts before the token set. */
   protected abstract sheets(doc: Document): readonly CSSStyleSheet[];
@@ -199,7 +199,7 @@ export abstract class RootElement extends HTMLElement {
     this.#applyHold();
   }
 
-  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
+  attributeChangedCallback(name: string, old: string | null, value: string | null): void {
     if (this.#reflecting) return;
     switch (name) {
       case 'mode':
@@ -227,7 +227,7 @@ export abstract class RootElement extends HTMLElement {
         this.#setKeymap(value);
         break;
       default:
-        this.attributeChanged(name, value);
+        this.attributeChanged(name, value, old);
     }
   }
 
