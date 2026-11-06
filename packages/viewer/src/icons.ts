@@ -20,6 +20,7 @@ export const ICONS = {
   moon: '<path d="M13.25 9.6A5.5 5.5 0 0 1 6.4 2.75a5.5 5.5 0 1 0 6.85 6.85Z"/>',
   monitor:
     '<rect x="2" y="2.75" width="12" height="8.5" rx="1.5"/><path d="M5.5 13.75h5M8 11.25v2.5"/>',
+  filter: '<path d="M2.5 3.25h11L9.25 8.5v3.75l-2.5 1.25v-5Z"/>',
   search: '<circle cx="7.25" cy="7.25" r="4.5"/><path d="m10.6 10.6 3 3"/>',
   close: '<path d="m4.25 4.25 7.5 7.5M11.75 4.25l-7.5 7.5"/>',
   check: '<path d="m3.5 8.4 3 2.9 6-6.6"/>',

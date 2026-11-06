@@ -3,11 +3,40 @@
  * keyboard map, live region, events, theme tokens, preferences and methods) and the regions
  * bound to it, the stage with its chrome, the change list, the search, the family filters and
  * the detail panel, placed as they always were (a 360 px sidebar; a bottom sheet below 760 px).
+ *
+ * Every region has a panel state (`panels.ts`): the host's `panels` attribute or property and
+ * the presets `sidebar`, `header` and `chrome` set them, the user changes them (folding the
+ * sidebar, the list or the detail panel, opening the legend, dragging the sidebar's width or
+ * the list / detail split), and the layout remembers the user's choices, theme, palette and
+ * language per origin (`layout-store.ts`; `persist="none"` turns that off). `kgdiff-layout`
+ * reports every change.
  */
-
 import { h } from './dom.js';
-import type { KgdiffViewerElement, ViewerChrome, ViewerLegend } from './index.js';
-import { toChrome, toLegend } from './prefs.js';
+import type {
+  KgdiffViewerElement,
+  LoadOptions,
+  PanelRegion,
+  PanelStates,
+  ReportPayload,
+  ViewerChrome,
+  ViewerLayout,
+  ViewerLegend,
+  ViewerPanels,
+} from './index.js';
+import { type Remembered, readRemembered, writeRemembered } from './layout-store.js';
+import {
+  DEFAULT_PANELS,
+  formatPanels,
+  PANEL_REGIONS,
+  parsePanels,
+  presetPanels,
+  resolvePanels,
+  SIDEBAR_REGIONS,
+  samePanels,
+  toPanels,
+} from './panels.js';
+import { sanitizeView, toChrome, toLegend } from './prefs.js';
+import { defaultStorage } from './review-store.js';
 import { bindRegion, uiContext } from './root.js';
 import { ROOT_ATTRIBUTES, RootElement } from './root-element.js';
 import type { Topic } from './session.js';
@@ -18,7 +47,7 @@ import { Filters } from './ui/filters.js';
 import { Header } from './ui/header.js';
 import { HelpDialog, Menu } from './ui/popovers.js';
 import { Search } from './ui/search.js';
-import { Sidebar } from './ui/sidebar.js';
+import { SIDEBAR_WIDTH, Sidebar } from './ui/sidebar.js';
 import { Stage } from './ui/stage.js';
 
 /** Below this width the sidebar becomes a bottom sheet. */
@@ -26,7 +55,22 @@ export const COMPACT_WIDTH = 760;
 /** Below this width the title drops the version tags. */
 const NARROW_WIDTH = 1100;
 
-const OBSERVED = [...ROOT_ATTRIBUTES, 'sidebar', 'chrome', 'legend'] as const;
+const OBSERVED = [
+  ...ROOT_ATTRIBUTES,
+  'sidebar',
+  'header',
+  'chrome',
+  'legend',
+  'panels',
+  'persist',
+] as const;
+
+type Preset = 'sidebar' | 'header' | 'chrome';
+type MutablePanels = { -readonly [R in PanelRegion]?: PanelStates[R] };
+
+function warnPanels(invalid: readonly string[]): void {
+  if (invalid.length > 0) console.warn(`[kgdiff] ignoring invalid panels: ${invalid.join(' ')}`);
+}
 
 export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   static get observedAttributes(): readonly string[] {
@@ -45,6 +89,29 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   #compact = false;
   readonly #cleanup: (() => void)[] = [];
 
+  // Panel states, from the first level that names a region (see `panels.ts`).
+  /** What the user changed in this page. */
+  readonly #runtime: MutablePanels = {};
+  /** The host's `panels`. */
+  #hostPanels: ViewerPanels = {};
+  /** The presets, from the attributes as the host set them (not as the layout reflects them). */
+  readonly #presetAttrs: Record<Preset, string | null> = {
+    sidebar: null,
+    header: null,
+    chrome: null,
+  };
+  #presets: ViewerPanels = {};
+  /** What the user chose before (`persist`), read at the first connection. */
+  #remembered: Remembered = { panels: {} };
+  /** The report's `view.panels`. */
+  #report: ViewerPanels = {};
+  #states: PanelStates = DEFAULT_PANELS;
+  /** The sidebar's regions that were open when the user folded it. */
+  #folded: readonly PanelRegion[] | null = null;
+  /** `kgdiff-layout` reports changes from the first connection on. */
+  #layoutReady = false;
+  readonly #storage = defaultStorage();
+
   constructor() {
     super();
     // The layout renders first, then the regions in the order they bound to the root.
@@ -57,9 +124,13 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     if (!this.#ui) this.#build();
     const ui = this.#ui;
     if (!ui) return;
+    if (!this.#layoutReady) {
+      this.#loadRemembered();
+      this.#layoutReady = true;
+    }
     this.controller.attach(ui.stage.canvasHost, ui.stage.minimapHost);
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
-    const canvas = ui.stage.canvasHost.querySelector('canvas');
+    const canvas = this.#canvas();
     if (canvas) {
       canvas.tabIndex = this.chrome === 'none' ? -1 : 0;
       const focusCanvas = (): void => {
@@ -78,14 +149,28 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     this.controller.detach();
   }
 
-  protected override attributeChanged(name: string): void {
+  protected override attributeChanged(name: string, value: string | null): void {
     switch (name) {
       case 'sidebar':
-        this.#applySidebar();
+      case 'header':
+        this.#preset(name, value);
         break;
       case 'chrome':
+        this.#preset(name, value);
+        this.#applyChrome();
+        break;
       case 'legend':
         this.#applyChrome();
+        break;
+      case 'panels': {
+        const { panels, invalid } = parsePanels(value ?? '');
+        warnPanels(invalid);
+        this.#setHostPanels(panels);
+        break;
+      }
+      case 'persist':
+        if (this.#layoutReady && this.persist === 'local') this.#loadRemembered();
+        this.#resolve('host');
         break;
       default:
         break;
@@ -93,7 +178,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   }
 
   protected override upgradedProperties(): readonly string[] {
-    return ['chrome', 'legend'];
+    return ['chrome', 'legend', 'panels', 'persist'];
   }
 
   protected override keysEnabled(): boolean {
@@ -111,6 +196,18 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     return true;
   }
 
+  protected override payloadSet(payload: ReportPayload): void {
+    // Validated (and warned about) once more when it loads.
+    this.#report = sanitizeView(payload.view, true)?.panels ?? {};
+    this.#resolve('host');
+  }
+
+  override load(options: LoadOptions): Promise<void> {
+    this.#report = {};
+    this.#resolve('host');
+    return super.load(options);
+  }
+
   // ─── Properties ───────────────────────────────────────────────────────────
 
   get chrome(): ViewerChrome {
@@ -118,7 +215,9 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   }
 
   set chrome(value: ViewerChrome) {
-    this.reflect('chrome', toChrome(value) === 'none' ? 'none' : null);
+    const v = toChrome(value) === 'none' ? 'none' : null;
+    this.reflect('chrome', v);
+    this.#preset('chrome', v);
     this.#applyChrome();
   }
 
@@ -132,22 +231,160 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     this.#applyChrome();
   }
 
-  // ─── Internals ────────────────────────────────────────────────────────────
-
-  get #sidebarOpen(): boolean {
-    return this.getAttribute('sidebar') !== 'closed';
+  get panels(): PanelStates {
+    return { ...this.#states };
   }
 
-  #applySidebar(): void {
+  set panels(value: ViewerPanels | string | null) {
+    const { panels, invalid } = toPanels(value);
+    warnPanels(invalid);
+    this.reflect('panels', formatPanels(panels) || null);
+    this.#setHostPanels(panels);
+  }
+
+  get persist(): 'local' | 'none' {
+    return this.getAttribute('persist') === 'none' ? 'none' : 'local';
+  }
+
+  set persist(value: 'local' | 'none') {
+    if (value === 'none') this.setAttribute('persist', 'none');
+    else this.removeAttribute('persist');
+  }
+
+  /** The panel states and sizes, as `kgdiff-layout` reports them. */
+  get #layout(): ViewerLayout {
+    const sidebar = this.#ui?.sidebar;
+    return {
+      panels: { ...this.#states },
+      sidebarWidth: sidebar?.width ?? SIDEBAR_WIDTH,
+      detailShare: sidebar?.detailShare ?? null,
+    };
+  }
+
+  // ─── Panels ───────────────────────────────────────────────────────────────
+
+  /** Some region's state may have changed: apply the new states, and report them. */
+  #resolve(source: 'user' | 'host'): void {
+    const remembered = this.persist === 'local' ? this.#remembered.panels : {};
+    const next = resolvePanels([
+      this.#runtime,
+      this.#hostPanels,
+      this.#presets,
+      remembered,
+      this.#report,
+    ]);
+    if (samePanels(next, this.#states)) return;
+    this.#states = next;
+    this.#applyPanels();
+    if (this.#layoutReady) this.#emitLayout(source);
+  }
+
+  #emitLayout(source: 'user' | 'host'): void {
+    this.dispatchEvent(
+      new CustomEvent('kgdiff-layout', {
+        detail: { ...this.#layout, source },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  /** The host restated some regions: what the user changed there in this page gives way. */
+  #setHostPanels(panels: ViewerPanels): void {
+    this.#hostPanels = panels;
+    for (const r of PANEL_REGIONS) if (panels[r] !== undefined) delete this.#runtime[r];
+    this.#resolve('host');
+  }
+
+  #preset(name: Preset, value: string | null): void {
+    this.#presetAttrs[name] = value;
+    const { sidebar, header, chrome } = this.#presetAttrs;
+    this.#presets = presetPanels(sidebar, header, chrome);
+    const affected =
+      name === 'sidebar' ? SIDEBAR_REGIONS : name === 'header' ? ['title'] : PANEL_REGIONS;
+    for (const r of affected) delete this.#runtime[r as PanelRegion];
+    if (name !== 'header') this.#folded = null;
+    this.#resolve('host');
+  }
+
+  /** The user changed some regions: they hold in this page, and are remembered. */
+  #userPanels(changes: ViewerPanels): void {
+    Object.assign(this.#runtime, changes);
+    this.#remember({ panels: { ...this.#remembered.panels, ...changes } });
+    this.#resolve('user');
+  }
+
+  #loadRemembered(): void {
+    if (this.persist !== 'local') return;
+    const r = readRemembered(this.#storage);
+    this.#remembered = r;
+    // A preference the host set wins; one the user chose before wins over a report's view.
+    const c = this.controller;
+    if (r.theme && !this.hasAttribute('theme') && !c.explicit.has('theme')) {
+      c.setThemePreference(r.theme);
+      c.explicit.add('theme');
+    }
+    if (r.palette && !this.hasAttribute('palette') && !c.explicit.has('palette')) {
+      c.setPalette(r.palette);
+      c.explicit.add('palette');
+    }
+    if (r.locale && !this.hasAttribute('locale') && !c.explicit.has('locale')) {
+      c.setLocale(r.locale);
+      c.explicit.add('locale');
+    }
+    this.#ui?.sidebar.setSizes(r.sidebarWidth ?? SIDEBAR_WIDTH, r.detailShare ?? null);
+    // The first states are not a change: no event.
+    const ready = this.#layoutReady;
+    this.#layoutReady = false;
+    this.#resolve('host');
+    this.#layoutReady = ready;
+  }
+
+  /** Remember the user's choice (merged into what other viewers of this origin wrote). */
+  #remember(patch: Partial<Remembered>): void {
+    if (this.persist !== 'local') return;
+    const stored = readRemembered(this.#storage);
+    const next: Remembered = {
+      ...stored,
+      ...patch,
+      panels: { ...stored.panels, ...(patch.panels ?? {}) },
+    };
+    this.#remembered = { ...this.#remembered, ...patch, panels: next.panels };
+    writeRemembered(this.#storage, next);
+  }
+
+  /** The user resized the sidebar or moved the split (reported and remembered once done). */
+  #resized(width: number, detailShare: number | null, done: boolean): void {
+    if (!done) return;
+    this.#remember({ sidebarWidth: width, detailShare });
+    this.#emitLayout('user');
+  }
+
+  #applyPanels(): void {
     const ui = this.#ui;
     if (!ui) return;
-    ui.sidebar.setOpen(this.#sidebarOpen);
+    const s = this.#states;
+    ui.sidebar.setPanels(s);
+    ui.stage.setPanels(s);
+    const sidebar = SIDEBAR_REGIONS.some((r) => s[r] !== 'hidden');
+    ui.header.setPanels(s.title, s.actions, sidebar, () => this.#canvas());
     ui.header.setSidebarState(this.#sidebarOpen);
+  }
+
+  #canvas(): HTMLElement | null {
+    return this.#ui?.stage.canvasHost.querySelector('canvas') ?? null;
+  }
+
+  // ─── Internals ────────────────────────────────────────────────────────────
+
+  /** The sidebar is open while one of its regions is. */
+  get #sidebarOpen(): boolean {
+    return SIDEBAR_REGIONS.some((r) => this.#states[r] === 'open');
   }
 
   /**
    * `chrome` and `legend`: what the stage shows, whether clicks select, whether the view stays
-   * fitted. The CSS hides the rest (`.root[data-chrome="none"]`).
+   * fitted. Which regions show is the `chrome="none"` preset's (see `panels.ts`).
    */
   #applyChrome(): void {
     const bare = this.chrome === 'none';
@@ -160,7 +397,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     ui.root.dataset.chrome = this.chrome;
     const legend = this.legend;
     ui.stage.setChrome(legend === 'auto' ? (bare ? 'mini' : 'full') : legend, !bare);
-    const canvas = ui.stage.canvasHost.querySelector('canvas');
+    const canvas = this.#canvas();
     if (canvas) canvas.tabIndex = bare ? -1 : 0;
     if (bare) {
       ui.help.hide();
@@ -172,11 +409,24 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
   protected actions(): UiActions {
     return {
       ...this.baseActions(),
+      setThemePreference: (pref) => {
+        this.theme = pref;
+        this.#remember({ theme: this.theme });
+      },
+      setPalette: (p) => {
+        this.palette = p;
+        this.#remember({ palette: this.palette });
+      },
+      setLocale: (l) => {
+        this.locale = l;
+        this.#remember({ locale: this.locale });
+      },
       toggleSidebar: (open) => this.#toggleSidebar(open),
       sidebarOpen: () => this.#sidebarOpen,
       toggleMenu: (open) => this.#toggleMenu(open),
       openHelp: () => this.#ui?.help.show(),
       focusSearch: () => this.#focusSearch(),
+      setPanel: (region, state) => this.#userPanels({ [region]: state }),
     };
   }
 
@@ -193,7 +443,18 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     const ui = uiContext(this.root, this.shadow);
     const menu = new Menu(ui);
     const help = new HelpDialog(ui);
-    const sidebar = new Sidebar(ui.tr, list, search, filters, detail);
+    const sidebar = new Sidebar(
+      ui,
+      {
+        setPanel: (region, state) => this.#userPanels({ [region]: state }),
+        resized: (width, share, done) => this.#resized(width, share, done),
+        focusOutside: () => (header.sidebarButton.hidden ? this.#canvas() : header.sidebarButton),
+      },
+      list,
+      search,
+      filters,
+      detail,
+    );
     // The title and the actions float over the canvas; the menu drops from the actions.
     header.attachMenu(menu.el);
     stage.el.appendChild(header.el);
@@ -211,7 +472,8 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     };
     stage.el.addEventListener('pointerenter', hover(true));
     stage.el.addEventListener('pointerleave', hover(false));
-    this.#applySidebar();
+    sidebar.setSizes(SIDEBAR_WIDTH, null);
+    this.#applyPanels();
     this.#applyChrome();
   }
 
@@ -235,10 +497,27 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     }
   }
 
+  /**
+   * Fold the sidebar (its open regions collapse) or open it again (the regions that were open,
+   * or all four). Reflected to the `sidebar` attribute.
+   */
   #toggleSidebar(open?: boolean): void {
+    const s = this.#states;
+    const shown = SIDEBAR_REGIONS.filter((r) => s[r] !== 'hidden');
+    if (shown.length === 0) return;
     const next = open ?? !this.#sidebarOpen;
     this.reflect('sidebar', next ? 'open' : 'closed');
-    this.#applySidebar();
+    if (next === this.#sidebarOpen) return;
+    const changes: MutablePanels = {};
+    if (next) {
+      const restore = this.#folded?.filter((r) => shown.includes(r)) ?? [];
+      for (const r of restore.length > 0 ? restore : shown) changes[r] = 'open';
+      this.#folded = null;
+    } else {
+      this.#folded = shown.filter((r) => s[r] === 'open');
+      for (const r of shown) changes[r] = 'collapsed';
+    }
+    this.#userPanels(changes);
   }
 
   #toggleMenu(open?: boolean): void {
@@ -250,8 +529,12 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     ui.header.setMenuState(next);
   }
 
+  /** `/`: an open search takes focus; else this layout's search opens, unless it is hidden. */
   #focusSearch(): void {
+    if (this.root.focus('search')) return;
+    if (this.#states.search === 'hidden') return;
     if (!this.#sidebarOpen) this.#toggleSidebar(true);
+    if (this.#states.search === 'collapsed') this.#userPanels({ search: 'open' });
     this.root.focus('search');
   }
 
@@ -269,7 +552,7 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
       }
       ui.stage.layout();
       ui.list.renderWindow();
-      if (compact) ui.sidebar.syncSheet();
+      ui.sidebar.layout(compact);
       this.controller.layoutChanged();
     });
     ro.observe(this);

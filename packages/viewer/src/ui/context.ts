@@ -6,7 +6,7 @@ import type { AttrValue, HunkKind, Locale } from '@kgdiff/core';
 import type { ChangeFamily, PaletteName, SceneHunk } from '@kgdiff/scene';
 import type { ViewerController } from '../controller.js';
 import type { Translator } from '../i18n.js';
-import type { ThemePreference, ViewerMode } from '../index.js';
+import type { PanelRegion, PanelState, ThemePreference, ViewerMode } from '../index.js';
 
 /**
  * What the layout does for the regions (preferences it reflects as attributes, the panels and
@@ -26,6 +26,8 @@ export interface UiActions {
   openHelp(): void;
   /** Show and focus the search (`/`). */
   focusSearch(): void;
+  /** The user opened or folded a region from inside it (the legend's head). */
+  setPanel?(region: PanelRegion, state: PanelState): void;
 }
 
 /** Elements of a region that others move focus to, through the root. */
@@ -36,9 +38,12 @@ export interface UiContext extends UiActions {
   readonly controller: ViewerController;
   /** Root of the region's shadow tree (for focus management). */
   readonly root: ShadowRoot;
-  /** Register `focus` as the root's `name` target; returns the function that unregisters it. */
-  target(name: FocusTarget, focus: () => void): () => void;
-  /** Focus the root's `name` target registered last; false when there is none. */
+  /**
+   * Register `focus` as the root's `name` target, available while `available` says so (default:
+   * always); returns the function that unregisters it.
+   */
+  target(name: FocusTarget, focus: () => void, available?: () => boolean): () => void;
+  /** Focus the root's available `name` target registered last; false when there is none. */
   focus(name: FocusTarget): boolean;
 }
 

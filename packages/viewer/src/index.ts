@@ -36,6 +36,51 @@ export type ViewerChrome = 'full' | 'none';
 /** The legend card, one line of dots, no legend, or `auto` (the card, one line without chrome). */
 export type ViewerLegend = 'auto' | 'full' | 'mini' | 'none';
 
+/**
+ * A region of the default layout (`KgdiffViewerElement.panels`): the change list, the detail
+ * panel, the search, the family filters (the sidebar's four), the view dock, the replay
+ * transport, the legend, the zoom buttons, the minimap, the title and the actions.
+ */
+export type PanelRegion =
+  | 'list'
+  | 'detail'
+  | 'search'
+  | 'filters'
+  | 'dock'
+  | 'transport'
+  | 'legend'
+  | 'zoom'
+  | 'minimap'
+  | 'title'
+  | 'actions';
+
+/**
+ * `open`; `collapsed`: folded to the control that opens it again (the list to its title, the
+ * detail panel to its bar, the search to a button, the filters to a button, the legend to its
+ * head; the sidebar folds away when all four of its regions are collapsed) and inert; `hidden`:
+ * not shown, and no control brings it back. Regions without a fold of their own (dock,
+ * transport, zoom, minimap, title, actions) are not shown while collapsed.
+ */
+export type PanelState = 'open' | 'collapsed' | 'hidden';
+
+/** The state of every region. */
+export type PanelStates = { readonly [R in PanelRegion]: PanelState };
+
+/** The states of some regions; the others keep theirs. */
+export type ViewerPanels = { readonly [R in PanelRegion]?: PanelState };
+
+/** The default layout's panel states and sizes (`kgdiff-layout`). */
+export interface ViewerLayout {
+  readonly panels: PanelStates;
+  /** The sidebar's width, px (360 by default). */
+  readonly sidebarWidth: number;
+  /**
+   * The detail panel's share of the sidebar's height (0–1), once the user dragged the split
+   * between it and the change list; null while it takes its content's height (up to 58%).
+   */
+  readonly detailShare: number | null;
+}
+
 /** A precomputed diff + layout: what the CLI embeds in HTML reports. Deterministic. */
 export interface ReportPayload {
   readonly format: 'kgdiff.report';
@@ -60,6 +105,11 @@ export interface ReportPayload {
     readonly theme?: ThemePreference;
     readonly palette?: PaletteName;
     readonly locale?: Locale;
+    /**
+     * Initial panel states of the default layout (`panels`). A choice the user made in the
+     * viewer before, or a `panels` attribute the page sets, wins over these.
+     */
+    readonly panels?: ViewerPanels;
   };
 }
 
@@ -99,6 +149,12 @@ export interface KgdiffViewerEventMap {
    * it starts again after `loopDelay` ms; set `loop = false` or call `pause()` to stop it.
    */
   'kgdiff-replay-end': CustomEvent<{ readonly loop: boolean }>;
+  /**
+   * The default layout changed: a panel opened, collapsed or was hidden, or a size changed (once
+   * a drag ends). `source`: the user did it in the viewer, or the host (attributes, properties,
+   * a report's `view.panels`).
+   */
+  'kgdiff-layout': CustomEvent<ViewerLayout & { readonly source: 'user' | 'host' }>;
 }
 
 export interface FitOptions {
@@ -148,6 +204,24 @@ export interface KgdiffViewerElement extends HTMLElement {
    * one pushed from its spot by a neighbour moves inside or is left out. Default `full`.
    */
   chrome: ViewerChrome;
+  /**
+   * Panel states of the layout, as the `panels` attribute (`"detail:collapsed minimap:hidden"`)
+   * or an object (`{ detail: 'collapsed' }`). Regions not named keep their state; entries that
+   * name no region or state are ignored with a warning. Set by the page, they win over what
+   * the user chose before (remembered) and a report's `view.panels`; the user can still open
+   * and close collapsed regions. Reading it gives every region's current state. The presets
+   * `sidebar="closed"` (list, detail, search and filters collapsed), `header="compact"` (title
+   * hidden) and `chrome="none"` (everything but the canvas and the legend hidden) are panel
+   * states too; `panels` wins over them for the regions it names.
+   */
+  get panels(): PanelStates;
+  set panels(value: ViewerPanels | string | null);
+  /**
+   * Reflected to the `persist` attribute. `local` (the default): the layout remembers the
+   * user's panel states, sizes, theme, palette and language in `localStorage`, for every
+   * viewer of this origin. `none`: it remembers nothing.
+   */
+  persist: 'local' | 'none';
   /**
    * Reflected to the `legend` attribute: `full` (the card), `mini` (one line: the families this
    * diff has, then unchanged), `none`. Default `auto`: `full`, or `mini` with `chrome="none"`.

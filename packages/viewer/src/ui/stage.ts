@@ -13,6 +13,7 @@ import {
   h,
   icon,
   iconButton,
+  moveFocusOut,
   relabel,
   replace,
   replaceKeepingFocus,
@@ -20,6 +21,7 @@ import {
 } from '../dom.js';
 import type { ChromeLayout } from '../framing.js';
 import type { Translator } from '../i18n.js';
+import type { PanelState, PanelStates } from '../index.js';
 import { FAMILIES } from '../styles.js';
 import { sceneHunkGlyph, type UiContext } from './context.js';
 import { Dock } from './dock.js';
@@ -180,7 +182,10 @@ export class Stage {
         type: 'button',
         class: 'legend-head',
         'aria-expanded': 'false',
-        onclick: () => this.#setLegend(!this.#legendOpen),
+        onclick: () => {
+          this.#setLegend(!this.#legendOpen);
+          ctx.setPanel?.('legend', this.#legendOpen ? 'open' : 'collapsed');
+        },
       },
       h('span', { class: 'lbl' }),
       icon('chevron-down'),
@@ -278,6 +283,32 @@ export class Stage {
   /** Re-measure what depends on rendered sizes (fonts, resizes). */
   layout(): void {
     this.dock.layout();
+  }
+
+  /**
+   * Follow the panel states of the chrome over the canvas: the dock, the replay transport, the
+   * legend (collapsed: folded to its head), the zoom buttons and the minimap. A region that is
+   * not open is not shown (and inert); focus inside it moves to the canvas first.
+   */
+  setPanels(states: Pick<PanelStates, 'dock' | 'transport' | 'legend' | 'zoom' | 'minimap'>): void {
+    const canvas = (): HTMLElement | null => this.canvasHost.querySelector('canvas');
+    const set = (state: PanelState, ...els: HTMLElement[]): void => {
+      for (const el of els) {
+        if (state !== 'open') moveFocusOut(this.#ctx.root, el, canvas);
+        attr(el, 'data-panel', state);
+        el.inert = state !== 'open';
+      }
+    };
+    set(states.dock, this.dock.el);
+    set(states.transport, this.#transport, this.#finished);
+    set(states.zoom, this.#zoomBar);
+    set(states.minimap, this.minimapHost);
+    const legend = states.legend;
+    if (legend === 'hidden') moveFocusOut(this.#ctx.root, this.#legend, canvas);
+    attr(this.#legend, 'data-panel', legend);
+    attr(this.#miniLegend, 'data-panel', legend);
+    this.#legend.inert = legend === 'hidden';
+    if (legend !== 'hidden') this.#setLegend(legend === 'open');
   }
 
   #setLegend(open: boolean): void {

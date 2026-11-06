@@ -129,3 +129,33 @@ export function relabel(el: Element, label: string): void {
   attr(el, 'aria-label', label);
   attr(el, 'title', label);
 }
+
+/**
+ * Whether `el` is shown and can take focus: connected, and neither it nor an ancestor (across
+ * shadow roots) is `hidden` or `inert`.
+ */
+export function isOpen(el: Element): boolean {
+  if (!el.isConnected) return false;
+  for (let n: Element | null = el; n; ) {
+    if ((n as HTMLElement).hidden || (n as HTMLElement).inert) return false;
+    n = n.parentElement ?? (n.getRootNode() as Partial<ShadowRoot>).host ?? null;
+  }
+  return true;
+}
+
+/**
+ * Before `from` (a region) folds or hides: if focus is inside it, move focus to `to()`, or let
+ * go of it when there is nowhere to go (focus never stays inside an inert region).
+ */
+export function moveFocusOut(
+  root: DocumentOrShadowRoot,
+  from: Element,
+  to: () => HTMLElement | null | undefined,
+): void {
+  // A focused element inside a nested shadow root shows as its host here.
+  const here = root.activeElement as HTMLElement | null;
+  if (!here || !from.contains(here)) return;
+  const next = to();
+  if (next && !from.contains(next)) next.focus({ preventScroll: true });
+  else here.blur();
+}
