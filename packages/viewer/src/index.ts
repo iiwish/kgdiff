@@ -37,6 +37,13 @@ import './elements/change-list.js';
 import './elements/change-detail.js';
 import './elements/search.js';
 import './elements/filters.js';
+import './elements/view-dock.js';
+import './elements/transport.js';
+import './elements/legend.js';
+import './elements/zoom.js';
+import './elements/minimap.js';
+import './elements/title.js';
+import './elements/actions.js';
 import { hydrate } from './payload.js';
 import { viewerTags } from './registry.js';
 
@@ -363,6 +370,58 @@ export interface KgdiffBoundElement extends HTMLElement {
   htmlFor: string;
   /** The root this element shows, or null while it waits for one. */
   readonly root: KgdiffRootElement | null;
+}
+
+/**
+ * `<kgdiff-legend>`'s `variant`: `full` (the card of every family) or `mini` (one line).
+ *
+ * @experimental Like the elements, in 0.6.
+ */
+export type LegendVariant = 'full' | 'mini';
+
+/**
+ * `<kgdiff-legend>` (experimental): what the colors mean, bound to a root.
+ *
+ * @experimental The elements are experimental in 0.6: names, attributes and markup may change
+ * in a minor release before they are stable.
+ */
+export interface KgdiffLegendElement extends KgdiffBoundElement {
+  /** Reflected to `variant`: `full` (default) or `mini`; another value reads `full`. */
+  variant: LegendVariant;
+  /** Reflected to the boolean `open`: whether the card is open (the user's toggle too). */
+  open: boolean;
+}
+
+/**
+ * An element that acts on one stage's view (experimental): `<kgdiff-zoom>`,
+ * `<kgdiff-minimap>`. It binds to the nearest `<kgdiff-stage>` around it, or to the one its
+ * `stage` attribute (an element id) names anywhere on the page.
+ *
+ * @experimental The elements are experimental in 0.6: names, attributes and markup may change
+ * in a minor release before they are stable.
+ */
+export interface KgdiffStageBoundElement extends HTMLElement {
+  /**
+   * Reflects the `stage` attribute: the id of the stage to act on, or '' for the nearest one
+   * around the element. Changing it binds again.
+   */
+  stageId: string;
+  /** The stage this element acts on, or null while it waits for one. */
+  readonly stageElement: KgdiffStageElement | null;
+}
+
+/**
+ * `<kgdiff-minimap>` (experimental): an overview of one stage's view.
+ *
+ * @experimental The elements are experimental in 0.6: names, attributes and markup may change
+ * in a minor release before they are stable.
+ */
+export interface KgdiffMinimapElement extends KgdiffStageBoundElement {
+  /**
+   * Whether the whole graph is in view, reflected to the boolean `overview` attribute; the
+   * minimap hides while it is (`kgdiff-minimap[overview] { display: block }` keeps it).
+   */
+  readonly overview: boolean;
 }
 
 /**

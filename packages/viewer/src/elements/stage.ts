@@ -22,7 +22,7 @@
  * Importing this module defines it.
  */
 import type { Region, ViewerContext } from '../bind.js';
-import { createContext, provideContext } from '../context.js';
+import { provideContext } from '../context.js';
 import type {
   KgdiffStageElement,
   PanelState,
@@ -35,27 +35,10 @@ import type { UiContext } from '../ui/context.js';
 import { Stage } from '../ui/stage.js';
 import { StageView } from '../view.js';
 import { BoundElement, define } from './bound.js';
+import { type StageViewContext, stageContext } from './stage-context.js';
 
-/**
- * What a stage provides to its descendants (the view-level context).
- *
- * @experimental Like the stage, in 0.6.
- */
-export interface StageContext {
-  /** Keep `element` clear of fits and flights; returns the function that stops it. */
-  registerObstacle(element: Element): () => void;
-}
-
-/** @internal What the chrome that acts on a view (`<kgdiff-zoom>`, `<kgdiff-minimap>`) gets. */
-export interface StageViewContext extends StageContext {
-  /** The stage's view now, or null while the stage waits for its root. */
-  readonly view: StageView | null;
-  /** Call `listener` with the view now and whenever it changes; returns the stop. */
-  watchView(listener: (view: StageView | null) => void): () => void;
-}
-
-/** @experimental The stage context's key (`Symbol.for('kgdiff.stage/1')`). */
-export const stageContext = createContext<StageContext>('kgdiff.stage/1');
+export type { StageContext } from './stage-context.js';
+export { stageContext } from './stage-context.js';
 
 /**
  * The regions of the built-in chrome a stage has.
@@ -207,6 +190,10 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
       provideContext(this, stageContext, (): StageViewContext => {
         const stage = this;
         return {
+          stage,
+          get root() {
+            return stage.context;
+          },
           registerObstacle: (el) => stage.registerObstacle(el),
           get view() {
             return stage.#view;
@@ -241,6 +228,8 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     });
     stage.setChrome('full', true);
     this.shadow.append(stage.el);
+    // Content slotted before the stage was built.
+    stage.slotted();
     // This stage's own view of the shared session: canvas, camera, framing, minimap.
     const view = new StageView(ctx.controller);
     view.version = this.#version;

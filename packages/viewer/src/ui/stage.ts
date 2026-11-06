@@ -82,6 +82,8 @@ export class Stage {
   /** The chrome's panel states, and the regions a slotted chrome element replaces. */
   #states: ChromeStates | null = null;
   readonly #replaced = new Set<StageRegion>();
+  /** The legend's state applied last: the user's toggle stands until it changes. */
+  #legendState: PanelState | null = null;
 
   readonly #ctx: UiContext;
 
@@ -165,7 +167,7 @@ export class Stage {
       const slot = (name: string): HTMLSlotElement => {
         const el = document.createElement('slot');
         el.name = name;
-        el.addEventListener('slotchange', () => this.#slotted());
+        el.addEventListener('slotchange', () => this.slotted());
         this.#slots.push(el);
         return el;
       };
@@ -263,8 +265,11 @@ export class Stage {
     this.dock.layout();
   }
 
-  /** The page's slotted content changed: a chrome element replaces the built-in one. */
-  #slotted(): void {
+  /**
+   * The page's slotted content changed (and once the stage is in its shadow root): a chrome
+   * element replaces the built-in one.
+   */
+  slotted(): void {
     const replaced = new Set<StageRegion>();
     for (const slot of this.#slots) {
       for (const el of slot.assignedElements({ flatten: true })) {
@@ -297,7 +302,8 @@ export class Stage {
     const given = this.#states;
     const state = (r: StageRegion): PanelState =>
       this.#replaced.has(r) ? 'hidden' : (given?.[r] ?? (r === 'legend' ? 'collapsed' : 'open'));
-    if (!given && this.#replaced.size === 0) return;
+    // Nothing declared or replaced, ever: the chrome stays as built.
+    if (!given && this.#replaced.size === 0 && this.#legendState === null) return;
     const canvas = (): HTMLElement | null => this.canvasHost.querySelector('canvas');
     const set = (s: PanelState, ...els: HTMLElement[]): void => {
       for (const el of els) {
@@ -315,7 +321,8 @@ export class Stage {
     attr(this.legend.card, 'data-panel', legend);
     attr(this.legend.mini, 'data-panel', legend);
     this.legend.card.inert = legend === 'hidden';
-    if (legend !== 'hidden') this.legend.setOpen(legend === 'open');
+    if (legend !== 'hidden' && legend !== this.#legendState) this.legend.setOpen(legend === 'open');
+    this.#legendState = legend;
   }
 
   /**

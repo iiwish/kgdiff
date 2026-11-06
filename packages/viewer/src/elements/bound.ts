@@ -41,6 +41,67 @@ export function define(name: string, ctor: CustomElementConstructor): void {
   }
 }
 
+/**
+ * Show `build`'s region in `host`'s shadow root, bound to the root `ctx`: the shared sheet, the
+ * host rules and, outside the root's subtree, its token set (kept up with theme changes); the
+ * session's language; the root's notifications; and, outside its subtree, the keys pressed in
+ * `host`, forwarded to the root (which owns the keyboard map). `release` collects the undo.
+ */
+export function mount(
+  host: HTMLElement,
+  shadow: ShadowRoot,
+  name: ElementName,
+  ctx: ViewerContext,
+  build: (ui: UiContext) => Region,
+  release: (fn: () => void) => void,
+): void {
+  const outside = !inside(host, ctx.host);
+  const adopt = (): void => {
+    const doc = host.ownerDocument;
+    shadow.adoptedStyleSheets = [
+      stylesheet(doc),
+      elementSheet(doc, name),
+      ...(outside ? [ctx.tokens(doc)] : []),
+    ];
+  };
+  const lang = (): void => {
+    for (const el of shadow.children) el.setAttribute('lang', ctx.controller.locale);
+  };
+  const ui: UiContext = {
+    ...uiContext(ctx, shadow),
+    // Focus targets go when the element does.
+    target: (target, focus, available) => {
+      const off = ctx.target(target, focus, available);
+      release(off);
+      return off;
+    },
+  };
+  adopt();
+  const region = build(ui);
+  release(
+    ctx.attach({
+      update: (topics) => {
+        if (outside && topics.has('theme')) adopt();
+        if (topics.has('locale') || topics.has('status')) lang();
+        region.update(topics);
+      },
+    }),
+  );
+  if (outside) {
+    // The root owns the keyboard map; keys pressed here would not reach it (and a root this
+    // element sits in must leave them alone).
+    const forward = (e: KeyboardEvent): void => forwardKey(ctx, e);
+    host.addEventListener('keydown', forward);
+    release(() => host.removeEventListener('keydown', forward));
+  }
+  lang();
+  try {
+    region.update(ALL_TOPICS);
+  } catch (error) {
+    console.error('[kgdiff] render failed:', error);
+  }
+}
+
 /** @experimental The base of the bound elements (`KgdiffBoundElement`), in 0.6. */
 export abstract class BoundElement extends HTMLElement implements KgdiffBoundElement {
   static get observedAttributes(): readonly string[] {
@@ -49,7 +110,6 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
 
   protected readonly shadow: ShadowRoot;
   #ctx: ViewerContext | null = null;
-  #outside = false;
   /** Bumped on every (re)binding: answers to an older request are ignored. */
   #generation = 0;
   readonly #release: (() => void)[] = [];
@@ -143,59 +203,10 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
 
   #attach(ctx: ViewerContext): void {
     this.#ctx = ctx;
-    this.#outside = !inside(this, ctx.host);
     const release = (fn: () => void): void => {
       this.#release.push(fn);
     };
-    const ui: UiContext = {
-      ...uiContext(ctx, this.shadow),
-      // Focus targets go when the element does.
-      target: (name, focus, available) => {
-        const off = ctx.target(name, focus, available);
-        release(off);
-        return off;
-      },
-    };
-    this.#adopt();
-    const region = this.build(ui, ctx, release);
-    release(
-      ctx.attach({
-        update: (topics) => {
-          if (this.#outside && topics.has('theme')) this.#adopt();
-          if (topics.has('locale') || topics.has('status')) this.#lang(ctx);
-          region.update(topics);
-        },
-      }),
-    );
-    if (this.#outside) {
-      // The root owns the keyboard map; keys pressed here would not reach it (and a root this
-      // element sits in must leave them alone).
-      const forward = (e: KeyboardEvent): void => forwardKey(ctx, e);
-      this.addEventListener('keydown', forward);
-      release(() => this.removeEventListener('keydown', forward));
-    }
-    this.#lang(ctx);
-    try {
-      region.update(ALL_TOPICS);
-    } catch (error) {
-      console.error('[kgdiff] render failed:', error);
-    }
-  }
-
-  /** The language of the session, on what the element shows. */
-  #lang(ctx: ViewerContext): void {
-    for (const el of this.shadow.children) el.setAttribute('lang', ctx.controller.locale);
-  }
-
-  /** The shared sheet, the host rules and, outside the root's subtree, its token set. */
-  #adopt(): void {
-    const doc = this.ownerDocument;
-    const ctx = this.#ctx;
-    this.shadow.adoptedStyleSheets = [
-      stylesheet(doc),
-      elementSheet(doc, this.name),
-      ...(ctx && this.#outside ? [ctx.tokens(doc)] : []),
-    ];
+    mount(this, this.shadow, this.name, ctx, (ui) => this.build(ui, ctx, release), release);
   }
 
   #unbind(): void {

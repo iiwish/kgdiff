@@ -658,7 +658,20 @@ const HOST =
   'all: initial; font-family: var(--kgdiff-font); font-size: 13px; line-height: 1.45; color: var(--kgdiff-text); -webkit-font-smoothing: antialiased;';
 
 /** The elements of RFC 0001 §3, by the name after `kgdiff-`. */
-export type ElementName = 'root' | 'stage' | 'change-list' | 'change-detail' | 'search' | 'filters';
+export type ElementName =
+  | 'root'
+  | 'stage'
+  | 'change-list'
+  | 'change-detail'
+  | 'search'
+  | 'filters'
+  | 'view-dock'
+  | 'transport'
+  | 'legend'
+  | 'zoom'
+  | 'minimap'
+  | 'title'
+  | 'actions';
 
 /** Each element's host rules, adopted after the shared sheet (`<kgdiff-root>`: instead of it). */
 const ELEMENT_STYLES: Readonly<Record<ElementName, string>> = {
@@ -692,6 +705,36 @@ const ELEMENT_STYLES: Readonly<Record<ElementName, string>> = {
   filters: /* css */ `
 :host { ${HOST} display: block; }
 :host([hidden]) { display: none; }`,
+  'view-dock': /* css */ `
+:host { ${HOST} display: inline-block; max-width: 100%; container-type: inline-size; }
+:host([hidden]) { display: none; }`,
+  transport: /* css */ `
+:host { ${HOST} display: block; width: min(600px, 100%); }
+:host([hidden]) { display: none; }
+.stack { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.transport { width: 100%; min-width: 0; }`,
+  legend: /* css */ `
+:host { ${HOST} display: inline-block; }
+:host([hidden]) { display: none; }
+.legend.float, .mini-legend.float { position: static; }
+.mini-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; font-size: 11px; line-height: 16px; color: var(--kgdiff-text-secondary); }`,
+  zoom: /* css */ `
+:host { ${HOST} display: inline-block; }
+:host([hidden]) { display: none; }`,
+  minimap: /* css */ `
+:host { ${HOST} display: block; position: relative; width: 184px; height: 128px; }
+:host([hidden]), :host([overview]) { display: none; }
+.minimap-host { width: 100%; height: 100%; }`,
+  title: /* css */ `
+:host { ${HOST} display: inline-block; max-width: 100%; }
+:host([hidden]) { display: none; }
+.hud-title { position: static; max-width: none; }`,
+  actions: /* css */ `
+:host { ${HOST} display: inline-block; position: relative; }
+:host([hidden]) { display: none; }
+.hud-end { position: relative; top: auto; right: auto; }
+/* The dialog covers the page, not the element. */
+.overlay-scrim { position: fixed; z-index: 1000; }`,
 };
 
 const elementSheets = new WeakMap<Document, Map<ElementName, CSSStyleSheet>>();

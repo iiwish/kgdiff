@@ -31,7 +31,7 @@ export interface UiActions {
 }
 
 /** Elements of a region that others move focus to, through the root. */
-export type FocusTarget = 'search' | 'list';
+export type FocusTarget = 'search' | 'list' | 'help';
 
 /** What a region gets from the root it is bound to: the session, the actions, focus moves. */
 export interface UiContext extends UiActions {
