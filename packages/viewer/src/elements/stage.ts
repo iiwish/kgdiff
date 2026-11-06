@@ -27,15 +27,24 @@ import type { UiContext } from '../ui/context.js';
 import { Stage } from '../ui/stage.js';
 import { BoundElement, define } from './bound.js';
 
-/** What a stage provides to its descendants (the view-level context). */
+/**
+ * What a stage provides to its descendants (the view-level context).
+ *
+ * @experimental Like the stage, in 0.6.
+ */
 export interface StageContext {
   /** Keep `element` clear of fits and flights; returns the function that stops it. */
   registerObstacle(element: Element): () => void;
 }
 
+/** @experimental The stage context's key (`Symbol.for('kgdiff.stage/1')`). */
 export const stageContext = createContext<StageContext>('kgdiff.stage/1');
 
-/** The regions of the built-in chrome a stage has. */
+/**
+ * The regions of the built-in chrome a stage has.
+ *
+ * @experimental Like the stage, in 0.6.
+ */
 export const STAGE_REGIONS: readonly StageRegion[] = [
   'dock',
   'transport',
@@ -60,6 +69,7 @@ function stagePanels(value: unknown): StagePanels {
   return out;
 }
 
+/** @experimental See the module's description. */
 export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   static override get observedAttributes(): readonly string[] {
     return ['for', 'panels'];
@@ -191,6 +201,7 @@ define('kgdiff-stage', KgdiffStage);
 
 declare global {
   interface HTMLElementTagNameMap {
+    /** @experimental In 0.6. */
     'kgdiff-stage': KgdiffStageElement;
   }
 }

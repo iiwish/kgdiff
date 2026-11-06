@@ -15,6 +15,7 @@ import { elementSheet } from '../styles.js';
 import type { UiActions } from '../ui/context.js';
 import { define } from './bound.js';
 
+/** @experimental See the module's description. */
 export class KgdiffRoot extends RootElement implements KgdiffRootElement {
   static get observedAttributes(): readonly string[] {
     return ROOT_ATTRIBUTES;
@@ -65,6 +66,7 @@ define('kgdiff-root', KgdiffRoot);
 
 declare global {
   interface HTMLElementTagNameMap {
+    /** @experimental In 0.6. */
     'kgdiff-root': KgdiffRootElement;
   }
 }

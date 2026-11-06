@@ -9,6 +9,7 @@ import type { UiContext } from '../ui/context.js';
 import { Detail } from '../ui/detail.js';
 import { BoundElement, define } from './bound.js';
 
+/** @experimental See the module's description. */
 export class KgdiffChangeDetail extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'change-detail';
 
@@ -23,6 +24,7 @@ define('kgdiff-change-detail', KgdiffChangeDetail);
 
 declare global {
   interface HTMLElementTagNameMap {
+    /** @experimental In 0.6. */
     'kgdiff-change-detail': KgdiffBoundElement;
   }
 }

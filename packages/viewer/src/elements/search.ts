@@ -13,6 +13,7 @@ import type { UiContext } from '../ui/context.js';
 import { Search } from '../ui/search.js';
 import { BoundElement, define } from './bound.js';
 
+/** @experimental See the module's description. */
 export class KgdiffSearch extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'search';
 
@@ -27,6 +28,7 @@ define('kgdiff-search', KgdiffSearch);
 
 declare global {
   interface HTMLElementTagNameMap {
+    /** @experimental In 0.6. */
     'kgdiff-search': KgdiffBoundElement;
   }
 }

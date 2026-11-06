@@ -12,6 +12,7 @@ import { ChangeList } from '../ui/change-list.js';
 import type { UiContext } from '../ui/context.js';
 import { BoundElement, define } from './bound.js';
 
+/** @experimental See the module's description. */
 export class KgdiffChangeList extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'change-list';
 
@@ -40,6 +41,7 @@ define('kgdiff-change-list', KgdiffChangeList);
 
 declare global {
   interface HTMLElementTagNameMap {
+    /** @experimental In 0.6. */
     'kgdiff-change-list': KgdiffBoundElement;
   }
 }
