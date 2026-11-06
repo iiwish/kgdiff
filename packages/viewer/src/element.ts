@@ -36,6 +36,7 @@ import {
   toTheme,
 } from './prefs.js';
 import { defaultStorage } from './review-store.js';
+import { cancelFrame, nextPaint, requestFrame } from './schedule.js';
 import { STYLES, themeVariables } from './styles.js';
 import type { UiContext } from './ui/context.js';
 import { Header } from './ui/header.js';
@@ -107,25 +108,6 @@ function media(query: string): MediaQueryList | null {
     : null;
 }
 
-/**
- * Resolve once the browser had a chance to paint the loading step. Hidden tabs never run
- * animation frames, so a short timer resolves it there (loading must never stall).
- */
-function nextPaint(): Promise<void> {
-  return new Promise((resolve) => {
-    let done = false;
-    const finish = (): void => {
-      if (done) return;
-      done = true;
-      resolve();
-    };
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => setTimeout(finish, 0));
-    }
-    setTimeout(finish, 50);
-  });
-}
-
 export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
   static get observedAttributes(): readonly string[] {
     return OBSERVED;
@@ -175,11 +157,8 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     };
     this.controller = new ViewerController(host, {
       now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
-      requestFrame: (cb) =>
-        typeof requestAnimationFrame === 'function' ? requestAnimationFrame(cb) : 0,
-      cancelFrame: (id) => {
-        if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(id);
-      },
+      requestFrame,
+      cancelFrame,
       yieldToPaint: nextPaint,
       storage: defaultStorage(),
     });
