@@ -286,22 +286,33 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     );
   }
 
-  /** The host restated some regions: what the user changed there in this page gives way. */
+  /**
+   * The host declared `panels`. Where its value changed, what the user changed there in this
+   * page gives way; declaring the same again (a framework re-rendering, an attribute set to
+   * the value it has) leaves the user's change alone.
+   */
   #setHostPanels(panels: ViewerPanels): void {
+    this.#yield(this.#hostPanels, panels);
     this.#hostPanels = panels;
-    for (const r of PANEL_REGIONS) if (panels[r] !== undefined) delete this.#runtime[r];
     this.#resolve('host');
   }
 
   #preset(name: Preset, value: string | null): void {
     this.#presetAttrs[name] = value;
     const { sidebar, header, chrome } = this.#presetAttrs;
-    this.#presets = presetPanels(sidebar, header, chrome);
-    const affected =
-      name === 'sidebar' ? SIDEBAR_REGIONS : name === 'header' ? ['title'] : PANEL_REGIONS;
-    for (const r of affected) delete this.#runtime[r as PanelRegion];
-    if (name !== 'header') this.#folded = null;
+    const next = presetPanels(sidebar, header, chrome);
+    if (this.#yield(this.#presets, next).some((r) => SIDEBAR_REGIONS.includes(r))) {
+      this.#folded = null;
+    }
+    this.#presets = next;
     this.#resolve('host');
+  }
+
+  /** Drop the user's in-page change of every region `before` and `after` disagree on. */
+  #yield(before: ViewerPanels, after: ViewerPanels): PanelRegion[] {
+    const changed = PANEL_REGIONS.filter((r) => before[r] !== after[r]);
+    for (const r of changed) delete this.#runtime[r];
+    return changed;
   }
 
   /** The user changed some regions: they hold in this page, and are remembered. */

@@ -279,12 +279,39 @@ describe('presets', () => {
     expect(el.panels).toMatchObject({ dock: 'open', list: 'collapsed', detail: 'open' });
   });
 
-  it('the host restating a preset overrides what the user changed in the page', async () => {
+  it('the host re-stating a preset leaves the user’s change; changing it overrides it', async () => {
     const el = await loaded({ sidebar: 'closed' });
     press(el, '\\');
     expect(el.panels.list).toBe('open');
     el.setAttribute('sidebar', 'closed');
+    expect(el.panels.list).toBe('open');
+    el.setAttribute('sidebar', 'open');
+    el.setAttribute('sidebar', 'closed');
     expect(el.panels.list).toBe('collapsed');
+  });
+});
+
+describe('re-stating panels (frameworks render again)', () => {
+  it('an equal object set again keeps what the user opened', async () => {
+    const el = await loaded();
+    el.panels = { detail: 'collapsed' };
+    $<HTMLButtonElement>(el, '.detail-bar').click();
+    expect(el.panels.detail).toBe('open');
+    el.panels = { detail: 'collapsed' };
+    expect(el.panels.detail).toBe('open');
+    el.panels = { detail: 'collapsed', zoom: 'hidden' };
+    expect(el.panels.detail).toBe('open');
+    el.panels = { detail: 'hidden', zoom: 'hidden' };
+    expect(el.panels.detail).toBe('hidden');
+  });
+
+  it('the attribute set again to the same string keeps it too', async () => {
+    const el = await loaded({ panels: 'detail:collapsed' });
+    const seen = layouts(el);
+    $<HTMLButtonElement>(el, '.detail-bar').click();
+    el.setAttribute('panels', 'detail:collapsed');
+    expect(el.panels.detail).toBe('open');
+    expect(seen.map((e) => e.source)).toEqual(['user']);
   });
 });
 
