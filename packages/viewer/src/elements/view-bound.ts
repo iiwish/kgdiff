@@ -8,7 +8,7 @@
  * binds again (a new view).
  */
 import type { Region } from '../bind.js';
-import type { KgdiffStageElement, KgdiffViewerElement } from '../index.js';
+import type { KgdiffRootElement, KgdiffStageElement, KgdiffViewerElement } from '../index.js';
 import type { ElementName } from '../styles.js';
 import type { UiContext } from '../ui/context.js';
 import type { StageView } from '../view.js';
@@ -44,15 +44,17 @@ export abstract class ViewBoundElement extends HTMLElement {
   ): Region;
 
   /**
-   * Reflects the `stage` attribute: the id of the stage to act on, or '' for the nearest one
-   * around the element. Changing it binds again.
+   * Reflects the `stage` attribute: the id of the stage to act on; '' (no attribute) for the
+   * nearest one around the element. Changing it binds again.
    */
-  get stageId(): string {
+  get stage(): string {
     return this.getAttribute('stage') ?? '';
   }
 
-  set stageId(value: string) {
-    this.setAttribute('stage', String(value));
+  set stage(value: string) {
+    const id = String(value);
+    if (id === '') this.removeAttribute('stage');
+    else this.setAttribute('stage', id);
   }
 
   /** The stage this element acts on, or null while it waits for one. */
@@ -60,11 +62,17 @@ export abstract class ViewBoundElement extends HTMLElement {
     return this.#stage?.stage ?? null;
   }
 
+  /** The root whose session the stage shows, or null while either waits. */
+  get rootElement(): KgdiffRootElement | null {
+    return (this.#stage?.root?.host as KgdiffRootElement | undefined) ?? null;
+  }
+
   connectedCallback(): void {
-    if (Object.hasOwn(this, 'stageId')) {
-      const value = (this as unknown as Record<string, unknown>).stageId;
-      delete (this as unknown as Record<string, unknown>).stageId;
-      this.stageId = String(value);
+    // Set before the element was defined: it shadows the accessor.
+    if (Object.hasOwn(this, 'stage')) {
+      const value = (this as unknown as Record<string, unknown>).stage;
+      delete (this as unknown as Record<string, unknown>).stage;
+      this.stage = String(value);
     }
     this.#bind();
   }

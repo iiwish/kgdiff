@@ -1,7 +1,7 @@
 /**
  * `<kgdiff-actions>` (RFC 0001 §3; experimental): the appearance menu (theme, color palette,
  * language: the root's `theme`, `palette` and `locale`) and the keyboard shortcuts dialog,
- * which `?` opens too. Binds to a root (`for`, `htmlFor`, `root`); a composed root has no
+ * which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); a composed root has no
  * sidebar, so there is no sidebar toggle. Importing this module defines it.
  */
 import type { Region } from '../bind.js';

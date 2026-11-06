@@ -3,7 +3,7 @@
  * part in view outlined. While the whole graph is in view it has nothing to add: it carries
  * the `overview` attribute then and hides (`kgdiff-minimap[overview] { display: block }` keeps
  * it). Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage="<id>"` names
- * (`stageId`, `stageElement`). Slotted into a stage it replaces the stage's built-in minimap;
+ * (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in minimap;
  * placed anywhere else it is not kept clear of fits and flights unless registered. Importing
  * this module defines it.
  */
