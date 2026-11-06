@@ -311,6 +311,33 @@ describe('sizes', () => {
     expect(readRemembered(localStorage).sidebarWidth).toBe(280);
   });
 
+  it('reports a separator only when it moved: a click, or a key at its end, says nothing', async () => {
+    const el = await loaded();
+    const seen = layouts(el);
+    const pointer = (target: Element, type: string, clientX = 100, clientY = 100): void => {
+      target.dispatchEvent(new PointerEvent(type, { pointerId: 1, clientX, clientY }));
+    };
+    for (const separator of [$(el, '.sb-resize'), $(el, '.sb-split')]) {
+      pointer(separator, 'pointerdown');
+      pointer(separator, 'pointerup');
+    }
+    expect(seen).toEqual([]);
+    expect(localStorage.getItem(LAYOUT_KEY)).toBeNull();
+    const edge = $(el, '.sb-resize');
+    press(edge, 'Home');
+    press(edge, 'Home');
+    $(el, '.sb-split').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    expect(seen.map((e) => e.sidebarWidth)).toEqual([280]);
+    // A drag that comes back where it started is not a change either.
+    $(el, '.sidebar').getBoundingClientRect = () => new DOMRect(0, 0, 280, 600);
+    pointer(edge, 'pointerdown', 100);
+    pointer(edge, 'pointermove', 60);
+    expect(edge.getAttribute('aria-valuenow')).toBe('320');
+    pointer(edge, 'pointermove', 100);
+    pointer(edge, 'pointerup', 100);
+    expect(seen).toHaveLength(1);
+  });
+
   it('steps from the width shown when the layout holds the sidebar below its stored width', async () => {
     remember({ panels: {}, sidebarWidth: 700 });
     const el = await loaded();

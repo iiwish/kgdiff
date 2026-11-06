@@ -39,8 +39,8 @@ const DETAIL_MIN = 64;
 export interface SidebarHost {
   /** The user opened or folded one of the sidebar's regions. */
   setPanel(region: PanelRegion, state: PanelState): void;
-  /** The user resized the sidebar or moved the split; `done`: the drag (or key press) ended. */
-  resized(width: number, detailShare: number | null, done: boolean): void;
+  /** The user resized the sidebar or moved the split (reported once the drag or key press ended). */
+  resized(width: number, detailShare: number | null): void;
   /** Where focus goes when the whole sidebar folds while it has focus. */
   focusOutside(): HTMLElement | null;
 }
@@ -67,6 +67,8 @@ export class Sidebar {
   #states: PanelStates | null = null;
   #width = SIDEBAR_WIDTH;
   #share: number | null = null;
+  /** The sizes last reported as done (or applied as remembered): a gesture that ends there is not reported. */
+  #reported: { width: number; share: number | null } = { width: SIDEBAR_WIDTH, share: null };
 
   constructor(
     ctx: UiContext,
@@ -215,6 +217,7 @@ export class Sidebar {
     }
     this.#width = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, Math.round(width)));
     this.#share = detailShare === null ? null : Math.max(0, Math.min(1, detailShare));
+    if (instant) this.#reported = { width: this.#width, share: this.#share };
     this.el.style.setProperty('--sidebar-w', `${this.#width}px`);
     if (this.#share === null) {
       this.el.removeAttribute('data-split');
@@ -270,6 +273,14 @@ export class Sidebar {
     );
   }
 
+  /** A drag or key press ended: report the sizes, unless they are where they were. */
+  #done(): void {
+    const { width, share } = this.#reported;
+    if (width === this.#width && share === this.#share) return;
+    this.#reported = { width: this.#width, share: this.#share };
+    this.#host.resized(this.#width, this.#share);
+  }
+
   // ─── Width ───────────────────────────────────────────────────────────────
 
   /** The widest the sidebar may be next to the canvas, px. */
@@ -296,7 +307,7 @@ export class Sidebar {
     const set = (px: number, done: boolean): void => {
       const width = Math.max(SIDEBAR_MIN, Math.min(this.#maxWidth(), px));
       this.setSizes(width, this.#share);
-      this.#host.resized(this.#width, this.#share, done);
+      if (done) this.#done();
     };
     this.#resize.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -312,7 +323,7 @@ export class Sidebar {
       if (!start || e.pointerId !== start.id) return;
       start = null;
       this.el.classList.remove('dragging');
-      this.#host.resized(this.#width, this.#share, true);
+      this.#done();
     };
     this.#resize.addEventListener('pointerup', end);
     this.#resize.addEventListener('pointercancel', end);
@@ -358,7 +369,7 @@ export class Sidebar {
     let start: { y: number; share: number; id: number } | null = null;
     const set = (share: number, done: boolean): void => {
       this.setSizes(this.#width, this.#clampShare(share));
-      this.#host.resized(this.#width, this.#share, done);
+      if (done) this.#done();
     };
     this.#split.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -375,14 +386,14 @@ export class Sidebar {
       if (!start || e.pointerId !== start.id) return;
       start = null;
       this.el.classList.remove('dragging');
-      this.#host.resized(this.#width, this.#share, true);
+      this.#done();
     };
     this.#split.addEventListener('pointerup', end);
     this.#split.addEventListener('pointercancel', end);
     // Back to the content's height.
     this.#split.addEventListener('dblclick', () => {
       this.setSizes(this.#width, null);
-      this.#host.resized(this.#width, null, true);
+      this.#done();
     });
     this.#split.addEventListener('keydown', (e) => {
       const current = this.#share ?? this.#measuredShare();
