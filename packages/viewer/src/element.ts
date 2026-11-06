@@ -170,7 +170,8 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
         break;
       }
       case 'persist':
-        if (this.#layoutReady && this.persist === 'local') this.#loadRemembered();
+        // Turned on in the page: what the user chose before applies now, as a host change.
+        if (this.#layoutReady && this.persist === 'local') this.#remembered = this.#recall();
         this.#resolve('host');
         break;
       default:
@@ -319,10 +320,9 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
     this.#resolve('user');
   }
 
-  #loadRemembered(): void {
-    if (this.persist !== 'local') return;
+  /** What the user chose before; theme, palette and language apply unless the host set them. */
+  #recall(): Remembered {
     const r = readRemembered(this.#storage);
-    this.#remembered = r;
     // A preference the host set wins; one the user chose before wins over a report's view.
     const c = this.controller;
     if (r.theme && !this.hasAttribute('theme') && !c.explicit.has('theme')) {
@@ -338,11 +338,14 @@ export class KgdiffViewer extends RootElement implements KgdiffViewerElement {
       c.explicit.add('locale');
     }
     this.#ui?.sidebar.setSizes(r.sidebarWidth ?? SIDEBAR_WIDTH, r.detailShare ?? null, true);
-    // The first states are not a change: no event.
-    const ready = this.#layoutReady;
-    this.#layoutReady = false;
+    return r;
+  }
+
+  /** The first connection: the remembered states are the first ones (not a change, no event). */
+  #loadRemembered(): void {
+    if (this.persist !== 'local') return;
+    this.#remembered = this.#recall();
     this.#resolve('host');
-    this.#layoutReady = ready;
   }
 
   /** Remember the user's choice (merged into what other viewers of this origin wrote). */
