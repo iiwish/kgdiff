@@ -6,7 +6,7 @@
  * target.
  */
 import type { SceneHunk } from '@kgdiff/scene';
-import { attr, h, icon, replace, setText } from '../dom.js';
+import { attr, h, icon, isOpen, replace, setText } from '../dom.js';
 import type { ListItem } from '../list-model.js';
 import { frameOrTimeout } from '../schedule.js';
 import type { Topic } from '../session.js';
@@ -73,7 +73,11 @@ export class ChangeList {
       if (row) c.flyToSelection();
     });
     this.sticky = h('div', { class: 'sticky', 'aria-hidden': 'true', hidden: true });
-    ctx.target('list', () => this.list.focus({ preventScroll: true }));
+    ctx.target(
+      'list',
+      () => this.list.focus({ preventScroll: true }),
+      () => isOpen(this.list),
+    );
   }
 
   update(topics: ReadonlySet<Topic>): void {

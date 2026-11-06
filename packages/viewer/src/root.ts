@@ -35,13 +35,18 @@ export interface ViewerContext {
   readonly host: HTMLElement;
   /** Render `region` on every notification (in binding order); returns the detach. */
   attach(region: Region): () => void;
-  target(name: FocusTarget, focus: () => void): () => void;
+  target(name: FocusTarget, focus: () => void, available?: () => boolean): () => void;
   focus(name: FocusTarget): boolean;
   /** The keyboard map, for a key event that reached the root. */
   handleKey(e: KeyboardEvent): void;
 }
 
 export const viewerContext = createContext<ViewerContext>('kgdiff.viewer/1');
+
+interface Target {
+  readonly focus: () => void;
+  readonly available: () => boolean;
+}
 
 function media(query: string): MediaQueryList | null {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -57,7 +62,7 @@ export class ViewerRoot implements ViewerContext {
   readonly actions: UiActions;
   readonly #shadow: ShadowRoot;
   readonly #regions: Region[] = [];
-  readonly #targets = new Map<FocusTarget, (() => void)[]>();
+  readonly #targets = new Map<FocusTarget, Target[]>();
   #renderFailed = false;
 
   /**
@@ -139,20 +144,27 @@ export class ViewerRoot implements ViewerContext {
     };
   }
 
-  target(name: FocusTarget, focus: () => void): () => void {
+  target(name: FocusTarget, focus: () => void, available?: () => boolean): () => void {
     const list = this.#targets.get(name) ?? [];
     this.#targets.set(name, list);
-    list.push(focus);
+    const target: Target = { focus, available: available ?? (() => true) };
+    list.push(target);
     return () => {
-      const i = list.indexOf(focus);
+      const i = list.indexOf(target);
       if (i >= 0) list.splice(i, 1);
     };
   }
 
+  /** Focus the `name` target registered last of those available (in an open region). */
   focus(name: FocusTarget): boolean {
-    const focus = this.#targets.get(name)?.at(-1);
-    focus?.();
-    return focus !== undefined;
+    const list = this.#targets.get(name) ?? [];
+    for (let i = list.length - 1; i >= 0; i--) {
+      const target = list[i] as Target;
+      if (!target.available()) continue;
+      target.focus();
+      return true;
+    }
+    return false;
   }
 
   announce(text: string): void {
@@ -286,7 +298,7 @@ export function uiContext(ctx: ViewerContext, root: ShadowRoot): UiContext {
     ...ctx.actions,
     controller: ctx.controller,
     root,
-    target: (name, focus) => ctx.target(name, focus),
+    target: (name, focus, available) => ctx.target(name, focus, available),
     focus: (name) => ctx.focus(name),
   };
 }

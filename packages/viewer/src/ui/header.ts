@@ -4,7 +4,8 @@
  * errors. How the diff is viewed is chosen in the dock at the bottom (`dock.ts`).
  */
 import type { Topic } from '../controller.js';
-import { attr, h, iconButton, relabel, replace } from '../dom.js';
+import { attr, h, iconButton, moveFocusOut, relabel, replace } from '../dom.js';
+import type { PanelState } from '../index.js';
 import type { UiContext } from './context.js';
 
 /** The kgdiff mark: a soft accent diamond holding a node. */
@@ -24,9 +25,10 @@ export class Header {
   readonly #brand: HTMLElement;
   readonly #versions: HTMLElement;
   readonly #actions: HTMLElement;
+  readonly #title: HTMLElement;
   readonly #end: HTMLElement;
   readonly #helpButton: HTMLButtonElement;
-  readonly #sidebarButton: HTMLButtonElement;
+  readonly sidebarButton: HTMLButtonElement;
 
   readonly #ctx: UiContext;
 
@@ -44,29 +46,25 @@ export class Header {
       'aria-expanded': 'false',
     });
     this.#helpButton = iconButton('help', '', () => ctx.openHelp());
-    this.#sidebarButton = iconButton('sidebar', '', () => ctx.toggleSidebar());
+    this.sidebarButton = iconButton('sidebar', '', () => ctx.toggleSidebar());
     this.#actions = h(
       'div',
       { class: 'hud-actions card', role: 'group' },
       this.menuButton,
       this.#helpButton,
-      this.#sidebarButton,
+      this.sidebarButton,
     );
     // The menu is a sibling of the actions card, not inside it: a backdrop filter would clip
     // the menu's own blur to the card.
     this.#end = h('div', { class: 'hud-end' }, this.#actions);
-    this.el = h(
-      'header',
-      { class: 'hud' },
-      h(
-        'div',
-        { class: 'hud-title card' },
-        this.#brand,
-        h('span', { class: 'header-sep', 'aria-hidden': 'true' }),
-        this.#versions,
-      ),
-      this.#end,
+    this.#title = h(
+      'div',
+      { class: 'hud-title card' },
+      this.#brand,
+      h('span', { class: 'header-sep', 'aria-hidden': 'true' }),
+      this.#versions,
     );
+    this.el = h('header', { class: 'hud' }, this.#title, this.#end);
   }
 
   /** Place the appearance menu under the actions. */
@@ -81,12 +79,30 @@ export class Header {
     attr(this.#actions, 'aria-label', tr.t('header.actions'));
     relabel(this.menuButton, tr.t('action.settings'));
     relabel(this.#helpButton, `${tr.t('action.help')} (?)`);
-    relabel(this.#sidebarButton, `${tr.t('action.sidebar')} (\\)`);
+    relabel(this.sidebarButton, `${tr.t('action.sidebar')} (\\)`);
     this.#renderVersions();
   }
 
   setSidebarState(open: boolean): void {
-    attr(this.#sidebarButton, 'aria-pressed', String(open));
+    attr(this.sidebarButton, 'aria-pressed', String(open));
+  }
+
+  /**
+   * Follow the panel states of the title and the actions (not shown unless open); the sidebar
+   * button goes when the sidebar has nothing to show. Focus in the actions moves to `outside`.
+   */
+  setPanels(
+    title: PanelState,
+    actions: PanelState,
+    sidebar: boolean,
+    outside: () => HTMLElement | null,
+  ): void {
+    attr(this.#title, 'data-panel', title);
+    if (actions !== 'open') moveFocusOut(this.#ctx.root, this.#end, outside);
+    attr(this.#end, 'data-panel', actions);
+    this.#end.inert = actions !== 'open';
+    if (!sidebar) moveFocusOut(this.#ctx.root, this.sidebarButton, outside);
+    this.sidebarButton.hidden = !sidebar;
   }
 
   setMenuState(open: boolean): void {

@@ -68,7 +68,7 @@ kbd {
   position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden;
   background: var(--kgdiff-bg);
 }
-.body { position: relative; flex: 1; min-height: 0; display: flex; }
+.body { position: relative; flex: 1; min-height: 0; display: flex; container-type: inline-size; }
 .stage-wrap { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--kgdiff-bg); container-type: inline-size; }
 .stage { position: absolute; inset: 0; }
 .stage canvas { outline: none; }
@@ -104,7 +104,6 @@ kbd {
   display: flex; align-items: center; gap: 10px; padding: 0 14px 0 10px;
 }
 .hud[data-titled="false"] .header-sep { display: none; }
-:host([header="compact"]) .hud-title { display: none; }
 .hud-end { position: absolute; top: 12px; right: 12px; }
 .hud-actions { display: flex; align-items: center; gap: 2px; padding: 4px; }
 .brand { display: flex; align-items: center; gap: 8px; flex: none; color: var(--kgdiff-text); }
@@ -343,14 +342,33 @@ ${familyRules}
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 .sidebar {
-  position: relative; z-index: 2; flex: none; width: 360px; display: flex; overflow: hidden;
+  /* The canvas keeps at least 320 px next to it. */
+  --sb-w: min(var(--sidebar-w, 360px), max(280px, 100cqw - 320px));
+  position: relative; z-index: 2; flex: none; width: var(--sb-w); display: flex; overflow: hidden;
   background: var(--kgdiff-panel); border-left: 1px solid var(--kgdiff-border);
   transition: width var(--kgdiff-base) var(--kgdiff-ease), border-color var(--kgdiff-base) var(--kgdiff-ease);
 }
+.sidebar.dragging { transition: none; }
 .sidebar[data-open="false"] { width: 0; border-left-color: transparent; }
-.sidebar-inner { width: 360px; flex: none; display: flex; flex-direction: column; min-height: 0; }
+.sidebar-inner { width: var(--sb-w); flex: none; display: flex; flex-direction: column; min-height: 0; }
 .sheet-handle { display: none; }
+/* Separators: the sidebar's width (its left edge) and the list / detail split. */
+.sb-resize { position: absolute; z-index: 3; top: 0; bottom: 0; left: 0; width: 6px; cursor: ew-resize; touch-action: none; }
+.sb-split { position: relative; z-index: 1; flex: none; height: 0; cursor: ns-resize; touch-action: none; }
+.sb-split::before { content: ""; position: absolute; left: 0; right: 0; top: -4px; height: 8px; }
+.sb-resize:hover, .sb-resize:focus-visible, .sidebar.dragging .sb-resize { box-shadow: inset 2px 0 0 var(--kgdiff-accent); }
+.sb-split:hover::after, .sb-split:focus-visible::after {
+  content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: var(--kgdiff-accent);
+}
+.sb-resize:focus-visible, .sb-split:focus-visible { outline: none; }
 .sb-head { flex: none; padding: 12px 12px 8px; display: grid; gap: 10px; border-bottom: 1px solid var(--kgdiff-border); }
+.sb-row { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.sb-row > .sb-title { flex: 1; min-width: 0; }
+.sb-row > .icon-btn { width: 24px; height: 24px; border-radius: 6px; }
+.list-toggle .icon { transition: transform var(--kgdiff-base) var(--kgdiff-ease); }
+.list-toggle[aria-expanded="false"] .icon { transform: rotate(180deg); }
+.filters-btn[data-active="true"] { color: var(--kgdiff-accent-text); }
+.filters-wrap:has(> .filters[hidden]) { display: none; }
 .sb-title { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 2px; }
 .sb-title h2 { margin: 0; font-size: 13px; font-weight: 650; }
 .count-badge {
@@ -454,7 +472,23 @@ ${familyRules}
 .result .status { font-size: 11.5px; color: var(--fam-text); flex: none; }
 
 /* ── Detail panel ────────────────────────────────────────────────────────── */
-.detail { flex: 0 1 auto; max-height: 58%; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid var(--kgdiff-border); background: var(--kgdiff-panel); }
+.detail-wrap { flex: 0 1 auto; max-height: 58%; min-height: 0; display: flex; flex-direction: column; border-top: 1px solid var(--kgdiff-border); background: var(--kgdiff-panel); }
+.detail-wrap:has(> .detail[hidden]) { display: none; }
+.detail-wrap[data-state="collapsed"] { flex: none; }
+.detail-wrap[data-state="collapsed"] > .detail { display: none; }
+/* The list is folded: the detail panel takes the room. */
+.sidebar[data-list="folded"] .detail-wrap { flex: 1 1 auto; max-height: none; }
+/* The user dragged the split. */
+.sidebar[data-split] .detail-wrap:not([data-state="collapsed"]) { flex: none; height: calc(var(--detail-share) * 100%); max-height: none; }
+.detail-bar {
+  flex: none; display: flex; align-items: center; gap: 8px; width: 100%; height: 30px; padding: 0 10px 0 16px;
+  font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kgdiff-text-3);
+}
+.detail-bar:hover { color: var(--kgdiff-text-2); background: var(--kgdiff-hover); }
+.detail-bar .icon { width: 14px; height: 14px; margin-left: auto; transition: transform var(--kgdiff-base) var(--kgdiff-ease); }
+.detail-bar[aria-expanded="false"] .icon { transform: rotate(180deg); }
+.detail { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; background: var(--kgdiff-panel); }
+.detail-wrap > .detail:not([data-empty="true"]) { flex: 1 1 auto; }
 .detail[data-empty="true"] { flex: none; }
 .detail-empty { padding: 16px; display: flex; align-items: center; gap: 12px; color: var(--kgdiff-text-3); font-size: 12.5px; }
 .detail-empty .icon { color: var(--kgdiff-text-3); }
@@ -564,9 +598,13 @@ ins.hl { text-decoration: none; background: var(--kgdiff-added-soft); color: var
 .key-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; border-bottom: 1px solid var(--kgdiff-border); font-size: 12.5px; color: var(--kgdiff-text-2); }
 .key-row .ks { display: inline-flex; align-items: center; gap: 3px; flex: none; color: var(--kgdiff-text-3); font-size: 11px; }
 
+/* ── Panel states: a region not open is not shown (the legend folds to its head) ── */
+[data-panel="hidden"], [data-panel="collapsed"]:not(.legend, .mini-legend) { display: none !important; }
+
 /* ── chrome="none": the graph, its hover tooltip and the legend line only ──── */
-.root[data-chrome="none"] .hud, .root[data-chrome="none"] .sidebar, .root[data-chrome="none"] .dock,
-.root[data-chrome="none"] .map-cluster, .root[data-chrome="none"] .side-chip { display: none !important; }
+/* The regions are hidden by the preset's panel states; the step caption and the swipe chips
+   belong to the canvas. */
+.root[data-chrome="none"] .caption, .root[data-chrome="none"] .side-chip { display: none !important; }
 .stage-wrap[data-selectable="false"] .tooltip .t-hint { display: none; }
 
 /* ── Compact (< 760 px): bottom sheet ────────────────────────────────────── */
@@ -579,6 +617,7 @@ ins.hl { text-decoration: none; background: var(--kgdiff-added-soft); color: var
 .root[data-compact="true"] .sidebar.dragging { transition: none; }
 .root[data-compact="true"] .sidebar[data-open="false"] { height: 0; border-top-color: transparent; box-shadow: none; }
 .root[data-compact="true"] .sidebar-inner { width: 100%; }
+.root[data-compact="true"] .sb-resize { display: none; }
 .root[data-compact="true"] .sheet-handle {
   display: flex; flex: none; justify-content: center; align-items: center; height: 28px; cursor: ns-resize; touch-action: none; border-radius: 14px 14px 0 0;
 }
@@ -594,7 +633,7 @@ ins.hl { text-decoration: none; background: var(--kgdiff-added-soft); color: var
 .root[data-compact="true"] .chrome > .dock { left: 12px; right: 12px; bottom: 26px; }
 .root[data-compact="true"] .transport { width: 100%; min-width: 0; }
 .root[data-compact="true"] .transport .pos { min-width: 48px; }
-.root[data-compact="true"] .detail { max-height: 50%; }
+.root[data-compact="true"] .detail-wrap { max-height: 50%; }
 .root[data-narrow="true"] .versions .tag, .root[data-narrow="true"] .versions .arrow { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
