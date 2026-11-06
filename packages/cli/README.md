@@ -204,7 +204,7 @@ import { main, nodeIO } from 'kgdiff';
 process.exitCode = await main(['a.ttl', 'b.ttl', '--stat'], nodeIO());
 ```
 
-`main(argv, io)` never throws and takes every side effect from `io` (streams, files, clock,
+`main(argv, io)` never throws and takes every side effect from `io` (streams, files, clock, runtime,
 environment, terminal size), so it runs in-process in tests. The renderers (`renderSummary`,
 `renderStat`, `renderNameStatus`, `renderMarkdown`, `renderReportHtml`) and helpers
 (`stringWidth`, `truncate`, `resolveColorLevel`, `parseCommandLine`) are exported too.

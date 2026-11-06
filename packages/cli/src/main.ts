@@ -4,7 +4,7 @@
  * load the diff engine.
  */
 import { parseCommandLine, peekColorMode } from './args.js';
-import { debugEnabled, formatError } from './errors.js';
+import { bugReportUrl, debugEnabled, formatError } from './errors.js';
 import { renderHelp } from './help.js';
 import type { CliIO } from './io.js';
 import { createPainter, isLightBackground, resolveColorLevel } from './style.js';
@@ -50,7 +50,10 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
       resolveColorLevel(peekColorMode(argv), io.env, io.stderrIsTTY),
       light,
     );
-    io.stderr.write(formatError(error, paint, debugEnabled(io.env.DEBUG)));
+    // The platform comes from `io` like every other side effect, so `main` stays runnable
+    // in-process and its output deterministic in tests.
+    const report = bugReportUrl(cliVersion(), io.runtime);
+    io.stderr.write(formatError(error, paint, debugEnabled(io.env.DEBUG), report));
     return 2;
   }
 }

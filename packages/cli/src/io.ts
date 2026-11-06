@@ -52,6 +52,11 @@ export interface CliIO {
   readonly stdinIsTTY: boolean;
   /** Terminal width of stdout, when known. */
   readonly columns: number | undefined;
+  /**
+   * The platform and runtime, for bug reports: `darwin arm64, Node.js v24.11.0`. Optional:
+   * without it the bug report link of an unexpected error names only the CLI version.
+   */
+  readonly runtime?: string;
   /** Clock for `generatedAt` in HTML reports. */
   now(): Date;
   /** Create a fresh private directory (`mkdtemp`) for reports opened with `--open` and no `-o`. */
