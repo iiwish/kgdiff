@@ -52,6 +52,12 @@ the elements is [RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/
   swatches.
 - **Zoom** (+ / − / fit) bottom right. The **minimap** next to it appears only while part of
   the content is out of view.
+- **Slots**: the page's content in `slot="top-start"`, `top-end`, `bottom-start`,
+  `bottom-center` or `bottom-end` of `<kgdiff-viewer>` goes over the canvas (the top ones under
+  the title and the actions, the bottom ones above the chrome of their corner) and is kept clear
+  of fits and flights. A chrome element slotted there replaces the built-in region
+  ([Elements](#elements-experimental)). In the compact layout the zoom buttons move under the
+  actions, the top-end content under them, and the bottom content above the full-width dock.
 
 ## Panels
 
@@ -206,8 +212,15 @@ both its cases, here and in the default map: `x:none` also unbinds Shift+X, unle
 too. Shortcuts:
 `overlay`, `swipe`, `replay`, `scope`, `expand`, `next`, `prev`, `first`, `last`, `fly`,
 `escape`, `play-pause`, `left`, `right` (step in replay, move the divider in swipe, larger with
-Shift), `fit`, `zoom-in`, `zoom-out`, `search`, `review`, `sidebar`, `theme`, `help`. The help
-dialog lists the default keys.
+Shift), `fit`, `zoom-in`, `zoom-out`, `search`, `review`, `sidebar`, `theme`, `help`. The
+shortcuts dialog lists the keys bound now, after `keymap`: a rebound key where it acts, an
+unbound shortcut left out (a row of shortcuts that no longer has one key each splits into a row
+per shortcut).
+
+**Several stages.** `f`, `+` and `−` fit and zoom every stage of the root; the zoom buttons of a
+stage (or a `<kgdiff-zoom>`) act on that stage alone. In a composed root `?` opens the dialog of
+a `<kgdiff-actions>` bound to it (which leaves the sidebar key out), and does nothing without
+one; `\` does nothing there.
 
 ## Embedding API
 
@@ -255,14 +268,21 @@ it starts again) and `kgdiff-layout` `{ panels, sidebarWidth, detailShare, sourc
 experimental in 0.6: names, attributes and markup may change in a minor release before they
 are stable.
 
-| Element                  | What it shows                                                             |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `<kgdiff-root>`          | nothing: the session, keyboard map, live region, events and theme tokens  |
-| `<kgdiff-stage>`         | the canvas, with its chrome (view dock, transport, legend, zoom, minimap) |
-| `<kgdiff-change-list>`   | the "Changes" title, count, review progress and the change rows           |
-| `<kgdiff-change-detail>` | the selected change or node                                               |
-| `<kgdiff-search>`        | node search: a combobox with its own results list                         |
-| `<kgdiff-filters>`       | the family filter chips with their counts, and "Show all"                 |
+| Element                  | What it shows                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `<kgdiff-root>`          | nothing: the session, keyboard map, live region, events and theme tokens          |
+| `<kgdiff-stage>`         | a view: the canvas, with its chrome (view dock, transport, legend, zoom, minimap) |
+| `<kgdiff-change-list>`   | the "Changes" title, count, review progress and the change rows                   |
+| `<kgdiff-change-detail>` | the selected change or node                                                       |
+| `<kgdiff-search>`        | node search: a combobox with its own results list                                 |
+| `<kgdiff-filters>`       | the family filter chips with their counts, and "Show all"                         |
+| `<kgdiff-view-dock>`     | the view dock: mode, changes only, the context hops and "+N"                      |
+| `<kgdiff-transport>`     | the replay transport and "Replay finished · Restart", in replay mode only         |
+| `<kgdiff-legend>`        | the legend: the card (`variant="full"`) or one line (`variant="mini"`)            |
+| `<kgdiff-zoom>`          | zoom in, zoom out and fit, for one stage                                          |
+| `<kgdiff-minimap>`       | one stage's minimap, hidden while the whole graph is in view                      |
+| `<kgdiff-title>`         | the brand, the names of the versions compared and their tags                      |
+| `<kgdiff-actions>`       | the appearance menu (theme, palette, language) and the shortcuts dialog           |
 
 - **`<kgdiff-root>`** has the attributes, properties, methods and events of `<kgdiff-viewer>`
   except the layout's (`panels`, `persist`, `sidebar`, `header`, `chrome`, `legend` and
@@ -278,11 +298,40 @@ are stable.
   further from the corner than the chrome there), and every slotted element is kept clear of
   fits and flights, as the chrome is. Content positioned some other way registers itself:
   `stage.registerObstacle(element)` (returns the function that stops it), also offered to the
-  stage's descendants as a context (`Symbol.for('kgdiff.stage/1')`). A root draws one stage for
-  now; a second stays empty. In this release the stage brings its canvas chrome along (it
-  becomes elements of its own later): its `panels` attribute or property, in the syntax above,
-  opens, collapses or hides the stage's regions `dock`, `transport`, `legend`, `zoom` and
-  `minimap` (`<kgdiff-stage panels="zoom:hidden minimap:hidden">`).
+  stage's descendants as a context (`Symbol.for('kgdiff.stage/1')`). The stage brings its
+  canvas chrome along: its `panels` attribute or property, in the syntax above, opens, collapses
+  or hides the stage's regions `dock`, `transport`, `legend`, `zoom` and `minimap`
+  (`<kgdiff-stage panels="zoom:hidden minimap:hidden">`). Each stage is a region named after the
+  graph (and its version), not a main landmark.
+- **Several stages.** A root draws every stage bound to it, each a view of its own: its canvas,
+  camera, fits and flights, tooltip and minimap. The session is the root's and shared: the
+  selection (every stage brings it into view), the hover (highlighted in every stage), the mode
+  and scope, the replay clock, the filters and the search. `version="before"` or `"after"` (the
+  `version` property; null follows the mode, another value is ignored with a warning) pins a
+  stage to one version whatever the mode: no swipe divider or replay caption then, and a chip
+  names the version. It is the one setting of a view; everything else is the session's.
+- **Chrome elements.** `<kgdiff-view-dock>`, `<kgdiff-transport>`, `<kgdiff-legend>`,
+  `<kgdiff-title>` and `<kgdiff-actions>` show the root's session (`for`, `htmlFor`, `root`, as
+  above). `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one view: the nearest `<kgdiff-stage>`
+  around them, or the one `stage="<id>"` names anywhere on the page (a `<kgdiff-viewer>` is the
+  stage of the ones inside it, and can be named too). The `stageId` property reflects `stage`
+  (`for` would bind a root, and `stage` alone would read as the element it finds); the
+  read-only `stageElement` is the stage found, or null while it waits, as
+  `popoverTargetElement` resolves `popovertarget`.
+- **Replacing the built-in chrome.** Slotted into a stage (or a `<kgdiff-viewer>`), the view
+  dock, transport, legend, zoom or minimap element replaces the stage's own region; the stage's
+  `panels` keeps applying to the regions it still draws, and the element is kept clear of fits
+  and flights like any slotted content. `<kgdiff-title>` and `<kgdiff-actions>` have no
+  counterpart in a stage; the viewer's own title and actions follow its `panels`
+  (`title:hidden`). Placed anywhere else, over the canvas or not, a chrome element is not an
+  obstacle unless registered with `stage.registerObstacle(element)`.
+- **`<kgdiff-legend>`**: `variant="full"` (the default) is the card, folded to its head until
+  opened; the boolean `open` (property `open`) reflects whether it is, the reader's toggle
+  included, as on `<details>`. `variant="mini"` is one line of dots. **`<kgdiff-minimap>`**
+  carries the `overview` attribute (read-only property `overview`) while the whole graph is in
+  view and hides then; `kgdiff-minimap[overview] { display: block }` keeps it.
+  **`<kgdiff-transport>`** shows in replay mode only. **`<kgdiff-actions>`** opens its menu and
+  dialog in place.
 - **Search** opens its results below the box while the query is not blank. The query lives in
   the session: a change list bound to the same root steps aside meanwhile. `/` focuses the
   search registered last that is shown.
@@ -297,7 +346,9 @@ are stable.
   the root do not reach it, so set them on that element too.
 - **Packages.** `import '@kgdiff/viewer'` defines every element. Each also has a subpath that
   defines only it: `@kgdiff/viewer/elements/root`, `…/stage`, `…/change-list`,
-  `…/change-detail`, `…/search`, `…/filters`. `@kgdiff/viewer/panels` is the panels syntax
+  `…/change-detail`, `…/search`, `…/filters`, `…/view-dock`, `…/transport`, `…/legend`,
+  `…/zoom`, `…/minimap`, `…/title`, `…/actions`. The session comes with the root and the
+  renderer with a stage: no other subpath carries either. `@kgdiff/viewer/panels` is the panels syntax
   (`parsePanels`, `PANEL_REGIONS`, `PANEL_STATES`), without DOM, which the CLI's `--panels`
   uses too.
 
@@ -334,6 +385,24 @@ in a way it cannot observe (a class on an ancestor, a stylesheet added later), c
   "Change 3 of 23: Renamed “x” to “y”" on navigation.
 - Contrast tokens are tested; color is never the only cue; reduced motion respected.
 - All features reachable by keyboard; pointer targets ≥ 28 px.
+- Announcements go through the root's one live region, once: the replay's end too, however many
+  transports show it.
+
+**Checks** (`packages/viewer/test/a11y.test.ts`), for the default layout and a composed root:
+every control shown has a name in every state (modes, scope, replay, the menu, the search's
+results, the dialog); one main landmark in the viewer and none from a stage; one live region per
+root; no positive `tabindex`; a region that is not open leaves no tab stop; the shortcuts dialog
+takes focus, keeps it and gives it back. The tab order they pin: in the viewer the canvas, the
+page's content in the top corners, the chrome from the bottom left (legend, zoom, dock), the
+title and actions, then the sidebar (search, filters, list, detail); in a composed root the
+page's order, each element's controls together, slotted content where its slot is.
+
+What they cannot cover (happy-dom has no layout and no styles): what styles hide (container
+queries, the compact layout), focus rings, contrast, reduced motion and target sizes; the
+accessible name as a browser computes it (approximated from `aria-labelledby`, `aria-label`,
+text and `title`); real sequential focus navigation (the order is read from the flat tree;
+checked by hand in Chrome on the dev page, the same order); and what a screen reader says (not
+checked).
 
 ## Internationalization
 

@@ -136,6 +136,23 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 });
 ```
 
+### Your content over the canvas
+
+The canvas has five slots for your page's content: `top-start` and `top-end` (under the title
+and the actions), `bottom-start`, `bottom-center` and `bottom-end`. The graph is framed clear of
+what you put there, at every fit and flight.
+
+```html
+<kgdiff-viewer style="height: 640px">
+  <my-status-card slot="top-end"></my-status-card>
+</kgdiff-viewer>
+```
+
+A chrome element slotted there replaces the built-in region: `<kgdiff-legend slot="bottom-start"
+variant="mini">` instead of the legend card, say ([below](#compose-your-own-layout)); `panels`
+keeps applying to every other region. In the compact layout of a narrow viewer the top-end
+content moves under the zoom buttons and the bottom content above the dock: keep it small there.
+
 
 ## Embed a small looping replay
 
@@ -159,14 +176,21 @@ change in a minor release before they are stable). `<kgdiff-root>` holds the dif
 shows nothing; the other elements show its parts wherever they are: inside it, or anywhere on
 the page with `for="<root id>"`.
 
-| Element                  | Shows                                                       |
-| ------------------------ | ----------------------------------------------------------- |
-| `<kgdiff-root>`          | nothing: it has the viewer's attributes, methods and events |
-| `<kgdiff-stage>`         | the graph, with the view dock, transport, legend and zoom   |
-| `<kgdiff-change-list>`   | the list of changes, with review progress                   |
-| `<kgdiff-change-detail>` | the selected change                                         |
-| `<kgdiff-search>`        | node search, its results in a popup                         |
-| `<kgdiff-filters>`       | the filter chips                                            |
+| Element                  | Shows                                                                             |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `<kgdiff-root>`          | nothing: it has the viewer's attributes, methods and events                       |
+| `<kgdiff-stage>`         | the graph, with its own view dock, transport, legend, zoom buttons and minimap    |
+| `<kgdiff-change-list>`   | the list of changes, with review progress                                         |
+| `<kgdiff-change-detail>` | the selected change                                                               |
+| `<kgdiff-search>`        | node search, its results in a popup                                               |
+| `<kgdiff-filters>`       | the filter chips                                                                  |
+| `<kgdiff-view-dock>`     | the view dock: the mode, changes only and the context hops                        |
+| `<kgdiff-transport>`     | the replay transport, in replay mode                                              |
+| `<kgdiff-legend>`        | the legend: a card (`open` reflects whether it is) or one line (`variant="mini"`) |
+| `<kgdiff-zoom>`          | zoom in, zoom out and fit, for one stage                                          |
+| `<kgdiff-minimap>`       | one stage's minimap, while part of the graph is out of view                       |
+| `<kgdiff-title>`         | the brand and the names of the versions compared                                  |
+| `<kgdiff-actions>`       | the appearance menu (theme, colors, language) and the shortcuts dialog            |
 
 ### The change list in your own sidebar
 
@@ -193,13 +217,62 @@ the page with `for="<root id>"`.
 - Lay the elements out with your own CSS; give the stage and the list a height.
   `<kgdiff-root>` renders as `display: contents`, so its children take part in your layout.
 - The stage's slots (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`)
-  place your content over the canvas, and the graph is framed clear of it. For content you
-  position yourself, call `stage.registerObstacle(element)`.
+  place your content over the canvas, and the graph is framed clear of it. A chrome element
+  slotted there (the view dock, transport, legend, zoom buttons or minimap) replaces the
+  stage's own, and the stage's `panels` keeps applying to the rest.
+- Anywhere else, over the canvas or not, an element is not kept clear of fits and flights
+  unless you register it: `stage.registerObstacle(element)`.
+- `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one stage: the nearest one around them, or the
+  one `stage="<id>"` names anywhere on the page (`zoom.stageId`, and `zoom.stageElement` for
+  the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements
+  show the root's session, like the change list.
 - The keyboard map belongs to the root: `j` / `k`, `x`, `/` and the rest work in every element
-  bound to it, and `/` focuses the search. `shortcuts` and `keymap` go on the root.
+  bound to it, `/` focuses the search and `?` opens the shortcuts dialog of a
+  `<kgdiff-actions>`, which lists the keys bound after `keymap`. `shortcuts` and `keymap` go on
+  the root. The `+`, `−` and `f` keys zoom and fit every stage of the root.
 - Composed elements remember nothing: your page owns the layout.
 - Each element has a subpath that defines only it: `@kgdiff/viewer/elements/root`, `/stage`,
-  `/change-list`, `/change-detail`, `/search`, `/filters`.
+  `/change-list`, `/change-detail`, `/search`, `/filters`, `/view-dock`, `/transport`,
+  `/legend`, `/zoom`, `/minimap`, `/title`, `/actions`.
+
+### Before and after, side by side
+
+```html
+<kgdiff-root id="diff">
+  <div class="pair">
+    <kgdiff-stage version="before" panels="dock:hidden transport:hidden"></kgdiff-stage>
+    <kgdiff-stage version="after" panels="dock:hidden transport:hidden legend:hidden"></kgdiff-stage>
+  </div>
+  <kgdiff-change-list></kgdiff-change-list>
+</kgdiff-root>
+
+<style>
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 480px; }
+  kgdiff-change-list { display: block; height: 240px; }
+</style>
+```
+
+One root, two stages: each draws one version whatever the mode (`version="before"`,
+`version="after"`, with a chip that names it) and has its own camera, zoom buttons and minimap.
+The selection, the hover, the filters and the search are the root's: pick a change in the list
+(or press `j`) and both stages bring it into view, each framing it in its own version; a node
+hovered in one is highlighted in both. Add `<kgdiff-view-dock>` for the changes-only scope, or
+`<kgdiff-title>` and `<kgdiff-actions>` above the pair.
+
+### A replay of a stage and a transport
+
+```html
+<kgdiff-root mode="replay" loop>
+  <kgdiff-stage panels="dock:hidden transport:hidden legend:hidden" style="height: 360px">
+  </kgdiff-stage>
+  <kgdiff-transport></kgdiff-transport>
+</kgdiff-root>
+```
+
+The transport plays, steps and scrubs the root's replay from under the canvas instead of over
+it; it shows in replay mode only. Slotted into the stage instead,
+`<kgdiff-transport slot="bottom-center">` replaces the stage's own and floats over the canvas,
+kept clear of the graph (keep `dock:hidden`).
 
 ## Theme it with CSS
 
