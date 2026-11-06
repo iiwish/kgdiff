@@ -17,14 +17,14 @@ import { defineConfig, type Plugin } from 'vite';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 
-/** Collapse the CSS template literal in `styles.ts` (comments, whitespace). */
+/** Collapse the CSS template literals in `styles.ts` (comments, whitespace). */
 function minifyCss(): Plugin {
   return {
     name: 'kgdiff-minify-css',
     enforce: 'pre',
     transform(code, id) {
       if (!id.endsWith('/viewer/src/styles.ts')) return null;
-      return code.replace(/\/\* css \*\/ `([\s\S]*?)`/, (_m, css: string) => {
+      return code.replace(/\/\* css \*\/ `([\s\S]*?)`/g, (_m, css: string) => {
         const min = css
           .replace(/\/\*[\s\S]*?\*\//g, '')
           .replace(/\s+/g, ' ')

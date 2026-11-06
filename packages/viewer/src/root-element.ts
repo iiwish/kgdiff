@@ -19,6 +19,7 @@ import type {
   ViewerMode,
   ViewerScope,
 } from './index.js';
+import { type Keymap, toKeymap } from './keyboard.js';
 import { assertPayload } from './payload.js';
 import {
   DEFAULT_LOOP_DELAY,
@@ -31,7 +32,7 @@ import {
   toScope,
   toTheme,
 } from './prefs.js';
-import { ViewerRoot } from './root.js';
+import { isRoot, ViewerRoot } from './root.js';
 import { ALL_TOPICS, type Topic } from './session.js';
 import type { UiActions } from './ui/context.js';
 
@@ -46,7 +47,13 @@ export const ROOT_ATTRIBUTES = [
   'loop',
   'loop-delay',
   'pause-on-hover',
+  'shortcuts',
+  'keymap',
 ] as const;
+
+/** Where keyboard shortcuts apply (`shortcuts`). */
+export type ShortcutScope = 'scoped' | 'global' | 'none';
+const SCOPES: readonly ShortcutScope[] = ['scoped', 'global', 'none'];
 
 /** Properties a page may set before the element is defined (they shadow the accessors). */
 const UPGRADED = [
@@ -59,6 +66,8 @@ const UPGRADED = [
   'loopDelay',
   'pauseOnHover',
   'payload',
+  'shortcuts',
+  'keymap',
 ] as const;
 
 /** Keys the page itself scrolls with: never taken at document level. */
@@ -103,9 +112,19 @@ export abstract class RootElement extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: 'open' });
-    this.root = new ViewerRoot(this, this.shadow, this.actions(), (type) => {
-      if (type === 'kgdiff-select' || type === 'kgdiff-mode') this.#writeHash();
-    });
+    this.root = new ViewerRoot(
+      this,
+      this.shadow,
+      this.actions(),
+      (type) => {
+        if (type === 'kgdiff-select' || type === 'kgdiff-mode') this.#writeHash();
+      },
+      {
+        sheets: (doc) => this.sheets(doc),
+        key: (e) => this.#key(e),
+        hover: (over) => this.pointerOver(over),
+      },
+    );
     this.controller = this.root.controller;
     this.controller.locale = toLocale(this.getAttribute('locale')) ?? detectLocale();
   }
@@ -123,6 +142,9 @@ export abstract class RootElement extends HTMLElement {
 
   /** An observed attribute that is not a root attribute changed. */
   protected attributeChanged(_name: string, _value: string | null): void {}
+
+  /** The sheets the shadow root adopts before the token set. */
+  protected abstract sheets(doc: Document): readonly CSSStyleSheet[];
 
   /** Properties of the subclass a page may set before the element is defined. */
   protected upgradedProperties(): readonly string[] {
@@ -197,6 +219,12 @@ export abstract class RootElement extends HTMLElement {
         break;
       case 'pause-on-hover':
         this.#applyHold();
+        break;
+      case 'shortcuts':
+        this.root.shortcutsOff = this.shortcuts === 'none';
+        break;
+      case 'keymap':
+        this.#setKeymap(value);
         break;
       default:
         this.attributeChanged(name, value);
@@ -334,6 +362,42 @@ export abstract class RootElement extends HTMLElement {
     else this.setAttribute('pause-on-hover', 'false');
   }
 
+  /**
+   * Where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root
+   * (keys of elements bound with `for` are forwarded to it). `global`: also when nothing on the
+   * page has focus, for the first such root, except the keys pages scroll with; the boolean
+   * `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps
+   * its arrow keys).
+   */
+  get shortcuts(): ShortcutScope {
+    const v = this.getAttribute('shortcuts') as ShortcutScope | null;
+    if (v !== null && SCOPES.includes(v)) return v;
+    return this.hasAttribute('global-shortcuts') ? 'global' : 'scoped';
+  }
+
+  set shortcuts(value: ShortcutScope) {
+    if (SCOPES.includes(value)) this.setAttribute('shortcuts', value);
+    else this.removeAttribute('shortcuts');
+  }
+
+  /**
+   * Keys bound to other shortcuts, or unbound with null: `{ x: null, r: 'review' }`, or as the
+   * `keymap` attribute `"x:none r:review"`. Keys not named keep the default map.
+   */
+  get keymap(): Keymap | null {
+    return this.root.keymap;
+  }
+
+  set keymap(value: Keymap | string | null) {
+    this.#setKeymap(value);
+  }
+
+  #setKeymap(value: unknown): void {
+    const { keymap, invalid } = toKeymap(value);
+    if (invalid.length > 0) console.warn(`[kgdiff] ignoring invalid keymap: ${invalid.join(' ')}`);
+    this.root.keymap = keymap;
+  }
+
   get payload(): ReportPayload | null {
     return this.#currentPayload;
   }
@@ -415,6 +479,15 @@ export abstract class RootElement extends HTMLElement {
     this.controller.fail(error);
   }
 
+  /**
+   * Draw the canvas with the `--kgdiff-*` tokens as computed now. Call it after changing tokens
+   * in a way the root cannot observe (a class on an ancestor, a stylesheet); theme, palette and
+   * system color scheme changes are followed by themselves.
+   */
+  refreshTheme(): void {
+    this.controller.refreshTheme();
+  }
+
   // ─── Internals ────────────────────────────────────────────────────────────
 
   protected reflect(name: string, value: string | null): void {
@@ -476,16 +549,23 @@ export abstract class RootElement extends HTMLElement {
   }
 
   #onKeyDown(e: KeyboardEvent): void {
-    if (e.defaultPrevented || e.isComposing || !this.keysEnabled()) return;
-    const path = e.composedPath();
-    if (!path.includes(this)) {
-      // Outside the component only with `global-shortcuts`, when nothing else has focus, for
-      // the first such viewer, and never the keys pages scroll with.
-      if (!this.hasAttribute('global-shortcuts') || PAGE_KEYS.has(e.key)) return;
+    // The nearest root takes a key pressed inside it; an outer one leaves it alone.
+    const nearest = e.composedPath().find(isRoot);
+    if (nearest !== undefined && nearest !== this) return;
+    if (nearest === undefined) {
+      // Outside every root only with `shortcuts="global"`, when nothing else has focus, for the
+      // first such root, and never the keys pages scroll with.
+      if (this.shortcuts !== 'global' || PAGE_KEYS.has(e.key)) return;
       const active = document.activeElement;
       if (active && active !== document.body && active !== document.documentElement) return;
-      if (connected.find((v) => v.hasAttribute('global-shortcuts')) !== this) return;
+      if (connected.find((v) => v.shortcuts === 'global') !== this) return;
     }
+    this.#key(e);
+  }
+
+  /** A key for this root: pressed inside it, or forwarded by an element bound with `for`. */
+  #key(e: KeyboardEvent): void {
+    if (e.defaultPrevented || e.isComposing || !this.keysEnabled()) return;
     if (this.interceptKey(e)) return;
     this.root.handleKey(e);
   }

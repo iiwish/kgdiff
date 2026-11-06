@@ -50,42 +50,12 @@ import { LEGACY_CHANGES_MODE, toLocale, toMode, toPalette, toScope, toTheme } fr
 import { ReplayClock } from './replay.js';
 import { ReviewStore, reviewKey, type StorageLike } from './review-store.js';
 import { type SearchHit, SearchIndex } from './search.js';
+import { ALL_TOPICS, type Topic } from './topics.js';
 
 export type Status = 'idle' | 'loading' | 'ready' | 'error';
 
-export type Topic =
-  | 'status'
-  | 'data'
-  | 'mode'
-  | 'selection'
-  | 'filters'
-  | 'search'
-  | 'review'
-  | 'replay'
-  | 'hover'
-  | 'theme'
-  | 'locale'
-  | 'focus'
-  | 'swipe'
-  | 'overview';
-
-/** Every topic: a full render. */
-export const ALL_TOPICS: ReadonlySet<Topic> = new Set<Topic>([
-  'status',
-  'data',
-  'mode',
-  'selection',
-  'filters',
-  'search',
-  'review',
-  'replay',
-  'hover',
-  'theme',
-  'locale',
-  'focus',
-  'swipe',
-  'overview',
-]);
+export type { Topic } from './topics.js';
+export { ALL_TOPICS } from './topics.js';
 
 /** What the session reports (`<kgdiff-viewer>` turns these into events and announcements). */
 export interface SessionHost {

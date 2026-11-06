@@ -1,13 +1,19 @@
 /**
- * @kgdiff/viewer: the drop-in `<kgdiff-viewer>` web component.
+ * @kgdiff/viewer: the drop-in `<kgdiff-viewer>` web component, and the elements it is made of.
  *
- * Importing this module defines `<kgdiff-viewer>` (if not yet defined).
- * Behaviour: docs/interaction.md. Visuals: docs/visual-language.md.
+ * Importing this module defines `<kgdiff-viewer>` and the experimental elements
+ * `<kgdiff-root>`, `<kgdiff-stage>`, `<kgdiff-change-list>`, `<kgdiff-change-detail>`,
+ * `<kgdiff-search>` and `<kgdiff-filters>` (each not yet defined; each also has a subpath,
+ * `@kgdiff/viewer/elements/<name>`, that defines only it). Behaviour: docs/interaction.md.
+ * Visuals: docs/visual-language.md. Design: docs/rfcs/0001-viewer-components.md.
  *
- * Modules: `element.ts` (the custom element), `controller.ts` (state, load pipeline, replay
- * clock, camera follow), `ui/*` (header, sidebar, detail panel, canvas chrome, popovers),
- * `i18n.ts`, `styles.ts`, `review-store.ts`, `hash-sync.ts`, `payload.ts`, `text-diff.ts`,
- * `keyboard.ts`.
+ * Modules: `session.ts` (the headless diff session), `controller.ts` (its canvas view),
+ * `root.ts` / `root-element.ts` (the root: keyboard map, live region, events, tokens,
+ * preferences), `element.ts` (the default layout, with `panels.ts` and `layout-store.ts`),
+ * `elements/*` (the public elements), `ui/*` (the regions: stage, change list, search, filters,
+ * detail panel, header, sidebar, popovers), `context.ts` / `bind.ts` (how they find their root),
+ * `i18n.ts`, `styles.ts`, `theme.ts`, `review-store.ts`, `hash-sync.ts`, `payload.ts`,
+ * `text-diff.ts`, `keyboard.ts`.
  */
 import type {
   Delta,
@@ -23,6 +29,14 @@ import type { ParseOptions } from '@kgdiff/formats';
 import type { LayoutJSON, LayoutOptions } from '@kgdiff/layout';
 import type { PaletteName } from '@kgdiff/scene';
 import { KgdiffViewer } from './element.js';
+import type { Keymap } from './keyboard.js';
+import type { ShortcutScope } from './root-element.js';
+import './elements/root.js';
+import './elements/stage.js';
+import './elements/change-list.js';
+import './elements/change-detail.js';
+import './elements/search.js';
+import './elements/filters.js';
 import { hydrate } from './payload.js';
 import { viewerTags } from './registry.js';
 
@@ -35,6 +49,8 @@ export type ThemePreference = 'auto' | 'light' | 'dark';
 export type ViewerChrome = 'full' | 'none';
 /** The legend card, one line of dots, no legend, or `auto` (the card, one line without chrome). */
 export type ViewerLegend = 'auto' | 'full' | 'mini' | 'none';
+export type { Keymap, ShortcutName } from './keyboard.js';
+export type { ShortcutScope } from './root-element.js';
 
 /**
  * A region of the default layout (`KgdiffViewerElement.panels`): the change list, the detail
@@ -165,21 +181,12 @@ export interface FitOptions {
 }
 
 /**
- * Public surface of the `<kgdiff-viewer>` element.
+ * What `<kgdiff-viewer>` and `<kgdiff-root>` share: a root of a diff session, its preferences,
+ * methods and events (`KgdiffViewerEventMap`, but `kgdiff-layout`).
  *
- * Boolean attributes: `sync-hash` (deep links `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`) and
- * `global-shortcuts`: keyboard shortcuts normally apply only while focus is inside the viewer;
- * with this attribute they also apply when nothing on the page has focus (for full-page
- * viewers such as HTML reports), except the keys pages scroll with (arrows, Home / End, Page
- * Up / Down, Space).
- *
- * `header="compact"` leaves the brand and the compared names out of the canvas, for hosts that
- * show their own (such as the playground).
- *
- * A small looping replay for another page: `mode="replay" chrome="none" loop` (with a height of
- * your choosing, such as 320px).
+ * Boolean attribute `sync-hash`: deep links `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`.
  */
-export interface KgdiffViewerElement extends HTMLElement {
+export interface KgdiffRootElement extends HTMLElement {
   /** Reflected to the `mode` attribute. Default `overlay`. */
   get mode(): ViewerMode;
   /** The legacy `changes` mode sets `overlay` + scope `changes`. */
@@ -195,6 +202,72 @@ export interface KgdiffViewerElement extends HTMLElement {
   palette: PaletteName;
   /** Reflected to the `locale` attribute. Default from `navigator.language`. */
   locale: Locale;
+  /**
+   * Reflected to the boolean `loop` attribute. In `replay` mode the replay plays by itself and
+   * starts again `loopDelay` ms after it ends. `pause()` stops it until `play()`. Default false.
+   */
+  loop: boolean;
+  /** Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200. */
+  loopDelay: number;
+  /**
+   * With `loop`, the replay pauses while the pointer is over the graph and continues when it
+   * leaves (a mouse or pen; not touch). Reflected as `pause-on-hover="false"` when off. Default true.
+   */
+  pauseOnHover: boolean;
+  /** Set a precomputed report (no diff / layout work in the browser). */
+  payload: ReportPayload | null;
+  /** Parse (if needed), diff, lay out and show two graphs. Rejects with a KgdiffError on bad input. */
+  load(options: LoadOptions): Promise<void>;
+  /** Select a hunk by id (null clears) and bring it into view. */
+  selectHunk(id: string | null): void;
+  next(): void;
+  prev(): void;
+  play(): void;
+  pause(): void;
+  /** Fit the whole graph, labels included, into view. */
+  fit(options?: FitOptions): Promise<void>;
+  /** The full delta of the current diff. */
+  exportDelta(): Delta;
+  reviewState(): ReviewState;
+  setReviewed(hunkId: string, reviewed: boolean): void;
+  /**
+   * Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the
+   * default): while focus is inside the root, or in an element bound to it with `for` (those
+   * forward their keys). `global`: also when nothing on the page has focus (for full-page
+   * viewers such as HTML reports), for the first such root, except the keys pages scroll with
+   * (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an
+   * alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and
+   * Enter).
+   */
+  shortcuts: ShortcutScope;
+  /**
+   * Single keys of the keyboard map bound to another shortcut, or unbound with `null`:
+   * `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text,
+   * `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; keys
+   * not named keep the default map; entries naming no shortcut are ignored with a warning.
+   */
+  get keymap(): Keymap | null;
+  set keymap(value: Keymap | string | null);
+  /**
+   * Draw the canvas with the `--kgdiff-*` tokens as computed now: after the page changed
+   * tokens in a way the root cannot observe (a class on an ancestor, a new stylesheet). Theme,
+   * palette and system color scheme changes are followed by themselves.
+   */
+  refreshTheme(): void;
+}
+
+/**
+ * Public surface of the `<kgdiff-viewer>` element: a root (`KgdiffRootElement`) with the
+ * default layout.
+ *
+ * `header="compact"` leaves the brand and the compared names out of the canvas, for hosts that
+ * show their own (such as the playground): the preset `panels="title:hidden"`.
+ * `sidebar="closed"` starts with the sidebar folded (`\` and the sidebar button open it).
+ *
+ * A small looping replay for another page: `mode="replay" chrome="none" loop` (with a height of
+ * your choosing, such as 320px).
+ */
+export interface KgdiffViewerElement extends KgdiffRootElement {
   /**
    * Reflected to the `chrome` attribute. `none` shows the graph alone: no title, actions, view
    * dock (with the step caption and playback bar), change list, zoom buttons, minimap or legend
@@ -227,34 +300,29 @@ export interface KgdiffViewerElement extends HTMLElement {
    * diff has, then unchanged), `none`. Default `auto`: `full`, or `mini` with `chrome="none"`.
    */
   legend: ViewerLegend;
+}
+
+/**
+ * An element bound to a root (experimental): `<kgdiff-change-list>`, `<kgdiff-change-detail>`,
+ * `<kgdiff-search>`, `<kgdiff-filters>`. It shows the session of the nearest `<kgdiff-root>` or
+ * `<kgdiff-viewer>` around it (across shadow roots), or of the one named by its `for`
+ * attribute (an element id) anywhere on the page; a root defined or connected later is found
+ * then.
+ */
+export type KgdiffBoundElement = HTMLElement;
+
+/**
+ * `<kgdiff-stage>` (experimental): the canvas, with five named slots for the page's content
+ * over it (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`). Every
+ * slotted element is kept clear of fits and flights.
+ */
+export interface KgdiffStageElement extends HTMLElement {
   /**
-   * Reflected to the boolean `loop` attribute. In `replay` mode the replay plays by itself and
-   * starts again `loopDelay` ms after it ends. `pause()` stops it until `play()`. Default false.
+   * Keep `element` (content over the canvas the stage does not place) clear of fits and
+   * flights; returns the function that stops it. Also on the stage context descendants can
+   * request (`Symbol.for('kgdiff.stage/1')`).
    */
-  loop: boolean;
-  /** Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200. */
-  loopDelay: number;
-  /**
-   * With `loop`, the replay pauses while the pointer is over the graph and continues when it
-   * leaves (a mouse or pen; not touch). Reflected as `pause-on-hover="false"` when off. Default true.
-   */
-  pauseOnHover: boolean;
-  /** Set a precomputed report (no diff / layout work in the browser). */
-  payload: ReportPayload | null;
-  /** Parse (if needed), diff, lay out and show two graphs. Rejects with a KgdiffError on bad input. */
-  load(options: LoadOptions): Promise<void>;
-  /** Select a hunk by id (null clears) and bring it into view. */
-  selectHunk(id: string | null): void;
-  next(): void;
-  prev(): void;
-  play(): void;
-  pause(): void;
-  /** Fit the whole graph, labels included, into view. */
-  fit(options?: FitOptions): Promise<void>;
-  /** The full delta of the current diff. */
-  exportDelta(): Delta;
-  reviewState(): ReviewState;
-  setReviewed(hunkId: string, reviewed: boolean): void;
+  registerObstacle(element: Element): () => void;
 }
 
 /**
