@@ -75,7 +75,9 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     const canvas = stage.canvasHost.querySelector('canvas');
     if (canvas) {
       canvas.tabIndex = 0;
-      canvas.addEventListener('pointerdown', () => canvas.focus({ preventScroll: true }));
+      const focusCanvas = (): void => canvas.focus({ preventScroll: true });
+      canvas.addEventListener('pointerdown', focusCanvas);
+      release(() => canvas.removeEventListener('pointerdown', focusCanvas));
     }
     const hover = (over: boolean) => (e: PointerEvent) => {
       if (e.pointerType !== 'touch') ctx.hover(over);
