@@ -1,12 +1,13 @@
 {
   "name": "@kgdiff/viewer",
   "version": "0.5.0",
-  "description": "Drop-in <kgdiff-viewer> web component: overlay, swipe, replay and changes-only views with review workflow.",
+  "description": "Drop-in <kgdiff-viewer> web component and the elements it is made of: overlay, swipe, replay and changes-only views with review workflow.",
   "keywords": [
     "kgdiff",
     "web-component",
     "viewer",
-    "diff-viewer"
+    "diff-viewer",
+    "custom-elements"
   ],
   "homepage": "https://github.com/iiwish/kgdiff/tree/main/packages/viewer#readme",
   "bugs": {
@@ -20,11 +21,49 @@
   "license": "MIT",
   "author": "iiwish",
   "type": "module",
-  "sideEffects": true,
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/elements/*.js",
+    "./dist/standalone.js",
+    "./dist/standalone-compute.js",
+    "./dist/standalone/*.js",
+    "./src/index.ts",
+    "./src/elements/*.ts",
+    "./src/standalone.ts",
+    "./src/standalone-compute.ts"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./elements/root": {
+      "types": "./dist/elements/root.d.ts",
+      "default": "./dist/elements/root.js"
+    },
+    "./elements/stage": {
+      "types": "./dist/elements/stage.d.ts",
+      "default": "./dist/elements/stage.js"
+    },
+    "./elements/change-list": {
+      "types": "./dist/elements/change-list.d.ts",
+      "default": "./dist/elements/change-list.js"
+    },
+    "./elements/change-detail": {
+      "types": "./dist/elements/change-detail.d.ts",
+      "default": "./dist/elements/change-detail.js"
+    },
+    "./elements/search": {
+      "types": "./dist/elements/search.d.ts",
+      "default": "./dist/elements/search.js"
+    },
+    "./elements/filters": {
+      "types": "./dist/elements/filters.d.ts",
+      "default": "./dist/elements/filters.js"
+    },
+    "./session": {
+      "types": "./dist/headless.d.ts",
+      "default": "./dist/headless.js"
     },
     "./compute": {
       "types": "./dist/compute.d.ts",

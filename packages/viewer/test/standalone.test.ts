@@ -1,7 +1,8 @@
 // @vitest-environment node
 /**
  * The standalone IIFE builds, stays self-contained (no parsers, no compute module inside) and
- * within its size budget. Prints the minified and gzip sizes.
+ * within its size budget. Prints the minified and gzip sizes, and those of each ESM subpath
+ * bundled on its own (what a host that imports only it ships).
  */
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,6 +13,7 @@ import { build } from 'vite';
 import { afterAll, describe, expect, it } from 'vitest';
 
 const configFile = fileURLToPath(new URL('../vite.config.ts', import.meta.url));
+const src = (file: string): string => fileURLToPath(new URL(`../src/${file}`, import.meta.url));
 const outDir = mkdtempSync(join(tmpdir(), 'kgdiff-viewer-standalone-'));
 
 /** Target for the standalone viewer, min + gzip, without formats: not met yet. */
@@ -57,4 +59,62 @@ describe('standalone bundle', () => {
     expect(viewer.gzip / 1024).toBeLessThan(GUARD_KB);
     expect(compute.text).toContain('KgdiffCompute');
   }, 60_000);
+});
+
+/** The package's entry points (`exports`), by subpath. */
+const SUBPATHS: Readonly<Record<string, string>> = {
+  '.': 'index.ts',
+  'elements/root': 'elements/root.ts',
+  'elements/stage': 'elements/stage.ts',
+  'elements/change-list': 'elements/change-list.ts',
+  'elements/change-detail': 'elements/change-detail.ts',
+  'elements/search': 'elements/search.ts',
+  'elements/filters': 'elements/filters.ts',
+  session: 'headless.ts',
+};
+
+describe('ESM subpaths', () => {
+  it('bundle on their own; an element without the root leaves the session out', async () => {
+    // `.` defines everything: the standalone build, less starting the hydration.
+    const sizes = await Promise.all(
+      Object.entries(SUBPATHS).map(async ([name, entry]) => {
+        const dir = join(outDir, 'esm', name.replace('/', '-'));
+        await build({
+          configFile,
+          logLevel: 'silent',
+          build: {
+            outDir: dir,
+            emptyOutDir: true,
+            // One minified file each (as a host's bundler would ship it), not ESM chunks.
+            lib: {
+              entry: src(entry),
+              formats: ['iife'],
+              name: 'Entry',
+              fileName: () => 'entry.js',
+            },
+          },
+        });
+        const text = readFileSync(join(dir, 'entry.js'), 'utf8');
+        return {
+          name,
+          text,
+          min: Buffer.byteLength(text),
+          gzip: gzipSync(text, { level: 9 }).length,
+        };
+      }),
+    );
+    const kb = (n: number) => `${(n / 1024).toFixed(1)} kB`;
+    console.info(
+      `[subpaths] ${sizes.map((s) => `${s.name} ${kb(s.min)} min, ${kb(s.gzip)} gzip`).join(' · ')}`,
+    );
+    const of = (name: string) => sizes.find((s) => s.name === name) as (typeof sizes)[number];
+    // The session's load pipeline and review store come with the root, not with an element.
+    for (const name of ['elements/change-list', 'elements/search', 'elements/filters']) {
+      expect(of(name).text, name).not.toContain('kgdiff:review:');
+      expect(of(name).gzip, name).toBeLessThan(of('elements/root').gzip);
+    }
+    expect(of('elements/root').text).toContain('kgdiff:review:');
+    expect(of('session').text).not.toContain('customElements.define');
+    for (const s of sizes) expect(s.gzip, s.name).toBeLessThanOrEqual(of('.').gzip);
+  }, 120_000);
 });
