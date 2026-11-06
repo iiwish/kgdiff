@@ -25,6 +25,16 @@
       #b { display: block; height: 320px; }
       #c { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
       #c kgdiff-change-list { height: 260px; border-radius: 10px; overflow: hidden; }
+      /* D: two stages of one root side by side, the chrome as elements around them. */
+      #d { display: grid; grid-template-rows: auto 420px auto 220px; gap: 10px; }
+      #d .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      #d .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-height: 0; }
+      #d kgdiff-stage { border-radius: 10px; overflow: hidden; }
+      #d kgdiff-transport { justify-self: center; }
+      #d kgdiff-change-list { border-radius: 10px; overflow: hidden; }
+      /* E: a replay of only a stage and a transport. */
+      #e { display: grid; grid-template-rows: 300px auto; gap: 10px; justify-items: center; }
+      #e kgdiff-stage { width: 100%; border-radius: 10px; overflow: hidden; }
       button { font: inherit; }
     </style>
   </head>
@@ -61,6 +71,37 @@
         <h2>B's search (for="b")</h2>
         <kgdiff-search for="b"></kgdiff-search>
       </div>
+    </section>
+    <section>
+      <h2>D · side by side</h2>
+      <p>
+        Two stages of one root, pinned to <code>before</code> and <code>after</code>: one
+        selection, filters and search, each its own camera, zoom buttons and minimap. The
+        title, view dock, actions, transport and legend are elements of the page.
+      </p>
+      <kgdiff-root id="d" locale="en">
+        <div class="bar">
+          <kgdiff-title></kgdiff-title>
+          <kgdiff-view-dock></kgdiff-view-dock>
+          <kgdiff-actions></kgdiff-actions>
+        </div>
+        <div class="pair">
+          <kgdiff-stage id="d-before" version="before" panels="dock:hidden transport:hidden">
+            <kgdiff-legend slot="bottom-start" variant="mini"></kgdiff-legend>
+          </kgdiff-stage>
+          <kgdiff-stage id="d-after" version="after" panels="dock:hidden transport:hidden legend:hidden">
+          </kgdiff-stage>
+        </div>
+        <kgdiff-transport></kgdiff-transport>
+        <kgdiff-change-list></kgdiff-change-list>
+      </kgdiff-root>
+    </section>
+    <section>
+      <h2>E · a replay of a stage and a transport</h2>
+      <kgdiff-root id="e" mode="replay" locale="en">
+        <kgdiff-stage panels="dock:hidden transport:hidden legend:hidden"></kgdiff-stage>
+        <kgdiff-transport></kgdiff-transport>
+      </kgdiff-root>
     </section>
     <script type="module" src="./main.ts"></script>
   </body>
