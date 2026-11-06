@@ -1,0 +1,16 @@
+kgdiff  Enterprise credit KG ontology v12 → v13             74 nodes · 171 edges
+
+  +1 added   −1 removed   ~6 modified   ⇄4 restructured   23 changes in 12 hunks
+  ++++−−−~~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      1        1         9         64
+  edges      4        4         4        163
+
+  By type
+  Role      4 +~~~
+  Entity    2 ~~
+  Event     2 −~
+  Asset     1 ~
+  Measure   1 ~
+  Relation  1 ~

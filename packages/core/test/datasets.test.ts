@@ -57,6 +57,7 @@ const sorted = (values: Iterable<string>): string[] => [...values].sort();
 
 const DATASETS = [
   'enterprise-kg',
+  'enterprise-kg-en',
   'llm-extraction',
   'data-lineage',
   'ontology-release',
@@ -270,5 +271,103 @@ describe.each(DATASETS)('example dataset %s', (dataset) => {
         d.hunks.map((h) => ({ id: h.id, kind: h.kind, phase: h.phase, anchor: h.anchor })),
       ).toEqual(expected.hunks);
     }
+  });
+});
+
+/**
+ * enterprise-kg-en is enterprise-kg in English: the same ids, edges, flags and column mappings,
+ * with every text translated one for one, so both report the same changes. Editing one of the
+ * two without the other fails here.
+ */
+describe('enterprise-kg-en translates enterprise-kg', () => {
+  interface Node {
+    readonly id: string;
+    readonly label?: string;
+    readonly type?: string | string[];
+    readonly aliases?: string[];
+    readonly attrs?: Record<string, unknown>;
+    readonly [key: string]: unknown;
+  }
+  interface Edge {
+    readonly source: string;
+    readonly predicate: string;
+    readonly target: string;
+    readonly label?: string;
+  }
+  interface Graph {
+    readonly nodes: Node[];
+    readonly edges: Edge[];
+  }
+  const graphs = (id: string): Graph[] =>
+    ['before.json', 'after.json'].map((f) => read<Graph>(`${id}/${f}`));
+  const zh = graphs('enterprise-kg');
+  const en = graphs('enterprise-kg-en');
+  const chinese = /[\u3000-\u9fff]/;
+
+  /** One English text per Chinese text, and no two Chinese texts with the same English one. */
+  function translation(role: string): (from: unknown, to: unknown) => void {
+    const forward = new Map<string, string>();
+    const backward = new Map<string, string>();
+    return (from, to) => {
+      const a = JSON.stringify(from);
+      const b = JSON.stringify(to);
+      expect(chinese.test(b), `${role} ${b} is not translated`).toBe(false);
+      expect(forward.get(a) ?? b, `${role} ${a}`).toBe(b);
+      expect(backward.get(b) ?? a, `${role} ${b}`).toBe(a);
+      forward.set(a, b);
+      backward.set(b, a);
+    };
+  }
+
+  it('has the same nodes, flags and column mappings', () => {
+    const label = translation('label');
+    const type = translation('type');
+    const alias = translation('alias');
+    for (const [i, g] of zh.entries()) {
+      const other = en[i]!;
+      expect(other.nodes.map((n) => n.id)).toEqual(g.nodes.map((n) => n.id));
+      for (const [j, n] of g.nodes.entries()) {
+        const m = other.nodes[j]!;
+        expect(Object.keys(m)).toEqual(Object.keys(n));
+        for (const key of ['deprecated', 'replacedBy', 'replaces']) expect(m[key]).toEqual(n[key]);
+        label(n.label, m.label);
+        type(n.type, m.type);
+        expect(m.aliases?.length).toBe(n.aliases?.length);
+        for (const [k, a] of (n.aliases ?? []).entries()) alias(a, m.aliases?.[k]);
+        const values = (node: Node): unknown[] => Object.values(node.attrs ?? {});
+        expect(values(m).length).toBe(values(n).length);
+        for (const [k, v] of values(n).entries()) {
+          if (typeof v !== 'string' || !chinese.test(v)) expect(values(m)[k], n.id).toEqual(v);
+        }
+      }
+    }
+  });
+
+  it('has the same edges, predicates translated one for one', () => {
+    const predicate = translation('predicate');
+    for (const [i, g] of zh.entries()) {
+      const other = en[i]!;
+      expect(other.edges.length).toBe(g.edges.length);
+      for (const [j, e] of g.edges.entries()) {
+        const f = other.edges[j]!;
+        expect([f.source, f.target]).toEqual([e.source, e.target]);
+        predicate(e.predicate, f.predicate);
+      }
+    }
+  });
+
+  it('reports the same changes', () => {
+    const run = (id: string): DiffResult => {
+      const meta = read<Meta>(`${id}/meta.json`);
+      return diff(load(id, meta.files.before), load(id, meta.files.after), meta.options);
+    };
+    const facets = (fs: readonly { kind: string }[]): string => fs.map((f) => f.kind).join(' ');
+    const shape = (d: DiffResult) => ({
+      nodes: sorted(d.nodes.map((n) => `${n.id} ${n.status} ${facets(n.facets)}`)),
+      edges: sorted(d.edges.map((e) => `${e.source} ${e.target} ${e.status} ${facets(e.facets)}`)),
+      // Ties in the review order go by the anchor's label, so only the set of hunks is the same.
+      hunks: sorted(d.hunks.map((h) => `${h.id} ${h.kind} ${h.phase}`)),
+    });
+    expect(shape(run('enterprise-kg-en'))).toEqual(shape(run('enterprise-kg')));
   });
 });

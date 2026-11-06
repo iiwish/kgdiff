@@ -1,0 +1,12 @@
+D	SPOT_CHECK	Removed “Spot check” and 2 relations
+G	LEGAL_REP	Merged “Legal person representative” into “Legal representative”
+V	EQUITY_PLEDGE	Moved “Equity pledge” under “Equity and investment”
+E	ACTUAL_CONTROL	Added “Actual control” —tracedThrough→ “Investment”
+E	TOP10_HOLDERS	“Top 10 shareholders”: holdsSharesIn now points to “Listed company” (was “Enterprise”)
+M	ENTERPRISE	Edited “Enterprise”
+R	EXEC_TENURE	Renamed “Executive tenure” → “Board and executive tenure”
+M	CONSUMPTION_RESTRICTION	Changed the type of “Consumption restriction”
+M	DISHONEST_EXECUTEE	Updated synonyms of “Defaulting judgment debtor”
+M	SINO_FOREIGN_JV	Deprecated “Sino-foreign joint venture”
+M	TRADEMARK	Updated attributes of “Trademark”
+A	BENEFICIAL_OWNER	Added “Beneficial owner” and 3 relations

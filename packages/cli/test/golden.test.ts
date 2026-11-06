@@ -14,6 +14,7 @@ const VERSION = `kgdiff ${cliVersion()}`;
 
 const CASES = [
   { id: 'enterprise-kg', locale: 'zh-CN' },
+  { id: 'enterprise-kg-en', locale: 'en' },
   { id: 'ontology-release', locale: 'en' },
   { id: 'llm-extraction', locale: 'en' },
 ] as const;

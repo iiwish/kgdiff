@@ -1,0 +1,21 @@
+[1m[38;2;124;156;255mkgdiff[39m[22m  [1mEnterprise credit KG ontology v12 → v13[22m                                 [2m74 nodes · 171 edges[22m
+
+  [1m[38;2;52;211;153m+1[39m[22m added   [1m[38;2;248;113;113m−1[39m[22m removed   [1m[38;2;251;191;36m~6[39m[22m modified   [1m[38;2;56;189;248m⇄4[39m[22m restructured                       [2m23 changes in 12 hunks[22m
+  [38;2;52;211;153m████[39m[38;2;248;113;113m███[39m[38;2;251;191;36m███████[39m[38;2;56;189;248m█████████[39m
+
+  [1mRemoved[22m [2m1[22m
+  [38;2;248;113;113m−[39m Removed “Spot check” and 2 relations                             [38;2;248;113;113mremoved[39m[2m · type Event · was lin…[22m
+  [1mRestructured[22m [2m4[22m
+  [38;2;167;139;250m⊕[39m Merged “Legal person representative” into “Legal representati…   [38;2;167;139;250midentity[39m[2m · via replacement hin…[22m
+  [38;2;56;189;248m⇄[39m Moved “Equity pledge” under “Equity and investment”              [38;2;56;189;248mstructure[39m[2m · from “Operational…[22m
+  [38;2;56;189;248m⇄[39m Added “Actual control” —tracedThrough→ “Investment”              [38;2;56;189;248mstructure[39m[2m · new relation[22m
+  [38;2;56;189;248m⇄[39m “Top 10 shareholders”: holdsSharesIn now points to “Listed co…   [38;2;56;189;248mstructure[39m[2m · relation retargeted[22m
+  [1mModified[22m [2m6[22m
+  [38;2;251;191;36m~[39m Edited “Enterprise”                                              [38;2;251;191;36mcontent[39m[2m · +2 −1 attributes · ~…[22m
+  [38;2;251;191;36m~[39m Renamed “Executive tenure” → “Board and executive tenure”        [38;2;251;191;36mcontent[39m[2m · +1 synonym[22m
+  [38;2;251;191;36m~[39m Changed the type of “Consumption restriction”                    [38;2;251;191;36mcontent[39m[2m · +1 −1 types[22m
+  [38;2;251;191;36m~[39m Updated synonyms of “Defaulting judgment debtor”                 [38;2;251;191;36mcontent[39m[2m · +1 −1 synonyms[22m
+  [38;2;251;191;36m~[39m Deprecated “Sino-foreign joint venture”                          [38;2;251;191;36mcontent[39m
+  [38;2;251;191;36m~[39m Updated attributes of “Trademark”                                [38;2;251;191;36mcontent[39m[2m · ~1 attribute[22m
+  [1mAdded[22m [2m1[22m
+  [38;2;52;211;153m+[39m Added “Beneficial owner” and 3 relations                         [38;2;52;211;153madded[39m[2m · type Role · linked to…[22m
