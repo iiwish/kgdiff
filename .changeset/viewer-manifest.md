@@ -1,0 +1,5 @@
+---
+'@kgdiff/viewer': minor
+---
+
+The viewer describes its elements for tools. The package ships a [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest) (`custom-elements.json`, named by the new `customElements` field), generated from the sources: every element's attributes and the properties they reflect, its methods, the roots' events with their `detail` types, the slots, the `--kgdiff-*` CSS custom properties and `<kgdiff-minimap>`'s `:state(overview)`, with each experimental part marked. Generated from it: `vscode.html-custom-data.json`, which VS Code reads through `html.customData` to complete and describe the tags and their attributes; and `@kgdiff/viewer/react` (experimental), React 19's JSX types for the elements, their properties and their `onkgdiff-*` events, enabled with `import type {} from '@kgdiff/viewer/react'` (`@types/react` is an optional peer dependency). The elements stay experimental in 0.6 and become stable in 0.7. The docs gain a reference of every element generated from the manifest, and tested recipes for React 19, Vue 3 and Svelte 5.

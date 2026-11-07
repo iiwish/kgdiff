@@ -4,7 +4,7 @@
   are implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13;
   [PR #37](https://github.com/iiwish/kgdiff/pull/37), merged as 22f28c6;
   [PR #39](https://github.com/iiwish/kgdiff/pull/39), merged as 3c1c16b); phase 4 is in
-  progress. The elements ship experimental in 0.6 and become stable in 0.7 (decision 7).
+  review (see [Phase 4 results](#phase-4-results)). The elements ship experimental in 0.6 and become stable in 0.7 (decision 7).
 - **Date:** 2026-11-06
 - **Prototype:** the branch `spike/viewer-components` was never merged and was deleted on
   2026-11-06; its findings are in [Prototype results](#prototype-results)
@@ -616,3 +616,64 @@ change-list 13.6, change-detail 16.8, search 12.3, filters 10.5, view-dock 12.2,
 legend 11.9, zoom 11.3, minimap 10.0, title 10.4, actions 16.2, panels 0.6. The renderer comes
 with a stage only, the session with the root only: the subpath test checks both for every
 element.
+
+## Phase 4 results
+
+Phase 4 generates the elements' description and what is made from it, and adds the framework
+recipes. The experimental marks stay (decision 7). Where it departs from §8, or decides what
+it left open:
+
+- **The manifest is made by `@custom-elements-manifest/analyzer`** (a dev dependency, 0.11.0):
+  the tool the web components ecosystem uses to write manifests (Lit, Shoelace, Storybook and
+  the editors read what it writes), which reads TypeScript classes, inheritance and
+  `observedAttributes`. Generating the manifest by hand from the TypeScript API was the
+  alternative, but TypeScript 7, the repository's compiler, ships no such API; the analyzer
+  brings its own TypeScript 5.4, which `scripts/manifest.ts` also takes for its types (the
+  `typescript5` dev dependency, the same version).
+- **One source for each part, no output patched by hand.** The analyzer reads the element
+  classes (`@tagname`); `scripts/manifest.ts` completes its output from the sources only: the
+  public interfaces in `src/index.ts` are the surface (an element's members are its interface's,
+  with their descriptions), `KgdiffEventMap` gives the roots' events and their `detail` types
+  (`@defaultLayout` keeps `kgdiff-layout` to `<kgdiff-viewer>`), `@attr`, `@slot` and
+  `@cssstate` tags on the classes give the attributes without a property, the slots and the
+  custom states, and the theme's `TOKENS` the CSS custom properties. The TSDoc gained what the
+  manifest showed missing: the element descriptions on their classes, the events, `next`,
+  `prev`, `play`, `pause` and the review methods.
+- **What it says.** Attributes linked to their properties both ways (`for` ⇄ `htmlFor`), their
+  values spelled out (`ViewerMode` → `'overlay' | 'swipe' | 'replay'`; an object a property
+  also takes, such as `panels`, is a `string` attribute); the experimental status as an
+  `experimental` field (`true` or its note) on a declaration or a member, as the schema's
+  `deprecated` is; schema 2.1 (custom states); modules named by their `dist` paths.
+- **Generated from the manifest, by the same script, checked by one test**
+  (`test/manifest.test.ts`, in `pnpm check`, which names the command that regenerates them):
+  the manifest, the reference pages `docs/viewer-elements.md` and its zh twin, VS Code's
+  `vscode.html-custom-data.json`, and `src/react.ts`.
+- **The reference is a page of its own**, generated whole, rather than tables between markers in
+  the hand-written pages: what it covers left those pages (the guide's attribute table, the
+  attribute / method / event paragraphs of interaction.md and of the README, the token table of
+  visual-language.md), which keep the explanation and link to it. The zh page translates its
+  prose and headings and keeps the API names and descriptions in English, as the TSDoc has
+  them: a second, translated source would drift from the first.
+- **Editor support.** `vscode.html-custom-data.json` ships in the package; a project names it in
+  `html.customData`. `@kgdiff/viewer/react` (experimental, types only; `dist/react.js` is empty)
+  types the elements in React 19's JSX: each prop is the element's property type (indexed from
+  its interface, so the two cannot disagree), an attribute without a property has its values,
+  and the roots' events are `onkgdiff-*` props with a typed `detail`. `@types/react` is an
+  optional peer dependency. TypeScript does not check JSX attribute names with a dash for
+  excess props, so `onkgdiff-layout` on a `<kgdiff-root>` is not rejected.
+- **The recipes run.** Each is a file the guides show verbatim (a test compares them):
+  React 19 type-checked with the generated types and rendered with react-dom (props set as
+  properties, objects included; `onkgdiff-select`; methods through the ref; a re-render
+  declaring the same panels keeps the reader's change); Vue 3 compiled with its SFC compiler and
+  mounted (`isCustomElement`, `.prop`, `@kgdiff-select`); Svelte 5 compiled with its compiler and
+  mounted. The Vue and Svelte recipes' types are not checked: that needs `vue-tsc` and
+  `svelte-check`, which the repository does not run.
+- **The docs tell one story:** experimental in 0.6 and stable from 0.7 wherever the elements are
+  introduced, the reference linked from interaction.md, the guide and the README, and the
+  root READMEs' figures current.
+- **Size:** the standalone bundle is unchanged, 116.3 kB (min + gzip): phase 4 changes
+  descriptions, not code.
+- **Open:** the `::part()` names (decided with the stabilization); CSS custom data for the
+  tokens in editors; type checks of the Vue and Svelte recipes; defaults as data in the
+  manifest (they are in the descriptions); the reduced session surface
+  (`@kgdiff/viewer/session`, the `session` property).
