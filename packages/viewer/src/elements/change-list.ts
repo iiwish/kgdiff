@@ -1,9 +1,5 @@
 /**
- * `<kgdiff-change-list>` (RFC 0001 §3; experimental): the "Changes" title with the count and
- * review progress, and the changes grouped by phase (a virtualized listbox; `j` / `k` / `x`,
- * Enter, Home / End). A labelled region. While a search is active (the session's query is not
- * blank) its rows step aside. Registers itself as the root's `list` focus target (choosing a
- * search result moves focus here). Importing this module defines it.
+ * `<kgdiff-change-list>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { Region } from '../bind.js';
 import { h } from '../dom.js';
@@ -12,7 +8,15 @@ import { ChangeList } from '../ui/change-list.js';
 import type { UiContext } from '../ui/context.js';
 import { BoundElement, define } from './bound.js';
 
-/** @experimental See the module's description. */
+/**
+ * The "Changes" title with the count and review progress, and the changes grouped by phase (a
+ * virtualized listbox; `j` / `k` / `x`, Enter, Home / End). A labelled region. While a search is
+ * active (the session's query is not blank) its rows step aside. Registers itself as the root's
+ * `list` focus target (choosing a search result moves focus here).
+ *
+ * @tagname kgdiff-change-list
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffChangeList extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'change-list';
 

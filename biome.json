@@ -12,7 +12,8 @@
       "!**/node_modules",
       "!**/coverage",
       "!examples/datasets",
-      "!.changeset/*.md"
+      "!.changeset/*.md",
+      "!packages/viewer/custom-elements.json"
     ]
   },
   "formatter": {

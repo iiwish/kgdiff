@@ -1,13 +1,5 @@
 /**
- * `<kgdiff-root>` (RFC 0001 §3; experimental): a root without visuals. It owns the session and
- * provides it to the elements inside it (`<kgdiff-stage>`, `<kgdiff-change-list>`, …) or naming
- * it with `for`, and owns what they share: the keyboard map, the live region announcing
- * navigation, the events and the theme tokens. It has the attributes, properties, methods and
- * events of `<kgdiff-viewer>` except the layout's (`panels`, `sidebar`, `header`, `chrome`,
- * `legend`, `persist`): the page lays the elements out, and nothing is remembered.
- *
- * It renders as `display: contents`, so its children are laid out by the page as if it were not
- * there. Importing this module defines it.
+ * `<kgdiff-root>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { KgdiffRootElement } from '../index.js';
 import { ROOT_ATTRIBUTES, RootElement } from '../root-element.js';
@@ -16,7 +8,20 @@ import { elementSheet } from '../styles.js';
 import type { UiActions } from '../ui/context.js';
 import { define } from './bound.js';
 
-/** @experimental See the module's description. */
+/**
+ * A root without visuals. It owns the session and provides it to the elements inside it
+ * (`<kgdiff-stage>`, `<kgdiff-change-list>`, …) or naming it with `for`, and owns what they share:
+ * the keyboard map, the live region announcing navigation, the events and the theme tokens. It has
+ * the attributes, properties, methods and events of `<kgdiff-viewer>` except the layout's
+ * (`panels`, `sidebar`, `header`, `chrome`, `legend`, `persist`): the page lays the elements out,
+ * and nothing is remembered.
+ *
+ * It renders as `display: contents`, so its children are laid out by the page as if it were not
+ * there.
+ *
+ * @tagname kgdiff-root
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffRoot extends RootElement implements KgdiffRootElement {
   static get observedAttributes(): readonly string[] {
     return ROOT_ATTRIBUTES;

@@ -100,6 +100,11 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
+/**
+ * @attr {boolean} sync-hash - Keep the selection, mode and scope in the page's URL hash
+ *   (`#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`) and follow it: deep links.
+ * @attr {boolean} global-shortcuts - The same as `shortcuts="global"`.
+ */
 export abstract class RootElement<S extends DiffSession = DiffSession> extends HTMLElement {
   /** @internal */
   readonly controller: S;

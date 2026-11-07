@@ -100,10 +100,12 @@
     "./standalone": "./dist/standalone/kgdiff-viewer.js",
     "./standalone/compute": "./dist/standalone/kgdiff-viewer-compute.js"
   },
+  "customElements": "custom-elements.json",
   "files": [
     "dist",
     "src",
-    "!src/**/*.test.ts"
+    "!src/**/*.test.ts",
+    "custom-elements.json"
   ],
   "engines": {
     "node": ">=22"
@@ -116,7 +118,8 @@
     "build": "tsc -p tsconfig.build.json && vite build -c vite.config.ts && vite build -c vite.config.ts --mode compute",
     "dev": "vite -c dev/vite.config.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "manifest": "tsx scripts/manifest.ts"
   },
   "dependencies": {
     "@kgdiff/core": "workspace:*",

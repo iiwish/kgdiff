@@ -1,7 +1,5 @@
 /**
- * `<kgdiff-filters>` (RFC 0001 §3; experimental): one chip per kind of change the diff has,
- * with its count and the legend's swatch, toggling the session's family filter, and "Show all"
- * while a filter is on. Importing this module defines it.
+ * `<kgdiff-filters>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { Region } from '../bind.js';
 import type { KgdiffBoundElement } from '../index.js';
@@ -9,7 +7,13 @@ import type { UiContext } from '../ui/context.js';
 import { Filters } from '../ui/filters.js';
 import { BoundElement, define } from './bound.js';
 
-/** @experimental See the module's description. */
+/**
+ * One chip per kind of change the diff has, with its count and the legend's swatch, toggling the
+ * session's family filter, and "Show all" while a filter is on.
+ *
+ * @tagname kgdiff-filters
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffFilters extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'filters';
 

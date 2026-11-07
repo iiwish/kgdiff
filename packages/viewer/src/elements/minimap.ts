@@ -1,13 +1,5 @@
 /**
- * `<kgdiff-minimap>` (RFC 0001 §3; experimental): an overview of one stage's view, with the
- * part in view outlined. While the whole graph is in view it has nothing to add: it is in the
- * custom state `overview` then (`:state(overview)`, and the read-only `overview` property). A
- * minimap the page places stays shown (`kgdiff-minimap:state(overview) { visibility: hidden }`
- * hides it without moving the layout); one slotted into a stage replaces the stage's own and
- * hides as it did. Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage="<id>"` names
- * (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in minimap;
- * placed anywhere else it is not kept clear of fits and flights unless registered. Importing
- * this module defines it.
+ * `<kgdiff-minimap>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { Region } from '../bind.js';
 import { attr, h } from '../dom.js';
@@ -17,7 +9,22 @@ import type { StageView } from '../view.js';
 import { define } from './bound.js';
 import { ViewBoundElement } from './view-bound.js';
 
-/** @experimental See the module's description. */
+/**
+ * An overview of one stage's view, with the part in view outlined. While the whole graph is in view
+ * it has nothing to add: it is in the custom state `overview` then (`:state(overview)`, and the
+ * read-only `overview` property). A minimap the page places stays shown
+ * (`kgdiff-minimap:state(overview) { visibility: hidden }` hides it without moving the layout); one
+ * slotted into a stage replaces the stage's own and hides as it did. Binds to the nearest
+ * `<kgdiff-stage>` around it, or to the one `stage="<id>"` names (`stage`, `stageElement`,
+ * `rootElement`). Slotted into a stage it replaces the stage's built-in minimap; placed anywhere
+ * else it is not kept clear of fits and flights unless registered.
+ *
+ * @tagname kgdiff-minimap
+ * @cssstate overview - While the whole graph is in view. A minimap the page places stays
+ *   shown; `kgdiff-minimap:state(overview) { visibility: hidden }` hides it in place.
+ *   Slotted into a stage it hides then, as the stage's own does.
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffMinimap extends ViewBoundElement implements KgdiffMinimapElement {
   protected readonly name = 'minimap';
 

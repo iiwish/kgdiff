@@ -1,9 +1,5 @@
 /**
- * `<kgdiff-actions>` (RFC 0001 §3; experimental): the appearance menu (theme, color palette,
- * language: the root's `theme`, `palette` and `locale`) and the keyboard shortcuts dialog,
- * which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); bound to a
- * `<kgdiff-viewer>` it has the sidebar toggle too (a composed root has no sidebar). Slotted
- * into a viewer it replaces the actions over its canvas. Importing this module defines it.
+ * `<kgdiff-actions>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { Region, ViewerContext } from '../bind.js';
 import { isOpen } from '../dom.js';
@@ -13,7 +9,15 @@ import { Actions } from '../ui/header.js';
 import { HelpDialog, Menu } from '../ui/popovers.js';
 import { BoundElement, define } from './bound.js';
 
-/** @experimental See the module's description. */
+/**
+ * The appearance menu (theme, color palette, language: the root's `theme`, `palette` and `locale`)
+ * and the keyboard shortcuts dialog, which `?` opens too. Binds to a root (`for`, `htmlFor`,
+ * `rootElement`); bound to a `<kgdiff-viewer>` it has the sidebar toggle too (a composed root has
+ * no sidebar). Slotted into a viewer it replaces the actions over its canvas.
+ *
+ * @tagname kgdiff-actions
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffActions extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'actions';
 

@@ -185,14 +185,22 @@ export interface ReviewState {
  * any element, the document or the window types `event.detail`.
  */
 export interface KgdiffEventMap {
+  /** A diff is shown, from `load()` or a `payload`; `stats` counts its nodes, edges and changes. */
   'kgdiff-ready': CustomEvent<{ readonly stats: DiffStats }>;
+  /**
+   * The selection changed: a change (`hunk`, its id, with the node chosen in it if any), a node
+   * alone (`hunk` null), or nothing (both null).
+   */
   'kgdiff-select': CustomEvent<{ readonly hunk: string | null; readonly node: string | null }>;
+  /** The mode or the scope changed, by the user, a key or the host. */
   'kgdiff-mode': CustomEvent<{ readonly mode: ViewerMode; readonly scope: ViewerScope }>;
+  /** A change was marked reviewed, or not; `progress` is the review state after it. */
   'kgdiff-review': CustomEvent<{
     readonly hunk: string;
     readonly reviewed: boolean;
     readonly progress: ReviewState;
   }>;
+  /** Loading or showing a diff failed; `error` is a `KgdiffError` for bad input. */
   'kgdiff-error': CustomEvent<{ readonly error: Error }>;
   /**
    * Playback reached the end of the replay (not fired for seeking or stepping there). `loop`:
@@ -203,6 +211,8 @@ export interface KgdiffEventMap {
    * The default layout changed: a panel opened, collapsed or was hidden, or a size changed (once
    * a drag ends). `source`: the user did it in the viewer, or the host (attributes, properties,
    * a report's `view.panels`).
+   *
+   * @defaultLayout `<kgdiff-viewer>` fires it; `<kgdiff-root>` has no layout of its own.
    */
   'kgdiff-layout': CustomEvent<ViewerLayout & { readonly source: 'user' | 'host' }>;
 }
@@ -257,15 +267,21 @@ export interface KgdiffRootElement extends HTMLElement {
   load(options: LoadOptions): Promise<void>;
   /** Select a hunk by id (null clears) and bring it into view. */
   selectHunk(id: string | null): void;
+  /** Select the next change (`j`), in the list's order, and bring it into view. */
   next(): void;
+  /** Select the previous change (`k`). */
   prev(): void;
+  /** Play the replay (in `replay` mode), from where it is. */
   play(): void;
+  /** Pause the replay; a looping one stays paused until `play()`. */
   pause(): void;
   /** Fit the whole graph, labels included, into view. */
   fit(options?: FitOptions): Promise<void>;
   /** The full delta of the current diff. */
   exportDelta(): Delta;
+  /** Which changes are reviewed, and how many of all. */
   reviewState(): ReviewState;
+  /** Mark a change (by its id) reviewed or not; saved per diff, as the reader's `x` is. */
   setReviewed(hunkId: string, reviewed: boolean): void;
   /**
    * Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the
@@ -297,8 +313,8 @@ export interface KgdiffRootElement extends HTMLElement {
 }
 
 /**
- * Public surface of the `<kgdiff-viewer>` element: a root (`KgdiffRootElement`) with the
- * default layout.
+ * The drop-in viewer: a root (`KgdiffRootElement`) with the default layout, the canvas with its
+ * chrome, the change list, the search, the filters and the detail panel.
  *
  * `header="compact"` leaves the brand and the compared names out of the canvas, for hosts that
  * show their own (such as the playground): the preset `panels="title:hidden"`.
