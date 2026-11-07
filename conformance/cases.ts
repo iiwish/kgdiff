@@ -146,7 +146,7 @@ export const CASES: readonly CaseDefinition[] = [
   {
     id: 'match-id-hints',
     description:
-      'A semantic-layer skeleton → enriched export matched by id: 1:1 rekeys through `replaces`, a merge of two hinted sources, a split of one source into two hinted targets, a deprecation with `replacedBy`, a move, a rename, a watched definition change and a self-loop that is rekeyed.',
+      'A data model’s first export and its enriched revision, matched by id: 1:1 rekeys through `replaces`, a merge of two hinted sources, a split of one source into two hinted targets, a deprecation with `replacedBy`, a move, a rename, a watched definition change and a self-loop that is rekeyed.',
     covers: [
       'kgdiff-json',
       'match:id',

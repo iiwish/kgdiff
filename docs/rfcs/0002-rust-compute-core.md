@@ -36,13 +36,13 @@ browser, which is kgdiff 1.0.
   cold cache spends seconds resolving and downloading before kgdiff starts. A static binary
   removes both. (Warm, the Node CLI is quick: about 50 ms for `--version` and 0.1 s for the
   enterprise-kg summary on an M-class laptop.)
-- **Semantic-layer tools want the engine as a library, in Rust.** The first downstream user of
-  this plan, a semantic layer for agents with a Rust core (not public yet), draws its ontology and
-  change graphs with kgdiff and wants its terminal summary and the browser's change graph to come
-  from the same data. Today it exports kgdiff JSON,
-  writes deltas itself and calls `kgdiff apply` to check them; with `kgdiff-core` as a crate it can
-  call `diff` directly and render the summary with `kgdiff-report`. Python users (notebooks,
-  ontology pipelines, GraphRAG evaluation) are in the same position.
+- **Applications that embed kgdiff want it as a library, in Rust.** A Rust application that
+  versions its own graphs (an ontology editor, a data catalog, an agent's memory) and wants its
+  terminal summary and the browser's change graph to come from the same data has to go through the
+  Node CLI today: export kgdiff JSON, write deltas itself and run `kgdiff apply` to check them.
+  With `kgdiff-core` as a crate it calls `diff` directly and renders the summary with
+  `kgdiff-report`. Python users (notebooks, ontology pipelines, GraphRAG evaluation) are in the same
+  position.
 - **Speed and memory.** The budgets in [architecture.md](../architecture.md#budgets) are met, but
   near their limits for large graphs (`normalize` of 100k nodes / 300k edges retains ~111 MB of a
   135 MB budget). Rust's data layout is several times denser and its startup is instant.
@@ -131,8 +131,8 @@ Cargo's `target/` is git-ignored; pnpm ignores the Rust crates and Cargo ignores
 | `kgdiff-report`  | the text outputs of the CLI and the HTML report (payload, escaping, inlining), no I/O                                              | core, layout                               |
 | `kgdiff`         | argument parsing, inputs (gzip, UTF-16, size limits), atomic outputs, overwrite checks, colors, `apply`                            | all of the above                           |
 
-`kgdiff-report` is a crate of its own so that the semantic layer — or anyone embedding the engine —
-renders the same summary and Markdown as `kgdiff` without pulling in argument parsing and file I/O.
+`kgdiff-report` is a crate of its own so that an application embedding the engine renders the same
+summary and Markdown as `kgdiff` without pulling in argument parsing and file I/O.
 The `kgdiff` crate also exposes `cli::run(argv, io) -> ExitCode`, which the Python package uses to
 ship the CLI (`python -m pykgdiff`, `uvx --from pykgdiff kgdiff`; the name `kgdiff` is taken on
 PyPI, [D-6](#open-decisions)).
@@ -189,15 +189,15 @@ engine) and becomes a `DiffResult` through the existing `diffFromJSON`.
 Why only the layout changes version: graph, diff, packed diff and delta keep their exact bytes, so
 nothing about them changes for any reader. A layout written by the Rust engine has the same shape as
 today's but different positions for the same input (next section), and stored layouts are used as
-anchors (the semantic layer keeps one mental map across versions by pinning known positions).
+anchors (an application that keeps one mental map across versions pins the positions it knows).
 Version 2 tells a reader that positions come from the new engine and adds one field, `generator`
 (`"kgdiff-layout/1"`, bumped whenever an algorithm change moves positions for the same input), so
 that caches can tell layout generations apart from then on. Positions taken from a version 1 layout
 stay valid pins: anchored layouts keep known positions bit-exact. `layoutFromJSON` learns to read
 version 2 in a 0.x release before phase 4, so that every viewer released after it reads both.
 
-`ReportPayload.layout` becoming optional is the change the semantic layer needs to feed the viewer
-a diff it computed itself ([downstream requirements](#references)): without a layout, the viewer
+`ReportPayload.layout` becoming optional lets an application feed the viewer a diff it computed
+itself (with `kgdiff-core`, or as `diff.v1` JSON it wrote): without a layout, the viewer
 lays the diff out in the browser with the compute add-on. It is also what lets the phase 3 CLI
 write HTML reports before the Rust layout exists (at a cost phase 3 states). It is additive
 (version 1 payloads with a layout read as before) and can ship before phase 2.
@@ -679,8 +679,8 @@ Acceptance:
   ported to `proptest` and pass (delta round trips, `diff(A, A)` empty, shuffle invariance).
 - The nightly differential run finds no mismatch in 10,000 random pairs.
 - Benchmarks meet the native targets of §7.
-- The semantic layer can replace its `kgdiff apply` check with a call to
-  `kgdiff_core::apply_delta`.
+- The crate's documentation shows, as tested examples, diffing two graphs, checking a delta with
+  `apply_delta` and reading a `diff.v1` document.
 
 #### Phase 3 — `kgdiff-formats`, `kgdiff-report` and the Rust CLI
 
@@ -803,19 +803,19 @@ Acceptance:
 
 ## Open decisions
 
-| ID   | Decision                                                                                       | Recommendation                                                                                                                                                                                   |
-| ---- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| D-1  | Make `Math.log2` in TypeScript matching exact (like the layout's) before phase 2?              | No: a plain Rust port of FreeBSD's `e_log2.c` already equals V8 on every integer up to 2²² (measured, Appendix A); changing TypeScript output now invalidates golden files for nothing           |
-| D-2  | Lone surrogates from JSON escapes (J-14)                                                       | Reject with `invalid-input` in Rust and, in a 0.x release before phase 3, in TypeScript too, so that behaviour stays identical; the corpus leaves them out until then                            |
-| D-3  | Layout version 2 with `generator`, or keep version 1                                           | Version 2 (§2); the alternative is silent change of what a stored layout means                                                                                                                   |
-| D-4  | `kgdiff-report` as its own crate, or a feature of `kgdiff`                                     | Its own crate (an embedder depends on it without the CLI's dependencies)                                                                                                                         |
-| D-5  | Ship the viewer's layout-less payloads before phase 2 (for the semantic layer) or with phase 3 | Before phase 2: small, additive, unblocks the semantic layer's "diff only" plan                                                                                                                  |
-| D-6  | Registry names                                                                                 | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now |
-| D-7  | Python package in phase 3 or later                                                             | After the CLI (phase 3), when both parsers and reports exist                                                                                                                                     |
-| D-8  | MSRV and edition                                                                               | Edition 2024; MSRV no newer than the stable release of six months before, raised only in minor releases                                                                                          |
-| D-9  | `oxrdfxml` / `oxjsonld` or ports of kgdiff's readers                                           | Decide by the phase 3 spike against the corpus                                                                                                                                                   |
-| D-10 | Phase 3 reports without a precomputed layout, or swap phases 3 and 4                           | Keep the order and accept the bounded regression on the native channels only (phase 3); swapping would delay the CLI, the larger win, behind the riskiest port                                   |
-| D-11 | Non-finite numbers in kgdiff JSON (§11)                                                        | Warn (`json-non-finite`) and keep them as `"Infinity"` / `"-Infinity"` like `normalize`, in a TypeScript 0.x release with a corpus update, before phase 3                                        |
+| ID   | Decision                                                                          | Recommendation                                                                                                                                                                                   |
+| ---- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D-1  | Make `Math.log2` in TypeScript matching exact (like the layout's) before phase 2? | No: a plain Rust port of FreeBSD's `e_log2.c` already equals V8 on every integer up to 2²² (measured, Appendix A); changing TypeScript output now invalidates golden files for nothing           |
+| D-2  | Lone surrogates from JSON escapes (J-14)                                          | Reject with `invalid-input` in Rust and, in a 0.x release before phase 3, in TypeScript too, so that behaviour stays identical; the corpus leaves them out until then                            |
+| D-3  | Layout version 2 with `generator`, or keep version 1                              | Version 2 (§2); the alternative is silent change of what a stored layout means                                                                                                                   |
+| D-4  | `kgdiff-report` as its own crate, or a feature of `kgdiff`                        | Its own crate (an embedding application depends on it without the CLI's dependencies)                                                                                                            |
+| D-5  | Ship the viewer's layout-less payloads before phase 2 or with phase 3             | Before phase 2: small and additive; applications that compute diffs themselves can use the viewer at once                                                                                        |
+| D-6  | Registry names                                                                    | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now |
+| D-7  | Python package in phase 3 or later                                                | After the CLI (phase 3), when both parsers and reports exist                                                                                                                                     |
+| D-8  | MSRV and edition                                                                  | Edition 2024; MSRV no newer than the stable release of six months before, raised only in minor releases                                                                                          |
+| D-9  | `oxrdfxml` / `oxjsonld` or ports of kgdiff's readers                              | Decide by the phase 3 spike against the corpus                                                                                                                                                   |
+| D-10 | Phase 3 reports without a precomputed layout, or swap phases 3 and 4              | Keep the order and accept the bounded regression on the native channels only (phase 3); swapping would delay the CLI, the larger win, behind the riskiest port                                   |
+| D-11 | Non-finite numbers in kgdiff JSON (§11)                                           | Warn (`json-non-finite`) and keep them as `"Infinity"` / `"-Infinity"` like `normalize`, in a TypeScript 0.x release with a corpus update, before phase 3                                        |
 
 ## Alternatives considered
 
@@ -870,9 +870,6 @@ Other probes:
   [formats.md](../formats.md), [delta-format.md](../delta-format.md), [cli.md](../cli.md)
 - [RFC 0001: Composable viewer components](./0001-viewer-components.md)
 - [conformance/README.md](../../conformance/README.md): the corpus format
-- Downstream requirements: the design notes of the semantic-layer project (not public), which ask
-  for `kgdiff-core` as a crate, for its terminal summary and the viewer's change graph to come from
-  the same data, and for the viewer to accept a diff without a layout
 - ECMAScript: `Number::toString`, `StringToNumber`, `OrdinaryOwnPropertyKeys` (the order of
   object keys), `String.prototype.trim` (WhiteSpace and LineTerminator), `JSON.parse` and
   `JSON.stringify`
