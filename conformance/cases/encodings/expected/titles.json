@@ -1,0 +1,46 @@
+{
+  "en": [
+    {
+      "id": "remove:old",
+      "title": "Removed “Obsolete” and 1 relation",
+      "subtitle": "was linked to “Données”"
+    },
+    {
+      "id": "modify:emoji",
+      "title": "Renamed “Emoji 🧪” → “Emoji 🧪🧫”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:table",
+      "title": "Renamed “表格” → “数据表”",
+      "subtitle": ""
+    },
+    {
+      "id": "add:view",
+      "title": "Added “Vue” and 1 relation",
+      "subtitle": "linked to “数据表”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "remove:old",
+      "title": "删除「Obsolete」及 1 条关系",
+      "subtitle": "原关联「Données」"
+    },
+    {
+      "id": "modify:emoji",
+      "title": "「Emoji 🧪」改名为「Emoji 🧪🧫」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:table",
+      "title": "「表格」改名为「数据表」",
+      "subtitle": ""
+    },
+    {
+      "id": "add:view",
+      "title": "新增「Vue」及 1 条关系",
+      "subtitle": "关联「数据表」"
+    }
+  ]
+}

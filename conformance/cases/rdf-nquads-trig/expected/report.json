@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.nq → after.trig",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "before.nq",
+      "format": "nquads"
+    },
+    "after": {
+      "name": "after.trig",
+      "format": "trig"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

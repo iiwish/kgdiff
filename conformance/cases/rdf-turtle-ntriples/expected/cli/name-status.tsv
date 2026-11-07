@@ -1,0 +1,4 @@
+A	http://example.org/zoo#Dog	Added “狗” and 1 relation
+A	_:b0b3910aa89ebf4	Added “Tail”
+R	http://example.org/zoo#Cat	Renamed “猫” → “家猫”
+D	_:b0a95c760e6f6de	Removed “Tail”

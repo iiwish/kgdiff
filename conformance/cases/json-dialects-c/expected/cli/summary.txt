@@ -1,0 +1,11 @@
+kgdiff  before.json → team 2                                      3 → 4 nodes · 2 → 3 edges
+
+  +1 added   ~3 modified                                               5 changes in 4 hunks
+  ++~~~
+
+  Modified 3
+  ~ Edited “Alice”                content · +1 attribute · −1 type
+  ~ Changed the id of “Bob”       content · 2 → 4 · +1 attribute · −1 type · replaces “Bob”
+  ~ Edited “Carol”                content · +1 attribute · −1 type · +1 synonym
+  Added 1
+  + Added “Dana” and 1 relation   added · linked to “Alice”

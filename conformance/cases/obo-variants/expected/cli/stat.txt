@@ -1,0 +1,12 @@
+kgdiff  ex ex/2026-01-01 → ex/2026-02-01          8 → 10 nodes · 8 edges
+
+  +2 added   ~5 modified   ⇄1 restructured         14 changes in 8 hunks
+  ++++~~~~~~⇄⇄⇄⇄
+  ⚑ Review first: definition changed in 1 hunk
+
+         added  removed  modified  unchanged
+  nodes      2        0         7          1
+  edges      2        2         1          5
+
+  By type
+  Term  9 ++~~~~~~~

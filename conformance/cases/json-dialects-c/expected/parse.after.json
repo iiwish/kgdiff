@@ -1,0 +1,89 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "1",
+        "label": "Alice",
+        "attrs": {
+          "group": "Person",
+          "title": "Team lead"
+        },
+        "position": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "3",
+        "label": "Carol",
+        "aliases": [
+          "Caz"
+        ],
+        "attrs": {
+          "group": "Person"
+        },
+        "position": {
+          "x": 120.5,
+          "y": -40.25
+        }
+      },
+      {
+        "id": "4",
+        "label": "Bob",
+        "attrs": {
+          "group": "Person"
+        },
+        "replaces": [
+          "2"
+        ]
+      },
+      {
+        "id": "5",
+        "label": "Dana",
+        "attrs": {
+          "group": "Person"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "1",
+        "target": "3",
+        "predicate": "mentors"
+      },
+      {
+        "source": "4",
+        "target": "1",
+        "predicate": "reports to"
+      },
+      {
+        "source": "5",
+        "target": "1",
+        "predicate": "reports to"
+      }
+    ],
+    "meta": {
+      "name": "team",
+      "source": "after.json",
+      "version": "2"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

@@ -1,0 +1,116 @@
+{
+  "en": [
+    {
+      "id": "split:model.shop.int_marketing_attribution",
+      "title": "Split “int_marketing_attribution” into “int_order_touchpoints” and “int_web_sessions”",
+      "subtitle": "via replacement hint · 3 relations carried over · +1 relation"
+    },
+    {
+      "id": "relations:model.shop.fct_daily_revenue",
+      "title": "“fct_daily_revenue”: depends on now points to “fct_payments” (was “fct_orders”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "modify:model.shop.dim_customers",
+      "title": "Updated attributes of “dim_customers”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:model.shop.fct_channel_performance",
+      "title": "Updated attributes of “fct_channel_performance”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:model.shop.fct_orders",
+      "title": "Updated attributes of “fct_orders”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:model.shop.fct_support_tickets",
+      "title": "Updated attributes of “fct_support_tickets”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:model.shop.stg_orders_v2",
+      "title": "Renamed “stg_orders” → “stg_orders_v2”",
+      "subtitle": "model.shop.stg_orders → model.shop.stg_orders_v2 · 92% match · ~1 attribute"
+    },
+    {
+      "id": "remove:model.shop.int_legacy_discounts",
+      "title": "Removed “int_legacy_discounts” and 2 relations",
+      "subtitle": "type model · was linked to “fct_orders” and “stg_orders_v2”"
+    },
+    {
+      "id": "modify:exposure.shop.support_ops_report",
+      "title": "Updated attributes of “support_ops_report”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:model.shop.fct_customer_ltv",
+      "title": "Added “fct_customer_ltv” and 2 relations",
+      "subtitle": "type model · linked to “dim_customers” and “fct_orders”"
+    },
+    {
+      "id": "relations:exposure.shop.customer_churn_model",
+      "title": "“customer_churn_model”: depends on now points to “fct_customer_ltv” (was “fct_orders”)",
+      "subtitle": "relation retargeted"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "split:model.shop.int_marketing_attribution",
+      "title": "「int_marketing_attribution」拆分为「int_order_touchpoints」和「int_web_sessions」",
+      "subtitle": "依据替代声明 · 迁移 3 条关系 · 关系 +1"
+    },
+    {
+      "id": "relations:model.shop.fct_daily_revenue",
+      "title": "「fct_daily_revenue」的「depends on」改为指向「fct_payments」（原为「fct_orders」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "modify:model.shop.dim_customers",
+      "title": "修改「dim_customers」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:model.shop.fct_channel_performance",
+      "title": "修改「fct_channel_performance」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:model.shop.fct_orders",
+      "title": "修改「fct_orders」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:model.shop.fct_support_tickets",
+      "title": "修改「fct_support_tickets」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:model.shop.stg_orders_v2",
+      "title": "「stg_orders」改名为「stg_orders_v2」",
+      "subtitle": "ID model.shop.stg_orders → model.shop.stg_orders_v2 · 匹配度 92% · 属性 ~1"
+    },
+    {
+      "id": "remove:model.shop.int_legacy_discounts",
+      "title": "删除「int_legacy_discounts」及 2 条关系",
+      "subtitle": "类型 model · 原关联「fct_orders」和「stg_orders_v2」"
+    },
+    {
+      "id": "modify:exposure.shop.support_ops_report",
+      "title": "修改「support_ops_report」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:model.shop.fct_customer_ltv",
+      "title": "新增「fct_customer_ltv」及 2 条关系",
+      "subtitle": "类型 model · 关联「dim_customers」和「fct_orders」"
+    },
+    {
+      "id": "relations:exposure.shop.customer_churn_model",
+      "title": "「customer_churn_model」的「depends on」改为指向「fct_customer_ltv」（原为「fct_orders」）",
+      "subtitle": "关系改为指向新节点"
+    }
+  ]
+}

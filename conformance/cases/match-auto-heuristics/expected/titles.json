@@ -1,0 +1,136 @@
+{
+  "en": [
+    {
+      "id": "remove:lorry",
+      "title": "Removed “Lorry” and 3 relations",
+      "subtitle": "type Class · was linked to “Cargo bed”, “Motor” and 1 more"
+    },
+    {
+      "id": "remove:sidecar",
+      "title": "Removed “Sidecar” and 2 relations",
+      "subtitle": "type Class · was linked to “Vehicle” and “Wheel”"
+    },
+    {
+      "id": "split:bus",
+      "title": "Split “Bus” into “Coach” and “Minibus”",
+      "subtitle": "inferred · 100% confidence · +4 relations · source kept"
+    },
+    {
+      "id": "merge:car",
+      "title": "Merged “Automobile” into “Car”",
+      "subtitle": "inferred · 100% confidence · 3 duplicates collapsed · +1 synonym"
+    },
+    {
+      "id": "modify:engine",
+      "title": "Renamed “Engine” → “Motor”",
+      "subtitle": "+1 synonym · ~1 relation"
+    },
+    {
+      "id": "modify:cargo_bed",
+      "title": "Deprecated “Cargo bed”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:petrol",
+      "title": "Changed the type of “Petrol”",
+      "subtitle": "+1 type"
+    },
+    {
+      "id": "add:lorries",
+      "title": "Added “Lorry truck” and 2 relations",
+      "subtitle": "type Class · linked to “Motor” and “Vehicle”"
+    },
+    {
+      "id": "add:scooter",
+      "title": "Added “Scooter” and 2 relations",
+      "subtitle": "type Class · linked to “Vehicle” and “Wheel”"
+    },
+    {
+      "id": "add:human_powered",
+      "title": "Added “Human-powered vehicle” and 1 relation",
+      "subtitle": "type Class · linked to “Vehicle”"
+    },
+    {
+      "id": "modify:bicycle",
+      "title": "Moved “Bicycle” under “Human-powered vehicle”",
+      "subtitle": "from “Vehicle”"
+    },
+    {
+      "id": "add:electricity",
+      "title": "Added “Electricity”",
+      "subtitle": "type Fuel · standalone"
+    },
+    {
+      "id": "relations:car",
+      "title": "Updated 2 relations of “Car”",
+      "subtitle": "~2 relations · 1 retargeted"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "remove:lorry",
+      "title": "删除「Lorry」及 3 条关系",
+      "subtitle": "类型 Class · 原关联「Cargo bed」、「Motor」等 3 个节点"
+    },
+    {
+      "id": "remove:sidecar",
+      "title": "删除「Sidecar」及 2 条关系",
+      "subtitle": "类型 Class · 原关联「Vehicle」和「Wheel」"
+    },
+    {
+      "id": "split:bus",
+      "title": "「Bus」拆分为「Coach」和「Minibus」",
+      "subtitle": "推断 · 置信度 100% · 关系 +4 · 源节点保留"
+    },
+    {
+      "id": "merge:car",
+      "title": "「Automobile」合并入「Car」",
+      "subtitle": "推断 · 置信度 100% · 合并 3 条重复关系 · 别名 +1"
+    },
+    {
+      "id": "modify:engine",
+      "title": "「Engine」改名为「Motor」",
+      "subtitle": "别名 +1 · 关系 ~1"
+    },
+    {
+      "id": "modify:cargo_bed",
+      "title": "弃用「Cargo bed」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:petrol",
+      "title": "修改「Petrol」的类型",
+      "subtitle": "类型 +1"
+    },
+    {
+      "id": "add:lorries",
+      "title": "新增「Lorry truck」及 2 条关系",
+      "subtitle": "类型 Class · 关联「Motor」和「Vehicle」"
+    },
+    {
+      "id": "add:scooter",
+      "title": "新增「Scooter」及 2 条关系",
+      "subtitle": "类型 Class · 关联「Vehicle」和「Wheel」"
+    },
+    {
+      "id": "add:human_powered",
+      "title": "新增「Human-powered vehicle」及 1 条关系",
+      "subtitle": "类型 Class · 关联「Vehicle」"
+    },
+    {
+      "id": "modify:bicycle",
+      "title": "「Bicycle」移至「Human-powered vehicle」下",
+      "subtitle": "原属「Vehicle」"
+    },
+    {
+      "id": "add:electricity",
+      "title": "新增「Electricity」",
+      "subtitle": "类型 Fuel · 无外部关联"
+    },
+    {
+      "id": "relations:car",
+      "title": "修改「Car」的 2 条关系",
+      "subtitle": "关系 ~2 · 1 条关系改为指向新节点"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 230,
+  "nodes": [
+    "_:b1628ed2e039c8b",
+    "http://example.org/pizza#Buffalo",
+    "http://example.org/pizza#Cheese",
+    "http://example.org/pizza#Dairy",
+    "http://example.org/pizza#Margherita",
+    "http://example.org/pizza#Mozzarella",
+    "http://example.org/pizza#Pizza",
+    "http://example.org/pizza#QuattroFormaggi",
+    "http://example.org/pizza#WoodOven",
+    "http://example.org/pizza#hasTopping"
+  ],
+  "radii": {
+    "_:b1628ed2e039c8b": 6.2,
+    "http://example.org/pizza#Buffalo": 6.2,
+    "http://example.org/pizza#Cheese": 6.2,
+    "http://example.org/pizza#Dairy": 6.2,
+    "http://example.org/pizza#Margherita": 7.11,
+    "http://example.org/pizza#Mozzarella": 8.4,
+    "http://example.org/pizza#Pizza": 7.11,
+    "http://example.org/pizza#QuattroFormaggi": 6.2,
+    "http://example.org/pizza#WoodOven": 6.2,
+    "http://example.org/pizza#hasTopping": 4
+  },
+  "hidden": {},
+  "components": [
+    [
+      "http://example.org/pizza#Buffalo",
+      "http://example.org/pizza#Cheese",
+      "http://example.org/pizza#Dairy",
+      "http://example.org/pizza#Margherita",
+      "http://example.org/pizza#Mozzarella",
+      "http://example.org/pizza#Pizza",
+      "http://example.org/pizza#QuattroFormaggi"
+    ],
+    [
+      "_:b1628ed2e039c8b",
+      "http://example.org/pizza#WoodOven"
+    ],
+    [
+      "http://example.org/pizza#hasTopping"
+    ]
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.jsonld → after.json",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "before.jsonld",
+      "format": "jsonld"
+    },
+    "after": {
+      "name": "after.json",
+      "format": "jsonld"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

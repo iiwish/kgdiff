@@ -1,0 +1,12 @@
+kgdiff  shop dbt project main@4f2c9e1 → main@b81d07a   43 → 44 nodes · 49 → 50 edges
+
+  +1 added   −1 removed   ~6 modified   ⇄3 restructured       21 changes in 11 hunks
+  +++−−−~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      3        2         6         35
+  edges      3        2         5         42
+
+  By type
+  model     10 +++−−~~~~~
+  exposure   1 ~

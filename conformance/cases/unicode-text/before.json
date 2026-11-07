@@ -1,0 +1,39 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "unicode", "version": "before" },
+  "nodes": [
+    { "id": "a-ascii", "label": "Plain ASCII" },
+    { "id": "😀-smile", "label": "Smile 😀", "attrs": { "😀key": "astral key", "note": "𝒳 script X" } },
+    { "id": "-pua", "label": "Private use " },
+    { "id": "～-wave", "label": "Fullwidth tilde ～" },
+    { "id": "𠀀-ext-b", "label": "𠀀 rare CJK" },
+    { "id": "é-nfc", "label": "Café", "aliases": ["Café au lait"] },
+    { "id": "math", "label": "𝐀𝐩𝐩𝐥𝐞 pie" },
+    { "id": "sigma", "label": "ΟΔΟΣ" },
+    { "id": "zwj", "label": "👩‍💻 Developer" },
+    { "id": "flag", "label": "🇨🇳 China" },
+    { "id": "keycap", "label": "1️⃣ First" },
+    { "id": "bidi", "label": "Invoice ‮evil‬" },
+    { "id": "ctrl", "label": "Bell\u0007 NEL\u0085 ZWSP​ BOM﻿ NBSP end" },
+    { "id": "cjk", "label": "数据资产目录" },
+    { "id": "hangul", "label": "데이터 카탈로그" },
+    { "id": "kana", "label": "データカタログ" },
+    { "id": "long", "label": "A very long label that mixes English, 中文字符, ＦＵＬＬＷＩＤＴＨ letters and emoji 🚀🚀🚀 so that every column layout has to truncate it" },
+    { "id": "turkish", "label": "İstanbul" }
+  ],
+  "edges": [
+    { "source": "😀-smile", "target": "a-ascii", "predicate": "😀rel" },
+    { "source": "-pua", "target": "～-wave", "predicate": "关联" },
+    { "source": "～-wave", "target": "𠀀-ext-b", "predicate": "关联" },
+    { "source": "𠀀-ext-b", "target": "😀-smile", "predicate": "关联" },
+    { "source": "math", "target": "é-nfc", "predicate": "served_with" },
+    { "source": "sigma", "target": "math", "predicate": "near" },
+    { "source": "zwj", "target": "flag", "predicate": "lives_in" },
+    { "source": "bidi", "target": "ctrl", "predicate": "see" },
+    { "source": "cjk", "target": "hangul", "predicate": "翻译" },
+    { "source": "cjk", "target": "kana", "predicate": "翻译" },
+    { "source": "long", "target": "cjk", "predicate": "describes" },
+    { "source": "turkish", "target": "keycap", "predicate": "ranks" }
+  ]
+}

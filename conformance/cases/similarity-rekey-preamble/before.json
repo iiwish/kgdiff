@@ -1,0 +1,14 @@
+{
+  "meta": { "name": "extraction", "version": "run-1" },
+  "nodes": [
+    { "id": "x1", "label": "Alpha" },
+    { "id": "x2", "label": "Beta" },
+    { "id": "r-7f3a", "label": "Gamma" },
+    { "id": "r-c0de", "label": "Delta" }
+  ],
+  "edges": [
+    { "source": "x1", "target": "x2", "predicate": "rel" },
+    { "source": "r-7f3a", "target": "x1", "predicate": "rel" },
+    { "source": "r-c0de", "target": "r-7f3a", "predicate": "rel" }
+  ]
+}

@@ -1,0 +1,10 @@
+E	-pua	“Private use ”: 关联 now points to “𠀀 rare CJK” (was “Fullwidth tilde ～”)
+D	～-wave	Removed “Fullwidth tilde ～” and 1 relation
+R	long	Renamed “A very long label that mixes English, 中…” → “A very long label that mixes English, 中…”
+R	apple-pie	Renamed “𝐀𝐩𝐩𝐥𝐞 pie” → “Apple pie”
+R	bidi	Renamed “Invoice ⟨U+202E⟩evil⟨U+202C⟩” → “Invoice ⟨U+202E⟩evil⟨U+202C⟩ (fixed)”
+R	😀-smile	Renamed “Smile 😀” → “Smile 😀😀”
+R	sigma-lower	Renamed “ΟΔΟΣ” → “οδος”
+R	kana	Renamed “データカタログ” → “データ・カタログ”
+R	cjk	Renamed “数据资产目录” → “数据资产总目录”
+A	🦀-crab	Added “Rust 🦀 crab” and 1 relation

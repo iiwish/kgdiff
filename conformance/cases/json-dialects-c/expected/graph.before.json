@@ -1,0 +1,1 @@
+{"format":"kgdiff.graph","version":1,"meta":{"source":"before.json"},"nodes":[{"id":"1","label":"Alice","types":["Person"],"attrs":{"title":"Team lead"}},{"id":"2","label":"Bob","types":["Person"]},{"id":"3","label":"Carol","types":["Person"]}],"edges":[{"source":"1","target":"3","predicate":"mentors"},{"source":"2","target":"1","predicate":"reports to"}]}

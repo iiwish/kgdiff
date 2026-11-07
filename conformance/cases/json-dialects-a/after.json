@@ -1,0 +1,18 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": { "name": "team" },
+  "nodes": [
+    { "id": "alice", "name": "Alice", "type": "Person", "team": "core" },
+    { "id": "bob", "name": "Robert", "type": "Person", "team": "platform" },
+    { "id": "carol", "name": "Carol", "type": "Person" },
+    { "id": "core", "name": "Core team", "type": "Team" },
+    { "id": "dave", "name": "Dave", "type": "Person" }
+  ],
+  "links": [
+    { "source": "bob", "target": "alice", "type": "reports_to" },
+    { "source": "alice", "target": "carol", "type": "mentors" },
+    { "source": "carol", "target": "core", "type": "parent" },
+    { "source": "dave", "target": "alice", "type": "reports_to", "weight": 0.5 }
+  ]
+}

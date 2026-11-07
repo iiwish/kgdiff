@@ -1,0 +1,5 @@
+M	http://example.org/pizza#Margherita	Edited “Margherita”
+M	http://example.org/pizza#Pizza	Updated attributes of “Pizza”
+R	http://example.org/pizza#WoodOven	Renamed “Wood oven” → “Wood-fired oven”
+A	http://example.org/pizza#Buffalo	Added “Buffalo milk” and 1 relation
+A	http://example.org/pizza#QuattroFormaggi	Added “Quattro formaggi” and 1 relation

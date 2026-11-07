@@ -1,0 +1,14 @@
+kgdiff  before.json → after.json                                               8 → 7 nodes · 5 edges
+
+  −1 removed   ~2 modified   ⇄3 restructured                                    6 changes in 6 hunks
+  −~~⇄⇄⇄
+
+  Removed 1
+  − Removed “nowhere”                                  removed · standalone
+  Restructured 3
+  ⇄ “Ex”: rel now points to “Second” (was “nowhere”)   structure · relation retargeted · +1 attribu…
+  ⇄ Added “Huge id” —next→ “One”                       structure · new relation
+  ⇄ Removed “Ten” —next→ “Two”                         structure · relation removed
+  Modified 2
+  ~ Renamed “ghost” → “Ghost, now declared”            content
+  ~ Updated attributes of “Second”                     content · ~1 attribute

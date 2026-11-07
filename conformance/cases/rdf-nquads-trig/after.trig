@@ -1,0 +1,19 @@
+@prefix ex: <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:g1 {
+  ex:a rdfs:label "A" ;
+    ex:rel ex:b , ex:d .
+}
+
+ex:g2 {
+  ex:b rdfs:label "B (renamed)" .
+}
+
+{
+  ex:b ex:rel ex:c .
+  ex:c rdfs:label "C" ;
+    ex:weight "2.5E0"^^xsd:double .
+  ex:d rdfs:label "D" .
+}

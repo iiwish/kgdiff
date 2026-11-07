@@ -1,0 +1,26 @@
+{
+  "en": [
+    {
+      "id": "modify:bob",
+      "title": "Renamed “Bob” → “Robert”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:dave",
+      "title": "Added “Dave” and 1 relation",
+      "subtitle": "type Person · linked to “Alice”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:bob",
+      "title": "「Bob」改名为「Robert」",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:dave",
+      "title": "新增「Dave」及 1 条关系",
+      "subtitle": "类型 Person · 关联「Alice」"
+    }
+  ]
+}

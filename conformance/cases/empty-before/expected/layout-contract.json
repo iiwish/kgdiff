@@ -1,0 +1,29 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 260,
+  "nodes": [
+    "column",
+    "dataset",
+    "lonely",
+    "table"
+  ],
+  "radii": {
+    "column": 6.2,
+    "dataset": 6.2,
+    "lonely": 4,
+    "table": 7.11
+  },
+  "hidden": {},
+  "components": [
+    [
+      "column",
+      "dataset",
+      "table"
+    ],
+    [
+      "lonely"
+    ]
+  ]
+}

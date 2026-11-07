@@ -1,0 +1,14 @@
+kgdiff  loops 1 → 2                                                      8 → 7 nodes · 13 → 12 edges
+
+  ~1 modified   ⇄6 restructured                                                11 changes in 7 hunks
+  ~⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+  Restructured 6
+  ⊕ Merged “Gamma ray burst” into “Gamma ray”             identity · via replacement hint · 1 relat…
+  ⇄ Updated 2 relations of “Alpha”                        structure · ~2 relations
+  ⇄ Removed “Beta” —next→ “Beta”                          structure · relation removed
+  ⇄ “Delta”: next now points to “Epsilon” (was “Delta”)   structure · relation retargeted
+  ⇄ Edited “Epsilon” —cycle→ “Epsilon”                    structure · label “loop” → “cycle”
+  ⇄ Added “Gamma” —next→ “Gamma”                          structure · new relation
+  Modified 1
+  ~ Renamed “Phi” → “Phi prime”                           content

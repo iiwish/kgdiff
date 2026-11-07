@@ -1,0 +1,36 @@
+@prefix ex: <http://example.org/zoo#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix obo: <http://purl.obolibrary.org/obo/> .
+
+ex: a owl:Ontology ; rdfs:label "Zoo ontology"@en ; owl:versionInfo "2026.1" .
+
+ex:Animal a owl:Class ; rdfs:label "Animal"@en , "动物"@zh .
+
+ex:Mammal a owl:Class ;
+  rdfs:subClassOf ex:Animal ;
+  rdfs:label "Mammal"@en , "哺乳动物"@zh .
+
+ex:Cat a owl:Class ;
+  rdfs:subClassOf ex:Mammal ;
+  rdfs:subClassOf [ a owl:Restriction ; owl:onProperty ex:eats ; owl:someValuesFrom ex:Fish ] ;
+  rdfs:label "Cat"@en , "猫"@zh , "Chat"@fr ;
+  skos:altLabel "Kitty"@en , "Felis catus" ;
+  ex:legs "4"^^xsd:integer ;
+  ex:weightKg "4.50"^^xsd:decimal ;
+  ex:lifespan "1.5E1"^^xsd:double ;
+  ex:population "600000000000000000000"^^xsd:integer ;
+  ex:domestic "1"^^xsd:boolean ;
+  ex:code "A-12"^^xsd:integer ;
+  ex:hasPart [ rdfs:label "Tail"@en ; ex:lengthM "0.3"^^xsd:decimal ] .
+
+ex:Kitten a owl:Class ;
+  rdfs:label "Kitten"@en ;
+  owl:deprecated true ;
+  obo:IAO_0100001 ex:Cat .
+
+ex:Fish a owl:Class ; rdfs:label "Fish"@en , "鱼"@zh .
+
+ex:eats a owl:ObjectProperty ; rdfs:label "eats"@en .

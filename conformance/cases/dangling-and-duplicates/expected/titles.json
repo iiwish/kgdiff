@@ -1,0 +1,66 @@
+{
+  "en": [
+    {
+      "id": "relations:x",
+      "title": "“Ex”: rel now points to “Second” (was “nowhere”)",
+      "subtitle": "relation retargeted · +1 attribute"
+    },
+    {
+      "id": "remove:nowhere",
+      "title": "Removed “nowhere”",
+      "subtitle": "standalone"
+    },
+    {
+      "id": "relations:1e+21",
+      "title": "Added “Huge id” —next→ “One”",
+      "subtitle": "new relation"
+    },
+    {
+      "id": "relations:10",
+      "title": "Removed “Ten” —next→ “Two”",
+      "subtitle": "relation removed"
+    },
+    {
+      "id": "modify:ghost",
+      "title": "Renamed “ghost” → “Ghost, now declared”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:dup",
+      "title": "Updated attributes of “Second”",
+      "subtitle": "~1 attribute"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "relations:x",
+      "title": "「Ex」的「rel」改为指向「Second」（原为「nowhere」）",
+      "subtitle": "关系改为指向新节点 · 属性 +1"
+    },
+    {
+      "id": "remove:nowhere",
+      "title": "删除「nowhere」",
+      "subtitle": "无外部关联"
+    },
+    {
+      "id": "relations:1e+21",
+      "title": "新增关系「Huge id」—next→「One」",
+      "subtitle": "新关系"
+    },
+    {
+      "id": "relations:10",
+      "title": "删除关系「Ten」—next→「Two」",
+      "subtitle": "关系已删除"
+    },
+    {
+      "id": "modify:ghost",
+      "title": "「ghost」改名为「Ghost, now declared」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:dup",
+      "title": "修改「Second」的属性",
+      "subtitle": "属性 ~1"
+    }
+  ]
+}

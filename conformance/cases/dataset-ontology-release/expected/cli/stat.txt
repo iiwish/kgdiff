@@ -1,0 +1,12 @@
+kgdiff  mhd 2026-09-01 → 2026-10-01    179 → 184 nodes · 351 → 353 edges
+
+  +3 added   ~12 modified   ⇄7 restructured       58 changes in 22 hunks
+  +++++~~~~~~~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄
+  ⚑ Review first: definition changed in 9 hunks
+
+         added  removed  modified  unchanged
+  nodes      5        0        23        156
+  edges     10        8        12        331
+
+  By type
+  Term  28 +++++~~~~~~~~~~~~~~~~~~~~~~~

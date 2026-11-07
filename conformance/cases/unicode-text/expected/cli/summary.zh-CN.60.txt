@@ -1,0 +1,20 @@
+kgdiff  unicode before → after             节点 18 · 关系 12
+
+  +1 新增   −1 删除   ~7 修改   ⇄1 结构调整
+  10 组共 12 处变化
+  ++−−~~~~~~~⇄
+
+  删除 1
+  − 删除「Fullwidth tilde ～」及 1 条关…   删除 · 原关联「…
+  结构调整 1
+  ⇄ 「Private use 」的「关联」改为指向…   结构 · 关系改为…
+  修改 7
+  ~ 「A very long label that mixes Engl…   内容
+  ~ 「𝐀𝐩𝐩𝐥𝐞 pie」改名为「Apple pie」       内容 · ID math →…
+  ~ 「Invoice ⟨U+202E⟩evil⟨U+202C⟩」改…    内容
+  ~ 「Smile 😀」改名为「Smile 😀😀」       内容 · 属性 ~1
+  ~ 「ΟΔΟΣ」改名为「οδος」                 内容 · ID sigma…
+  ~ 「データカタログ」改名为「データ・…    内容
+  ~ 「数据资产目录」改名为「数据资产总…    内容
+  新增 1
+  + 新增「Rust 🦀 crab」及 1 条关系        新增 · 关联「Smi…

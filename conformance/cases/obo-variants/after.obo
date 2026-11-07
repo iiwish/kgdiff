@@ -1,0 +1,80 @@
+format-version: 1.4
+data-version: ex/2026-02-01
+idspace: EX http://example.org/ex_ "Example terms"
+default-namespace: example
+ontology: ex
+
+[Term]
+id: EX:0000001
+name: organism
+def: "A living thing that grows and reproduces." [EX:curator, PMID:123]
+
+[Term]
+id: EX:0000002
+name: Animal
+synonym: "beast" EXACT []
+synonym: "creature" RELATED [EX:curator]
+synonym: "fauna" BROAD []
+is_a: EX:0000001 ! organism
+
+[Term]
+id: EX:0000003
+name: plant
+is_a: EX:0000001 ! organism
+relationship: part_of EX:0000010 ! biome
+xref: WIKI:Plant
+xref: WIKIDATA:Q756
+
+[Term]
+id: EX:0000044
+name: flower
+alt_id: EX:0000004
+alt_id: EX:0000040
+is_a: EX:0000003 ! plant
+comment: Has petals and sepals.
+
+[Term]
+id: EX:0000005
+name: shrub
+name: shrubbery
+is_a: EX:0000003 ! plant
+
+[Term]
+id: EX:0000006
+name: bush
+is_obsolete: true
+replaced_by: EX:0000005
+
+[Term]
+id: EX:0000007
+name: tree
+is_a: EX:0000003 ! plant
+comment:
+
+[Term]
+id: EX:0000009
+name: ecosystem
+
+[Term]
+id: EX:0000009
+synonym: "habitat system" RELATED []
+
+[Term]
+id: EX:0000010
+name: biome
+def: A large naturally occurring community.
+is_a: EX:0000009 ! ecosystem
+
+[Typedef]
+id: part_of
+name: part of
+is_transitive: true
+
+[Instance]
+id: EX:I001
+name: Fido
+instance_of: EX:0000002
+
+[Foo]
+id: EX:9999999
+name: unknown stanza

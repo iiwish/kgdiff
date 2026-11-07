@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    { "id": 10, "label": "Ten" },
+    { "id": 2, "label": "Two" },
+    { "id": 1, "label": "One" },
+    { "id": 1e+21, "label": "Huge id" },
+    { "id": "dup", "label": "Second", "attrs": { "v": 3, "w": true } },
+    { "id": "dup", "label": "First", "attrs": { "v": 1 } },
+    { "id": "x", "label": "Ex" },
+    { "id": "ghost", "label": "Ghost, now declared" }
+  ],
+  "edges": [
+    { "source": 2, "target": "ghost", "predicate": "points_to" },
+    { "source": 1e21, "target": 1, "predicate": "next" },
+    { "source": "x", "target": "dup", "predicate": "rel", "attrs": { "n": 2 } },
+    { "source": "x", "target": "dup", "predicate": "rel" },
+    { "source": "x", "target": "dup", "predicate": "rel", "attrs": { "n": 3 } }
+  ]
+}

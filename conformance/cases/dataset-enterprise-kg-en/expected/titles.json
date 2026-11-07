@@ -1,0 +1,126 @@
+{
+  "en": [
+    {
+      "id": "remove:SPOT_CHECK",
+      "title": "Removed “Spot check” and 2 relations",
+      "subtitle": "type Event · was linked to “Operational risk” and “Enterprise”"
+    },
+    {
+      "id": "merge:LEGAL_REP",
+      "title": "Merged “Legal person representative” into “Legal representative”",
+      "subtitle": "via replacement hint · 1 relation carried over · 2 duplicates collapsed · kept as deprecated · +1 synonym"
+    },
+    {
+      "id": "modify:EQUITY_PLEDGE",
+      "title": "Moved “Equity pledge” under “Equity and investment”",
+      "subtitle": "from “Operational risk”"
+    },
+    {
+      "id": "relations:ACTUAL_CONTROL",
+      "title": "Added “Actual control” —tracedThrough→ “Investment”",
+      "subtitle": "new relation"
+    },
+    {
+      "id": "relations:TOP10_HOLDERS",
+      "title": "“Top 10 shareholders”: holdsSharesIn now points to “Listed company” (was “Enterprise”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "modify:ENTERPRISE",
+      "title": "Edited “Enterprise”",
+      "subtitle": "+2 −1 attributes · ~1 relation"
+    },
+    {
+      "id": "modify:EXEC_TENURE",
+      "title": "Renamed “Executive tenure” → “Board and executive tenure”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:CONSUMPTION_RESTRICTION",
+      "title": "Changed the type of “Consumption restriction”",
+      "subtitle": "+1 −1 types"
+    },
+    {
+      "id": "modify:DISHONEST_EXECUTEE",
+      "title": "Updated synonyms of “Defaulting judgment debtor”",
+      "subtitle": "+1 −1 synonyms"
+    },
+    {
+      "id": "modify:SINO_FOREIGN_JV",
+      "title": "Deprecated “Sino-foreign joint venture”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:TRADEMARK",
+      "title": "Updated attributes of “Trademark”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:BENEFICIAL_OWNER",
+      "title": "Added “Beneficial owner” and 3 relations",
+      "subtitle": "type Role · linked to “Equity and investment”, “Enterprise” and 1 more"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "remove:SPOT_CHECK",
+      "title": "删除「Spot check」及 2 条关系",
+      "subtitle": "类型 Event · 原关联「Operational risk」和「Enterprise」"
+    },
+    {
+      "id": "merge:LEGAL_REP",
+      "title": "「Legal person representative」合并入「Legal representative」",
+      "subtitle": "依据替代声明 · 迁移 1 条关系 · 合并 2 条重复关系 · 源节点保留为已弃用 · 别名 +1"
+    },
+    {
+      "id": "modify:EQUITY_PLEDGE",
+      "title": "「Equity pledge」移至「Equity and investment」下",
+      "subtitle": "原属「Operational risk」"
+    },
+    {
+      "id": "relations:ACTUAL_CONTROL",
+      "title": "新增关系「Actual control」—tracedThrough→「Investment」",
+      "subtitle": "新关系"
+    },
+    {
+      "id": "relations:TOP10_HOLDERS",
+      "title": "「Top 10 shareholders」的「holdsSharesIn」改为指向「Listed company」（原为「Enterprise」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "modify:ENTERPRISE",
+      "title": "修改「Enterprise」",
+      "subtitle": "属性 +2 −1 · 关系 ~1"
+    },
+    {
+      "id": "modify:EXEC_TENURE",
+      "title": "「Executive tenure」改名为「Board and executive tenure」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:CONSUMPTION_RESTRICTION",
+      "title": "修改「Consumption restriction」的类型",
+      "subtitle": "类型 +1 −1"
+    },
+    {
+      "id": "modify:DISHONEST_EXECUTEE",
+      "title": "修改「Defaulting judgment debtor」的别名",
+      "subtitle": "别名 +1 −1"
+    },
+    {
+      "id": "modify:SINO_FOREIGN_JV",
+      "title": "弃用「Sino-foreign joint venture」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:TRADEMARK",
+      "title": "修改「Trademark」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:BENEFICIAL_OWNER",
+      "title": "新增「Beneficial owner」及 3 条关系",
+      "subtitle": "类型 Role · 关联「Equity and investment」、「Enterprise」等 3 个节点"
+    }
+  ]
+}

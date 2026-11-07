@@ -1,0 +1,23 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "edges", "version": "1" },
+  "nodes": [
+    { "id": "a", "label": "Ada" },
+    { "id": "b", "label": "Bea" },
+    { "id": "c", "label": "Cy" },
+    { "id": "d", "label": "Dee" }
+  ],
+  "edges": [
+    { "id": "e1", "source": "a", "target": "b", "predicate": "knows" },
+    { "id": "e2", "source": "a", "target": "c", "predicate": "likes" },
+    { "id": "e3", "source": "b", "target": "c", "predicate": "rel", "label": "related" },
+    { "id": "e4", "source": "c", "target": "d", "predicate": "rel", "attrs": { "w": 1 } },
+    { "source": "a", "target": "d", "predicate": "plain" },
+    { "source": "b", "target": "d", "predicate": "plain" },
+    { "id": "[\"a\",\"x\",\"b\"]", "source": "a", "target": "b", "predicate": "y" },
+    { "source": "a", "target": "b", "predicate": "x" },
+    { "id": "e5", "source": "b", "target": "d", "predicate": "owes" },
+    { "id": "e5", "source": "b", "target": "d", "predicate": "owes", "attrs": { "amount": 10 } }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "en": [
+    {
+      "id": "modify:b",
+      "title": "Renamed “Ω omega” → “Ω Omega”",
+      "subtitle": "−1 relation"
+    },
+    {
+      "id": "add:d",
+      "title": "Added “Δ delta” and 1 relation",
+      "subtitle": "linked to “𝔘𝔫𝔦𝔠𝔬𝔡𝔢”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:b",
+      "title": "「Ω omega」改名为「Ω Omega」",
+      "subtitle": "关系 −1"
+    },
+    {
+      "id": "add:d",
+      "title": "新增「Δ delta」及 1 条关系",
+      "subtitle": "关联「𝔘𝔫𝔦𝔠𝔬𝔡𝔢」"
+    }
+  ]
+}

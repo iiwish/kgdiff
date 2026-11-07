@@ -1,0 +1,12 @@
+kgdiff  before.ttl → after.ttl           66 → 71 nodes · 105 → 112 edges
+
+  +3 added   ~6 modified   ⇄5 restructured        27 changes in 14 hunks
+  +++++++++++~~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      5        0        12         54
+  edges      7        0         3        102
+
+  By type
+  rdfs:Class    14 +++++~~~~~~~~~
+  rdf:Property   3 ~~~

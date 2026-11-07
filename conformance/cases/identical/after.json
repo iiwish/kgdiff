@@ -1,0 +1,15 @@
+{
+  "edges": [
+    { "attrs": { "since": 1, "often": true }, "predicate": "chases", "target": "cat", "source": "dog" },
+    { "source": "dog", "target": "mammal", "predicate": "subClassOf" },
+    { "source": "cat", "target": "mammal", "predicate": "subClassOf" },
+    { "source": "mammal", "target": "animal", "predicate": "subClassOf" }
+  ],
+  "nodes": [
+    { "id": "dog", "label": "Dog", "types": ["Species"], "attrs": { "legs": 4 } },
+    { "attrs": { "sound": "meow", "legs": 4, "colors": ["black", "white"] }, "types": ["Species"], "label": "Café cat", "id": "cat" },
+    { "id": "mammal", "label": "Mammal", "types": ["Taxon", "Class", "Class"], "aliases": ["Mammalia", "mammals", "Mammal"] },
+    { "id": "animal", "label": "Animal", "types": ["Class"] }
+  ],
+  "meta": { "version": "same", "name": "zoo" }
+}

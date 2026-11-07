@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "edges 1 → 2",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "edges 1",
+      "format": "json"
+    },
+    "after": {
+      "name": "edges 2",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

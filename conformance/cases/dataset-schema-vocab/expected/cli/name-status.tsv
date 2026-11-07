@@ -1,0 +1,14 @@
+G	https://schema.org/SoftwareSourceCode	Merged “Code” into “Software source code”
+G	https://schema.org/employee	Merged “employees” into “employee”
+E	https://schema.org/Review	Added “Review” —itemReviewed→ “Thing”
+M	https://schema.org/Corporation	Updated synonyms of “Corporation”
+M	https://schema.org/Dataset	Updated attributes of “Dataset”
+M	https://schema.org/Event	Updated attributes of “Event”
+R	https://schema.org/NGO	Renamed “NGO” → “Non-governmental organization”
+R	https://schema.org/ScholarlyArticle	Renamed “Scholarly artcle” → “Scholarly article”
+A	https://schema.org/FoodEstablishment	Added “Food establishment”, “Cafe or coffee shop” and 2 relations
+V	https://schema.org/Restaurant	Moved “Restaurant” under “Food establishment”
+M	https://schema.org/servesCuisine	Edited “serves cuisine”
+A	https://schema.org/SocialMediaPosting	Added “Social media posting”, “Discussion forum posting” and 2 relations
+V	https://schema.org/BlogPosting	Moved “Blog posting” under “Social media posting”
+A	https://schema.org/VirtualLocation	Added “Virtual location” and 2 relations

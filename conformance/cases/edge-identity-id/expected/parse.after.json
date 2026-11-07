@@ -1,0 +1,106 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "a",
+        "label": "Ada"
+      },
+      {
+        "id": "b",
+        "label": "Bea"
+      },
+      {
+        "id": "c",
+        "label": "Cy"
+      },
+      {
+        "id": "d",
+        "label": "Dee"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "source": "a",
+        "target": "c",
+        "predicate": "knows"
+      },
+      {
+        "id": "e2",
+        "source": "a",
+        "target": "c",
+        "predicate": "loves"
+      },
+      {
+        "source": "a",
+        "target": "b",
+        "predicate": "x"
+      },
+      {
+        "id": "[\"a\",\"x\",\"b\"]",
+        "source": "a",
+        "target": "b",
+        "predicate": "y"
+      },
+      {
+        "id": "e5",
+        "source": "b",
+        "target": "d",
+        "predicate": "owes",
+        "attrs": {
+          "amount": 12
+        }
+      },
+      {
+        "source": "b",
+        "target": "d",
+        "predicate": "plain"
+      },
+      {
+        "id": "e3",
+        "source": "b",
+        "target": "c",
+        "predicate": "rel",
+        "label": "relates to"
+      },
+      {
+        "id": "e4",
+        "source": "c",
+        "target": "d",
+        "predicate": "rel",
+        "attrs": {
+          "w": 2
+        }
+      },
+      {
+        "id": "e6",
+        "source": "d",
+        "target": "a",
+        "predicate": "back"
+      }
+    ],
+    "meta": {
+      "name": "edges",
+      "source": "after.json",
+      "version": "2"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

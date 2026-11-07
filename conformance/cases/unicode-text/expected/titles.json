@@ -1,0 +1,106 @@
+{
+  "en": [
+    {
+      "id": "relations:-pua",
+      "title": "“Private use ”: 关联 now points to “𠀀 rare CJK” (was “Fullwidth tilde ～”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "remove:～-wave",
+      "title": "Removed “Fullwidth tilde ～” and 1 relation",
+      "subtitle": "was linked to “𠀀 rare CJK”"
+    },
+    {
+      "id": "modify:long",
+      "title": "Renamed “A very long label that mixes English, 中…” → “A very long label that mixes English, 中…”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:apple-pie",
+      "title": "Renamed “𝐀𝐩𝐩𝐥𝐞 pie” → “Apple pie”",
+      "subtitle": "math → apple-pie"
+    },
+    {
+      "id": "modify:bidi",
+      "title": "Renamed “Invoice ‮evil‬” → “Invoice ‮evil‬ (fixed)”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:😀-smile",
+      "title": "Renamed “Smile 😀” → “Smile 😀😀”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:sigma-lower",
+      "title": "Renamed “ΟΔΟΣ” → “οδος”",
+      "subtitle": "sigma → sigma-lower"
+    },
+    {
+      "id": "modify:kana",
+      "title": "Renamed “データカタログ” → “データ・カタログ”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:cjk",
+      "title": "Renamed “数据资产目录” → “数据资产总目录”",
+      "subtitle": ""
+    },
+    {
+      "id": "add:🦀-crab",
+      "title": "Added “Rust 🦀 crab” and 1 relation",
+      "subtitle": "linked to “Smile 😀😀”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "relations:-pua",
+      "title": "「Private use 」的「关联」改为指向「𠀀 rare CJK」（原为「Fullwidth tilde ～」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "remove:～-wave",
+      "title": "删除「Fullwidth tilde ～」及 1 条关系",
+      "subtitle": "原关联「𠀀 rare CJK」"
+    },
+    {
+      "id": "modify:long",
+      "title": "「A very long label that mixes English, 中…」改名为「A very long label that mixes English, 中…」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:apple-pie",
+      "title": "「𝐀𝐩𝐩𝐥𝐞 pie」改名为「Apple pie」",
+      "subtitle": "ID math → apple-pie"
+    },
+    {
+      "id": "modify:bidi",
+      "title": "「Invoice ‮evil‬」改名为「Invoice ‮evil‬ (fixed)」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:😀-smile",
+      "title": "「Smile 😀」改名为「Smile 😀😀」",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:sigma-lower",
+      "title": "「ΟΔΟΣ」改名为「οδος」",
+      "subtitle": "ID sigma → sigma-lower"
+    },
+    {
+      "id": "modify:kana",
+      "title": "「データカタログ」改名为「データ・カタログ」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:cjk",
+      "title": "「数据资产目录」改名为「数据资产总目录」",
+      "subtitle": ""
+    },
+    {
+      "id": "add:🦀-crab",
+      "title": "新增「Rust 🦀 crab」及 1 条关系",
+      "subtitle": "关联「Smile 😀😀」"
+    }
+  ]
+}

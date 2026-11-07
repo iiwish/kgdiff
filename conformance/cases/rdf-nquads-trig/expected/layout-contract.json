@@ -1,0 +1,27 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 250,
+  "nodes": [
+    "http://example.org/a",
+    "http://example.org/b",
+    "http://example.org/c",
+    "http://example.org/d"
+  ],
+  "radii": {
+    "http://example.org/a": 7.11,
+    "http://example.org/b": 7.11,
+    "http://example.org/c": 6.2,
+    "http://example.org/d": 6.2
+  },
+  "hidden": {},
+  "components": [
+    [
+      "http://example.org/a",
+      "http://example.org/b",
+      "http://example.org/c",
+      "http://example.org/d"
+    ]
+  ]
+}

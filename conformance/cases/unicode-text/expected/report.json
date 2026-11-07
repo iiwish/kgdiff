@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "unicode before → after",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "unicode before",
+      "format": "json"
+    },
+    "after": {
+      "name": "unicode after",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "description": "JSON.stringify(JSON.parse(text)) and JSON.stringify(JSON.parse(text), null, 2); null when JSON.parse rejects the text. Covers the order of object keys (array indices first), duplicate keys, number formatting and escapes. Lone surrogates are left out on purpose: whether an implementation accepts them is an open decision (RFC 0002, D-2).",
+  "entries": [
+    {"text":"{\"b\":1,\"10\":2,\"2\":3,\"a\":4}","stringify":"{\"2\":3,\"10\":2,\"b\":1,\"a\":4}","pretty":"{\n  \"2\": 3,\n  \"10\": 2,\n  \"b\": 1,\n  \"a\": 4\n}"},
+    {"text":"{\"b\":1,\"a\":2,\"b\":3}","stringify":"{\"b\":3,\"a\":2}","pretty":"{\n  \"b\": 3,\n  \"a\": 2\n}"},
+    {"text":"{\"01\":1,\"1\":2,\"-1\":3,\"1.0\":4,\"4294967294\":5,\"4294967295\":6,\"0\":7}","stringify":"{\"0\":7,\"1\":2,\"4294967294\":5,\"01\":1,\"-1\":3,\"1.0\":4,\"4294967295\":6}","pretty":"{\n  \"0\": 7,\n  \"1\": 2,\n  \"4294967294\": 5,\n  \"01\": 1,\n  \"-1\": 3,\n  \"1.0\": 4,\n  \"4294967295\": 6\n}"},
+    {"text":"{\"__proto__\":{\"polluted\":true},\"constructor\":1,\"toString\":2}","stringify":"{\"__proto__\":{\"polluted\":true},\"constructor\":1,\"toString\":2}","pretty":"{\n  \"__proto__\": {\n    \"polluted\": true\n  },\n  \"constructor\": 1,\n  \"toString\": 2\n}"},
+    {"text":"{\"nested\":{\"z\":1,\"3\":3,\"1\":{\"y\":true,\"0\":false}}}","stringify":"{\"nested\":{\"1\":{\"0\":false,\"y\":true},\"3\":3,\"z\":1}}","pretty":"{\n  \"nested\": {\n    \"1\": {\n      \"0\": false,\n      \"y\": true\n    },\n    \"3\": 3,\n    \"z\": 1\n  }\n}"},
+    {"text":"[1,1.0,-0,0.0,1e21,1e-7,1E2,0.000001,100,1.5e300,5e-324]","stringify":"[1,1,0,0,1e+21,1e-7,100,0.000001,100,1.5e+300,5e-324]","pretty":"[\n  1,\n  1,\n  0,\n  0,\n  1e+21,\n  1e-7,\n  100,\n  0.000001,\n  100,\n  1.5e+300,\n  5e-324\n]"},
+    {"text":"[12345678901234567890,9007199254740993,123456789012345680000]","stringify":"[12345678901234567000,9007199254740992,123456789012345680000]","pretty":"[\n  12345678901234567000,\n  9007199254740992,\n  123456789012345680000\n]"},
+    {"text":"[1e400,-1e400,1e-400]","stringify":"[null,null,0]","pretty":"[\n  null,\n  null,\n  0\n]"},
+    {"text":"[\"\\u0000\\u001f\\u007f\\u0080\",\"\\u2028\\u2029\",\"\\b\\f\\n\\r\\t\\/\\\"\\\\\"]","stringify":"[\"\\u0000\\u001f\",\"  \",\"\\b\\f\\n\\r\\t/\\\"\\\\\"]","pretty":"[\n  \"\\u0000\\u001f\",\n  \"  \",\n  \"\\b\\f\\n\\r\\t/\\\"\\\\\"\n]"},
+    {"text":"[\"\\ud83d\\ude00\",\"x\\u00e9\\u4E2D\"]","stringify":"[\"😀\",\"xé中\"]","pretty":"[\n  \"😀\",\n  \"xé中\"\n]"},
+    {"text":"[\"é\",\"e\\u0301\",\"\\u00e9\"]","stringify":"[\"é\",\"é\",\"é\"]","pretty":"[\n  \"é\",\n  \"é\",\n  \"é\"\n]"},
+    {"text":"{}","stringify":"{}","pretty":"{}"},
+    {"text":"[]","stringify":"[]","pretty":"[]"},
+    {"text":"[{},[],[[]],{\"a\":{}}]","stringify":"[{},[],[[]],{\"a\":{}}]","pretty":"[\n  {},\n  [],\n  [\n    []\n  ],\n  {\n    \"a\": {}\n  }\n]"},
+    {"text":"  {\"spaced\" : [ 1 , 2 ] }  ","stringify":"{\"spaced\":[1,2]}","pretty":"{\n  \"spaced\": [\n    1,\n    2\n  ]\n}"},
+    {"text":"\"\\uFEFF bom-escape\"","stringify":"\"﻿ bom-escape\"","pretty":"\"﻿ bom-escape\""},
+    {"text":"null","stringify":"null","pretty":"null"},
+    {"text":"true","stringify":"true","pretty":"true"},
+    {"text":"{\"a\":1,}","stringify":null,"pretty":null},
+    {"text":"[01]","stringify":null,"pretty":null},
+    {"text":"{'a':1}","stringify":null,"pretty":null},
+    {"text":"[1e]","stringify":null,"pretty":null},
+    {"text":"[NaN]","stringify":null,"pretty":null},
+    {"text":"\"\u0001\"","stringify":null,"pretty":null}
+  ]
+}

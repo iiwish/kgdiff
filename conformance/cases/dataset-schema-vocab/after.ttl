@@ -1,0 +1,470 @@
+# A slice of a schema.org-style vocabulary, release vocab-2026.10.
+# Example data for kgdiff (CC0-1.0). Modelled on the kinds of changes schema.org releases make;
+# not an actual schema.org release. Deprecations use owl:deprecated + IAO:0100001 (term replaced by).
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix obo: <http://purl.obolibrary.org/obo/> .
+@prefix schema: <https://schema.org/> .
+
+# ─── Classes ─────────────────────────────────────────────────────────────────────────────────────
+
+schema:Thing
+    a rdfs:Class ;
+    rdfs:label "Thing"@en, "事物"@zh ;
+    rdfs:comment "Root type: anything that can be described." .
+
+schema:CreativeWork
+    a rdfs:Class ;
+    rdfs:label "Creative work"@en, "创作作品"@zh ;
+    rdfs:comment "Something produced by creative effort, such as a text, a recording, a program or a data collection." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:Article
+    a rdfs:Class ;
+    rdfs:label "Article"@en, "文章"@zh ;
+    rdfs:comment "A written piece published on its own, for example in a newspaper, magazine or website." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:NewsArticle
+    a rdfs:Class ;
+    rdfs:label "News article"@en, "新闻报道"@zh ;
+    rdfs:comment "An article that reports on current events or gives background to them." ;
+    rdfs:subClassOf schema:Article .
+
+schema:ScholarlyArticle
+    a rdfs:Class ;
+    rdfs:label "Scholarly article"@en, "学术论文"@zh ;
+    rdfs:comment "An article written for an academic audience, usually peer reviewed." ;
+    rdfs:subClassOf schema:Article .
+
+schema:BlogPosting
+    a rdfs:Class ;
+    rdfs:label "Blog posting"@en, "博客文章"@zh ;
+    rdfs:comment "An entry published on a blog." ;
+    rdfs:subClassOf schema:SocialMediaPosting .
+
+schema:SocialMediaPosting
+    a rdfs:Class ;
+    rdfs:label "Social media posting"@en, "社交媒体帖子"@zh ;
+    rdfs:comment "A post published on a social or community platform, including blog entries and forum messages." ;
+    rdfs:subClassOf schema:Article .
+
+schema:DiscussionForumPosting
+    a rdfs:Class ;
+    rdfs:label "Discussion forum posting"@en, "论坛帖子"@zh ;
+    rdfs:comment "A message posted to an online discussion forum." ;
+    rdfs:subClassOf schema:SocialMediaPosting .
+
+schema:Book
+    a rdfs:Class ;
+    rdfs:label "Book"@en, "图书"@zh ;
+    rdfs:comment "A book, in print or electronic form." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:Movie
+    a rdfs:Class ;
+    rdfs:label "Movie"@en, "电影"@zh ;
+    rdfs:comment "A motion picture." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:MusicRecording
+    a rdfs:Class ;
+    rdfs:label "Music recording"@en ;
+    rdfs:comment "A single recorded piece of music, such as one track of an album." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:Dataset
+    a rdfs:Class ;
+    rdfs:label "Dataset"@en, "数据集"@zh ;
+    rdfs:comment "A collection of structured data about one or more topics, published as a unit with one or more distributions." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:SoftwareApplication
+    a rdfs:Class ;
+    rdfs:label "Software application"@en, "软件应用"@zh ;
+    rdfs:comment "A program that end users install or run." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:SoftwareSourceCode
+    a rdfs:Class ;
+    rdfs:label "Software source code"@en, "源代码"@zh ;
+    rdfs:comment "Human-readable program text, from a short snippet to a complete project." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:Code
+    a rdfs:Class ;
+    rdfs:label "Code"@en ;
+    rdfs:comment "Program text, such as a snippet or a complete program. Deprecated: use SoftwareSourceCode." ;
+    rdfs:subClassOf schema:CreativeWork ;
+    owl:deprecated true ;
+    obo:IAO_0100001 schema:SoftwareSourceCode .
+
+schema:WebPage
+    a rdfs:Class ;
+    rdfs:label "Web page"@en, "网页"@zh ;
+    rdfs:comment "A single page of a website." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:Review
+    a rdfs:Class ;
+    rdfs:label "Review"@en, "评论"@zh ;
+    rdfs:comment "An assessment of something, such as a book, a product or a restaurant." ;
+    rdfs:subClassOf schema:CreativeWork, [
+        a owl:Restriction ;
+        owl:onProperty schema:itemReviewed ;
+        owl:someValuesFrom schema:Thing
+    ] .
+
+schema:Comment
+    a rdfs:Class ;
+    rdfs:label "Comment"@en ;
+    rdfs:comment "A short remark attached to another piece of content, such as a blog post." ;
+    rdfs:subClassOf schema:CreativeWork .
+
+schema:Organization
+    a rdfs:Class ;
+    rdfs:label "Organization"@en, "组织"@zh ;
+    rdfs:comment "A group of people organized for a purpose, such as a company, school, club or charity." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:Corporation
+    a rdfs:Class ;
+    rdfs:label "Corporation"@en, "公司"@zh ;
+    skos:altLabel "Company"@en ;
+    rdfs:comment "A company incorporated as a legal entity." ;
+    rdfs:subClassOf schema:Organization .
+
+schema:NGO
+    a rdfs:Class ;
+    rdfs:label "Non-governmental organization"@en, "非政府组织"@zh ;
+    skos:altLabel "NGO"@en ;
+    rdfs:comment "An organization that operates independently of any government." ;
+    rdfs:subClassOf schema:Organization .
+
+schema:EducationalOrganization
+    a rdfs:Class ;
+    rdfs:label "Educational organization"@en, "教育机构"@zh ;
+    rdfs:comment "An organization whose main purpose is teaching." ;
+    rdfs:subClassOf schema:Organization .
+
+schema:CollegeOrUniversity
+    a rdfs:Class ;
+    rdfs:label "College or university"@en, "高等院校"@zh ;
+    rdfs:comment "An institution of higher education." ;
+    rdfs:subClassOf schema:EducationalOrganization .
+
+schema:LocalBusiness
+    a rdfs:Class ;
+    rdfs:label "Local business"@en, "本地商家"@zh ;
+    rdfs:comment "A business, or one branch of it, that serves customers at a physical location, for example a shop, a bank branch or a clinic." ;
+    rdfs:subClassOf schema:Organization, schema:Place .
+
+schema:FoodEstablishment
+    a rdfs:Class ;
+    rdfs:label "Food establishment"@en, "餐饮场所"@zh ;
+    rdfs:comment "A business that prepares or serves food or drink." ;
+    rdfs:subClassOf schema:LocalBusiness .
+
+schema:CafeOrCoffeeShop
+    a rdfs:Class ;
+    rdfs:label "Cafe or coffee shop"@en, "咖啡馆"@zh ;
+    rdfs:comment "A small establishment serving coffee, tea and light meals." ;
+    rdfs:subClassOf schema:FoodEstablishment .
+
+schema:Restaurant
+    a rdfs:Class ;
+    rdfs:label "Restaurant"@en, "餐厅"@zh ;
+    rdfs:comment "A business that prepares and serves meals." ;
+    rdfs:subClassOf schema:FoodEstablishment .
+
+schema:Store
+    a rdfs:Class ;
+    rdfs:label "Store"@en, "商店"@zh ;
+    rdfs:comment "A business that sells goods at retail." ;
+    rdfs:subClassOf schema:LocalBusiness .
+
+schema:Person
+    a rdfs:Class ;
+    rdfs:label "Person"@en, "人"@zh ;
+    rdfs:comment "A human being, living, dead or fictional." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:Place
+    a rdfs:Class ;
+    rdfs:label "Place"@en, "地点"@zh ;
+    rdfs:comment "A location with a more or less fixed physical extent." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:VirtualLocation
+    a rdfs:Class ;
+    rdfs:label "Virtual location"@en, "线上地点"@zh ;
+    rdfs:comment "A location that exists only online, such as a video-conference room or a live stream." ;
+    rdfs:subClassOf schema:Intangible .
+
+schema:Event
+    a rdfs:Class ;
+    rdfs:label "Event"@en, "事件"@zh ;
+    rdfs:comment "Something that happens at a given time and place, such as a concert, a lecture or a festival. Recurring events are described as one Event per occurrence." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:BusinessEvent
+    a rdfs:Class ;
+    rdfs:label "Business event"@en ;
+    rdfs:comment "An event organized for business purposes, such as a trade fair." ;
+    rdfs:subClassOf schema:Event .
+
+schema:MusicEvent
+    a rdfs:Class ;
+    rdfs:label "Music event"@en ;
+    rdfs:comment "An event where music is performed." ;
+    rdfs:subClassOf schema:Event .
+
+schema:Product
+    a rdfs:Class ;
+    rdfs:label "Product"@en, "产品"@zh ;
+    rdfs:comment "Something offered for sale or use, whether a physical good or a service." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:Intangible
+    a rdfs:Class ;
+    rdfs:label "Intangible"@en ;
+    rdfs:comment "Umbrella type for things without physical form, such as quantities, ratings and structured values." ;
+    rdfs:subClassOf schema:Thing .
+
+schema:Offer
+    a rdfs:Class ;
+    rdfs:label "Offer"@en, "报价"@zh ;
+    rdfs:comment "A proposal to sell, rent or provide something, under stated conditions." ;
+    rdfs:subClassOf schema:Intangible .
+
+schema:Rating
+    a rdfs:Class ;
+    rdfs:label "Rating"@en, "评分"@zh ;
+    rdfs:comment "A score on a numeric scale, for example from one to five stars." ;
+    rdfs:subClassOf schema:Intangible .
+
+schema:AggregateRating
+    a rdfs:Class ;
+    rdfs:label "Aggregate rating"@en, "综合评分"@zh ;
+    rdfs:comment "A rating computed from many individual ratings or reviews." ;
+    rdfs:subClassOf schema:Rating .
+
+schema:StructuredValue
+    a rdfs:Class ;
+    rdfs:label "Structured value"@en ;
+    rdfs:comment "A value made of several parts, used when plain text or a link is not enough." ;
+    rdfs:subClassOf schema:Intangible .
+
+schema:ContactPoint
+    a rdfs:Class ;
+    rdfs:label "Contact point"@en, "联系方式"@zh ;
+    rdfs:comment "A way to get in touch with an organization or person, such as a support line." ;
+    rdfs:subClassOf schema:StructuredValue .
+
+schema:PostalAddress
+    a rdfs:Class ;
+    rdfs:label "Postal address"@en, "邮政地址"@zh ;
+    rdfs:comment "An address for sending mail." ;
+    rdfs:subClassOf schema:ContactPoint .
+
+# ─── Data types ──────────────────────────────────────────────────────────────────────────────────
+
+schema:Text
+    a rdfs:Class, schema:DataType ;
+    rdfs:label "Text"@en ;
+    rdfs:comment "Data type for character strings." .
+
+schema:URL
+    a rdfs:Class, schema:DataType ;
+    rdfs:label "URL"@en ;
+    rdfs:comment "Data type for web addresses." ;
+    rdfs:subClassOf schema:Text .
+
+schema:Number
+    a rdfs:Class, schema:DataType ;
+    rdfs:label "Number"@en ;
+    rdfs:comment "Data type for numeric values." .
+
+schema:Integer
+    a rdfs:Class, schema:DataType ;
+    rdfs:label "Integer"@en ;
+    rdfs:comment "Data type for whole numbers." ;
+    rdfs:subClassOf schema:Number .
+
+schema:Date
+    a rdfs:Class, schema:DataType ;
+    rdfs:label "Date"@en ;
+    rdfs:comment "Data type for calendar dates in ISO 8601 form (YYYY-MM-DD)." .
+
+schema:DateTime
+    a rdfs:Class, schema:DataType ;
+    rdfs:label "DateTime"@en ;
+    rdfs:comment "Data type for a date with a time of day, in ISO 8601 form." .
+
+# ─── Properties ──────────────────────────────────────────────────────────────────────────────────
+
+schema:name
+    a rdf:Property ;
+    rdfs:label "name"@en ;
+    rdfs:comment "What the item is called." ;
+    schema:domainIncludes schema:Thing ;
+    schema:rangeIncludes schema:Text .
+
+schema:description
+    a rdf:Property ;
+    rdfs:label "description"@en ;
+    rdfs:comment "A free-text account of the item." ;
+    schema:domainIncludes schema:Thing ;
+    schema:rangeIncludes schema:Text .
+
+schema:url
+    a rdf:Property ;
+    rdfs:label "url"@en ;
+    rdfs:comment "Web address of the item." ;
+    schema:domainIncludes schema:Thing ;
+    schema:rangeIncludes schema:URL .
+
+schema:author
+    a rdf:Property ;
+    rdfs:label "author"@en ;
+    rdfs:comment "Who wrote or created the work or rating." ;
+    schema:domainIncludes schema:CreativeWork, schema:Rating ;
+    schema:rangeIncludes schema:Organization, schema:Person .
+
+schema:publisher
+    a rdf:Property ;
+    rdfs:label "publisher"@en ;
+    rdfs:comment "Who published the work." ;
+    schema:domainIncludes schema:CreativeWork ;
+    schema:rangeIncludes schema:Organization, schema:Person .
+
+schema:datePublished
+    a rdf:Property ;
+    rdfs:label "date published"@en ;
+    rdfs:comment "When the work was first published or broadcast." ;
+    schema:domainIncludes schema:CreativeWork ;
+    schema:rangeIncludes schema:Date, schema:DateTime .
+
+schema:review
+    a rdf:Property ;
+    rdfs:label "review"@en ;
+    rdfs:comment "A review of this item." ;
+    schema:domainIncludes schema:CreativeWork, schema:Organization, schema:Place, schema:Product ;
+    schema:rangeIncludes schema:Review .
+
+schema:reviewRating
+    a rdf:Property ;
+    rdfs:label "review rating"@en ;
+    rdfs:comment "The score that this review gives." ;
+    schema:domainIncludes schema:Review ;
+    schema:rangeIncludes schema:Rating .
+
+schema:itemReviewed
+    a rdf:Property ;
+    rdfs:label "item reviewed"@en ;
+    rdfs:comment "The thing that the review or rating is about." ;
+    schema:domainIncludes schema:AggregateRating, schema:Review ;
+    schema:rangeIncludes schema:Thing .
+
+schema:ratingValue
+    a rdf:Property ;
+    rdfs:label "rating value"@en ;
+    rdfs:comment "The value of the rating." ;
+    schema:domainIncludes schema:Rating ;
+    schema:rangeIncludes schema:Number, schema:Text .
+
+schema:employee
+    a rdf:Property ;
+    rdfs:label "employee"@en ;
+    rdfs:comment "A person employed by the organization." ;
+    schema:domainIncludes schema:Organization ;
+    schema:rangeIncludes schema:Person .
+
+schema:employees
+    a rdf:Property ;
+    rdfs:label "employees"@en ;
+    rdfs:comment "People employed by the organization. Deprecated: use employee, which is repeatable." ;
+    schema:domainIncludes schema:Organization ;
+    schema:rangeIncludes schema:Person ;
+    owl:deprecated true ;
+    obo:IAO_0100001 schema:employee .
+
+schema:founder
+    a rdf:Property ;
+    rdfs:label "founder"@en ;
+    rdfs:comment "A person who founded the organization." ;
+    schema:domainIncludes schema:Organization ;
+    schema:rangeIncludes schema:Person .
+
+schema:worksFor
+    a rdf:Property ;
+    rdfs:label "works for"@en ;
+    rdfs:comment "An organization the person is employed by." ;
+    schema:domainIncludes schema:Person ;
+    schema:rangeIncludes schema:Organization .
+
+schema:address
+    a rdf:Property ;
+    rdfs:label "address"@en ;
+    rdfs:comment "The physical address of the item." ;
+    schema:domainIncludes schema:Organization, schema:Person, schema:Place ;
+    schema:rangeIncludes schema:PostalAddress, schema:Text .
+
+schema:location
+    a rdf:Property ;
+    rdfs:label "location"@en ;
+    rdfs:comment "Where the event takes place or where the organization is based." ;
+    schema:domainIncludes schema:Event, schema:Organization ;
+    schema:rangeIncludes schema:Place, schema:PostalAddress, schema:Text, schema:VirtualLocation .
+
+schema:startDate
+    a rdf:Property ;
+    rdfs:label "start date"@en ;
+    rdfs:comment "When the item starts, in ISO 8601 form." ;
+    schema:domainIncludes schema:Event ;
+    schema:rangeIncludes schema:Date, schema:DateTime .
+
+schema:organizer
+    a rdf:Property ;
+    rdfs:label "organizer"@en ;
+    rdfs:comment "Who organizes the event." ;
+    schema:domainIncludes schema:Event ;
+    schema:rangeIncludes schema:Organization, schema:Person .
+
+schema:offers
+    a rdf:Property ;
+    rdfs:label "offers"@en ;
+    rdfs:comment "An offer under which the item is available." ;
+    schema:domainIncludes schema:CreativeWork, schema:Event, schema:Product ;
+    schema:rangeIncludes schema:Offer .
+
+schema:price
+    a rdf:Property ;
+    rdfs:label "price"@en ;
+    rdfs:comment "The amount asked in the offer." ;
+    schema:domainIncludes schema:Offer ;
+    schema:rangeIncludes schema:Number, schema:Text .
+
+schema:servesCuisine
+    a rdf:Property ;
+    rdfs:label "serves cuisine"@en ;
+    rdfs:comment "The style of food the establishment serves." ;
+    schema:domainIncludes schema:FoodEstablishment ;
+    schema:rangeIncludes schema:Text .
+
+schema:numberOfPages
+    a rdf:Property ;
+    rdfs:label "number of pages"@en ;
+    rdfs:comment "How many pages the book has." ;
+    schema:domainIncludes schema:Book ;
+    schema:rangeIncludes schema:Integer .
+
+schema:codeRepository
+    a rdf:Property ;
+    rdfs:label "code repository"@en ;
+    rdfs:comment "Where the source code is hosted, for example a Git repository." ;
+    schema:domainIncludes schema:SoftwareSourceCode ;
+    schema:rangeIncludes schema:URL .

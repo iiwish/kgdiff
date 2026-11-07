@@ -1,0 +1,33 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 235,
+  "nodes": [
+    "_:b01b7df874a952b",
+    "_:b187a4b8e554203",
+    "http://example.org/acme",
+    "http://example.org/alice",
+    "http://example.org/bob",
+    "http://example.org/carol"
+  ],
+  "radii": {
+    "_:b01b7df874a952b": 6.2,
+    "_:b187a4b8e554203": 6.2,
+    "http://example.org/acme": 7.81,
+    "http://example.org/alice": 7.81,
+    "http://example.org/bob": 7.11,
+    "http://example.org/carol": 6.2
+  },
+  "hidden": {},
+  "components": [
+    [
+      "_:b01b7df874a952b",
+      "_:b187a4b8e554203",
+      "http://example.org/acme",
+      "http://example.org/alice",
+      "http://example.org/bob",
+      "http://example.org/carol"
+    ]
+  ]
+}

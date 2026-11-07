@@ -1,0 +1,228 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "EX:0000001",
+        "label": "organism",
+        "type": "Term",
+        "attrs": {
+          "def": "A living thing that grows and reproduces.",
+          "def_xrefs": [
+            "EX:curator",
+            "PMID:123"
+          ],
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000002",
+        "label": "Animal",
+        "type": "Term",
+        "aliases": [
+          "beast",
+          "creature",
+          "fauna"
+        ],
+        "attrs": {
+          "namespace": "example",
+          "synonyms": [
+            "beast (EXACT)",
+            "creature (RELATED)",
+            "fauna (BROAD)"
+          ]
+        }
+      },
+      {
+        "id": "EX:0000003",
+        "label": "plant",
+        "type": "Term",
+        "attrs": {
+          "namespace": "example",
+          "xref": [
+            "WIKI:Plant",
+            "WIKIDATA:Q756"
+          ]
+        }
+      },
+      {
+        "id": "EX:0000005",
+        "label": "shrub",
+        "type": "Term",
+        "aliases": [
+          "shrubbery"
+        ],
+        "attrs": {
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000006",
+        "label": "bush",
+        "type": "Term",
+        "attrs": {
+          "namespace": "example"
+        },
+        "deprecated": true,
+        "replacedBy": [
+          "EX:0000005"
+        ]
+      },
+      {
+        "id": "EX:0000007",
+        "label": "tree",
+        "type": "Term",
+        "attrs": {
+          "comment": "",
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000009",
+        "label": "ecosystem",
+        "type": "Term",
+        "aliases": [
+          "habitat system"
+        ],
+        "attrs": {
+          "namespace": "example",
+          "synonyms": [
+            "habitat system (RELATED)"
+          ]
+        }
+      },
+      {
+        "id": "EX:0000010",
+        "label": "biome",
+        "type": "Term",
+        "attrs": {
+          "def": "A large naturally occurring community.",
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000044",
+        "label": "flower",
+        "type": "Term",
+        "attrs": {
+          "alt_id": [
+            "EX:0000004",
+            "EX:0000040"
+          ],
+          "comment": "Has petals and sepals.",
+          "namespace": "example"
+        },
+        "replaces": [
+          "EX:0000004",
+          "EX:0000040"
+        ]
+      },
+      {
+        "id": "EX:I001",
+        "label": "Fido",
+        "type": "Instance",
+        "attrs": {
+          "namespace": "example"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "EX:0000002",
+        "target": "EX:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000003",
+        "target": "EX:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000003",
+        "target": "EX:0000010",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "EX:0000005",
+        "target": "EX:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000007",
+        "target": "EX:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000010",
+        "target": "EX:0000009",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000044",
+        "target": "EX:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:I001",
+        "target": "EX:0000002",
+        "predicate": "instance_of",
+        "label": "instance of"
+      }
+    ],
+    "meta": {
+      "name": "ex",
+      "predicateLabels": {
+        "part_of": "part of"
+      },
+      "source": "after.obo",
+      "version": "ex/2026-02-01"
+    }
+  },
+  "format": "obo",
+  "prefixes": {
+    "EX": "http://example.org/ex_",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {
+    "part_of": "part of"
+  },
+  "warnings": [
+    {
+      "code": "obo-multiple-names",
+      "message": "EX:0000005 has more than one name.",
+      "line": 39
+    },
+    {
+      "code": "obo-duplicate-id",
+      "message": "[Term] EX:0000009 is defined more than once; the stanzas were merged.",
+      "line": 58
+    },
+    {
+      "code": "obo-unquoted-def",
+      "message": "Definition of EX:0000010 is not quoted.",
+      "line": 65
+    },
+    {
+      "code": "obo-unknown-stanza",
+      "message": "Skipped unsupported [Foo] stanza.",
+      "line": 78
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "shop dbt project main@4f2c9e1 → main@b81d07a",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "shop dbt project main@4f2c9e1",
+      "format": "json"
+    },
+    "after": {
+      "name": "shop dbt project main@b81d07a",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

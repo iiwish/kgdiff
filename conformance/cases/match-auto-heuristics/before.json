@@ -1,0 +1,37 @@
+{
+  "meta": { "name": "vehicles", "version": "2026.1" },
+  "nodes": [
+    { "id": "vehicle", "label": "Vehicle", "type": "Class" },
+    { "id": "car", "label": "Car", "type": "Class", "aliases": ["Motorcar"] },
+    { "id": "auto", "label": "Automobile", "type": "Class" },
+    { "id": "bus", "label": "Bus", "type": "Class", "aliases": ["Coach", "Minibus"] },
+    { "id": "bicycle", "label": "Bicycle", "type": "Class" },
+    { "id": "lorry", "label": "Lorry", "type": "Class" },
+    { "id": "sidecar", "label": "Sidecar", "type": "Class" },
+    { "id": "engine", "label": "Engine", "type": "Part" },
+    { "id": "cargo_bed", "label": "Cargo bed", "type": "Part" },
+    { "id": "wheel", "label": "Wheel", "type": "Part" },
+    { "id": "petrol", "label": "Petrol", "type": "Fuel" },
+    { "id": "maker", "label": "Manufacturer", "type": "Organization" }
+  ],
+  "edges": [
+    { "source": "car", "target": "vehicle", "predicate": "is_a" },
+    { "source": "auto", "target": "vehicle", "predicate": "is_a" },
+    { "source": "bus", "target": "vehicle", "predicate": "is_a" },
+    { "source": "bicycle", "target": "vehicle", "predicate": "is_a" },
+    { "source": "lorry", "target": "vehicle", "predicate": "is_a" },
+    { "source": "sidecar", "target": "vehicle", "predicate": "is_a" },
+    { "source": "car", "target": "engine", "predicate": "has_part", "attrs": { "count": 1 } },
+    { "source": "auto", "target": "engine", "predicate": "has_part" },
+    { "source": "auto", "target": "wheel", "predicate": "has_part" },
+    { "source": "car", "target": "wheel", "predicate": "has_part", "attrs": { "count": 4 } },
+    { "source": "bus", "target": "engine", "predicate": "has_part" },
+    { "source": "bus", "target": "wheel", "predicate": "has_part" },
+    { "source": "lorry", "target": "cargo_bed", "predicate": "has_part" },
+    { "source": "lorry", "target": "engine", "predicate": "has_part" },
+    { "source": "bicycle", "target": "wheel", "predicate": "has_part", "attrs": { "count": 2 } },
+    { "source": "car", "target": "petrol", "predicate": "fuel" },
+    { "source": "engine", "target": "maker", "predicate": "made_by" },
+    { "source": "sidecar", "target": "wheel", "predicate": "has_part" }
+  ]
+}

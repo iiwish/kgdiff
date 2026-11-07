@@ -1,0 +1,64 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "1",
+        "label": "Alice",
+        "type": "Person",
+        "attrs": {
+          "title": "Team lead"
+        }
+      },
+      {
+        "id": "2",
+        "label": "Bob",
+        "type": "Person"
+      },
+      {
+        "id": "3",
+        "label": "Carol",
+        "type": "Person"
+      }
+    ],
+    "edges": [
+      {
+        "source": "1",
+        "target": "3",
+        "predicate": "mentors",
+        "label": "mentors"
+      },
+      {
+        "source": "2",
+        "target": "1",
+        "predicate": "reports to",
+        "label": "reports to"
+      }
+    ],
+    "meta": {
+      "source": "before.json"
+    }
+  },
+  "format": "json",
+  "dialect": "vis",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": [
+    {
+      "code": "json-ignored-fields",
+      "message": "Ignored vis fields that are not part of the graph: arrows (1), color (1)."
+    }
+  ]
+}

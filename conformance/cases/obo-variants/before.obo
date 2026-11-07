@@ -1,0 +1,61 @@
+format-version: 1.4
+data-version: ex/2026-01-01
+idspace: EX http://example.org/ex_ "Example terms"
+default-namespace: example
+ontology: ex
+remark: A small ontology that exercises the OBO reader.
+
+[Term]
+id: EX:0000001
+name: organism
+def: "A living thing." [EX:curator]
+
+[Term]
+id: EX:0000002
+name: animal
+synonym: "beast" EXACT []
+synonym: "creature" RELATED [EX:curator]
+is_a: EX:0000001 ! organism
+
+[Term]
+id: EX:0000003
+name: plant
+is_a: EX:0000001 ! organism
+relationship: part_of EX:0000009 ! ecosystem
+xref: WIKI:Plant
+
+[Term]
+id: EX:0000004
+name: flower
+alt_id: EX:0000040
+is_a: EX:0000003 ! plant
+comment: Has petals.
+
+[Term]
+id: EX:0000005
+name: shrub
+is_a: EX:0000003 ! plant
+
+[Term]
+id: EX:0000006
+name: bush
+is_a: EX:0000003 ! plant
+relationship: part_of EX:0000009 ! ecosystem
+
+[Term]
+id: EX:0000009
+name: ecosystem
+
+[Typedef]
+id: part_of
+name: part of
+is_transitive: true
+
+[Instance]
+id: EX:I001
+name: Fido
+instance_of: EX:0000002
+
+[Foo]
+id: EX:9999999
+name: unknown stanza

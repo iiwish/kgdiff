@@ -1,0 +1,82 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 235,
+  "nodes": [
+    "a-ascii",
+    "apple-pie",
+    "bidi",
+    "cjk",
+    "ctrl",
+    "flag",
+    "hangul",
+    "kana",
+    "keycap",
+    "long",
+    "sigma-lower",
+    "turkish",
+    "zwj",
+    "é-nfc",
+    "😀-smile",
+    "🦀-crab",
+    "𠀀-ext-b",
+    "-pua",
+    "～-wave"
+  ],
+  "radii": {
+    "a-ascii": 6.2,
+    "apple-pie": 7.11,
+    "bidi": 6.2,
+    "cjk": 7.81,
+    "ctrl": 6.2,
+    "flag": 6.2,
+    "hangul": 6.2,
+    "kana": 6.2,
+    "keycap": 6.2,
+    "long": 6.2,
+    "sigma-lower": 6.2,
+    "turkish": 6.2,
+    "zwj": 6.2,
+    "é-nfc": 6.2,
+    "😀-smile": 7.81,
+    "🦀-crab": 6.2,
+    "𠀀-ext-b": 7.11,
+    "-pua": 6.2,
+    "～-wave": 7.11
+  },
+  "hidden": {},
+  "components": [
+    [
+      "a-ascii",
+      "😀-smile",
+      "🦀-crab",
+      "𠀀-ext-b",
+      "-pua",
+      "～-wave"
+    ],
+    [
+      "cjk",
+      "hangul",
+      "kana",
+      "long"
+    ],
+    [
+      "apple-pie",
+      "sigma-lower",
+      "é-nfc"
+    ],
+    [
+      "bidi",
+      "ctrl"
+    ],
+    [
+      "flag",
+      "zwj"
+    ],
+    [
+      "keycap",
+      "turkish"
+    ]
+  ]
+}

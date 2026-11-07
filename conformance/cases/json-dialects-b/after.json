@@ -1,0 +1,14 @@
+{
+  "attributes": { "name": "team" },
+  "options": { "type": "directed", "multi": false, "allowSelfLoops": true },
+  "nodes": [
+    { "key": "alice", "attributes": { "label": "Alice", "type": "Person", "x": 1, "y": 2, "size": 10 } },
+    { "key": "bob", "attributes": { "label": "Bob", "type": "Engineer" } },
+    { "key": "carol", "attributes": { "label": "Carol", "type": "Person" } }
+  ],
+  "edges": [
+    { "key": "e1", "source": "bob", "target": "alice", "attributes": { "predicate": "reports_to" } },
+    { "key": "e2", "source": "alice", "target": "carol", "attributes": { "predicate": "mentors", "since": 2022 } },
+    { "source": "carol", "target": "carol", "attributes": { "predicate": "self_review" } }
+  ]
+}

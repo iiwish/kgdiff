@@ -1,0 +1,130 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "term:attribute",
+        "label": "Attribute",
+        "deprecated": true,
+        "replacedBy": [
+          "term:dimension"
+        ]
+      },
+      {
+        "id": "term:dimension",
+        "label": "Dimension",
+        "attrs": {
+          "definition": "An attribute to group by.",
+          "updated_at": "2026-05-01"
+        }
+      },
+      {
+        "id": "term:facet",
+        "label": "Facet",
+        "replacedBy": [
+          "term:dimension"
+        ]
+      },
+      {
+        "id": "term:indicator",
+        "label": "Indicator"
+      },
+      {
+        "id": "term:kpi",
+        "label": "Key performance indicator",
+        "aliases": [
+          "KPI"
+        ],
+        "attrs": {
+          "definition": "A metric tied to a goal.",
+          "etag": "b1",
+          "updated_at": "2026-05-01"
+        }
+      },
+      {
+        "id": "term:measure",
+        "label": "Measure"
+      },
+      {
+        "id": "term:metric",
+        "label": "Metric",
+        "attrs": {
+          "definition": "A quantitative measure.",
+          "etag": "a1",
+          "updated_at": "2026-05-01"
+        }
+      },
+      {
+        "id": "term:okr",
+        "label": "Objective and key results",
+        "attrs": {
+          "rdfs:comment": "Goal framework.",
+          "updated_at": "2026-05-01"
+        }
+      },
+      {
+        "id": "term:old-name",
+        "label": "Revenue per user"
+      }
+    ],
+    "edges": [
+      {
+        "source": "term:attribute",
+        "target": "term:dimension",
+        "predicate": "related"
+      },
+      {
+        "source": "term:facet",
+        "target": "term:dimension",
+        "predicate": "related"
+      },
+      {
+        "source": "term:indicator",
+        "target": "term:metric",
+        "predicate": "broader"
+      },
+      {
+        "source": "term:kpi",
+        "target": "term:metric",
+        "predicate": "broader"
+      },
+      {
+        "source": "term:measure",
+        "target": "term:metric",
+        "predicate": "related"
+      },
+      {
+        "source": "term:okr",
+        "target": "term:metric",
+        "predicate": "broader"
+      },
+      {
+        "source": "term:old-name",
+        "target": "term:metric",
+        "predicate": "broader"
+      }
+    ],
+    "meta": {
+      "name": "glossary",
+      "source": "before.json",
+      "version": "2026-05"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

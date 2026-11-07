@@ -1,0 +1,12 @@
+kgdiff  encodings utf-16 → gzip                         4 nodes · 3 edges
+
+  +1 added   −1 removed   ~2 modified                6 changes in 4 hunks
+  ++−−~~
+
+  Removed 1
+  − Removed “Obsolete” and 1 relation   removed · was linked to “Données”
+  Modified 2
+  ~ Renamed “Emoji 🧪” → “Emoji 🧪🧫”   content
+  ~ Renamed “表格” → “数据表”           content
+  Added 1
+  + Added “Vue” and 1 relation          added · linked to “数据表”

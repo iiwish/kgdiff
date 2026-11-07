@@ -1,0 +1,37 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "retail", "version": "skeleton" },
+  "nodes": [
+    { "id": "party", "label": "Party", "type": "Concept" },
+    { "id": "taxonomy", "label": "Business taxonomy", "type": "Concept" },
+    { "id": "geo", "label": "Geography", "type": "Concept" },
+    { "id": "dim_customer", "label": "Customer", "type": "Entity", "attrs": { "table": "crm.customers", "rows": 120000 } },
+    { "id": "dim_client", "label": "Client", "type": "Entity", "attrs": { "table": "erp.clients", "rows": 8400 } },
+    { "id": "fct_order", "label": "Order", "type": "Event", "attrs": { "table": "sales.orders", "grain": "order" } },
+    { "id": "fct_order_line", "label": "Order line", "type": "Event", "attrs": { "table": "sales.order_lines", "grain": "line" } },
+    { "id": "dim_product", "label": "Product", "type": "Entity", "attrs": { "table": "pim.products" } },
+    { "id": "dim_sku", "label": "SKU", "type": "Entity", "aliases": ["Stock keeping unit"], "attrs": { "table": "pim.skus" } },
+    { "id": "dim_category", "label": "Category", "type": "Entity" },
+    { "id": "dim_region", "label": "Region", "type": "Entity" },
+    { "id": "channel", "label": "Channel", "type": "Entity" },
+    { "id": "metric_revenue", "label": "Revenue", "type": "Metric", "attrs": { "definition": "Sum of order line amounts", "unit": "CNY" } },
+    { "id": "metric_gmv", "label": "GMV", "type": "Metric", "attrs": { "definition": "Gross merchandise value" } }
+  ],
+  "edges": [
+    { "source": "dim_customer", "target": "party", "predicate": "subClassOf" },
+    { "source": "dim_client", "target": "party", "predicate": "subClassOf" },
+    { "source": "dim_region", "target": "geo", "predicate": "subClassOf" },
+    { "source": "channel", "target": "geo", "predicate": "subClassOf" },
+    { "source": "fct_order", "target": "dim_customer", "predicate": "placed_by", "attrs": { "cardinality": "N:1" } },
+    { "source": "fct_order", "target": "dim_client", "predicate": "billed_to", "attrs": { "cardinality": "N:1" } },
+    { "source": "fct_order", "target": "dim_region", "predicate": "ships_to" },
+    { "source": "fct_order_line", "target": "fct_order", "predicate": "part_of" },
+    { "source": "fct_order_line", "target": "dim_sku", "predicate": "of_item" },
+    { "source": "dim_sku", "target": "dim_product", "predicate": "variant_of" },
+    { "source": "dim_product", "target": "dim_category", "predicate": "in_category" },
+    { "source": "dim_category", "target": "dim_category", "predicate": "parent_category", "label": "parent category" },
+    { "source": "metric_revenue", "target": "fct_order_line", "predicate": "computed_from" },
+    { "source": "metric_gmv", "target": "fct_order", "predicate": "computed_from" }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "description": "facetLabel(kind, locale) of @kgdiff/core for every facet kind, in canonical facet order.",
+  "labels": {
+    "en": {
+      "rekey": "Re-keyed",
+      "rename": "Renamed",
+      "mergedInto": "Merged into",
+      "mergeTarget": "Merge target",
+      "splitFrom": "Split from",
+      "splitInto": "Split into",
+      "move": "Moved",
+      "deprecate": "Deprecated",
+      "replacement": "Replacement links",
+      "types": "Types changed",
+      "aliases": "Synonyms changed",
+      "attrs": "Attributes changed",
+      "retarget": "Retargeted",
+      "predicate": "Relation type changed",
+      "label": "Relabeled",
+      "collapsed": "Collapsed duplicate"
+    },
+    "zh-CN": {
+      "rekey": "ID 变更",
+      "rename": "改名",
+      "mergedInto": "合并入",
+      "mergeTarget": "合并目标",
+      "splitFrom": "拆分自",
+      "splitInto": "拆分为",
+      "move": "移动",
+      "deprecate": "弃用",
+      "replacement": "替代关系",
+      "types": "类型变更",
+      "aliases": "别名变更",
+      "attrs": "属性变更",
+      "retarget": "改为指向",
+      "predicate": "关系类型变更",
+      "label": "标签变更",
+      "collapsed": "重复合并"
+    }
+  }
+}

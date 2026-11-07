@@ -1,0 +1,22 @@
+kgdiff  unicode before → after
+  18 nodes · 12 edges
+
+  +1 added   −1 removed   ~7 modified
+  ⇄1 restructured
+  12 changes in 10 hunks
+  ++−−~~~~~~~⇄
+
+  Removed 1
+  − Removed “Fullwi…   removed · was li…
+  Restructured 1
+  ⇄ “Private use ”…   structure · rela…
+  Modified 7
+  ~ Renamed “A very…   content
+  ~ Renamed “𝐀𝐩𝐩𝐥𝐞…    content · math →…
+  ~ Renamed “Invoic…   content
+  ~ Renamed “Smile…    content · ~1 att…
+  ~ Renamed “ΟΔΟΣ”…    content · sigma…
+  ~ Renamed “データ…   content
+  ~ Renamed “数据资…   content
+  Added 1
+  + Added “Rust 🦀…    added · linked t…

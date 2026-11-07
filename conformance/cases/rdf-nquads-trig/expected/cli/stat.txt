@@ -1,0 +1,11 @@
+kgdiff  before.nq → after.trig                 3 → 4 nodes · 2 → 3 edges
+
+  +1 added   ~2 modified                            4 changes in 3 hunks
+  ++~~
+
+         added  removed  modified  unchanged
+  nodes      1        0         2          1
+  edges      1        0         0          2
+
+  By type
+  (untyped)  3 +~~

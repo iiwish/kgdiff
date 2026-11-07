@@ -1,0 +1,10 @@
+kgdiff  edges 1 → 2                                         4 nodes · 9 edges
+
+  ⇄4 restructured                                        7 changes in 4 hunks
+  ⇄⇄⇄⇄⇄⇄⇄
+
+  Restructured 4
+  ⇄ Updated 3 relations of “Ada”   structure · −1 ~2 relations · 1 retargeted
+  ⇄ Updated 2 relations of “Bea”   structure · ~2 relations
+  ⇄ Edited “Cy” —rel→ “Dee”        structure · ~1 attribute
+  ⇄ Added “Dee” —back→ “Ada”       structure · new relation

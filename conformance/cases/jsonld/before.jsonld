@@ -1,0 +1,41 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "http://schema.org/",
+    "ex": "http://example.org/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "knows": { "@type": "@id" },
+    "memberOf": { "@type": "@id" },
+    "data": { "@id": "ex:data", "@type": "@json" },
+    "height": { "@id": "ex:height", "@type": "http://www.w3.org/2001/XMLSchema#double" },
+    "label": { "@id": "rdfs:label", "@container": "@language" }
+  },
+  "@graph": [
+    {
+      "@id": "ex:alice",
+      "@type": "Person",
+      "label": { "en": "Alice", "zh": "爱丽丝" },
+      "age": 42,
+      "height": 1.7,
+      "score": 0.1,
+      "knows": "ex:bob",
+      "memberOf": "ex:acme",
+      "data": { "b": 1, "10": 2, "a": [1, 2.0, -0], "2": { "z": null } }
+    },
+    {
+      "@id": "ex:bob",
+      "@type": "Person",
+      "name": "Bob",
+      "big": 1e21,
+      "small": 1e-7,
+      "count": 100000000000000000000,
+      "@reverse": { "employee": { "@id": "ex:acme" } }
+    },
+    {
+      "@id": "ex:acme",
+      "@type": "Organization",
+      "name": [{ "@value": "Acme", "@language": "en" }, { "@value": "顶点公司", "@language": "zh" }],
+      "address": { "streetAddress": "1 Main St", "addressLocality": "Springfield" }
+    }
+  ]
+}

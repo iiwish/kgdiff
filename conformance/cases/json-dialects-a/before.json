@@ -1,0 +1,16 @@
+{
+  "elements": {
+    "nodes": [
+      { "data": { "id": "alice", "label": "Alice", "type": "Person", "team": "core" }, "position": { "x": 10, "y": 20 }, "selected": false, "classes": "lead" },
+      { "data": { "id": "bob", "label": "Bob", "type": "Person", "team": "core" }, "position": { "x": 80, "y": 20 } },
+      { "data": { "id": "carol", "label": "Carol", "type": "Person", "parent": "core" } },
+      { "data": { "id": "core", "label": "Core team", "type": "Team" } }
+    ],
+    "edges": [
+      { "data": { "id": "e1", "source": "bob", "target": "alice", "relation": "reports_to" } },
+      { "data": { "id": "e2", "source": "alice", "target": "carol", "label": "mentors" } }
+    ]
+  },
+  "style": [{ "selector": "node", "style": { "label": "data(label)" } }],
+  "zoom": 1.5
+}

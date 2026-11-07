@@ -1,0 +1,93 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "_:b187a4b8e554203",
+        "attrs": {
+          "schema:addressLocality": "Springfield",
+          "schema:streetAddress": "1 Main St"
+        }
+      },
+      {
+        "id": "http://example.org/acme",
+        "label": "Acme",
+        "type": "schema:Organization",
+        "aliases": [
+          "顶点公司"
+        ]
+      },
+      {
+        "id": "http://example.org/alice",
+        "label": "Alice",
+        "type": "schema:Person",
+        "aliases": [
+          "爱丽丝"
+        ],
+        "attrs": {
+          "http://example.org/data": "{\"10\":2,\"2\":{\"z\":null},\"a\":[1,2,0],\"b\":1}",
+          "http://example.org/height": 1.7,
+          "schema:age": 42,
+          "schema:score": 0.1
+        }
+      },
+      {
+        "id": "http://example.org/bob",
+        "label": "Bob",
+        "type": "schema:Person",
+        "attrs": {
+          "schema:big": 1e+21,
+          "schema:count": "100000000000000000000",
+          "schema:small": 1e-7
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "http://example.org/acme",
+        "target": "_:b187a4b8e554203",
+        "predicate": "schema:address",
+        "label": "address"
+      },
+      {
+        "source": "http://example.org/acme",
+        "target": "http://example.org/bob",
+        "predicate": "schema:employee",
+        "label": "employee"
+      },
+      {
+        "source": "http://example.org/alice",
+        "target": "http://example.org/bob",
+        "predicate": "schema:knows",
+        "label": "knows"
+      },
+      {
+        "source": "http://example.org/alice",
+        "target": "http://example.org/acme",
+        "predicate": "schema:memberOf",
+        "label": "memberOf"
+      }
+    ],
+    "meta": {
+      "source": "before.jsonld"
+    }
+  },
+  "format": "jsonld",
+  "prefixes": {
+    "": "http://schema.org/",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "ex": "http://example.org/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

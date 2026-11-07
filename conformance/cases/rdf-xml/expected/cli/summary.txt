@@ -1,0 +1,12 @@
+kgdiff  Pizza ontology 1.0 → 1.1                                     8 → 10 nodes · 5 → 7 edges
+
+  +2 added   ~3 modified                                                   8 changes in 5 hunks
+  ++++~~~~
+
+  Modified 3
+  ~ Edited “Margherita”                       content · ~1 attribute · +1 synonym · ~1 relation
+  ~ Updated attributes of “Pizza”             content · ~1 attribute
+  ~ Renamed “Wood oven” → “Wood-fired oven”   content
+  Added 2
+  + Added “Buffalo milk” and 1 relation       added · type owl:Class · linked to “Mozzarella”
+  + Added “Quattro formaggi” and 1 relation   added · type owl:Class · linked to “Pizza”

@@ -1,0 +1,25 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "glossary", "version": "2026-05" },
+  "nodes": [
+    { "id": "term:metric", "label": "Metric", "attrs": { "definition": "A quantitative measure.", "updated_at": "2026-05-01", "etag": "a1" } },
+    { "id": "term:kpi", "label": "Key performance indicator", "aliases": ["KPI"], "attrs": { "definition": "A metric tied to a goal.", "updated_at": "2026-05-01", "etag": "b1" } },
+    { "id": "term:okr", "label": "Objective and key results", "attrs": { "rdfs:comment": "Goal framework.", "updated_at": "2026-05-01" } },
+    { "id": "term:dimension", "label": "Dimension", "attrs": { "definition": "An attribute to group by.", "updated_at": "2026-05-01" } },
+    { "id": "term:attribute", "label": "Attribute", "replacedBy": ["term:dimension"], "deprecated": true },
+    { "id": "term:facet", "label": "Facet", "replacedBy": ["term:dimension"] },
+    { "id": "term:measure", "label": "Measure" },
+    { "id": "term:indicator", "label": "Indicator" },
+    { "id": "term:old-name", "label": "Revenue per user" }
+  ],
+  "edges": [
+    { "source": "term:kpi", "target": "term:metric", "predicate": "broader" },
+    { "source": "term:okr", "target": "term:metric", "predicate": "broader" },
+    { "source": "term:measure", "target": "term:metric", "predicate": "related" },
+    { "source": "term:indicator", "target": "term:metric", "predicate": "broader" },
+    { "source": "term:attribute", "target": "term:dimension", "predicate": "related" },
+    { "source": "term:facet", "target": "term:dimension", "predicate": "related" },
+    { "source": "term:old-name", "target": "term:metric", "predicate": "broader" }
+  ]
+}

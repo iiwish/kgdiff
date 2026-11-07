@@ -1,0 +1,11 @@
+S	model.shop.int_marketing_attribution	Split “int_marketing_attribution” into “int_order_touchpoints” and “int_web_sessions”
+E	model.shop.fct_daily_revenue	“fct_daily_revenue”: depends on now points to “fct_payments” (was “fct_orders”)
+M	model.shop.dim_customers	Updated attributes of “dim_customers”
+M	model.shop.fct_channel_performance	Updated attributes of “fct_channel_performance”
+M	model.shop.fct_orders	Updated attributes of “fct_orders”
+M	model.shop.fct_support_tickets	Updated attributes of “fct_support_tickets”
+R	model.shop.stg_orders_v2	Renamed “stg_orders” → “stg_orders_v2”
+D	model.shop.int_legacy_discounts	Removed “int_legacy_discounts” and 2 relations
+M	exposure.shop.support_ops_report	Updated attributes of “support_ops_report”
+A	model.shop.fct_customer_ltv	Added “fct_customer_ltv” and 2 relations
+E	exposure.shop.customer_churn_model	“customer_churn_model”: depends on now points to “fct_customer_ltv” (was “fct_orders”)

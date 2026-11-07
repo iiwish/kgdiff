@@ -1,0 +1,45 @@
+{
+  "before": [
+    {
+      "code": "dangling-edge",
+      "message": "Edge endpoint \"ghost\" is not declared; an implicit node was created",
+      "ref": "ghost"
+    },
+    {
+      "code": "dangling-edge",
+      "message": "Edge endpoint \"nowhere\" is not declared; an implicit node was created",
+      "ref": "nowhere"
+    },
+    {
+      "code": "duplicate-edge",
+      "message": "Edge [\"x\",\"rel\",\"dup\"] has 2 parallel copies; they are keyed #2, #3…",
+      "ref": "[\"x\",\"rel\",\"dup\"]"
+    },
+    {
+      "code": "duplicate-edge",
+      "message": "Edge [\"x\",\"rel\",\"dup\"] is declared 2 times with identical content; the copies were collapsed",
+      "ref": "[\"x\",\"rel\",\"dup\"]"
+    },
+    {
+      "code": "duplicate-node",
+      "message": "Node \"dup\" is declared more than once; the declarations were merged",
+      "ref": "dup"
+    },
+    {
+      "code": "empty-id",
+      "message": "Dropped a node without an id"
+    }
+  ],
+  "after": [
+    {
+      "code": "duplicate-edge",
+      "message": "Edge [\"x\",\"rel\",\"dup\"] has 3 parallel copies; they are keyed #2, #3…",
+      "ref": "[\"x\",\"rel\",\"dup\"]"
+    },
+    {
+      "code": "duplicate-node",
+      "message": "Node \"dup\" is declared more than once; the declarations were merged",
+      "ref": "dup"
+    }
+  ]
+}

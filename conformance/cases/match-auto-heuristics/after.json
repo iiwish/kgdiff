@@ -1,0 +1,41 @@
+{
+  "meta": { "name": "vehicles", "version": "2026.2" },
+  "nodes": [
+    { "id": "vehicle", "label": "Vehicle", "type": "Class" },
+    { "id": "car", "label": "Car", "type": "Class", "aliases": ["Automobile", "Motorcar"] },
+    { "id": "bus", "label": "Bus", "type": "Class" },
+    { "id": "coach", "label": "Coach", "type": "Class" },
+    { "id": "minibus", "label": "Minibus", "type": "Class" },
+    { "id": "bicycle", "label": "Bicycle", "type": "Class" },
+    { "id": "human_powered", "label": "Human-powered vehicle", "type": "Class" },
+    { "id": "lorries", "label": "Lorry truck", "type": "Class" },
+    { "id": "scooter", "label": "Scooter", "type": "Class" },
+    { "id": "engine", "label": "Motor", "type": "Part", "aliases": ["Engine"] },
+    { "id": "cargo_bed", "label": "Cargo bed", "type": "Part", "deprecated": true },
+    { "id": "wheel", "label": "Wheel", "type": "Part" },
+    { "id": "petrol", "label": "Petrol", "type": ["Fuel", "Hydrocarbon"] },
+    { "id": "electricity", "label": "Electricity", "type": "Fuel" },
+    { "id": "maker", "label": "Manufacturer", "type": "Organization" }
+  ],
+  "edges": [
+    { "source": "car", "target": "vehicle", "predicate": "is_a" },
+    { "source": "bus", "target": "vehicle", "predicate": "is_a" },
+    { "source": "coach", "target": "vehicle", "predicate": "is_a" },
+    { "source": "coach", "target": "engine", "predicate": "has_part" },
+    { "source": "minibus", "target": "vehicle", "predicate": "is_a" },
+    { "source": "minibus", "target": "wheel", "predicate": "has_part" },
+    { "source": "human_powered", "target": "vehicle", "predicate": "is_a" },
+    { "source": "bicycle", "target": "human_powered", "predicate": "is_a" },
+    { "source": "lorries", "target": "vehicle", "predicate": "is_a" },
+    { "source": "scooter", "target": "vehicle", "predicate": "is_a" },
+    { "source": "scooter", "target": "wheel", "predicate": "has_part", "attrs": { "count": 2 } },
+    { "source": "car", "target": "engine", "predicate": "has_part", "attrs": { "count": 2 } },
+    { "source": "car", "target": "wheel", "predicate": "has_part", "attrs": { "count": 4 } },
+    { "source": "bus", "target": "engine", "predicate": "has_part" },
+    { "source": "bus", "target": "wheel", "predicate": "has_part" },
+    { "source": "lorries", "target": "engine", "predicate": "has_part" },
+    { "source": "bicycle", "target": "wheel", "predicate": "has_part", "attrs": { "count": 2 } },
+    { "source": "car", "target": "electricity", "predicate": "fuel" },
+    { "source": "engine", "target": "maker", "predicate": "supplied_by" }
+  ]
+}

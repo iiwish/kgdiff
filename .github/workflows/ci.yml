@@ -45,6 +45,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      # pnpm test generates the corpus with the CLI in-process; this runs the built CLI as a real
+      # process (pipes, exit codes, clean environment), as another implementation is checked.
+      - name: Replay the conformance corpus's CLI runs with the built kgdiff
+        run: pnpm conformance:replay
       - name: Check the packed packages (README, LICENSE, source maps, publint, attw)
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: pnpm check:packages

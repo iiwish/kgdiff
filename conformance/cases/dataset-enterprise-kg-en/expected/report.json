@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "Enterprise credit KG ontology v12 → v13",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "Enterprise credit KG ontology v12",
+      "format": "json"
+    },
+    "after": {
+      "name": "Enterprise credit KG ontology v13",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

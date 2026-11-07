@@ -1,0 +1,26 @@
+{
+  "en": [
+    {
+      "id": "add:table",
+      "title": "Added “Table”, 2 more nodes and 2 relations",
+      "subtitle": "standalone"
+    },
+    {
+      "id": "add:lonely",
+      "title": "Added “Isolated node”",
+      "subtitle": "standalone"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "add:table",
+      "title": "新增「Table」等 3 个节点及 2 条关系",
+      "subtitle": "无外部关联"
+    },
+    {
+      "id": "add:lonely",
+      "title": "新增「Isolated node」",
+      "subtitle": "无外部关联"
+    }
+  ]
+}

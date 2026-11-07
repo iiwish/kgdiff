@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.json → catalog 1.0.0",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "before.json",
+      "format": "json"
+    },
+    "after": {
+      "name": "catalog 1.0.0",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

@@ -1,0 +1,9 @@
+kgdiff  encodings utf-16be → utf-8-bom-crlf        3 → 4 nodes · 2 edges
+
+  +1 added   ~1 modified                            4 changes in 2 hunks
+  ++~~
+
+  Modified 1
+  ~ Renamed “Ω omega” → “Ω Omega”    content · −1 relation
+  Added 1
+  + Added “Δ delta” and 1 relation   added · linked to “𝔘𝔫𝔦𝔠𝔬𝔡𝔢”

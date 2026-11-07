@@ -1,0 +1,19 @@
+kgdiff  unicode before → after                                                   18 nodes · 12 edges
+
+  +1 added   −1 removed   ~7 modified   ⇄1 restructured                       12 changes in 10 hunks
+  ++−−~~~~~~~⇄
+
+  Removed 1
+  − Removed “Fullwidth tilde ～” and 1 relation                      removed · was linked to “𠀀 ra…
+  Restructured 1
+  ⇄ “Private use ”: 关联 now points to “𠀀 rare CJK” (was “Fullw…   structure · relation retargeted
+  Modified 7
+  ~ Renamed “A very long label that mixes English, 中…” → “A very…   content
+  ~ Renamed “𝐀𝐩𝐩𝐥𝐞 pie” → “Apple pie”                                content · math → apple-pie
+  ~ Renamed “Invoice ⟨U+202E⟩evil⟨U+202C⟩” → “Invoice ⟨U+202E⟩evi…   content
+  ~ Renamed “Smile 😀” → “Smile 😀😀”                                content · ~1 attribute
+  ~ Renamed “ΟΔΟΣ” → “οδος”                                          content · sigma → sigma-lower
+  ~ Renamed “データカタログ” → “データ・カタログ”                    content
+  ~ Renamed “数据资产目录” → “数据资产总目录”                        content
+  Added 1
+  + Added “Rust 🦀 crab” and 1 relation                              added · linked to “Smile 😀😀”

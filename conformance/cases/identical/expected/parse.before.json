@@ -1,0 +1,93 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "animal",
+        "label": "Animal",
+        "type": "Class"
+      },
+      {
+        "id": "cat",
+        "label": "Café cat",
+        "type": "Species",
+        "attrs": {
+          "colors": [
+            "black",
+            "white"
+          ],
+          "legs": 4,
+          "sound": "meow"
+        }
+      },
+      {
+        "id": "dog",
+        "label": "Dog",
+        "type": "Species",
+        "attrs": {
+          "legs": 4
+        }
+      },
+      {
+        "id": "mammal",
+        "label": "Mammal",
+        "type": [
+          "Class",
+          "Taxon"
+        ],
+        "aliases": [
+          "Mammalia",
+          "mammals"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "source": "cat",
+        "target": "mammal",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "dog",
+        "target": "cat",
+        "predicate": "chases",
+        "attrs": {
+          "often": true,
+          "since": 1
+        }
+      },
+      {
+        "source": "dog",
+        "target": "mammal",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "mammal",
+        "target": "animal",
+        "predicate": "subClassOf"
+      }
+    ],
+    "meta": {
+      "name": "zoo",
+      "source": "before.json",
+      "version": "same"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

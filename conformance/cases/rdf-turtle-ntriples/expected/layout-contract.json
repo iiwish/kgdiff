@@ -1,0 +1,46 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 230,
+  "nodes": [
+    "_:b0a95c760e6f6de",
+    "_:b0b3910aa89ebf4",
+    "http://example.org/zoo#Animal",
+    "http://example.org/zoo#Cat",
+    "http://example.org/zoo#Dog",
+    "http://example.org/zoo#Fish",
+    "http://example.org/zoo#Kitten",
+    "http://example.org/zoo#Mammal",
+    "http://example.org/zoo#eats"
+  ],
+  "radii": {
+    "_:b0a95c760e6f6de": 6.2,
+    "_:b0b3910aa89ebf4": 6.2,
+    "http://example.org/zoo#Animal": 6.2,
+    "http://example.org/zoo#Cat": 7.81,
+    "http://example.org/zoo#Dog": 6.2,
+    "http://example.org/zoo#Fish": 6.2,
+    "http://example.org/zoo#Kitten": 4,
+    "http://example.org/zoo#Mammal": 7.81,
+    "http://example.org/zoo#eats": 4
+  },
+  "hidden": {},
+  "components": [
+    [
+      "_:b0a95c760e6f6de",
+      "_:b0b3910aa89ebf4",
+      "http://example.org/zoo#Animal",
+      "http://example.org/zoo#Cat",
+      "http://example.org/zoo#Dog",
+      "http://example.org/zoo#Fish",
+      "http://example.org/zoo#Mammal"
+    ],
+    [
+      "http://example.org/zoo#Kitten"
+    ],
+    [
+      "http://example.org/zoo#eats"
+    ]
+  ]
+}

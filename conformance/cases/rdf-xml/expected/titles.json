@@ -1,0 +1,56 @@
+{
+  "en": [
+    {
+      "id": "modify:http://example.org/pizza#Margherita",
+      "title": "Edited “Margherita”",
+      "subtitle": "~1 attribute · +1 synonym · ~1 relation"
+    },
+    {
+      "id": "modify:http://example.org/pizza#Pizza",
+      "title": "Updated attributes of “Pizza”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:http://example.org/pizza#WoodOven",
+      "title": "Renamed “Wood oven” → “Wood-fired oven”",
+      "subtitle": ""
+    },
+    {
+      "id": "add:http://example.org/pizza#Buffalo",
+      "title": "Added “Buffalo milk” and 1 relation",
+      "subtitle": "type owl:Class · linked to “Mozzarella”"
+    },
+    {
+      "id": "add:http://example.org/pizza#QuattroFormaggi",
+      "title": "Added “Quattro formaggi” and 1 relation",
+      "subtitle": "type owl:Class · linked to “Pizza”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:http://example.org/pizza#Margherita",
+      "title": "修改「Margherita」",
+      "subtitle": "属性 ~1 · 别名 +1 · 关系 ~1"
+    },
+    {
+      "id": "modify:http://example.org/pizza#Pizza",
+      "title": "修改「Pizza」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:http://example.org/pizza#WoodOven",
+      "title": "「Wood oven」改名为「Wood-fired oven」",
+      "subtitle": ""
+    },
+    {
+      "id": "add:http://example.org/pizza#Buffalo",
+      "title": "新增「Buffalo milk」及 1 条关系",
+      "subtitle": "类型 owl:Class · 关联「Mozzarella」"
+    },
+    {
+      "id": "add:http://example.org/pizza#QuattroFormaggi",
+      "title": "新增「Quattro formaggi」及 1 条关系",
+      "subtitle": "类型 owl:Class · 关联「Pizza」"
+    }
+  ]
+}

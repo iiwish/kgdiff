@@ -1,0 +1,86 @@
+{
+  "en": [
+    {
+      "id": "merge:EX:0000005",
+      "title": "Merged “bush” into “shrub”",
+      "subtitle": "via replacement hint · 1 duplicate collapsed · −1 relation · kept as deprecated · +1 synonym"
+    },
+    {
+      "id": "modify:EX:0000002",
+      "title": "Renamed “animal” → “Animal”",
+      "subtitle": "~1 attribute · +1 synonym"
+    },
+    {
+      "id": "modify:EX:0000009",
+      "title": "Edited “ecosystem”",
+      "subtitle": "+1 attribute · +1 synonym"
+    },
+    {
+      "id": "modify:EX:0000044",
+      "title": "Changed the id of “flower”",
+      "subtitle": "EX:0000004 → EX:0000044 · ~2 attributes · replaces “flower”"
+    },
+    {
+      "id": "modify:EX:0000001",
+      "title": "Updated attributes of “organism”",
+      "subtitle": "~2 attributes"
+    },
+    {
+      "id": "add:EX:0000010",
+      "title": "Added “biome” and 1 relation",
+      "subtitle": "type Term · linked to “ecosystem”"
+    },
+    {
+      "id": "modify:EX:0000003",
+      "title": "Edited “plant”",
+      "subtitle": "~1 attribute · ~1 relation"
+    },
+    {
+      "id": "add:EX:0000007",
+      "title": "Added “tree” and 1 relation",
+      "subtitle": "type Term · linked to “plant”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "merge:EX:0000005",
+      "title": "「bush」合并入「shrub」",
+      "subtitle": "依据替代声明 · 合并 1 条重复关系 · 关系 −1 · 源节点保留为已弃用 · 别名 +1"
+    },
+    {
+      "id": "modify:EX:0000002",
+      "title": "「animal」改名为「Animal」",
+      "subtitle": "属性 ~1 · 别名 +1"
+    },
+    {
+      "id": "modify:EX:0000009",
+      "title": "修改「ecosystem」",
+      "subtitle": "属性 +1 · 别名 +1"
+    },
+    {
+      "id": "modify:EX:0000044",
+      "title": "「flower」的 ID 已变更",
+      "subtitle": "ID EX:0000004 → EX:0000044 · 属性 ~2 · 替代「flower」"
+    },
+    {
+      "id": "modify:EX:0000001",
+      "title": "修改「organism」的属性",
+      "subtitle": "属性 ~2"
+    },
+    {
+      "id": "add:EX:0000010",
+      "title": "新增「biome」及 1 条关系",
+      "subtitle": "类型 Term · 关联「ecosystem」"
+    },
+    {
+      "id": "modify:EX:0000003",
+      "title": "修改「plant」",
+      "subtitle": "属性 ~1 · 关系 ~1"
+    },
+    {
+      "id": "add:EX:0000007",
+      "title": "新增「tree」及 1 条关系",
+      "subtitle": "类型 Term · 关联「plant」"
+    }
+  ]
+}

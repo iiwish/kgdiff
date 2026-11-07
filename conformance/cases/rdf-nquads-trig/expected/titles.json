@@ -1,0 +1,36 @@
+{
+  "en": [
+    {
+      "id": "modify:http://example.org/b",
+      "title": "Renamed “B” → “B (renamed)”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:http://example.org/c",
+      "title": "Updated attributes of “C”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:http://example.org/d",
+      "title": "Added “D” and 1 relation",
+      "subtitle": "linked to “A”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:http://example.org/b",
+      "title": "「B」改名为「B (renamed)」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:http://example.org/c",
+      "title": "修改「C」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:http://example.org/d",
+      "title": "新增「D」及 1 条关系",
+      "subtitle": "关联「A」"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "en": [
+    {
+      "id": "modify:n03",
+      "title": "Renamed “Table” → “Table (physical)”",
+      "subtitle": ""
+    },
+    {
+      "id": "add:n17",
+      "title": "Added “Lineage edge” and 1 relation",
+      "subtitle": "linked to “Pipeline”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:n03",
+      "title": "「Table」改名为「Table (physical)」",
+      "subtitle": ""
+    },
+    {
+      "id": "add:n17",
+      "title": "新增「Lineage edge」及 1 条关系",
+      "subtitle": "关联「Pipeline」"
+    }
+  ]
+}

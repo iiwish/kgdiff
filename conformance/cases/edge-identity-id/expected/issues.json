@@ -1,0 +1,10 @@
+{
+  "before": [
+    {
+      "code": "duplicate-edge",
+      "message": "Edge id \"e5\" is used 2 times; the declarations were merged",
+      "ref": "e5"
+    }
+  ],
+  "after": []
+}

@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "ex ex/2026-01-01 → ex/2026-02-01",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "ex ex/2026-01-01",
+      "format": "obo"
+    },
+    "after": {
+      "name": "ex ex/2026-02-01",
+      "format": "obo"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

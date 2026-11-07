@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "curie-extraction run-a → run-b",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "curie-extraction run-a",
+      "format": "json"
+    },
+    "after": {
+      "name": "curie-extraction run-b",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

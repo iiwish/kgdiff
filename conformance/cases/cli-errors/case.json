@@ -1,0 +1,498 @@
+{
+  "id": "cli-errors",
+  "description": "kgdiff's own error paths, with their messages and exit codes: invalid JSON at a character outside the BMP (the message quotes one UTF-16 unit), an OBO line clipped in the middle of a surrogate pair, an unreadable format, an empty input, a missing file, the input size limit (a size printed with toFixed), usage errors, a diff given where a graph is expected, and apply on the wrong base, strict and lenient.",
+  "covers": [
+    "errors",
+    "exit-codes",
+    "usage",
+    "utf16-units",
+    "toFixed",
+    "apply:mismatch",
+    "apply:lenient"
+  ],
+  "inputs": {
+    "before": "before.json",
+    "after": "after.json"
+  },
+  "extraInputs": [
+    "bad-astral.json",
+    "bad-line.obo",
+    "garbage.txt",
+    "empty.json"
+  ],
+  "parse": {
+    "before": {
+      "format": "auto",
+      "filename": "before.json",
+      "allowEmpty": false
+    },
+    "after": {
+      "format": "auto",
+      "filename": "after.json",
+      "allowEmpty": false
+    }
+  },
+  "options": {},
+  "resolvedOptions": {
+    "match": {
+      "strategy": "auto",
+      "threshold": 0.82,
+      "suggestThreshold": 0.6,
+      "maxCandidates": 8
+    },
+    "edgeIdentity": "structure",
+    "hierarchyPredicates": [
+      "rdfs:subClassOf",
+      "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "rdfs:subPropertyOf",
+      "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+      "skos:broader",
+      "http://www.w3.org/2004/02/skos/core#broader",
+      "is_a",
+      "subClassOf",
+      "parent"
+    ],
+    "detectMerges": true,
+    "detectSplits": true,
+    "ignoreAttrs": []
+  },
+  "locale": "en",
+  "layoutOptions": {},
+  "identical": false,
+  "cli": [
+    {
+      "name": "summary",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.txt"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "stat",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--stat"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/stat.txt"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "name-status",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--name-status"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/name-status.tsv"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "markdown",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--markdown"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.md"
+      },
+      "versionPlaceholder": true,
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "json",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--json"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/diff.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "delta",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--delta"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/delta.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "exit-code",
+      "args": [
+        "before.json",
+        "after.json",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--exit-code",
+        "--quiet"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 1
+    },
+    {
+      "name": "apply",
+      "args": [
+        "apply",
+        "before.json",
+        "expected/delta.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/apply.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "invalid-json-astral",
+      "args": [
+        "bad-astral.json",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: \"bad-astral.json\": Invalid JSON on line 2, column 13: expected a value, found \"\\ud83d\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "obo-clipped-line",
+      "args": [
+        "bad-line.obo",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: \"bad-line.obo\": Invalid OBO on line 6: expected \"tag: value\", got \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa�…\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "undetectable-format",
+      "args": [
+        "garbage.txt",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: Cannot tell the format of \"garbage.txt\".\nhint: Pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo) or use a known file extension.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "empty-input",
+      "args": [
+        "empty.json",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: <before> \"empty.json\" is empty.\nhint: Pass --allow-empty to compare with an empty graph (e.g. before a first release).\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "missing-file",
+      "args": [
+        "missing.json",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: Cannot read <before> \"missing.json\": no such file or directory.\nhint: Check the path. Use - to read from stdin.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "input-size-limit",
+      "args": [
+        "before.json",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100",
+        "KGDIFF_MAX_INPUT": "1280"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: <before> \"before.json\" is too large: the input limit is 1.3 KiB.\nhint: If the input is genuine, raise the limit with KGDIFF_MAX_INPUT (e.g. KGDIFF_MAX_INPUT=4G).\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "unknown-format-flag",
+      "args": [
+        "before.json",
+        "after.json",
+        "--format",
+        "nope",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: Invalid value \"nope\" for --format.\nhint: Expected one of: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "threshold-out-of-range",
+      "args": [
+        "before.json",
+        "after.json",
+        "--threshold",
+        "2",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: Invalid value \"2\" for --threshold.\nhint: Expected a number between 0 and 1.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "two-outputs-on-stdout",
+      "args": [
+        "before.json",
+        "after.json",
+        "--json",
+        "--delta",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: --json and --delta would all write to stdout.\nhint: Send all but one to a file, e.g. --json out.json.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "unknown-option",
+      "args": [
+        "before.json",
+        "after.json",
+        "--frobnicate",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: Unknown option --frobnicate.\nhint: Run `kgdiff --help` for usage.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "diff-given-as-graph",
+      "args": [
+        "expected/diff.json",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: \"expected/diff.json\": This is a kgdiff diff (format \"kgdiff.diff\", as `kgdiff --json` writes it), not a graph.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "apply-wrong-base",
+      "args": [
+        "apply",
+        "after.json",
+        "expected/delta.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: <graph> \"after.json\" is not the base of this delta (graph c53:072641cfad7e57, delta base c53:111603338b81d3).\nhint: If it is the same graph, parse it as when the delta was made: --format and --lang must match the options given to `kgdiff … --delta` (they change what the graph contains). Otherwise --no-strict applies what fits and reports the rest.\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "apply-lenient",
+      "args": [
+        "apply",
+        "after.json",
+        "expected/delta.json",
+        "--no-strict",
+        "--verbose",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/apply.lenient.json"
+      },
+      "stderr": {
+        "text": "warning: Skipped 3 of 3 operations that do not fit this graph:\n  #0 node.set: node \"n03\" label differs from \"from\"\n  #1 node.add: node \"n17\" already exists\n  #2 edge.add: edge already exists\n"
+      },
+      "exit": 0
+    }
+  ]
+}

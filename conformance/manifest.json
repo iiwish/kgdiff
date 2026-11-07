@@ -1,0 +1,365 @@
+{
+  "format": "kgdiff.conformance",
+  "version": 1,
+  "description": "Language-neutral conformance corpus of kgdiff: inputs, options and the expected outputs of the reference (TypeScript) implementation. See README.md.",
+  "versionPlaceholder": "kgdiff <version>",
+  "cases": [
+    {
+      "id": "dataset-enterprise-kg",
+      "covers": [
+        "dataset",
+        "kgdiff-json",
+        "zh-CN",
+        "merge:hint",
+        "move",
+        "retarget",
+        "rename",
+        "predicate",
+        "types"
+      ]
+    },
+    {
+      "id": "dataset-enterprise-kg-en",
+      "covers": [
+        "dataset",
+        "kgdiff-json",
+        "merge:hint",
+        "move",
+        "retarget",
+        "rename"
+      ]
+    },
+    {
+      "id": "dataset-ontology-release",
+      "covers": [
+        "dataset",
+        "obo",
+        "match:id",
+        "merge:replaced_by",
+        "split",
+        "deprecate",
+        "move",
+        "synonyms",
+        "xrefs"
+      ]
+    },
+    {
+      "id": "dataset-llm-extraction",
+      "covers": [
+        "dataset",
+        "kgdiff-json",
+        "match:similarity",
+        "suggestions",
+        "label-variants"
+      ]
+    },
+    {
+      "id": "dataset-data-lineage",
+      "covers": [
+        "dataset",
+        "kgdiff-json",
+        "match:auto",
+        "rekey",
+        "split",
+        "retarget",
+        "attrs"
+      ]
+    },
+    {
+      "id": "dataset-schema-vocab",
+      "covers": [
+        "dataset",
+        "turtle",
+        "match:id",
+        "deprecate",
+        "replacement",
+        "owl-restriction",
+        "move"
+      ]
+    },
+    {
+      "id": "match-id-hints",
+      "covers": [
+        "kgdiff-json",
+        "match:id",
+        "hint:replaces",
+        "hint:replacedBy",
+        "rekey",
+        "merge:hint",
+        "split:hint",
+        "deprecate",
+        "move",
+        "rename",
+        "self-loop",
+        "retarget:merge",
+        "watch"
+      ]
+    },
+    {
+      "id": "match-auto-heuristics",
+      "covers": [
+        "kgdiff-json",
+        "match:auto",
+        "merge:heuristic",
+        "collapsed",
+        "split:heuristic",
+        "move",
+        "retarget",
+        "predicate",
+        "rename",
+        "types",
+        "aliases",
+        "edge-attrs",
+        "deprecate",
+        "suggestions"
+      ]
+    },
+    {
+      "id": "self-loops",
+      "covers": [
+        "kgdiff-json",
+        "self-loop",
+        "parallel-edges",
+        "retarget",
+        "edge-label",
+        "merge:hint"
+      ]
+    },
+    {
+      "id": "unicode-text",
+      "covers": [
+        "kgdiff-json",
+        "astral",
+        "utf16-order",
+        "nfc",
+        "nfkc",
+        "case-folding",
+        "emoji",
+        "cjk",
+        "bidi",
+        "controls",
+        "width",
+        "truncation"
+      ]
+    },
+    {
+      "id": "json-numbers-and-keys",
+      "covers": [
+        "kgdiff-json",
+        "numbers",
+        "key-order",
+        "duplicate-keys",
+        "__proto__",
+        "nested-values",
+        "meta",
+        "pretty"
+      ]
+    },
+    {
+      "id": "dangling-and-duplicates",
+      "covers": [
+        "json",
+        "numeric-ids",
+        "duplicate-node",
+        "empty-id",
+        "dangling-edge",
+        "implicit",
+        "parallel-edges",
+        "issues"
+      ]
+    },
+    {
+      "id": "edge-identity-id",
+      "covers": [
+        "kgdiff-json",
+        "edge-identity:id",
+        "retarget",
+        "predicate",
+        "edge-label",
+        "edge-attrs"
+      ]
+    },
+    {
+      "id": "options-ignore-watch",
+      "covers": [
+        "kgdiff-json",
+        "hierarchy",
+        "ignore-attr",
+        "no-merges",
+        "no-splits",
+        "threshold",
+        "watch-attr"
+      ]
+    },
+    {
+      "id": "identical",
+      "covers": [
+        "kgdiff-json",
+        "identical",
+        "order-independence",
+        "nfc",
+        "exit-code"
+      ]
+    },
+    {
+      "id": "empty-before",
+      "covers": [
+        "allow-empty",
+        "add"
+      ]
+    },
+    {
+      "id": "similarity-rekey-preamble",
+      "covers": [
+        "kgdiff-json",
+        "match:similarity",
+        "rekey-preamble",
+        "rekey-cycle",
+        "identical"
+      ]
+    },
+    {
+      "id": "rdf-turtle-ntriples",
+      "covers": [
+        "turtle",
+        "ntriples",
+        "typed-literals",
+        "languages",
+        "blank-nodes",
+        "owl-restriction",
+        "deprecate",
+        "cross-format"
+      ]
+    },
+    {
+      "id": "rdf-nquads-trig",
+      "covers": [
+        "nquads",
+        "trig",
+        "named-graphs",
+        "warnings",
+        "cross-format"
+      ]
+    },
+    {
+      "id": "rdf-xml",
+      "covers": [
+        "rdfxml",
+        "dtd-entities",
+        "xml-base",
+        "xml-literal",
+        "collection",
+        "owl-restriction",
+        "annotations"
+      ]
+    },
+    {
+      "id": "jsonld",
+      "covers": [
+        "jsonld",
+        "json-ld-detection",
+        "json-literal",
+        "reverse",
+        "numbers",
+        "languages"
+      ]
+    },
+    {
+      "id": "obo-variants",
+      "covers": [
+        "obo",
+        "crlf",
+        "alt_id",
+        "replaced_by",
+        "typedef",
+        "instance",
+        "warnings",
+        "merge:replaced_by",
+        "watch"
+      ]
+    },
+    {
+      "id": "json-dialects-a",
+      "covers": [
+        "json",
+        "cytoscape",
+        "d3",
+        "ignored-fields",
+        "compound-parent"
+      ]
+    },
+    {
+      "id": "json-dialects-b",
+      "covers": [
+        "json",
+        "g6",
+        "graphology",
+        "ignored-fields",
+        "self-loop"
+      ]
+    },
+    {
+      "id": "json-dialects-c",
+      "covers": [
+        "json",
+        "vis",
+        "kgdiff-json",
+        "numeric-ids",
+        "positions",
+        "layout:anchored",
+        "rekey"
+      ]
+    },
+    {
+      "id": "encodings",
+      "covers": [
+        "utf-16",
+        "bom",
+        "crlf",
+        "gzip"
+      ]
+    },
+    {
+      "id": "synthetic-600",
+      "covers": [
+        "kgdiff-json",
+        "synthetic",
+        "cjk",
+        "scale",
+        "layout:changes"
+      ]
+    },
+    {
+      "id": "encodings-be",
+      "covers": [
+        "utf-16be",
+        "bom",
+        "crlf"
+      ]
+    },
+    {
+      "id": "cli-errors",
+      "covers": [
+        "errors",
+        "exit-codes",
+        "usage",
+        "utf16-units",
+        "toFixed",
+        "apply:mismatch",
+        "apply:lenient"
+      ]
+    }
+  ],
+  "primitives": [
+    "primitives/number-to-string.json",
+    "primitives/number-from-string.json",
+    "primitives/js-math.json",
+    "primitives/log2.json",
+    "primitives/string-order.json",
+    "primitives/json-roundtrip.json",
+    "primitives/text-similarity.json",
+    "primitives/predicate-label.json",
+    "primitives/label-width.json",
+    "primitives/facet-labels.json"
+  ]
+}

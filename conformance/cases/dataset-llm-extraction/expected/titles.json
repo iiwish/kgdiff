@@ -1,0 +1,306 @@
+{
+  "en": [
+    {
+      "id": "modify:e_0792",
+      "title": "Renamed “Irène Joliot-Curie” → “Irene Joliot-Curie”",
+      "subtitle": "+1 relation"
+    },
+    {
+      "id": "modify:e_e1f0",
+      "title": "Renamed “André Debierne” → “André-Louis Debierne”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_7e22",
+      "title": "Renamed “Henri Becquerel” → “Antoine Henri Becquerel”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_0d5c",
+      "title": "Renamed “uranic rays” → “Becquerel rays”",
+      "subtitle": "+2 synonyms"
+    },
+    {
+      "id": "modify:e_d48f",
+      "title": "Updated synonyms of “Flying University”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:e_6cfd",
+      "title": "Renamed “Frédéric Joliot” → “Frédéric Joliot-Curie”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:e_a587",
+      "title": "Renamed “St. Joachimsthal” → “Jáchymov”",
+      "subtitle": "+2 synonyms"
+    },
+    {
+      "id": "modify:e_f19e",
+      "title": "Renamed “Passy” → “Passy (Haute-Savoie)”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:e_f6eb",
+      "title": "Renamed “polonium (Po)” → “Polonium”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_71d3",
+      "title": "Updated synonyms of “Radium Institute”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:e_5c50",
+      "title": "Renamed “Recherches sur les substances radioacti…” → “Research on Radioactive Substances”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:e_dc2d",
+      "title": "Renamed “Univ. of Paris” → “University of Paris”",
+      "subtitle": "+2 synonyms"
+    },
+    {
+      "id": "modify:e_3c48",
+      "title": "Renamed “uranium” → “Uranium”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_b4da",
+      "title": "Renamed “Wilhelm Röntgen” → “Wilhelm Conrad Röntgen”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_6884",
+      "title": "Renamed “First World War” → “World War I”",
+      "subtitle": "+2 synonyms"
+    },
+    {
+      "id": "modify:e_5cd4",
+      "title": "Renamed “aplastic anemia” → “aplastic anaemia”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_c177",
+      "title": "Renamed “artificial radioactivity” → “induced radioactivity”",
+      "subtitle": "+1 −1 types · +1 synonym"
+    },
+    {
+      "id": "modify:e_ca47",
+      "title": "Renamed “petites Curies” → “mobile radiography units”",
+      "subtitle": "+2 synonyms"
+    },
+    {
+      "id": "modify:e_df3b",
+      "title": "Renamed “Curie electrometer” → “piezoelectric quartz electrometer”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:e_ed24",
+      "title": "Changed the type of “radioactivity”",
+      "subtitle": "+1 −1 types"
+    },
+    {
+      "id": "modify:e_b206",
+      "title": "Renamed “thorium” → “Thorium”",
+      "subtitle": "+1 relation"
+    },
+    {
+      "id": "relations:e_13af",
+      "title": "Removed “Pierre Curie” —discovered→ “Thorium”",
+      "subtitle": "relation removed"
+    },
+    {
+      "id": "modify:e_1c8f",
+      "title": "Renamed “ESPCI” → “École supérieure de physique et de chim…”",
+      "subtitle": "+2 synonyms"
+    },
+    {
+      "id": "modify:e_37c6",
+      "title": "Renamed “Marie Curie” → “Marie Skłodowska-Curie”",
+      "subtitle": "~1 attribute · +2 synonyms · ~3 relations"
+    },
+    {
+      "id": "remove:e_c3b6",
+      "title": "Removed “Albert Einstein” and 1 relation",
+      "subtitle": "type Person · was linked to “Marie Skłodowska-Curie”"
+    },
+    {
+      "id": "add:e_261f",
+      "title": "Added “uraninite (pitchblende)” and 2 relations",
+      "subtitle": "type Mineral · linked to “Jáchymov” and “Polonium”"
+    },
+    {
+      "id": "modify:e_e1a6",
+      "title": "Renamed “radium (Ra)” → “Radium”",
+      "subtitle": "~1 relation"
+    },
+    {
+      "id": "remove:e_7bf2",
+      "title": "Removed “pitchblende” and 2 relations",
+      "subtitle": "type Mineral · was linked to “Jáchymov” and “Polonium”"
+    },
+    {
+      "id": "add:e_e4de",
+      "title": "Added “French Academy of Sciences” and 2 relations",
+      "subtitle": "type Organization · linked to “Radium” and “Polonium”"
+    },
+    {
+      "id": "add:e_00ce",
+      "title": "Added “Gustave Bémont” and 2 relations",
+      "subtitle": "type Person · linked to “Pierre Curie” and “Radium”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:e_0792",
+      "title": "「Irène Joliot-Curie」改名为「Irene Joliot-Curie」",
+      "subtitle": "关系 +1"
+    },
+    {
+      "id": "modify:e_e1f0",
+      "title": "「André Debierne」改名为「André-Louis Debierne」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_7e22",
+      "title": "「Henri Becquerel」改名为「Antoine Henri Becquerel」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_0d5c",
+      "title": "「uranic rays」改名为「Becquerel rays」",
+      "subtitle": "别名 +2"
+    },
+    {
+      "id": "modify:e_d48f",
+      "title": "修改「Flying University」的别名",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:e_6cfd",
+      "title": "「Frédéric Joliot」改名为「Frédéric Joliot-Curie」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:e_a587",
+      "title": "「St. Joachimsthal」改名为「Jáchymov」",
+      "subtitle": "别名 +2"
+    },
+    {
+      "id": "modify:e_f19e",
+      "title": "「Passy」改名为「Passy (Haute-Savoie)」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:e_f6eb",
+      "title": "「polonium (Po)」改名为「Polonium」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_71d3",
+      "title": "修改「Radium Institute」的别名",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:e_5c50",
+      "title": "「Recherches sur les substances radioacti…」改名为「Research on Radioactive Substances」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:e_dc2d",
+      "title": "「Univ. of Paris」改名为「University of Paris」",
+      "subtitle": "别名 +2"
+    },
+    {
+      "id": "modify:e_3c48",
+      "title": "「uranium」改名为「Uranium」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_b4da",
+      "title": "「Wilhelm Röntgen」改名为「Wilhelm Conrad Röntgen」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_6884",
+      "title": "「First World War」改名为「World War I」",
+      "subtitle": "别名 +2"
+    },
+    {
+      "id": "modify:e_5cd4",
+      "title": "「aplastic anemia」改名为「aplastic anaemia」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:e_c177",
+      "title": "「artificial radioactivity」改名为「induced radioactivity」",
+      "subtitle": "类型 +1 −1 · 别名 +1"
+    },
+    {
+      "id": "modify:e_ca47",
+      "title": "「petites Curies」改名为「mobile radiography units」",
+      "subtitle": "别名 +2"
+    },
+    {
+      "id": "modify:e_df3b",
+      "title": "「Curie electrometer」改名为「piezoelectric quartz electrometer」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:e_ed24",
+      "title": "修改「radioactivity」的类型",
+      "subtitle": "类型 +1 −1"
+    },
+    {
+      "id": "modify:e_b206",
+      "title": "「thorium」改名为「Thorium」",
+      "subtitle": "关系 +1"
+    },
+    {
+      "id": "relations:e_13af",
+      "title": "删除关系「Pierre Curie」—discovered→「Thorium」",
+      "subtitle": "关系已删除"
+    },
+    {
+      "id": "modify:e_1c8f",
+      "title": "「ESPCI」改名为「École supérieure de physique et de chim…」",
+      "subtitle": "别名 +2"
+    },
+    {
+      "id": "modify:e_37c6",
+      "title": "「Marie Curie」改名为「Marie Skłodowska-Curie」",
+      "subtitle": "属性 ~1 · 别名 +2 · 关系 ~3"
+    },
+    {
+      "id": "remove:e_c3b6",
+      "title": "删除「Albert Einstein」及 1 条关系",
+      "subtitle": "类型 Person · 原关联「Marie Skłodowska-Curie」"
+    },
+    {
+      "id": "add:e_261f",
+      "title": "新增「uraninite (pitchblende)」及 2 条关系",
+      "subtitle": "类型 Mineral · 关联「Jáchymov」和「Polonium」"
+    },
+    {
+      "id": "modify:e_e1a6",
+      "title": "「radium (Ra)」改名为「Radium」",
+      "subtitle": "关系 ~1"
+    },
+    {
+      "id": "remove:e_7bf2",
+      "title": "删除「pitchblende」及 2 条关系",
+      "subtitle": "类型 Mineral · 原关联「Jáchymov」和「Polonium」"
+    },
+    {
+      "id": "add:e_e4de",
+      "title": "新增「French Academy of Sciences」及 2 条关系",
+      "subtitle": "类型 Organization · 关联「Radium」和「Polonium」"
+    },
+    {
+      "id": "add:e_00ce",
+      "title": "新增「Gustave Bémont」及 2 条关系",
+      "subtitle": "类型 Person · 关联「Pierre Curie」和「Radium」"
+    }
+  ]
+}

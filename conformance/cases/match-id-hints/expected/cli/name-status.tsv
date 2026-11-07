@@ -1,0 +1,11 @@
+V	channel	Moved “Channel” under “Business taxonomy”
+M	dim_region	Deprecated “Region”
+M	category	Changed the id of “Category”
+R	metric_revenue	Renamed “Revenue” → “Net revenue”
+M	order_line	Changed the id of “Order line”
+M	product	Changed the id of “Product”
+S	dim_sku	Split “SKU” (dim_sku) into “Bundle” and “SKU” (sku)
+A	sales_region	Added “Sales region” and 1 relation
+M	order	Changed the id of “Order”
+D	metric_gmv	Removed “GMV” and 1 relation
+G	customer	Merged “Client” and “Customer” (dim_customer) into “Customer” (customer)
