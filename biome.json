@@ -13,7 +13,9 @@
       "!**/coverage",
       "!examples/datasets",
       "!.changeset/*.md",
-      "!packages/viewer/custom-elements.json"
+      "!packages/viewer/custom-elements.json",
+      "!docs/viewer-elements.md",
+      "!docs/zh/viewer-elements.md"
     ]
   },
   "formatter": {

@@ -48,31 +48,10 @@ viewer.mode = 'replay';
 viewer.play();
 ```
 
-| 属性               | 取值                                                    | 默认                      |
-| ------------------ | ------------------------------------------------------- | ------------------------- |
-| `mode`             | `overlay`、`swipe`、`replay`（旧值 `changes` 见下文）   | `overlay`                 |
-| `scope`            | `all`、`changes`：只看变更，可配合任意对比方式          | `all`（大图为 `changes`） |
-| `theme`            | `auto`、`light`、`dark`                                 | `auto`                    |
-| `palette`          | `default`、`colorblind`                                 | `default`                 |
-| `locale`           | `en`、`zh-CN`                                           | 取自 `navigator.language` |
-| `panels`           | 各区域的状态，例如 `detail:collapsed minimap:hidden`    | 全部展开，图例收起        |
-| `persist`          | `none`：什么也不记                                      | 记住（按源）              |
-| `persist-key`      | 记住时使用的 `localStorage` 键                          | `kgdiff:viewer`           |
-| `sidebar`          | `open`、`closed`（`panels` 的一个预设）                 |                           |
-| `sync-hash`        | 布尔值：深链接 `#kgdiff=hunk:<id>;mode:<m>;scope:<s>`   |                           |
-| `shortcuts`        | `scoped`、`global`（页面上没有焦点时也生效）、`none`    | `scoped`                  |
-| `global-shortcuts` | 布尔值：等同于 `shortcuts="global"`                     |                           |
-| `keymap`           | 重新绑定或解除按键，例如 `x:none r:review`              |                           |
-| `header`           | `compact`：不显示品牌和图名，适合页面自己显示这些信息时 |                           |
-| `chrome`           | `none`：只显示图本身，适合嵌入小块区域                  | `full`                    |
-| `legend`           | `auto`、`full`、`mini`（一行）、`none`                  | `auto`                    |
-| `loop`             | 布尔值：回放自动播放、循环往复                          |                           |
-| `loop-delay`       | 循环回放播完到重新开始之间的毫秒数                      | `1200`                    |
-| `pause-on-hover`   | `false`：鼠标停在图上时循环回放也不暂停                 | 暂停                      |
+每个 HTML 属性、JavaScript 属性、方法和事件，连同取值和默认值，都列在由源码生成的
+[查看器元素：参考](../viewer-elements.md#kgdiff-viewer)里。页面最常设置的是：`mode`（`overlay`、`swipe`、`replay`）、`scope`（`changes`：只看变更，可配合任意对比方式）、`theme`、`locale`、`panels`（[见下文](#调整布局)）和 `chrome`（`none` 用于[小块嵌入](#嵌入一段循环回放)）。事件会冒泡出查看器，并且在每个元素、document 和 window 上都有类型（`KgdiffEventMap`）。
 
 加入 `scope` 之前的写法 `mode="changes"` 仍然有效：它表示 `overlay` 加 `scope="changes"`，属性会被改写成这两个值。
-
-`mode`、`scope`、`theme`、`palette`、`locale`、`panels`、`persist`、`chrome`、`legend`、`loop`、`loopDelay`、`pauseOnHover`、`shortcuts` 和 `keymap` 同时也是 JavaScript 属性（`panels` 和 `keymap` 也接受对象）。方法：`load()`、`selectHunk(id)`、`next()`、`prev()`、`play()`、`pause()`、`fit({ animate, padding })`、`exportDelta()`、`reviewState()`、`setReviewed(id, reviewed)` 和 `refreshTheme()`。事件都会冒泡并穿过 Shadow DOM：`kgdiff-ready` `{ stats }`、`kgdiff-select` `{ hunk, node }`、`kgdiff-mode` `{ mode, scope }`、`kgdiff-review` `{ hunk, reviewed, progress }`、`kgdiff-error` `{ error }`、`kgdiff-replay-end` `{ loop }` 和 `kgdiff-layout` `{ panels, sidebarWidth, detailShare, source }`。详见[查看器：交互与 API](../interaction.md#嵌入-api)。
 
 ## 调整布局
 

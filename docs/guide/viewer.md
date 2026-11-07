@@ -52,40 +52,15 @@ viewer.mode = 'replay';
 viewer.play();
 ```
 
-| Attribute          | Values                                                        | Default                    |
-| ------------------ | ------------------------------------------------------------- | -------------------------- |
-| `mode`             | `overlay`, `swipe`, `replay` (legacy `changes`, see below)    | `overlay`                  |
-| `scope`            | `all`, `changes`: only the changes, in any mode               | `all` (`changes` if large) |
-| `theme`            | `auto`, `light`, `dark`                                       | `auto`                     |
-| `palette`          | `default`, `colorblind`                                       | `default`                  |
-| `locale`           | `en`, `zh-CN`                                                 | from `navigator.language`  |
-| `panels`           | region states, e.g. `detail:collapsed minimap:hidden`         | all open, legend collapsed |
-| `persist`          | `none`: remember nothing                                      | remembers (per origin)     |
-| `persist-key`      | the `localStorage` key to remember under                      | `kgdiff:viewer`            |
-| `sidebar`          | `open`, `closed` (a preset of `panels`)                       |                            |
-| `sync-hash`        | boolean: deep links `#kgdiff=hunk:<id>;mode:<m>;scope:<s>`    |                            |
-| `shortcuts`        | `scoped`, `global` (also when nothing has focus), `none`      | `scoped`                   |
-| `global-shortcuts` | boolean: the same as `shortcuts="global"`                     |                            |
-| `keymap`           | keys rebound or unbound, e.g. `x:none r:review`               |                            |
-| `header`           | `compact`: no brand or graph names, when your page shows them |                            |
-| `chrome`           | `none`: the graph alone, for small embeds                     | `full`                     |
-| `legend`           | `auto`, `full`, `mini` (one line), `none`                     | `auto`                     |
-| `loop`             | boolean: the replay plays by itself, over and over            |                            |
-| `loop-delay`       | ms between the end of a looping replay and its restart        | `1200`                     |
-| `pause-on-hover`   | `false`: a looping replay keeps playing under the mouse       | pauses                     |
+Every attribute, property, method and event, with its values and default, is in
+[Viewer elements: reference](../viewer-elements.md#kgdiff-viewer), generated from the sources.
+The ones most pages set: `mode` (`overlay`, `swipe`, `replay`), `scope` (`changes`: only the
+changes, in any mode), `theme`, `locale`, `panels` ([below](#arrange-the-layout)) and `chrome`
+(`none` for [small embeds](#embed-a-small-looping-replay)). Events bubble out of the viewer and
+are typed on every element, the document and the window (`KgdiffEventMap`).
 
 `mode="changes"`, from before scopes existed, still works: it means `overlay` with
 `scope="changes"`, and the attributes are rewritten to say so.
-
-`mode`, `scope`, `theme`, `palette`, `locale`, `panels`, `persist`, `chrome`, `legend`, `loop`,
-`loopDelay`, `pauseOnHover`, `shortcuts` and `keymap` are also properties (`panels` and
-`keymap` take objects too). Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`, `play()`,
-`pause()`, `fit({ animate, padding })`, `exportDelta()`, `reviewState()`,
-`setReviewed(id, reviewed)` and `refreshTheme()`. Events, all bubbling and composed:
-`kgdiff-ready` `{ stats }`, `kgdiff-select` `{ hunk, node }`, `kgdiff-mode` `{ mode, scope }`,
-`kgdiff-review` `{ hunk, reviewed, progress }`, `kgdiff-error` `{ error }`,
-`kgdiff-replay-end` `{ loop }` and `kgdiff-layout` `{ panels, sidebarWidth, detailShare, source }`.
-[Viewer: interaction and API](../interaction.md#embedding-api) has the details.
 
 ## Arrange the layout
 

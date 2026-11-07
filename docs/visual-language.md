@@ -94,23 +94,14 @@ Okabe–Ito based; same tokens, family colors replaced (dark / light):
 The viewer's colors and fonts are CSS custom properties set on its root (`<kgdiff-viewer>`,
 `<kgdiff-root>`): the canvas and the panels both draw with them, so a page that overrides one
 (`kgdiff-viewer { --kgdiff-accent: #e8590c }`) restyles both
-([Theming](interaction.md#theming)). The tokens below are public API from 0.6; others the
+([Theming](interaction.md#theming)). The listed tokens are public API from 0.6; others the
 stylesheet uses (motion, hover and press tints) are not.
 
-| CSS token                                                              | Theme token                                          |
-| ---------------------------------------------------------------------- | ---------------------------------------------------- |
-| `--kgdiff-background`, `--kgdiff-grid`                                 | `canvas.background`, `canvas.grid`                   |
-| `--kgdiff-panel`, `--kgdiff-raised`, `--kgdiff-overlay`                | `surface.panel`, `surface.raised`, `surface.overlay` |
-| `--kgdiff-border`, `--kgdiff-border-strong`, `--kgdiff-control-border` | `surface.border`, `borderStrong`, `controlBorder`    |
-| `--kgdiff-shadow`                                                      | `surface.shadow`                                     |
-| `--kgdiff-text`, `--kgdiff-text-secondary`, `--kgdiff-text-muted`      | `text.primary`, `text.secondary`, `text.muted`       |
-| `--kgdiff-accent`, `-strong`, `-soft`, `-text`                         | `accent.base`, `strong`, `soft`, `text`              |
-| `--kgdiff-neutral`, `-stroke`, `-edge`, `-label`                       | `neutral.node`, `nodeStroke`, `edge`, `label`        |
-| `--kgdiff-<family>`, `-strong`, `-soft`, `-text`                       | `family.<family>.base`, `strong`, `soft`, `text`     |
-| `--kgdiff-font`, `--kgdiff-font-mono`                                  | `font.family`, `font.mono`                           |
+Each token and the theme token it sets are listed in
+[Viewer elements: reference](viewer-elements.md#tokens), generated from the sources.
 
-`<family>` is `added`, `removed`, `content`, `structure` or `identity`, so for example
-`--kgdiff-removed-soft`. Names are whole words, like the theme's (`--kgdiff-text-muted` for
+Each family (`added`, `removed`, `content`, `structure`, `identity`) has four, for example
+`--kgdiff-removed`, `--kgdiff-removed-strong`, `--kgdiff-removed-soft` and `--kgdiff-removed-text`. Names are whole words, like the theme's (`--kgdiff-text-muted` for
 `text.muted`). Colors may be written in any sRGB syntax the browser knows (names,
 `hsl()`, `color-mix()`); the canvas normalizes them, and ignores, with a console warning, a
 value it cannot draw (such as `oklch()`). The contrast guarantees above hold for the built-in

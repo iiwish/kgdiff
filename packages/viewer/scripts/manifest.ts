@@ -231,7 +231,8 @@ function readSources(files: readonly ts.SourceFile[]): Sources {
   const classes = new Map<string, ClassDoc>();
   const constants = new Map<string, readonly string[]>();
 
-  for (const file of [sourceFile('src/index.ts'), ...files]) {
+  const typeFiles = ['src/index.ts', '../core/src/types.ts', '../scene/src/types.ts'];
+  for (const file of [...typeFiles.map(sourceFile), ...files]) {
     const visit = (node: ts.Node): void => {
       if (ts.isInterfaceDeclaration(node)) {
         const members = new Map<string, Doc>();
@@ -327,6 +328,26 @@ interface AnalyzedMember {
 interface AnalyzedDeclaration {
   name: string;
   members?: AnalyzedMember[];
+}
+
+/**
+ * What an attribute's text can be: a property's string unions spelled out (`ViewerMode` →
+ * `'overlay' | 'swipe' | 'replay'`), `boolean` or `number` as they are, anything else (an
+ * object a property takes too, such as `panels`) `string`. `null` is the attribute's absence.
+ */
+function attributeType(
+  text: string | undefined,
+  aliases: ReadonlyMap<string, readonly string[]>,
+): string | undefined {
+  if (!text) return undefined;
+  const parts = text
+    .split('|')
+    .map((p) => p.trim())
+    .filter((p) => p && p !== 'null' && p !== 'undefined')
+    .flatMap((p) => aliases.get(p)?.map((v) => `'${v}'`) ?? [p]);
+  if (parts.every((p) => /^'[^']*'$/.test(p))) return parts.join(' | ');
+  if (parts.length === 1 && (parts[0] === 'boolean' || parts[0] === 'number')) return parts[0];
+  return 'string';
 }
 
 const camel = (name: string): string =>
@@ -434,7 +455,7 @@ export function buildManifest(): Manifest {
       const fieldName = name === 'for' ? 'htmlFor' : camel(name);
       const field = members.find((m) => m.kind === 'field' && m.name === fieldName);
       const description = tag?.description ?? field?.description;
-      const type = tag?.type ?? field?.type?.text;
+      const type = attributeType(tag?.type ?? field?.type?.text, sources.aliases);
       if (!description) throw new Error(`[manifest] ${tagName}: no description for ${name}`);
       attributes.push({
         name,
@@ -539,6 +560,266 @@ export interface Generated {
   readonly content: string;
 }
 
+interface Words {
+  readonly title: string;
+  readonly intro: string;
+  readonly experimental: (note: string) => string;
+  readonly import: (tag: string, subpath: string | null) => string;
+  readonly attributes: string;
+  readonly properties: string;
+  readonly methods: string;
+  readonly events: string;
+  readonly slots: string;
+  readonly states: string;
+  readonly tokens: string;
+  readonly tokensIntro: string;
+  readonly head: {
+    readonly attribute: string;
+    readonly property: string;
+    readonly values: string;
+    readonly type: string;
+    readonly description: string;
+    readonly method: string;
+    readonly event: string;
+    readonly detail: string;
+    readonly slot: string;
+    readonly state: string;
+    readonly token: string;
+    readonly syntax: string;
+  };
+  readonly readonly: string;
+  readonly exp: string;
+}
+
+const EN: Words = {
+  title: 'Viewer elements: reference',
+  intro:
+    'Every element of `@kgdiff/viewer`: its attributes and the properties they reflect, its ' +
+    'other properties, methods, events, slots, CSS custom properties and custom states. ' +
+    '[Viewer: interaction and API](interaction.md) explains how they work together, and ' +
+    '[Embed the viewer](guide/viewer.md) has recipes.\n\n' +
+    'The elements other than `<kgdiff-viewer>` are experimental in 0.6 and become stable in ' +
+    '0.7: names, attributes and markup may change in a minor release until then. Editors can ' +
+    "complete the tags and attributes from the package's " +
+    '[custom data](guide/viewer.md#editor-support).',
+  experimental: (note) => `**Experimental:** ${note}`,
+  import: (tag, subpath) =>
+    subpath
+      ? `\`import '@kgdiff/viewer/elements/${subpath}'\` defines \`<${tag}>\` alone; \`import '@kgdiff/viewer'\` defines every element.`
+      : `\`import '@kgdiff/viewer'\` defines \`<${tag}>\` (and every other element).`,
+  attributes: 'Attributes',
+  properties: 'Properties',
+  methods: 'Methods',
+  events: 'Events',
+  slots: 'Slots',
+  states: 'Custom states',
+  tokens: 'CSS custom properties',
+  tokensIntro:
+    'Set on `<kgdiff-viewer>` and `<kgdiff-root>` (the elements inside a root inherit them; ' +
+    "an element bound with `for` outside it adopts the root's built-in set). The canvas and " +
+    'the panels both draw with them: [Theming](interaction.md#theming).',
+  head: {
+    attribute: 'Attribute',
+    property: 'Property',
+    values: 'Values',
+    type: 'Type',
+    description: 'Description',
+    method: 'Method',
+    event: 'Event',
+    detail: '`detail`',
+    slot: 'Slot',
+    state: 'State',
+    token: 'Property',
+    syntax: 'Syntax',
+  },
+  readonly: 'read-only',
+  exp: 'experimental',
+};
+
+const ZH: Words = {
+  title: '查看器元素：参考',
+  intro:
+    '`@kgdiff/viewer` 的每个元素：它的 HTML 属性及其对应的 JavaScript 属性、其他 JavaScript ' +
+    '属性、方法、事件、插槽、CSS 自定义属性和自定义状态。它们如何配合见' +
+    '[查看器：交互与 API](interaction.md)，用法示例见[嵌入查看器](guide/viewer.md)。\n\n' +
+    '除 `<kgdiff-viewer>` 外，这些元素在 0.6 中是实验性的，0.7 起稳定：在此之前，名称、属性和结构' +
+    '可能在次版本中变化。\n\n' +
+    '本页由源码生成（`packages/viewer/custom-elements.json`）。API 名称和说明直接取自源码的英文' +
+    '文档注释，没有翻译：同一份说明只有一个来源，表格才能随源码自动更新、不会与英文版不一致。' +
+    '编辑器可以按包里的[自定义数据](guide/viewer.md#编辑器支持)补全标签和属性。',
+  experimental: (note) => `**实验性：** ${note}`,
+  import: (tag, subpath) =>
+    subpath
+      ? `\`import '@kgdiff/viewer/elements/${subpath}'\` 只定义 \`<${tag}>\`；\`import '@kgdiff/viewer'\` 定义所有元素。`
+      : `\`import '@kgdiff/viewer'\` 定义 \`<${tag}>\`（以及其他所有元素）。`,
+  attributes: 'HTML 属性',
+  properties: 'JavaScript 属性',
+  methods: '方法',
+  events: '事件',
+  slots: '插槽',
+  states: '自定义状态',
+  tokens: 'CSS 自定义属性',
+  tokensIntro:
+    '设在 `<kgdiff-viewer>` 和 `<kgdiff-root>` 上（根元素内部的元素继承它们；在根元素之外用 `for` ' +
+    '绑定的元素采用根元素的内置令牌集）。画布和各个面板都用它们绘制：见[主题](interaction.md#主题)。',
+  head: {
+    attribute: 'HTML 属性',
+    property: 'JavaScript 属性',
+    values: '取值',
+    type: '类型',
+    description: '说明',
+    method: '方法',
+    event: '事件',
+    detail: '`detail`',
+    slot: '插槽',
+    state: '状态',
+    token: '属性',
+    syntax: '语法',
+  },
+  readonly: '只读',
+  exp: '实验性',
+};
+
+/** A table cell: pipes escaped, paragraphs kept, `<` outside code made text. */
+function cell(text: string): string {
+  return text
+    .split(/(`[^`]*`)/)
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(/</g, '&lt;').replace(/>/g, '&gt;')))
+    .join('')
+    .replace(/\|/g, '\\|')
+    .replace(/\n\n/g, '<br><br>');
+}
+
+const code = (text: string): string => `\`${text}\``;
+
+function table(head: readonly string[], rows: readonly (readonly string[])[]): string {
+  const line = (cells: readonly string[]): string => `| ${cells.join(' | ')} |`;
+  return [line(head), line(head.map(() => '---')), ...rows.map(line)].join('\n');
+}
+
+/** The element subpath that defines `tag` alone (`null`: the main entry only). */
+const subpathOf = (path: string): string | null => {
+  const m = /^dist\/elements\/([\w-]+)\.js$/.exec(path);
+  return m?.[1] ?? null;
+};
+
+/** `name(a: A, b?: B): R` */
+function signature(m: Member): string {
+  const params = (m.parameters ?? [])
+    .map((p) => `${p.name}${p.optional ? '?' : ''}${p.type ? `: ${p.type.text}` : ''}`)
+    .join(', ');
+  return `${m.name}(${params})${m.return?.type ? `: ${m.return.type.text}` : ''}`;
+}
+
+function referencePage(manifest: Manifest, w: Words, generatedFrom: string): string {
+  const out: string[] = [`# ${w.title}`, `<!-- ${generatedFrom} -->`, w.intro];
+  const elements = manifest.modules.flatMap((m) =>
+    m.declarations.map((d) => ({ element: d, path: m.path })),
+  );
+  out.push(
+    elements.map(({ element }) => `- [\`<${element.tagName}>\`](#${element.tagName})`).join('\n'),
+  );
+  for (const { element: e, path } of elements) {
+    out.push(`<a id="${e.tagName}"></a>\n\n## \`<${e.tagName}>\``);
+    if (e.experimental) {
+      out.push(w.experimental(typeof e.experimental === 'string' ? e.experimental : ''));
+    }
+    out.push(cell(e.description).replace(/<br><br>/g, '\n\n'));
+    out.push(w.import(e.tagName, subpathOf(path)));
+    const flag = (x: { experimental?: boolean | string }): string =>
+      x.experimental ? ` (${w.exp})` : '';
+    if (e.attributes.length > 0) {
+      out.push(`### ${w.attributes}`);
+      out.push(
+        table(
+          [w.head.attribute, w.head.property, w.head.values, w.head.description],
+          e.attributes.map((a) => [
+            code(a.name),
+            a.fieldName ? code(a.fieldName) : '',
+            a.type ? cell(code(a.type.text)) : '',
+            cell(a.description ?? '') + flag(a),
+          ]),
+        ),
+      );
+    }
+    const props = e.members.filter((m) => m.kind === 'field' && !m.attribute);
+    if (props.length > 0) {
+      out.push(`### ${w.properties}`);
+      out.push(
+        table(
+          [w.head.property, w.head.type, w.head.description],
+          props.map((m) => [
+            code(m.name) + (m.readonly ? ` (${w.readonly})` : ''),
+            m.type ? cell(code(m.type.text)) : '',
+            cell(m.description ?? '') + flag(m),
+          ]),
+        ),
+      );
+    }
+    const methods = e.members.filter((m) => m.kind === 'method');
+    if (methods.length > 0) {
+      out.push(`### ${w.methods}`);
+      out.push(
+        table(
+          [w.head.method, w.head.description],
+          methods.map((m) => [cell(code(signature(m))), cell(m.description ?? '') + flag(m)]),
+        ),
+      );
+    }
+    if (e.events.length > 0) {
+      out.push(`### ${w.events}`);
+      out.push(
+        table(
+          [w.head.event, w.head.detail, w.head.description],
+          e.events.map((ev) => [
+            code(ev.name),
+            cell(code(ev.type.text.replace(/^CustomEvent<([\s\S]*)>$/, '$1'))),
+            cell(ev.description ?? ''),
+          ]),
+        ),
+      );
+    }
+    if (e.slots.length > 0) {
+      out.push(`### ${w.slots}`);
+      out.push(
+        table(
+          [w.head.slot, w.head.description],
+          e.slots.map((sl) => [code(sl.name), cell(sl.description ?? '')]),
+        ),
+      );
+    }
+    if (e.cssStates.length > 0) {
+      out.push(`### ${w.states}`);
+      out.push(
+        table(
+          [w.head.state, w.head.description],
+          e.cssStates.map((st) => [code(`:state(${st.name})`), cell(st.description ?? '')]),
+        ),
+      );
+    }
+  }
+  const tokens = elements.find(({ element }) => element.cssProperties.length > 0)?.element;
+  if (tokens) {
+    out.push(`<a id="tokens"></a>\n\n## ${w.tokens}`);
+    out.push(w.tokensIntro);
+    out.push(
+      table(
+        [w.head.token, w.head.syntax, w.head.description],
+        tokens.cssProperties.map((t) => [
+          code(t.name),
+          t.syntax ? code(t.syntax) : '',
+          cell(t.description ?? ''),
+        ]),
+      ),
+    );
+  }
+  return `${out.join('\n\n')}\n`;
+}
+
+const GENERATED =
+  'Generated from packages/viewer/custom-elements.json by packages/viewer/scripts/manifest.ts: ' +
+  'do not edit. Run `pnpm --filter @kgdiff/viewer manifest` after changing the sources.';
+
 export function generate(): Generated[] {
   const manifest = buildManifest();
   return [
@@ -546,6 +827,8 @@ export function generate(): Generated[] {
       path: 'packages/viewer/custom-elements.json',
       content: `${JSON.stringify(manifest, null, 2)}\n`,
     },
+    { path: 'docs/viewer-elements.md', content: referencePage(manifest, EN, GENERATED) },
+    { path: 'docs/zh/viewer-elements.md', content: referencePage(manifest, ZH, GENERATED) },
   ];
 }
 

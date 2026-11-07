@@ -234,33 +234,13 @@ one; `\` does nothing there.
 </script>
 ```
 
-Attributes, reflected by properties of the same name: `mode` (`overlay|swipe|replay`; the
-legacy `changes` reads as `overlay` + `scope="changes"`), `scope` (`all|changes`, default
-`changes` for large graphs), `theme` (`auto|light|dark`), `palette` (`default|colorblind`),
-`locale` (`en|zh-CN`, default from `navigator.language`), `panels` (see [Panels](#panels)),
-`persist` (`none` remembers nothing), `persist-key` (the `localStorage` key, `kgdiff:viewer`
-by default; `persistKey`), `chrome` (`none` shows the graph alone for small embeds:
-no title, actions, view dock with its step caption and playback bar, change list, zoom
-buttons, minimap or legend card; the hover tooltip and a one-line legend stay, clicks and
-shortcuts do nothing, the minimum height drops to 120px and the view stays fitted on resize
-and at each loop), `legend` (`auto|full|mini|none`), `loop` (the replay plays by itself and
-starts again after `loop-delay` ms, default 1200; `loopDelay`), `pause-on-hover` (`false`
-keeps a looping replay playing under the mouse; `pauseOnHover`), `shortcuts`
-(`scoped|global|none`) and `keymap` (see [Keyboard map](#keyboard-map); the property takes an
-object and is not reflected). Attributes only: `sidebar` (`open|closed`, a preset; reflects the
-sidebar's state after `\`), `header` (`compact` leaves the brand and the compared names out,
-for hosts that show their own), `sync-hash` (deep links
-`#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`; old `mode:changes` links still work) and
-`global-shortcuts`. Properties only: `payload` (a precomputed report) and `layout` (read only:
-every region's state and the sizes, see [Panels](#panels)).
-Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`, `play()`, `pause()`,
-`fit({ animate, padding })` (labels included), `exportDelta()`, `reviewState()`,
-`setReviewed(id, reviewed)` and `refreshTheme()` (draw the canvas with the tokens as computed
-now, after the page changed them in a way the viewer cannot observe). Events (`CustomEvent`,
-bubbling, composed): `kgdiff-ready` `{ stats }`, `kgdiff-select` `{ hunk, node }`,
-`kgdiff-mode` `{ mode, scope }`, `kgdiff-review` `{ hunk, reviewed, progress }`,
-`kgdiff-error` `{ error }`, `kgdiff-replay-end` `{ loop }` (playback reached the end; `loop`:
-it starts again) and `kgdiff-layout` `{ panels, sidebarWidth, detailShare, source }`.
+The attributes and the properties they reflect, the other properties (`payload`, a
+precomputed report; `layout`, every region's state and the sizes), the methods and the events
+(`CustomEvent`s that bubble and are composed) are listed in
+[Viewer elements: reference](viewer-elements.md#kgdiff-viewer), generated from the sources; the
+sections here explain them: [Modes](#modes), [Panels](#panels), [Keyboard map](#keyboard-map),
+[Theming](#theming). The legacy `mode="changes"` reads as `overlay` with `scope="changes"`, and
+old `mode:changes` deep links (`sync-hash`) still work.
 
 ## Elements (experimental)
 
