@@ -245,8 +245,10 @@ old `mode:changes` deep links (`sync-hash`) still work.
 ## Elements (experimental)
 
 `<kgdiff-viewer>` is a default layout of elements that can also be placed one by one. They are
-experimental in 0.6: names, attributes and markup may change in a minor release before they
-are stable.
+experimental in 0.6 and stable from 0.7 ([RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md#decisions),
+decision 7): names, attributes and markup may change in a minor release until then. Each one's
+attributes, properties, events, slots and states are in the
+[reference](viewer-elements.md); this section explains how they work together.
 
 | Element                  | What it shows                                                                     |
 | ------------------------ | --------------------------------------------------------------------------------- |
@@ -336,7 +338,9 @@ are stable.
   `…/zoom`, `…/minimap`, `…/title`, `…/actions`. The session comes with the root and the
   renderer with a stage: no other subpath carries either. `@kgdiff/viewer/panels` is the panels syntax
   (`parsePanels`, `PANEL_REGIONS`, `PANEL_STATES`), without DOM, which the CLI's `--panels`
-  uses too.
+  uses too. The package ships its Custom Elements Manifest (`custom-elements.json`, the
+  `customElements` field), VS Code's HTML custom data generated from it, and React 19's JSX
+  types (`@kgdiff/viewer/react`): [Editor support](guide/viewer.md#editor-support).
 
 ## Theming
 

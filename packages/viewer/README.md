@@ -37,14 +37,9 @@ ESM only. Runs in evergreen browsers.
   self-contained script that defines the element and shows embedded payloads. The optional
   `@kgdiff/viewer/standalone/compute` add-on brings the diff engine and force layout for `load()`.
 
-Attributes: `mode` (`overlay` | `swipe` | `replay`), `scope` (`all` | `changes`), `theme`,
-`palette`, `locale`, `panels`, `persist`, `sidebar`, `sync-hash`, `shortcuts`,
-`global-shortcuts`, `keymap`, `header`, `chrome`, `legend`, `loop`, `loop-delay`,
-`pause-on-hover`. The legacy `mode="changes"` still works: it means `overlay` with
-`scope="changes"`. Methods: `load`, `selectHunk`, `next`, `prev`, `play`, `pause`, `fit`,
-`exportDelta`, `reviewState`, `setReviewed`, `refreshTheme`. Events: `kgdiff-ready`,
-`kgdiff-select`, `kgdiff-mode`, `kgdiff-review`, `kgdiff-error`, `kgdiff-replay-end`,
-`kgdiff-layout`.
+Every attribute, property, method and event (with its values and default) is in the
+[reference](../../docs/viewer-elements.md), generated from the sources. The legacy
+`mode="changes"` still works: it means `overlay` with `scope="changes"`.
 
 ## Arrange the layout
 
@@ -63,11 +58,22 @@ storage entry (`kgdiff:viewer` by default) for apps that share an origin. Colors
 
 ## Compose your own layout (experimental)
 
-`<kgdiff-root>` holds the session; `<kgdiff-stage>` (the canvas, with five slots for your own
-content over it), `<kgdiff-change-list>`, `<kgdiff-change-detail>`, `<kgdiff-search>` and
-`<kgdiff-filters>` show its parts, inside it or anywhere with `for="<root id>"`. Importing
-`@kgdiff/viewer` defines them all, and `@kgdiff/viewer/elements/<name>` defines one. See
-[the guide](../../docs/guide/viewer.md#compose-your-own-layout).
+`<kgdiff-root>` holds the session; the other elements show its parts, inside it or anywhere with
+`for="<root id>"`: `<kgdiff-stage>` (the canvas, with five slots for your own content over it;
+several stages of one root draw it side by side, `version="before"` / `"after"`),
+`<kgdiff-change-list>`, `<kgdiff-change-detail>`, `<kgdiff-search>`, `<kgdiff-filters>`, and the
+canvas chrome: `<kgdiff-view-dock>`, `<kgdiff-transport>`, `<kgdiff-legend>`, `<kgdiff-zoom>`,
+`<kgdiff-minimap>`, `<kgdiff-title>`, `<kgdiff-actions>`. Importing `@kgdiff/viewer` defines them
+all, and `@kgdiff/viewer/elements/<name>` defines one. They are experimental in 0.6 and stable
+from 0.7. See [the guide](../../docs/guide/viewer.md#compose-your-own-layout).
+
+## Editor support
+
+The package ships its Custom Elements Manifest (`custom-elements.json`), VS Code's HTML custom
+data (`vscode.html-custom-data.json`, for `html.customData`) and React 19's JSX types
+(`import type {} from '@kgdiff/viewer/react'`): see
+[Editor support](../../docs/guide/viewer.md#editor-support) and the
+[framework recipes](../../docs/guide/viewer.md#react) (React 19, Vue 3, Svelte 5).
 
 ## Embed a small looping replay
 
@@ -77,14 +83,6 @@ replay loop:
 ```html
 <kgdiff-viewer mode="replay" chrome="none" loop style="height: 320px"></kgdiff-viewer>
 ```
-
-| Attribute (property)              | Values                         | Default                                          |
-| --------------------------------- | ------------------------------ | ------------------------------------------------ |
-| `chrome` (`chrome`)               | `full`, `none`                 | `full`                                           |
-| `legend` (`legend`)               | `auto`, `full`, `mini`, `none` | `auto`: `full`, or `mini` with `chrome="none"`   |
-| `loop` (`loop`)                   | boolean                        | off                                              |
-| `loop-delay` (`loopDelay`)        | ms between the end and restart | `1200`                                           |
-| `pause-on-hover` (`pauseOnHover`) | `false` to keep playing        | on: a looping replay pauses under a mouse or pen |
 
 - `chrome="none"` shows the graph alone: no title, actions (theme, help, sidebar button), view
   dock (with its step caption, playback bar and finished card), change list, zoom buttons,
@@ -111,8 +109,12 @@ viewer.addEventListener('kgdiff-replay-end', (event) => {
 
 ## Learn more
 
-- [Interaction](../../docs/interaction.md): views, change list, panels, keyboard map, the
-  [embedding API](../../docs/interaction.md#embedding-api) and the elements.
+- [Embed the viewer](../../docs/guide/viewer.md): recipes, from a drop-in viewer to your own
+  layout and the framework recipes.
+- [Interaction](../../docs/interaction.md): views, change list, panels, keyboard map and the
+  elements, explained.
+- [Reference](../../docs/viewer-elements.md): every element's attributes, properties, methods,
+  events, slots, CSS custom properties and states.
 - [Visual language](../../docs/visual-language.md): what every color, ring and glyph means.
 
 ## License
