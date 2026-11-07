@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "企业信用知识图谱本体 v12 → v13",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "企业信用知识图谱本体 v12",
+      "format": "json"
+    },
+    "after": {
+      "name": "企业信用知识图谱本体 v13",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "zh-CN"
+  }
+}

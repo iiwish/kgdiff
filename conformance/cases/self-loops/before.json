@@ -1,0 +1,30 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "loops", "version": "1" },
+  "nodes": [
+    { "id": "a", "label": "Alpha" },
+    { "id": "b", "label": "Beta" },
+    { "id": "c", "label": "Gamma" },
+    { "id": "d", "label": "Delta" },
+    { "id": "e", "label": "Epsilon" },
+    { "id": "f", "label": "Phi" },
+    { "id": "g1", "label": "Gamma ray" },
+    { "id": "g2", "label": "Gamma ray burst", "replacedBy": ["g1"] }
+  ],
+  "edges": [
+    { "source": "a", "target": "a", "predicate": "related", "attrs": { "w": 1 } },
+    { "source": "a", "target": "a", "predicate": "likes", "attrs": { "since": 2020 } },
+    { "source": "a", "target": "a", "predicate": "likes", "attrs": { "since": 2024 } },
+    { "source": "a", "target": "b", "predicate": "next" },
+    { "source": "b", "target": "b", "predicate": "next" },
+    { "source": "b", "target": "c", "predicate": "next" },
+    { "source": "d", "target": "d", "predicate": "next" },
+    { "source": "e", "target": "e", "predicate": "loop" },
+    { "source": "f", "target": "f", "predicate": "self" },
+    { "source": "f", "target": "a", "predicate": "next" },
+    { "source": "g2", "target": "g2", "predicate": "echoes" },
+    { "source": "g2", "target": "a", "predicate": "next" },
+    { "source": "g1", "target": "a", "predicate": "next" }
+  ]
+}

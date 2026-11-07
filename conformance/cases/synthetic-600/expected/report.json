@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "synth-600 before → after",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "synth-600 before",
+      "format": "json"
+    },
+    "after": {
+      "name": "synth-600 after",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "zh-CN"
+  }
+}

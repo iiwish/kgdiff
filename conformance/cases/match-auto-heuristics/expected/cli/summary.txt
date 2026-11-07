@@ -1,0 +1,27 @@
+kgdiff  vehicles 2026.1 → 2026.2                                       12 → 15 nodes · 18 → 19 edges
+
+  +4 added   −2 removed   ~3 modified   ⇄4 restructured                       36 changes in 13 hunks
+  +++++++++−−−−−−−~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+  Removed 2
+  − Removed “Lorry” and 3 relations                 removed · type Class · was linked to “Cargo bed…
+  − Removed “Sidecar” and 2 relations               removed · type Class · was linked to “Vehicle”…
+  Restructured 4
+  ⑂ Split “Bus” into “Coach” and “Minibus”          identity · inferred · 100% confidence · +4 rela…
+  ⊕ Merged “Automobile” into “Car”                  identity · inferred · 100% confidence · 3 dupli…
+  ⇄ Moved “Bicycle” under “Human-powered vehicle”   structure · from “Vehicle”
+  ⇄ Updated 2 relations of “Car”                    structure · ~2 relations · 1 retargeted
+  Modified 3
+  ~ Renamed “Engine” → “Motor”                      content · +1 synonym · ~1 relation
+  ~ Deprecated “Cargo bed”                          content
+  ~ Changed the type of “Petrol”                    content · +1 type
+  Added 4
+  + Added “Lorry truck” and 2 relations             added · type Class · linked to “Motor” and “Veh…
+  + Added “Scooter” and 2 relations                 added · type Class · linked to “Vehicle” and “W…
+  + Added “Human-powered vehicle” and 1 relation    added · type Class · linked to “Vehicle”
+  + Added “Electricity”                             added · type Fuel · standalone
+
+  Possible matches 1
+  ≈ “Lorry” → “Lorry truck”   63% · below the 82% threshold · name 67% · neighbours 40%
+  Not paired, so listed as removed or added. To pair one, add a synonym or a replacement link, or
+  lower --threshold.

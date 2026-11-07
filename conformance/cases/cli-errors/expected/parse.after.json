@@ -1,0 +1,227 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "n01",
+        "label": "Catalog",
+        "attrs": {
+          "description": "The catalog of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n02",
+        "label": "Dataset",
+        "attrs": {
+          "description": "The dataset of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n03",
+        "label": "Table (physical)",
+        "attrs": {
+          "description": "The table of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n04",
+        "label": "Column",
+        "attrs": {
+          "description": "The column of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n05",
+        "label": "View",
+        "attrs": {
+          "description": "The view of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n06",
+        "label": "Schema",
+        "attrs": {
+          "description": "The schema of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n07",
+        "label": "Owner",
+        "attrs": {
+          "description": "The owner of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n08",
+        "label": "Steward",
+        "attrs": {
+          "description": "The steward of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n09",
+        "label": "Glossary term",
+        "attrs": {
+          "description": "The glossary term of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n10",
+        "label": "Metric",
+        "attrs": {
+          "description": "The metric of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n11",
+        "label": "Dimension",
+        "attrs": {
+          "description": "The dimension of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n12",
+        "label": "Pipeline",
+        "attrs": {
+          "description": "The pipeline of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n13",
+        "label": "Job",
+        "attrs": {
+          "description": "The job of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n14",
+        "label": "Run",
+        "attrs": {
+          "description": "The run of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n15",
+        "label": "Source system",
+        "attrs": {
+          "description": "The source system of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n16",
+        "label": "Report",
+        "attrs": {
+          "description": "The report of the data catalog, used for the error cases."
+        }
+      },
+      {
+        "id": "n17",
+        "label": "Lineage edge"
+      }
+    ],
+    "edges": [
+      {
+        "source": "n02",
+        "target": "n01",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n03",
+        "target": "n02",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n04",
+        "target": "n03",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n05",
+        "target": "n04",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n06",
+        "target": "n05",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n07",
+        "target": "n06",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n08",
+        "target": "n07",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n09",
+        "target": "n08",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n10",
+        "target": "n09",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n11",
+        "target": "n10",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n12",
+        "target": "n11",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n13",
+        "target": "n12",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n14",
+        "target": "n13",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n15",
+        "target": "n14",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n16",
+        "target": "n15",
+        "predicate": "related_to"
+      },
+      {
+        "source": "n17",
+        "target": "n12",
+        "predicate": "describes"
+      }
+    ],
+    "meta": {
+      "name": "errors",
+      "source": "after.json",
+      "version": "2"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

@@ -1,0 +1,1 @@
+{"format":"kgdiff.graph","version":1,"meta":{"name":"encodings","source":"after.json","version":"utf-8-bom-crlf"},"nodes":[{"id":"a","label":"Ärger"},{"id":"b","label":"Ω Omega"},{"id":"c","label":"𝔘𝔫𝔦𝔠𝔬𝔡𝔢"},{"id":"d","label":"Δ delta"}],"edges":[{"source":"a","target":"b","predicate":"sees"},{"source":"d","target":"c","predicate":"sees"}]}

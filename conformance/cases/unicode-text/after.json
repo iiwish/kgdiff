@@ -1,0 +1,39 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "unicode", "version": "after" },
+  "nodes": [
+    { "id": "a-ascii", "label": "Plain ASCII" },
+    { "id": "😀-smile", "label": "Smile 😀😀", "attrs": { "😀key": "astral key", "note": "𝒴 script Y" } },
+    { "id": "-pua", "label": "Private use " },
+    { "id": "𠀀-ext-b", "label": "𠀀 rare CJK" },
+    { "id": "🦀-crab", "label": "Rust 🦀 crab" },
+    { "id": "é-nfc", "label": "Café", "aliases": ["Café au lait"] },
+    { "id": "apple-pie", "label": "Apple pie" },
+    { "id": "sigma-lower", "label": "οδος" },
+    { "id": "zwj", "label": "👩‍💻 Developer" },
+    { "id": "flag", "label": "🇨🇳 China" },
+    { "id": "keycap", "label": "1️⃣ First" },
+    { "id": "bidi", "label": "Invoice ‮evil‬ (fixed)" },
+    { "id": "ctrl", "label": "Bell\u0007 NEL\u0085 ZWSP​ BOM﻿ NBSP end" },
+    { "id": "cjk", "label": "数据资产总目录" },
+    { "id": "hangul", "label": "데이터 카탈로그" },
+    { "id": "kana", "label": "データ・カタログ" },
+    { "id": "long", "label": "A very long label that mixes English, 中文字符, ＦＵＬＬＷＩＤＴＨ letters and emoji 🚀🚀🚀 so that every column layout has to truncate it, now longer" },
+    { "id": "turkish", "label": "İstanbul" }
+  ],
+  "edges": [
+    { "source": "😀-smile", "target": "a-ascii", "predicate": "😀rel" },
+    { "source": "-pua", "target": "𠀀-ext-b", "predicate": "关联" },
+    { "source": "𠀀-ext-b", "target": "😀-smile", "predicate": "关联" },
+    { "source": "🦀-crab", "target": "😀-smile", "predicate": "关联" },
+    { "source": "apple-pie", "target": "é-nfc", "predicate": "served_with" },
+    { "source": "sigma-lower", "target": "apple-pie", "predicate": "near" },
+    { "source": "zwj", "target": "flag", "predicate": "lives_in" },
+    { "source": "bidi", "target": "ctrl", "predicate": "see" },
+    { "source": "cjk", "target": "hangul", "predicate": "翻译" },
+    { "source": "cjk", "target": "kana", "predicate": "翻译" },
+    { "source": "long", "target": "cjk", "predicate": "describes" },
+    { "source": "turkish", "target": "keycap", "predicate": "ranks" }
+  ]
+}

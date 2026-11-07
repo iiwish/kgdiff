@@ -1,0 +1,197 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "auto",
+        "label": "Automobile",
+        "type": "Class"
+      },
+      {
+        "id": "bicycle",
+        "label": "Bicycle",
+        "type": "Class"
+      },
+      {
+        "id": "bus",
+        "label": "Bus",
+        "type": "Class",
+        "aliases": [
+          "Coach",
+          "Minibus"
+        ]
+      },
+      {
+        "id": "car",
+        "label": "Car",
+        "type": "Class",
+        "aliases": [
+          "Motorcar"
+        ]
+      },
+      {
+        "id": "cargo_bed",
+        "label": "Cargo bed",
+        "type": "Part"
+      },
+      {
+        "id": "engine",
+        "label": "Engine",
+        "type": "Part"
+      },
+      {
+        "id": "lorry",
+        "label": "Lorry",
+        "type": "Class"
+      },
+      {
+        "id": "maker",
+        "label": "Manufacturer",
+        "type": "Organization"
+      },
+      {
+        "id": "petrol",
+        "label": "Petrol",
+        "type": "Fuel"
+      },
+      {
+        "id": "sidecar",
+        "label": "Sidecar",
+        "type": "Class"
+      },
+      {
+        "id": "vehicle",
+        "label": "Vehicle",
+        "type": "Class"
+      },
+      {
+        "id": "wheel",
+        "label": "Wheel",
+        "type": "Part"
+      }
+    ],
+    "edges": [
+      {
+        "source": "auto",
+        "target": "engine",
+        "predicate": "has_part"
+      },
+      {
+        "source": "auto",
+        "target": "wheel",
+        "predicate": "has_part"
+      },
+      {
+        "source": "auto",
+        "target": "vehicle",
+        "predicate": "is_a"
+      },
+      {
+        "source": "bicycle",
+        "target": "wheel",
+        "predicate": "has_part",
+        "attrs": {
+          "count": 2
+        }
+      },
+      {
+        "source": "bicycle",
+        "target": "vehicle",
+        "predicate": "is_a"
+      },
+      {
+        "source": "bus",
+        "target": "engine",
+        "predicate": "has_part"
+      },
+      {
+        "source": "bus",
+        "target": "wheel",
+        "predicate": "has_part"
+      },
+      {
+        "source": "bus",
+        "target": "vehicle",
+        "predicate": "is_a"
+      },
+      {
+        "source": "car",
+        "target": "petrol",
+        "predicate": "fuel"
+      },
+      {
+        "source": "car",
+        "target": "engine",
+        "predicate": "has_part",
+        "attrs": {
+          "count": 1
+        }
+      },
+      {
+        "source": "car",
+        "target": "wheel",
+        "predicate": "has_part",
+        "attrs": {
+          "count": 4
+        }
+      },
+      {
+        "source": "car",
+        "target": "vehicle",
+        "predicate": "is_a"
+      },
+      {
+        "source": "engine",
+        "target": "maker",
+        "predicate": "made_by"
+      },
+      {
+        "source": "lorry",
+        "target": "cargo_bed",
+        "predicate": "has_part"
+      },
+      {
+        "source": "lorry",
+        "target": "engine",
+        "predicate": "has_part"
+      },
+      {
+        "source": "lorry",
+        "target": "vehicle",
+        "predicate": "is_a"
+      },
+      {
+        "source": "sidecar",
+        "target": "wheel",
+        "predicate": "has_part"
+      },
+      {
+        "source": "sidecar",
+        "target": "vehicle",
+        "predicate": "is_a"
+      }
+    ],
+    "meta": {
+      "name": "vehicles",
+      "source": "before.json",
+      "version": "2026.1"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

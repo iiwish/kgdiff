@@ -1,0 +1,43 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 260,
+  "nodes": [
+    "1",
+    "10",
+    "1e+21",
+    "2",
+    "dup",
+    "ghost",
+    "nowhere",
+    "x"
+  ],
+  "radii": {
+    "1": 6.2,
+    "2": 7.11,
+    "10": 6.2,
+    "1e+21": 6.2,
+    "dup": 7.81,
+    "ghost": 6.2,
+    "nowhere": 6.2,
+    "x": 7.81
+  },
+  "hidden": {},
+  "components": [
+    [
+      "10",
+      "2",
+      "ghost"
+    ],
+    [
+      "dup",
+      "nowhere",
+      "x"
+    ],
+    [
+      "1",
+      "1e+21"
+    ]
+  ]
+}

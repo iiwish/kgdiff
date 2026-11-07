@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "vehicles 2026.1 → 2026.2",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "vehicles 2026.1",
+      "format": "json"
+    },
+    "after": {
+      "name": "vehicles 2026.2",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

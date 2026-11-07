@@ -1,0 +1,46 @@
+{
+  "en": [
+    {
+      "id": "relations:a",
+      "title": "Updated 3 relations of “Ada”",
+      "subtitle": "−1 ~2 relations · 1 retargeted"
+    },
+    {
+      "id": "relations:b",
+      "title": "Updated 2 relations of “Bea”",
+      "subtitle": "~2 relations"
+    },
+    {
+      "id": "relations:c",
+      "title": "Edited “Cy” —rel→ “Dee”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "relations:d",
+      "title": "Added “Dee” —back→ “Ada”",
+      "subtitle": "new relation"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "relations:a",
+      "title": "修改「Ada」的 3 条关系",
+      "subtitle": "关系 −1 ~2 · 1 条关系改为指向新节点"
+    },
+    {
+      "id": "relations:b",
+      "title": "修改「Bea」的 2 条关系",
+      "subtitle": "关系 ~2"
+    },
+    {
+      "id": "relations:c",
+      "title": "修改关系「Cy」—rel→「Dee」",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "relations:d",
+      "title": "新增关系「Dee」—back→「Ada」",
+      "subtitle": "新关系"
+    }
+  ]
+}

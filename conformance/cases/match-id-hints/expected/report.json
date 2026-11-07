@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "retail skeleton → enriched",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "retail skeleton",
+      "format": "json"
+    },
+    "after": {
+      "name": "retail enriched",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

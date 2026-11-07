@@ -1,0 +1,6 @@
+D	term:facet	Removed “Facet” and 1 relation
+V	term:indicator	Moved “Indicator” under “Key performance indicator”
+R	term:okr	Renamed “Objective and key results” → “Objectives and key results”
+M	term:dimension	Edited “Dimension”
+M	term:metric	Updated attributes of “Metric”
+R	term:arpu	Renamed “Revenue per user” → “Revenue per user (ARPU)”

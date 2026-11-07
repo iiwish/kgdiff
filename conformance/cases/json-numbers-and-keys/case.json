@@ -1,0 +1,277 @@
+{
+  "id": "json-numbers-and-keys",
+  "description": "Attribute values that JavaScript and Rust print differently (1e21, 1e-7, 0.000001, -0, 1.0, 2^53 + 1, values beyond the double range, the shortest round-trip digits), integer-like object keys that JavaScript lists first, duplicate keys, `__proto__`, nested objects and arrays, numbers and integer-like keys in `meta`.",
+  "covers": [
+    "kgdiff-json",
+    "numbers",
+    "key-order",
+    "duplicate-keys",
+    "__proto__",
+    "nested-values",
+    "meta",
+    "pretty"
+  ],
+  "inputs": {
+    "before": "before.json",
+    "after": "after.json"
+  },
+  "parse": {
+    "before": {
+      "format": "auto",
+      "filename": "before.json",
+      "allowEmpty": false
+    },
+    "after": {
+      "format": "auto",
+      "filename": "after.json",
+      "allowEmpty": false
+    }
+  },
+  "options": {
+    "match": {
+      "strategy": "id"
+    }
+  },
+  "resolvedOptions": {
+    "match": {
+      "strategy": "id",
+      "threshold": 0.82,
+      "suggestThreshold": 0.6,
+      "maxCandidates": 8
+    },
+    "edgeIdentity": "structure",
+    "hierarchyPredicates": [
+      "rdfs:subClassOf",
+      "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "rdfs:subPropertyOf",
+      "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+      "skos:broader",
+      "http://www.w3.org/2004/02/skos/core#broader",
+      "is_a",
+      "subClassOf",
+      "parent"
+    ],
+    "detectMerges": true,
+    "detectSplits": true,
+    "ignoreAttrs": []
+  },
+  "locale": "en",
+  "layoutOptions": {},
+  "identical": false,
+  "cli": [
+    {
+      "name": "summary",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.txt"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "stat",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--stat"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/stat.txt"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "name-status",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--name-status"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/name-status.tsv"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "markdown",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--markdown"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.md"
+      },
+      "versionPlaceholder": true,
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "json",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--json"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/diff.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "delta",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--delta"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/delta.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "exit-code",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--exit-code",
+        "--quiet"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 1
+    },
+    {
+      "name": "json-pretty",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--json",
+        "--pretty"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/diff.pretty.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "apply",
+      "args": [
+        "apply",
+        "before.json",
+        "expected/delta.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/apply.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    }
+  ]
+}

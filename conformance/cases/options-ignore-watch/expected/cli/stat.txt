@@ -1,0 +1,12 @@
+kgdiff  glossary 2026-05 → 2026-06             9 → 8 nodes · 7 → 6 edges
+
+  −1 removed   ~4 modified   ⇄1 restructured        9 changes in 6 hunks
+  −−~~~~~⇄⇄
+  ⚑ Review first: definition, rdfs:comment changed in 3 hunks
+
+         added  removed  modified  unchanged
+  nodes      0        1         5          3
+  edges      0        1         2          4
+
+  By type
+  (untyped)  6 −~~~~~

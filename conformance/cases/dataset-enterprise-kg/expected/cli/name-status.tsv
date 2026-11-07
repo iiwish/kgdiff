@@ -1,0 +1,12 @@
+D	SPOT_CHECK	删除「抽查检查」及 2 条关系
+G	LEGAL_REP	「法人代表」合并入「法定代表人」
+V	EQUITY_PLEDGE	「股权出质」移至「股权投资」下
+E	TOP10_HOLDERS	「十大股东」的「持股」改为指向「上市公司」（原为「企业」）
+E	ACTUAL_CONTROL	新增关系「实际控制」—穿透依据→「投资」
+M	ENTERPRISE	修改「企业」
+M	SINO_FOREIGN_JV	弃用「中外合资企业」
+M	TRADEMARK	修改「商标」的属性
+M	DISHONEST_EXECUTEE	修改「失信被执行人」的别名
+R	EXEC_TENURE	「高管任职」改名为「董监高任职」
+M	CONSUMPTION_RESTRICTION	修改「限制高消费」的类型
+A	BENEFICIAL_OWNER	新增「受益所有人」及 3 条关系

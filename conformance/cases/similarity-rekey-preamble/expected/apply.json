@@ -1,0 +1,1 @@
+{"format":"kgdiff.graph","version":1,"meta":{"name":"extraction","version":"run-2"},"nodes":[{"id":"r-19bc","label":"Gamma"},{"id":"r-c0de","label":"Delta"},{"id":"x1","label":"Beta"},{"id":"x2","label":"Alpha"}],"edges":[{"source":"r-19bc","target":"x2","predicate":"rel"},{"source":"r-c0de","target":"r-19bc","predicate":"rel"},{"source":"x2","target":"x1","predicate":"rel"}]}

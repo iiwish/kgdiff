@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "mhd 2026-09-01 → 2026-10-01",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "mhd 2026-09-01",
+      "format": "obo"
+    },
+    "after": {
+      "name": "mhd 2026-10-01",
+      "format": "obo"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

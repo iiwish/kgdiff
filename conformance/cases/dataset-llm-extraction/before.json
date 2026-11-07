@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "name": "curie-extraction",
+    "version": "run-a",
+    "model": "extractor-v1 (temperature 0.7)",
+    "source": "Marie Curie and the discovery of radioactivity (examples/datasets/llm-extraction/README.md)",
+    "extracted_at": "2026-10-30T09:14:02Z"
+  },
+  "nodes": [
+    {
+      "id": "e_8bd8",
+      "label": "Marie Curie",
+      "type": "Person",
+      "attrs": { "born": 1867, "died": 1934, "nationality": "Polish" }
+    },
+    {
+      "id": "e_7091",
+      "label": "Pierre Curie",
+      "type": "Person",
+      "attrs": { "born": 1859, "died": 1906 }
+    },
+    { "id": "e_e554", "label": "Jacques Curie", "type": "Person", "attrs": { "born": 1855 } },
+    {
+      "id": "e_c7c7",
+      "label": "Henri Becquerel",
+      "type": "Person",
+      "attrs": { "born": 1852, "died": 1908 }
+    },
+    { "id": "e_492f", "label": "Wilhelm Röntgen", "type": "Person", "attrs": { "born": 1845 } },
+    { "id": "e_32f9", "label": "Gabriel Lippmann", "type": "Person", "attrs": { "born": 1845 } },
+    { "id": "e_3cff", "label": "André Debierne", "type": "Person", "attrs": { "born": 1874 } },
+    { "id": "e_21c8", "label": "Irène Joliot-Curie", "type": "Person", "attrs": { "born": 1897 } },
+    { "id": "e_98eb", "label": "Frédéric Joliot", "type": "Person", "attrs": { "born": 1900 } },
+    { "id": "e_4112", "label": "Ève Curie", "type": "Person", "attrs": { "born": 1904 } },
+    { "id": "e_c3b6", "label": "Albert Einstein", "type": "Person", "attrs": { "born": 1879 } },
+    { "id": "e_e901", "label": "Warsaw", "type": "Place", "attrs": { "country": "Poland" } },
+    { "id": "e_ab96", "label": "Poland", "type": "Place" },
+    { "id": "e_f719", "label": "Paris", "type": "Place", "attrs": { "country": "France" } },
+    { "id": "e_c660", "label": "St. Joachimsthal", "type": "Place" },
+    { "id": "e_76f7", "label": "Bohemia", "type": "Place" },
+    { "id": "e_3f72", "label": "Passy", "type": "Place", "attrs": { "country": "France" } },
+    { "id": "e_0b14", "label": "Panthéon", "type": "Place", "attrs": { "city": "Paris" } },
+    {
+      "id": "e_1e18",
+      "label": "Flying University",
+      "type": "Organization",
+      "attrs": { "city": "Warsaw" }
+    },
+    { "id": "e_3ef4", "label": "Univ. of Paris", "type": "Organization" },
+    { "id": "e_e87a", "label": "ESPCI", "type": "Organization", "attrs": { "founded": 1882 } },
+    {
+      "id": "e_fbba",
+      "label": "Radium Institute",
+      "type": "Organization",
+      "attrs": { "founded": 1914 }
+    },
+    {
+      "id": "e_8805",
+      "label": "polonium (Po)",
+      "type": "Element",
+      "attrs": { "symbol": "Po", "atomic_number": 84 }
+    },
+    {
+      "id": "e_3a22",
+      "label": "radium (Ra)",
+      "type": "Element",
+      "attrs": { "symbol": "Ra", "atomic_number": 88 }
+    },
+    {
+      "id": "e_a85b",
+      "label": "uranium",
+      "type": "Element",
+      "attrs": { "symbol": "U", "atomic_number": 92 }
+    },
+    {
+      "id": "e_611f",
+      "label": "thorium",
+      "type": "Element",
+      "attrs": { "symbol": "Th", "atomic_number": 90 }
+    },
+    { "id": "e_7bf2", "label": "pitchblende", "type": "Mineral", "attrs": { "formula": "UO2" } },
+    { "id": "e_a802", "label": "radioactivity", "type": "Concept", "attrs": { "year": 1898 } },
+    { "id": "e_495e", "label": "uranic rays", "type": "Phenomenon", "attrs": { "year": 1896 } },
+    { "id": "e_fd4e", "label": "X-rays", "type": "Phenomenon", "attrs": { "year": 1895 } },
+    {
+      "id": "e_a79d",
+      "label": "artificial radioactivity",
+      "type": "Concept",
+      "attrs": { "year": 1934 }
+    },
+    { "id": "e_ac4f", "label": "radiography", "type": "Technique" },
+    { "id": "e_d097", "label": "Curie electrometer", "type": "Instrument" },
+    { "id": "e_caf0", "label": "petites Curies", "type": "Instrument", "attrs": { "year": 1914 } },
+    { "id": "e_1b5a", "label": "aplastic anemia", "type": "Disease" },
+    { "id": "e_95a8", "label": "Nobel Prize in Physics", "type": "Award" },
+    { "id": "e_7d52", "label": "Nobel Prize in Chemistry", "type": "Award" },
+    {
+      "id": "e_4c01",
+      "label": "First World War",
+      "type": "Event",
+      "attrs": { "start": 1914, "end": 1918 }
+    },
+    {
+      "id": "e_15c1",
+      "label": "Recherches sur les substances radioactives",
+      "type": "Work",
+      "attrs": { "year": 1903 }
+    }
+  ],
+  "edges": [
+    { "source": "e_8bd8", "predicate": "studied_at", "target": "e_1e18" },
+    { "source": "e_8bd8", "predicate": "studied_at", "target": "e_3ef4" },
+    { "source": "e_8bd8", "predicate": "parent_of", "target": "e_21c8" },
+    { "source": "e_8bd8", "predicate": "parent_of", "target": "e_4112" },
+    { "source": "e_7091", "predicate": "parent_of", "target": "e_21c8" },
+    { "source": "e_7091", "predicate": "worked_at", "target": "e_e87a" },
+    { "source": "e_8bd8", "predicate": "discovered", "target": "e_8805" },
+    { "source": "e_8bd8", "predicate": "discovered", "target": "e_3a22" },
+    { "source": "e_7091", "predicate": "discovered", "target": "e_8805" },
+    { "source": "e_7091", "predicate": "discovered", "target": "e_3a22" },
+    { "source": "e_8bd8", "predicate": "coined", "target": "e_a802" },
+    { "source": "e_8bd8", "predicate": "influenced_by", "target": "e_c7c7" },
+    { "source": "e_8bd8", "predicate": "advised_by", "target": "e_32f9" },
+    { "source": "e_8bd8", "predicate": "authored", "target": "e_15c1" },
+    { "source": "e_c7c7", "predicate": "discovered", "target": "e_495e" },
+    { "source": "e_c7c7", "predicate": "influenced_by", "target": "e_492f" },
+    { "source": "e_492f", "predicate": "discovered", "target": "e_fd4e" },
+    { "source": "e_a85b", "predicate": "emits", "target": "e_495e" },
+    { "source": "e_7091", "predicate": "built", "target": "e_d097" },
+    { "source": "e_e554", "predicate": "built", "target": "e_d097" },
+    { "source": "e_8bd8", "predicate": "married_to", "target": "e_7091", "attrs": { "year": 1895 } },
+    { "source": "e_8bd8", "predicate": "born_in", "target": "e_ab96" },
+    { "source": "e_8bd8", "predicate": "worked_at", "target": "e_e87a" },
+    { "source": "e_7091", "predicate": "discovered", "target": "e_611f" },
+    { "source": "e_8805", "predicate": "extracted_from", "target": "e_7bf2" },
+    { "source": "e_3a22", "predicate": "extracted_from", "target": "e_7bf2" },
+    { "source": "e_7bf2", "predicate": "mined_in", "target": "e_c660" },
+    { "source": "e_8bd8", "predicate": "collaborated_with", "target": "e_c3b6" },
+    { "source": "e_e554", "predicate": "sibling_of", "target": "e_7091" },
+    { "source": "e_8bd8", "predicate": "used", "target": "e_d097" },
+    { "source": "e_8805", "predicate": "named_after", "target": "e_ab96" },
+    { "source": "e_c660", "predicate": "located_in", "target": "e_76f7" },
+    { "source": "e_e901", "predicate": "located_in", "target": "e_ab96" },
+    { "source": "e_1e18", "predicate": "located_in", "target": "e_e901" },
+    { "source": "e_3ef4", "predicate": "located_in", "target": "e_f719" },
+    { "source": "e_e87a", "predicate": "located_in", "target": "e_f719" },
+    { "source": "e_fbba", "predicate": "located_in", "target": "e_f719" },
+    { "source": "e_0b14", "predicate": "located_in", "target": "e_f719" },
+    { "source": "e_8bd8", "predicate": "awarded", "target": "e_95a8", "attrs": { "year": 1903 } },
+    { "source": "e_7091", "predicate": "awarded", "target": "e_95a8", "attrs": { "year": 1903 } },
+    { "source": "e_c7c7", "predicate": "awarded", "target": "e_95a8", "attrs": { "year": 1903 } },
+    { "source": "e_8bd8", "predicate": "awarded", "target": "e_7d52", "attrs": { "year": 1911 } },
+    { "source": "e_98eb", "predicate": "awarded", "target": "e_7d52", "attrs": { "year": 1935 } },
+    { "source": "e_8bd8", "predicate": "collaborated_with", "target": "e_3cff" },
+    { "source": "e_8bd8", "predicate": "founded", "target": "e_fbba" },
+    { "source": "e_8bd8", "predicate": "organized", "target": "e_caf0" },
+    { "source": "e_caf0", "predicate": "used_in", "target": "e_4c01" },
+    { "source": "e_caf0", "predicate": "used_for", "target": "e_ac4f" },
+    { "source": "e_8bd8", "predicate": "died_in", "target": "e_3f72" },
+    { "source": "e_8bd8", "predicate": "died_of", "target": "e_1b5a" },
+    { "source": "e_7091", "predicate": "died_in", "target": "e_f719" },
+    { "source": "e_8bd8", "predicate": "buried_in", "target": "e_0b14" },
+    { "source": "e_21c8", "predicate": "married_to", "target": "e_98eb" },
+    { "source": "e_21c8", "predicate": "discovered", "target": "e_a79d" },
+    { "source": "e_98eb", "predicate": "discovered", "target": "e_a79d" }
+  ]
+}

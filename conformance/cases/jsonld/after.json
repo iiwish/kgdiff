@@ -1,0 +1,42 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "http://schema.org/",
+    "ex": "http://example.org/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "knows": { "@type": "@id" },
+    "memberOf": { "@type": "@id" },
+    "data": { "@id": "ex:data", "@type": "@json" },
+    "height": { "@id": "ex:height", "@type": "http://www.w3.org/2001/XMLSchema#double" },
+    "label": { "@id": "rdfs:label", "@container": "@language" }
+  },
+  "@graph": [
+    {
+      "@id": "ex:alice",
+      "@type": "Person",
+      "label": { "en": "Alice Liddell", "zh": "爱丽丝" },
+      "age": 43,
+      "height": 1.7,
+      "score": 0.15,
+      "knows": ["ex:bob", "ex:carol"],
+      "memberOf": "ex:acme",
+      "data": { "2": { "z": null }, "a": [1, 2, 0], "10": 2, "b": 1 }
+    },
+    {
+      "@id": "ex:bob",
+      "@type": "Person",
+      "name": "Bob",
+      "big": 1E21,
+      "small": 1.0e-7,
+      "count": 1e20,
+      "@reverse": { "employee": { "@id": "ex:acme" } }
+    },
+    { "@id": "ex:carol", "@type": "Person", "name": "Carol", "age": 39 },
+    {
+      "@id": "ex:acme",
+      "@type": "Organization",
+      "name": [{ "@value": "Acme", "@language": "en" }, { "@value": "顶点公司", "@language": "zh" }],
+      "address": { "streetAddress": "2 Main St", "addressLocality": "Springfield" }
+    }
+  ]
+}

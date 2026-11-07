@@ -1,0 +1,22 @@
+G	MHD:0000062	Merged “juvenile diabetes” and “insulin-dependent diabetes mellitus” into “type 1 diabetes mellitus”
+G	MHD:0000018	Merged “heart attack” into “myocardial infarction”
+G	MHD:0000031	Merged “chronic obstructive airway disease” into “chronic obstructive pulmonary disease”
+V	MHD:0000087	Moved “Crohn disease” under “inflammatory bowel disease”
+V	MHD:0000072	Moved “Hashimoto thyroiditis” under “autoimmune thyroid disease”
+V	MHD:0000038	Moved “tuberculosis” under “bacterial infectious disease”
+R	MHD:0000082	Renamed “alcoholic liver disease” → “alcohol-related liver disease”
+V	MHD:0000074	Moved “hyperglycemia” under “abnormal blood glucose concentration”
+R	MHD:0000056	Renamed “Alzheimer's disease” → “Alzheimer disease”
+M	MHD:0000050	Updated attributes of “COVID-19”
+M	MHD:0000030	Updated attributes of “asthma”
+M	MHD:0000093	Updated attributes of “chronic kidney disease”
+M	MHD:0002010	Edited “dyspnea”
+R	MHD:0000081	Renamed “non-alcoholic steatohepatitis” → “metabolic dysfunction-associated steato…”
+R	MHD:0000080	Renamed “non-alcoholic fatty liver disease” → “metabolic dysfunction-associated steato…”
+M	MHD:0000060	Edited “migraine”
+R	MHD:0000079	Renamed “fatty liver disease” → “steatotic liver disease”
+M	MHD:0000063	Updated attributes of “type 2 diabetes mellitus”
+A	MHD:0000203	Added “arginine vasopressin disorder” and 1 relation
+S	MHD:0000067	Split “diabetes insipidus” into “arginine vasopressin deficiency” and “arginine vasopressin resistance”
+A	MHD:0000202	Added “cryptogenic steatotic liver disease” and 1 relation
+A	MHD:0000201	Added “metabolic dysfunction and alcohol-relat…” and 1 relation

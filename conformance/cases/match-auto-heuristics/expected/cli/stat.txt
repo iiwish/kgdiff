@@ -1,0 +1,13 @@
+kgdiff  vehicles 2026.1 → 2026.2                   12 → 15 nodes · 18 → 19 edges
+
+  +4 added   −2 removed   ~3 modified   ⇄4 restructured   36 changes in 13 hunks
+  +++++++++−−−−−−−~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      6        3         6          3
+  edges      9        8         4          6
+
+  By type
+  Class  11 +++++−−−~~~
+  Fuel    2 +~
+  Part    2 ~~

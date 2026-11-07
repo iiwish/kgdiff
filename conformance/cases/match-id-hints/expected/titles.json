@@ -1,0 +1,116 @@
+{
+  "en": [
+    {
+      "id": "modify:channel",
+      "title": "Moved “Channel” under “Business taxonomy”",
+      "subtitle": "from “Geography”"
+    },
+    {
+      "id": "modify:dim_region",
+      "title": "Deprecated “Region”",
+      "subtitle": "replaced by “Sales region” · −1 relation"
+    },
+    {
+      "id": "modify:category",
+      "title": "Changed the id of “Category”",
+      "subtitle": "dim_category → category · replaces “Category”"
+    },
+    {
+      "id": "modify:metric_revenue",
+      "title": "Renamed “Revenue” → “Net revenue”",
+      "subtitle": "+1 ~1 attributes"
+    },
+    {
+      "id": "modify:order_line",
+      "title": "Changed the id of “Order line”",
+      "subtitle": "fct_order_line → order_line · replaces “Order line”"
+    },
+    {
+      "id": "modify:product",
+      "title": "Changed the id of “Product”",
+      "subtitle": "dim_product → product · replaces “Product”"
+    },
+    {
+      "id": "split:dim_sku",
+      "title": "Split “SKU” (dim_sku) into “Bundle” and “SKU” (sku)",
+      "subtitle": "via replacement hint · 2 relations carried over · +1 relation"
+    },
+    {
+      "id": "add:sales_region",
+      "title": "Added “Sales region” and 1 relation",
+      "subtitle": "type Entity · linked to “Geography”"
+    },
+    {
+      "id": "modify:order",
+      "title": "Changed the id of “Order”",
+      "subtitle": "fct_order → order · replaces “Order” · +1 ~1 relations"
+    },
+    {
+      "id": "remove:metric_gmv",
+      "title": "Removed “GMV” and 1 relation",
+      "subtitle": "type Metric · was linked to “Order”"
+    },
+    {
+      "id": "merge:customer",
+      "title": "Merged “Client” and “Customer” (dim_customer) into “Customer” (customer)",
+      "subtitle": "via replacement hint · 3 relations carried over · 1 duplicate collapsed"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:channel",
+      "title": "「Channel」移至「Business taxonomy」下",
+      "subtitle": "原属「Geography」"
+    },
+    {
+      "id": "modify:dim_region",
+      "title": "弃用「Region」",
+      "subtitle": "由「Sales region」替代 · 关系 −1"
+    },
+    {
+      "id": "modify:category",
+      "title": "「Category」的 ID 已变更",
+      "subtitle": "ID dim_category → category · 替代「Category」"
+    },
+    {
+      "id": "modify:metric_revenue",
+      "title": "「Revenue」改名为「Net revenue」",
+      "subtitle": "属性 +1 ~1"
+    },
+    {
+      "id": "modify:order_line",
+      "title": "「Order line」的 ID 已变更",
+      "subtitle": "ID fct_order_line → order_line · 替代「Order line」"
+    },
+    {
+      "id": "modify:product",
+      "title": "「Product」的 ID 已变更",
+      "subtitle": "ID dim_product → product · 替代「Product」"
+    },
+    {
+      "id": "split:dim_sku",
+      "title": "「SKU」（dim_sku）拆分为「Bundle」和「SKU」（sku）",
+      "subtitle": "依据替代声明 · 迁移 2 条关系 · 关系 +1"
+    },
+    {
+      "id": "add:sales_region",
+      "title": "新增「Sales region」及 1 条关系",
+      "subtitle": "类型 Entity · 关联「Geography」"
+    },
+    {
+      "id": "modify:order",
+      "title": "「Order」的 ID 已变更",
+      "subtitle": "ID fct_order → order · 替代「Order」 · 关系 +1 ~1"
+    },
+    {
+      "id": "remove:metric_gmv",
+      "title": "删除「GMV」及 1 条关系",
+      "subtitle": "类型 Metric · 原关联「Order」"
+    },
+    {
+      "id": "merge:customer",
+      "title": "「Client」和「Customer」（dim_customer）合并入「Customer」（customer）",
+      "subtitle": "依据替代声明 · 迁移 3 条关系 · 合并 1 条重复关系"
+    }
+  ]
+}

@@ -5,3 +5,7 @@
 *.png binary
 *.webp binary
 *.gz binary
+
+# The conformance corpus is compared byte for byte: its inputs include CRLF and UTF-16 files on
+# purpose, so nothing under conformance/cases is converted on checkout or commit.
+conformance/cases/** -text

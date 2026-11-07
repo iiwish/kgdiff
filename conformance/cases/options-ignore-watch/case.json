@@ -1,0 +1,354 @@
+{
+  "id": "options-ignore-watch",
+  "description": "Every CLI-expressible diff option at once: a custom hierarchy predicate, ignored attributes, merge and split detection off, a stricter threshold, plus watched attributes in the text outputs.",
+  "covers": [
+    "kgdiff-json",
+    "hierarchy",
+    "ignore-attr",
+    "no-merges",
+    "no-splits",
+    "threshold",
+    "watch-attr"
+  ],
+  "inputs": {
+    "before": "before.json",
+    "after": "after.json"
+  },
+  "parse": {
+    "before": {
+      "format": "auto",
+      "filename": "before.json",
+      "allowEmpty": false
+    },
+    "after": {
+      "format": "auto",
+      "filename": "after.json",
+      "allowEmpty": false
+    }
+  },
+  "options": {
+    "match": {
+      "strategy": "auto",
+      "threshold": 0.9
+    },
+    "hierarchyPredicates": [
+      "broader"
+    ],
+    "ignoreAttrs": [
+      "updated_at",
+      "etag"
+    ],
+    "detectMerges": false,
+    "detectSplits": false
+  },
+  "resolvedOptions": {
+    "match": {
+      "strategy": "auto",
+      "threshold": 0.9,
+      "suggestThreshold": 0.6,
+      "maxCandidates": 8
+    },
+    "edgeIdentity": "structure",
+    "hierarchyPredicates": [
+      "broader"
+    ],
+    "detectMerges": false,
+    "detectSplits": false,
+    "ignoreAttrs": [
+      "etag",
+      "updated_at"
+    ]
+  },
+  "locale": "en",
+  "layoutOptions": {},
+  "identical": false,
+  "cli": [
+    {
+      "name": "summary",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.txt"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "stat",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--stat"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/stat.txt"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "name-status",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--name-status"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/name-status.tsv"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "markdown",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--markdown"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.md"
+      },
+      "versionPlaceholder": true,
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "json",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--json"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/diff.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "delta",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--delta"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/delta.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    },
+    {
+      "name": "exit-code",
+      "args": [
+        "before.json",
+        "after.json",
+        "--match",
+        "auto",
+        "--threshold",
+        "0.9",
+        "--hierarchy",
+        "broader",
+        "--ignore-attr",
+        "updated_at",
+        "--ignore-attr",
+        "etag",
+        "--no-merges",
+        "--no-splits",
+        "--watch-attr",
+        "definition",
+        "--watch-attr",
+        "rdfs:comment",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--exit-code",
+        "--quiet"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 1
+    },
+    {
+      "name": "apply",
+      "args": [
+        "apply",
+        "before.json",
+        "expected/delta.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/apply.json"
+      },
+      "stderr": {
+        "text": "warning: The result (c53:109cd29dbd2018) differs from the delta's target (c53:0f9144211bca03).\n"
+      },
+      "exit": 0
+    }
+  ]
+}

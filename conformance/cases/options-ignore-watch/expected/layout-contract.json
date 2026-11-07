@@ -1,0 +1,44 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 235,
+  "nodes": [
+    "term:arpu",
+    "term:attribute",
+    "term:dimension",
+    "term:facet",
+    "term:indicator",
+    "term:kpi",
+    "term:measure",
+    "term:metric",
+    "term:okr"
+  ],
+  "radii": {
+    "term:arpu": 6.2,
+    "term:attribute": 6.2,
+    "term:dimension": 7.11,
+    "term:facet": 6.2,
+    "term:indicator": 6.2,
+    "term:kpi": 7.81,
+    "term:measure": 6.2,
+    "term:metric": 8.92,
+    "term:okr": 6.2
+  },
+  "hidden": {},
+  "components": [
+    [
+      "term:arpu",
+      "term:indicator",
+      "term:kpi",
+      "term:measure",
+      "term:metric",
+      "term:okr"
+    ],
+    [
+      "term:attribute",
+      "term:dimension",
+      "term:facet"
+    ]
+  ]
+}

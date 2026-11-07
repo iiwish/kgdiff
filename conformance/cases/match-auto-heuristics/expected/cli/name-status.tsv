@@ -1,0 +1,13 @@
+D	lorry	Removed “Lorry” and 3 relations
+D	sidecar	Removed “Sidecar” and 2 relations
+S	bus	Split “Bus” into “Coach” and “Minibus”
+G	car	Merged “Automobile” into “Car”
+R	engine	Renamed “Engine” → “Motor”
+M	cargo_bed	Deprecated “Cargo bed”
+M	petrol	Changed the type of “Petrol”
+A	lorries	Added “Lorry truck” and 2 relations
+A	scooter	Added “Scooter” and 2 relations
+A	human_powered	Added “Human-powered vehicle” and 1 relation
+V	bicycle	Moved “Bicycle” under “Human-powered vehicle”
+A	electricity	Added “Electricity”
+E	car	Updated 2 relations of “Car”

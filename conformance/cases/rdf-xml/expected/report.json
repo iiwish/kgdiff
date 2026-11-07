@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "Pizza ontology 1.0 → 1.1",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "Pizza ontology 1.0",
+      "format": "rdfxml"
+    },
+    "after": {
+      "name": "Pizza ontology 1.1",
+      "format": "rdfxml"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

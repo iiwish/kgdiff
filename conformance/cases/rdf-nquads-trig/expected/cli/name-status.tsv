@@ -1,0 +1,3 @@
+R	http://example.org/b	Renamed “B” → “B (renamed)”
+M	http://example.org/c	Updated attributes of “C”
+A	http://example.org/d	Added “D” and 1 relation

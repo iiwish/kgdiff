@@ -1,0 +1,15 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "catalog", "version": "1.0.0" },
+  "nodes": [
+    { "id": "dataset", "label": "Dataset" },
+    { "id": "table", "label": "Table" },
+    { "id": "column", "label": "Column" },
+    { "id": "lonely", "label": "Isolated node" }
+  ],
+  "edges": [
+    { "source": "table", "target": "dataset", "predicate": "part_of" },
+    { "source": "column", "target": "table", "predicate": "part_of" }
+  ]
+}

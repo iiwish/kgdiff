@@ -1,0 +1,5431 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "MHD:0000001",
+        "label": "disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disposition to undergo pathological processes that exists in an organism because of one or more disorders in that organism.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:4"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000002",
+        "label": "disease of anatomical entity",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease that manifests in a defined anatomical structure.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:7"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000003",
+        "label": "infectious disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease resulting from the presence and activity of a microbial, viral, fungal or parasitic agent.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:0050117"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000004",
+        "label": "disease of cellular proliferation",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease characterized by abnormally rapid cell division.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:14566"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000005",
+        "label": "disease of metabolism",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease that involves errors in metabolic processes of building or degradation of molecules.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:0014667"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000006",
+        "label": "cardiovascular system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in the heart or blood vessels.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:1287",
+            "MESH:D002318"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000007",
+        "label": "respiratory system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in the airways, lungs or pleura.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:1579",
+            "MESH:D012140"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000008",
+        "label": "nervous system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in the central or peripheral nervous system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:863",
+            "MESH:D009422"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000009",
+        "label": "gastrointestinal system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in the digestive tract or its accessory organs.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:77",
+            "MESH:D004066"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000010",
+        "label": "endocrine system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in an endocrine gland.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:28",
+            "MESH:D004700"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000011",
+        "label": "urinary system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in the kidneys or urinary tract.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:18"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000012",
+        "label": "immune system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that results from a dysfunction of the immune system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:2914",
+            "MESH:D007154"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000013",
+        "label": "musculoskeletal system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in bones, joints or skeletal muscle.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:17",
+            "MESH:D009140"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000014",
+        "label": "integumentary system disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that is located in the skin or its appendages.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:16"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000015",
+        "label": "hematologic disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of anatomical entity that affects the blood or blood-forming tissues.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "MESH:D006402"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000016",
+        "label": "heart disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A cardiovascular system disease that is located in the heart.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:114",
+            "MESH:D006331"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000017",
+        "label": "coronary artery disease",
+        "type": "Term",
+        "aliases": [
+          "CAD",
+          "coronary heart disease"
+        ],
+        "attrs": {
+          "def": "A heart disease in which atherosclerotic plaque narrows the coronary arteries and reduces blood flow to the myocardium.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "CAD (EXACT)",
+            "coronary heart disease (EXACT)"
+          ],
+          "xref": [
+            "DOID:3393",
+            "ICD10CM:I25.10",
+            "MESH:D003324"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000018",
+        "label": "myocardial infarction",
+        "type": "Term",
+        "aliases": [
+          "MI"
+        ],
+        "attrs": {
+          "def": "A coronary artery disease characterized by necrosis of myocardial tissue caused by prolonged ischemia.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "MI (EXACT)"
+          ],
+          "xref": [
+            "DOID:5844",
+            "ICD10CM:I21",
+            "MESH:D009203"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000019",
+        "label": "heart attack",
+        "type": "Term",
+        "aliases": [
+          "cardiac infarction"
+        ],
+        "attrs": {
+          "def": "A coronary artery disease in which blood flow to part of the heart muscle is blocked.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "cardiac infarction (RELATED)"
+          ],
+          "xref": [
+            "ICD10CM:I21.9"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000020",
+        "label": "angina pectoris",
+        "type": "Term",
+        "aliases": [
+          "angina"
+        ],
+        "attrs": {
+          "def": "A coronary artery disease characterized by episodic chest pain caused by transient myocardial ischemia.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "angina (EXACT)"
+          ],
+          "xref": [
+            "ICD10CM:I20",
+            "MESH:D000787"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000021",
+        "label": "heart failure",
+        "type": "Term",
+        "aliases": [
+          "cardiac failure"
+        ],
+        "attrs": {
+          "def": "A heart disease in which the heart cannot pump enough blood to meet the needs of the body.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "cardiac failure (EXACT)"
+          ],
+          "xref": [
+            "ICD10CM:I50",
+            "MESH:D006333"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000022",
+        "label": "atrial fibrillation",
+        "type": "Term",
+        "aliases": [
+          "AF"
+        ],
+        "attrs": {
+          "def": "A heart disease characterized by rapid and irregular contraction of the atria.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "AF (EXACT)"
+          ],
+          "xref": [
+            "DOID:0060224",
+            "ICD10CM:I48",
+            "MESH:D001281"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000023",
+        "label": "hypertension",
+        "type": "Term",
+        "aliases": [
+          "high blood pressure"
+        ],
+        "attrs": {
+          "def": "A cardiovascular system disease characterized by persistently elevated arterial blood pressure.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "high blood pressure (EXACT)"
+          ],
+          "xref": [
+            "DOID:10763",
+            "ICD10CM:I10",
+            "MESH:D006973"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000024",
+        "label": "atherosclerosis",
+        "type": "Term",
+        "attrs": {
+          "def": "A cardiovascular system disease characterized by the build-up of lipid-laden plaque in the intima of arteries.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:1936",
+            "MESH:D050197"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000025",
+        "label": "cerebrovascular disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A cardiovascular system disease that affects the blood vessels supplying the brain.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "MESH:D002561"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000026",
+        "label": "ischemic stroke",
+        "type": "Term",
+        "aliases": [
+          "cerebral infarction"
+        ],
+        "attrs": {
+          "def": "A cerebrovascular disease in which an arterial occlusion causes focal infarction of brain tissue.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "cerebral infarction (EXACT)"
+          ],
+          "xref": [
+            "ICD10CM:I63"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000027",
+        "label": "hemorrhagic stroke",
+        "type": "Term",
+        "attrs": {
+          "def": "A cerebrovascular disease caused by rupture of a blood vessel and bleeding into or around the brain.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "ICD10CM:I61"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000028",
+        "label": "lung disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A respiratory system disease that is located in the lung.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:850",
+            "MESH:D008171"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000029",
+        "label": "bronchial disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A lung disease that is located in the bronchi.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:1176"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000030",
+        "label": "asthma",
+        "type": "Term",
+        "aliases": [
+          "bronchial asthma"
+        ],
+        "attrs": {
+          "def": "A bronchial disease characterized by chronic airway inflammation and reversible airflow obstruction.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "bronchial asthma (EXACT)"
+          ],
+          "xref": [
+            "DOID:2841",
+            "ICD10CM:J45",
+            "MESH:D001249",
+            "SNOMEDCT_US_2025_09_01:195967001"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000031",
+        "label": "chronic obstructive pulmonary disease",
+        "type": "Term",
+        "aliases": [
+          "COPD",
+          "chronic obstructive lung disease"
+        ],
+        "attrs": {
+          "def": "A lung disease characterized by persistent respiratory symptoms and airflow limitation.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "COPD (EXACT)",
+            "chronic obstructive lung disease (EXACT)"
+          ],
+          "xref": [
+            "DOID:3083",
+            "ICD10CM:J44",
+            "MESH:D029424"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000032",
+        "label": "chronic obstructive airway disease",
+        "type": "Term",
+        "aliases": [
+          "COAD"
+        ],
+        "attrs": {
+          "def": "A lung disease characterized by chronic obstruction of airflow through the airways.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "COAD (EXACT)"
+          ],
+          "xref": [
+            "ICD10CM:J44.9"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000033",
+        "label": "chronic bronchitis",
+        "type": "Term",
+        "attrs": {
+          "def": "A bronchial disease characterized by productive cough lasting at least three months in two consecutive years.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "ICD10CM:J42",
+            "MESH:D029481"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000034",
+        "label": "pulmonary emphysema",
+        "type": "Term",
+        "aliases": [
+          "emphysema"
+        ],
+        "attrs": {
+          "def": "A chronic obstructive pulmonary disease characterized by permanent enlargement and destruction of the alveolar walls.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "emphysema (EXACT)"
+          ],
+          "xref": [
+            "DOID:9675",
+            "ICD10CM:J43",
+            "MESH:D011656"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000035",
+        "label": "pneumonia",
+        "type": "Term",
+        "attrs": {
+          "def": "A lung disease characterized by inflammation of the alveoli, usually caused by infection.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:552",
+            "ICD10CM:J18.9",
+            "MESH:D011014"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000036",
+        "label": "bacterial pneumonia",
+        "type": "Term",
+        "attrs": {
+          "def": "A pneumonia that is caused by a bacterial infection.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "ICD10CM:J15.9"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000037",
+        "label": "viral pneumonia",
+        "type": "Term",
+        "attrs": {
+          "def": "A pneumonia that is caused by a viral infection.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "ICD10CM:J12.9"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000038",
+        "label": "tuberculosis",
+        "type": "Term",
+        "aliases": [
+          "TB"
+        ],
+        "attrs": {
+          "def": "An infectious disease caused by Mycobacterium tuberculosis that most often affects the lungs.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "TB (EXACT)"
+          ],
+          "xref": [
+            "DOID:399",
+            "ICD10CM:A15",
+            "MESH:D014376"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000039",
+        "label": "lung cancer",
+        "type": "Term",
+        "aliases": [
+          "lung neoplasm"
+        ],
+        "attrs": {
+          "def": "A cancer that originates in the tissues of the lung.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "lung neoplasm (RELATED)"
+          ],
+          "xref": [
+            "DOID:1324",
+            "ICD10CM:C34",
+            "MESH:D008175"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000040",
+        "label": "non-small cell lung carcinoma",
+        "type": "Term",
+        "aliases": [
+          "NSCLC"
+        ],
+        "attrs": {
+          "def": "A lung cancer that is not a small cell carcinoma; includes adenocarcinoma, squamous cell carcinoma and large cell carcinoma.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "NSCLC (EXACT)"
+          ],
+          "xref": [
+            "DOID:3908"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000041",
+        "label": "small cell lung carcinoma",
+        "type": "Term",
+        "aliases": [
+          "SCLC",
+          "oat cell carcinoma"
+        ],
+        "attrs": {
+          "def": "A lung cancer composed of small cells with neuroendocrine features.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "SCLC (EXACT)",
+            "oat cell carcinoma (RELATED)"
+          ],
+          "xref": [
+            "DOID:5409"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000042",
+        "label": "cancer",
+        "type": "Term",
+        "aliases": [
+          "malignant neoplasm",
+          "malignant tumor"
+        ],
+        "attrs": {
+          "def": "A disease of cellular proliferation that is malignant and primary, characterized by uncontrolled cellular proliferation, local cell invasion and metastasis.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "synonyms": [
+            "malignant neoplasm (EXACT)",
+            "malignant tumor (EXACT)"
+          ],
+          "xref": [
+            "DOID:162"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000043",
+        "label": "colorectal cancer",
+        "type": "Term",
+        "aliases": [
+          "CRC"
+        ],
+        "attrs": {
+          "def": "A cancer that is located in the colon or rectum.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "CRC (EXACT)"
+          ],
+          "xref": [
+            "DOID:9256",
+            "MESH:D015179"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000047",
+        "label": "bacterial infectious disease",
+        "type": "Term",
+        "attrs": {
+          "def": "An infectious disease that is caused by a bacterium.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:104"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000048",
+        "label": "viral infectious disease",
+        "type": "Term",
+        "attrs": {
+          "def": "An infectious disease that is caused by a virus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:934"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000049",
+        "label": "influenza",
+        "type": "Term",
+        "aliases": [
+          "flu"
+        ],
+        "attrs": {
+          "def": "A viral infectious disease of the respiratory tract caused by influenza A or B virus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "flu (EXACT)"
+          ],
+          "xref": [
+            "DOID:8469",
+            "MESH:D007251"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000050",
+        "label": "COVID-19",
+        "type": "Term",
+        "aliases": [
+          "2019 novel coronavirus infection",
+          "coronavirus disease 2019"
+        ],
+        "attrs": {
+          "def": "A viral infectious disease caused by severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2).",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "2019 novel coronavirus infection (EXACT)",
+            "coronavirus disease 2019 (EXACT)"
+          ],
+          "xref": [
+            "DOID:0080600",
+            "ICD10CM:U07.1",
+            "MESH:D000086382"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000051",
+        "label": "viral hepatitis",
+        "type": "Term",
+        "attrs": {
+          "def": "A hepatitis that is caused by a hepatotropic virus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "MESH:D006525"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000053",
+        "label": "hepatitis B",
+        "type": "Term",
+        "attrs": {
+          "def": "A viral hepatitis caused by hepatitis B virus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:2043",
+            "ICD10CM:B18.1",
+            "MESH:D006509"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000054",
+        "label": "hepatitis C",
+        "type": "Term",
+        "attrs": {
+          "def": "A viral hepatitis caused by hepatitis C virus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:1883",
+            "ICD10CM:B18.2",
+            "MESH:D006526"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000055",
+        "label": "neurodegenerative disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A nervous system disease characterized by progressive loss of structure or function of neurons.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "MESH:D019636"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000056",
+        "label": "Alzheimer's disease",
+        "type": "Term",
+        "aliases": [
+          "AD"
+        ],
+        "attrs": {
+          "def": "A neurodegenerative disease characterized by progressive memory loss and cognitive decline, with extracellular amyloid-beta plaques and intracellular tau tangles.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "AD (EXACT)"
+          ],
+          "xref": [
+            "DOID:10652",
+            "ICD10CM:G30",
+            "MESH:D000544"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000057",
+        "label": "Parkinson disease",
+        "type": "Term",
+        "aliases": [
+          "PD",
+          "paralysis agitans"
+        ],
+        "attrs": {
+          "def": "A neurodegenerative disease characterized by loss of dopaminergic neurons in the substantia nigra.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "PD (EXACT)",
+            "paralysis agitans (EXACT)"
+          ],
+          "xref": [
+            "DOID:14330",
+            "MESH:D010300"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000058",
+        "label": "multiple sclerosis",
+        "type": "Term",
+        "aliases": [
+          "MS"
+        ],
+        "attrs": {
+          "def": "A nervous system disease characterized by immune-mediated demyelination in the central nervous system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "MS (EXACT)"
+          ],
+          "xref": [
+            "DOID:2377",
+            "ICD10CM:G35",
+            "MESH:D009103"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000059",
+        "label": "epilepsy",
+        "type": "Term",
+        "attrs": {
+          "def": "A nervous system disease characterized by an enduring predisposition to generate epileptic seizures.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:1826",
+            "ICD10CM:G40",
+            "MESH:D004827"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000060",
+        "label": "migraine",
+        "type": "Term",
+        "aliases": [
+          "headache",
+          "migraine disorder"
+        ],
+        "attrs": {
+          "def": "A nervous system disease characterized by recurrent attacks of moderate to severe headache, often with nausea and sensitivity to light.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "headache (RELATED)",
+            "migraine disorder (EXACT)"
+          ],
+          "xref": [
+            "DOID:6364",
+            "ICD10CM:G43",
+            "MESH:D008881"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000061",
+        "label": "diabetes mellitus",
+        "type": "Term",
+        "attrs": {
+          "def": "A disease of metabolism characterized by chronic hyperglycemia resulting from defects in insulin secretion, insulin action, or both.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:9351",
+            "MESH:D003920"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000062",
+        "label": "type 1 diabetes mellitus",
+        "type": "Term",
+        "aliases": [
+          "T1DM",
+          "type I diabetes"
+        ],
+        "attrs": {
+          "def": "A diabetes mellitus caused by autoimmune destruction of the insulin-producing beta cells of the pancreatic islets.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "T1DM (EXACT)",
+            "type I diabetes (EXACT)"
+          ],
+          "xref": [
+            "DOID:9744",
+            "ICD10CM:E10",
+            "MESH:D003922"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000063",
+        "label": "type 2 diabetes mellitus",
+        "type": "Term",
+        "aliases": [
+          "T2DM",
+          "adult-onset diabetes"
+        ],
+        "attrs": {
+          "def": "A diabetes mellitus characterized by insulin resistance and relative insulin deficiency.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "T2DM (EXACT)",
+            "adult-onset diabetes (RELATED)"
+          ],
+          "xref": [
+            "DOID:9352",
+            "ICD10CM:E11",
+            "MESH:D003924"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000064",
+        "label": "juvenile diabetes",
+        "type": "Term",
+        "aliases": [
+          "juvenile-onset diabetes"
+        ],
+        "attrs": {
+          "def": "A diabetes mellitus with onset in childhood that requires insulin treatment.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "juvenile-onset diabetes (EXACT)"
+          ],
+          "xref": [
+            "ICD10CM:E10.9"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000065",
+        "label": "insulin-dependent diabetes mellitus",
+        "type": "Term",
+        "aliases": [
+          "IDDM"
+        ],
+        "attrs": {
+          "def": "A diabetes mellitus in which survival depends on exogenous insulin.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "IDDM (EXACT)"
+          ],
+          "xref": [
+            "UMLS:C0011854"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000067",
+        "label": "diabetes insipidus",
+        "type": "Term",
+        "aliases": [
+          "DI",
+          "arginine vasopressin deficiency",
+          "arginine vasopressin resistance",
+          "central diabetes insipidus",
+          "nephrogenic diabetes insipidus"
+        ],
+        "attrs": {
+          "def": "A pituitary gland disease characterized by the excretion of large volumes of dilute urine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "DI (EXACT)",
+            "arginine vasopressin deficiency (NARROW)",
+            "arginine vasopressin resistance (NARROW)",
+            "central diabetes insipidus (NARROW)",
+            "nephrogenic diabetes insipidus (NARROW)"
+          ],
+          "xref": [
+            "DOID:9409",
+            "MESH:D003919"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000068",
+        "label": "thyroid disease",
+        "type": "Term",
+        "attrs": {
+          "def": "An endocrine system disease that is located in the thyroid gland.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:50",
+            "MESH:D013959"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000069",
+        "label": "hypothyroidism",
+        "type": "Term",
+        "attrs": {
+          "def": "A thyroid disease characterized by insufficient production of thyroid hormones.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:1459",
+            "ICD10CM:E03.9",
+            "MESH:D007037"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000070",
+        "label": "hyperthyroidism",
+        "type": "Term",
+        "aliases": [
+          "thyrotoxicosis"
+        ],
+        "attrs": {
+          "def": "A thyroid disease characterized by excessive production of thyroid hormones.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "thyrotoxicosis (RELATED)"
+          ],
+          "xref": [
+            "DOID:7998",
+            "MESH:D006980"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000071",
+        "label": "autoimmune thyroid disease",
+        "type": "Term",
+        "aliases": [
+          "AITD"
+        ],
+        "attrs": {
+          "def": "A thyroid disease in which the immune system targets thyroid antigens.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "AITD (EXACT)"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000072",
+        "label": "Hashimoto thyroiditis",
+        "type": "Term",
+        "aliases": [
+          "Hashimoto's disease",
+          "chronic lymphocytic thyroiditis"
+        ],
+        "attrs": {
+          "def": "A thyroid disease characterized by chronic lymphocytic infiltration of the thyroid gland, often resulting in hypothyroidism.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "Hashimoto's disease (EXACT)",
+            "chronic lymphocytic thyroiditis (EXACT)"
+          ],
+          "xref": [
+            "DOID:7188",
+            "ICD10CM:E06.3",
+            "MESH:D050031"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000073",
+        "label": "Graves disease",
+        "type": "Term",
+        "aliases": [
+          "Graves' disease"
+        ],
+        "attrs": {
+          "def": "An autoimmune thyroid disease in which thyroid-stimulating antibodies cause hyperthyroidism and diffuse goiter.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "Graves' disease (EXACT)"
+          ],
+          "xref": [
+            "DOID:12361",
+            "ICD10CM:E05.0",
+            "MESH:D006111"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000074",
+        "label": "hyperglycemia",
+        "type": "Term",
+        "aliases": [
+          "high blood sugar"
+        ],
+        "attrs": {
+          "def": "An abnormally high concentration of glucose in the blood.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "high blood sugar (EXACT)"
+          ],
+          "xref": [
+            "HP:0003074",
+            "MESH:D006943"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000075",
+        "label": "pituitary gland disease",
+        "type": "Term",
+        "attrs": {
+          "def": "An endocrine system disease that is located in the pituitary gland.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "MESH:D010900"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000076",
+        "label": "autoimmune disease",
+        "type": "Term",
+        "attrs": {
+          "def": "An immune system disease in which the immune response is directed against the body’s own tissues.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "DOID:417",
+            "MESH:D001327"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000077",
+        "label": "hepatitis",
+        "type": "Term",
+        "attrs": {
+          "def": "A liver disease characterized by inflammation of the liver parenchyma.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:2237",
+            "MESH:D006505"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000078",
+        "label": "liver disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A gastrointestinal system disease that is located in the liver.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:409",
+            "MESH:D008107"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000079",
+        "label": "fatty liver disease",
+        "type": "Term",
+        "aliases": [
+          "hepatic steatosis",
+          "steatosis of liver"
+        ],
+        "attrs": {
+          "def": "A liver disease characterized by accumulation of triglycerides in hepatocytes.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "hepatic steatosis (RELATED)",
+            "steatosis of liver (RELATED)"
+          ],
+          "xref": [
+            "DOID:9452",
+            "MESH:D005234"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000080",
+        "label": "non-alcoholic fatty liver disease",
+        "type": "Term",
+        "aliases": [
+          "NAFLD"
+        ],
+        "attrs": {
+          "def": "A fatty liver disease that occurs in people who drink little or no alcohol.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "NAFLD (EXACT)"
+          ],
+          "xref": [
+            "DOID:0080208",
+            "ICD10CM:K76.0",
+            "MESH:D065626"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000081",
+        "label": "non-alcoholic steatohepatitis",
+        "type": "Term",
+        "aliases": [
+          "NASH"
+        ],
+        "attrs": {
+          "def": "A non-alcoholic fatty liver disease with hepatocellular injury and lobular inflammation.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "NASH (EXACT)"
+          ],
+          "xref": [
+            "DOID:0080547",
+            "ICD10CM:K75.81"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000082",
+        "label": "alcoholic liver disease",
+        "type": "Term",
+        "aliases": [
+          "ALD"
+        ],
+        "attrs": {
+          "def": "A liver disease caused by chronic excessive alcohol consumption.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "ALD (EXACT)"
+          ],
+          "xref": [
+            "ICD10CM:K70",
+            "MESH:D008108"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000083",
+        "label": "alcoholic hepatitis",
+        "type": "Term",
+        "attrs": {
+          "def": "An alcoholic liver disease characterized by acute inflammation and necrosis of the liver.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "ICD10CM:K70.1",
+            "MESH:D006519"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000084",
+        "label": "liver cirrhosis",
+        "type": "Term",
+        "aliases": [
+          "cirrhosis of liver"
+        ],
+        "attrs": {
+          "def": "A liver disease characterized by diffuse fibrosis and regenerative nodules replacing normal liver architecture.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "cirrhosis of liver (EXACT)"
+          ],
+          "xref": [
+            "DOID:5082",
+            "MESH:D008103"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000085",
+        "label": "intestinal disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A gastrointestinal system disease that is located in the intestine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "MESH:D007410"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000086",
+        "label": "inflammatory bowel disease",
+        "type": "Term",
+        "aliases": [
+          "IBD"
+        ],
+        "attrs": {
+          "def": "An intestinal disease characterized by chronic inflammation of the gastrointestinal tract.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "IBD (EXACT)"
+          ],
+          "xref": [
+            "DOID:0050589",
+            "MESH:D015212"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000087",
+        "label": "Crohn disease",
+        "type": "Term",
+        "aliases": [
+          "Crohn's disease",
+          "regional enteritis"
+        ],
+        "attrs": {
+          "def": "A chronic inflammatory disease that may affect any segment of the gastrointestinal tract, most often the terminal ileum.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "Crohn's disease (EXACT)",
+            "regional enteritis (EXACT)"
+          ],
+          "xref": [
+            "DOID:8778",
+            "ICD10CM:K50",
+            "MESH:D003424"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000088",
+        "label": "ulcerative colitis",
+        "type": "Term",
+        "aliases": [
+          "UC"
+        ],
+        "attrs": {
+          "def": "An inflammatory bowel disease characterized by continuous mucosal inflammation of the colon and rectum.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "UC (EXACT)"
+          ],
+          "xref": [
+            "DOID:8577",
+            "ICD10CM:K51",
+            "MESH:D003093"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000089",
+        "label": "gastritis",
+        "type": "Term",
+        "attrs": {
+          "def": "A gastrointestinal system disease characterized by inflammation of the gastric mucosa.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:4029",
+            "ICD10CM:K29",
+            "MESH:D005756"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000090",
+        "label": "celiac disease",
+        "type": "Term",
+        "aliases": [
+          "coeliac disease",
+          "gluten-sensitive enteropathy"
+        ],
+        "attrs": {
+          "def": "An intestinal disease in which gluten triggers immune-mediated damage of the small intestinal mucosa.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "coeliac disease (EXACT)",
+            "gluten-sensitive enteropathy (EXACT)"
+          ],
+          "xref": [
+            "DOID:10608",
+            "ICD10CM:K90.0",
+            "MESH:D002446"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000092",
+        "label": "kidney disease",
+        "type": "Term",
+        "attrs": {
+          "def": "A urinary system disease that is located in the kidney.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:557",
+            "MESH:D007674"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000093",
+        "label": "chronic kidney disease",
+        "type": "Term",
+        "aliases": [
+          "CKD",
+          "chronic renal failure"
+        ],
+        "attrs": {
+          "def": "A kidney disease characterized by a gradual loss of kidney function over months or years.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "CKD (EXACT)",
+            "chronic renal failure (RELATED)"
+          ],
+          "xref": [
+            "DOID:784",
+            "ICD10CM:N18",
+            "MESH:D051436"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000094",
+        "label": "glomerulonephritis",
+        "type": "Term",
+        "attrs": {
+          "def": "A kidney disease characterized by inflammation of the renal glomeruli.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:2921",
+            "MESH:D005921"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000096",
+        "label": "rheumatoid arthritis",
+        "type": "Term",
+        "aliases": [
+          "RA"
+        ],
+        "attrs": {
+          "def": "A musculoskeletal system disease characterized by chronic immune-mediated inflammation of synovial joints.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "RA (EXACT)"
+          ],
+          "xref": [
+            "DOID:7148",
+            "MESH:D001172"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000097",
+        "label": "osteoarthritis",
+        "type": "Term",
+        "aliases": [
+          "degenerative joint disease"
+        ],
+        "attrs": {
+          "def": "A musculoskeletal system disease characterized by degeneration of articular cartilage and remodelling of subchondral bone.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "synonyms": [
+            "degenerative joint disease (EXACT)"
+          ],
+          "xref": [
+            "DOID:8398",
+            "MESH:D010003"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000098",
+        "label": "osteoporosis",
+        "type": "Term",
+        "attrs": {
+          "def": "A musculoskeletal system disease characterized by low bone mass and deterioration of bone microarchitecture.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:11476",
+            "ICD10CM:M81",
+            "MESH:D010024"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000100",
+        "label": "psoriasis",
+        "type": "Term",
+        "attrs": {
+          "def": "An integumentary system disease characterized by immune-mediated hyperproliferation of keratinocytes forming scaly plaques.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:8893",
+            "ICD10CM:L40",
+            "MESH:D011565"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000102",
+        "label": "anemia",
+        "type": "Term",
+        "attrs": {
+          "def": "A hematologic disease characterized by a decrease in the total amount of hemoglobin or red blood cells.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "MESH:D000740"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0000103",
+        "label": "iron deficiency anemia",
+        "type": "Term",
+        "attrs": {
+          "def": "An anemia caused by insufficient iron for hemoglobin synthesis.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "disease",
+          "xref": [
+            "DOID:11758",
+            "ICD10CM:D50",
+            "MESH:D018798"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001001",
+        "label": "anatomical entity",
+        "type": "Term",
+        "attrs": {
+          "def": "A material entity that is part of a human organism.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "UBERON:0001062"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001002",
+        "label": "anatomical system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical entity that consists of multiple organs that together perform a common function.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000467"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001003",
+        "label": "organ",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical entity that is a discrete structural unit performing a specific function.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000062"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001004",
+        "label": "organ part",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical entity that is part of an organ.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000064"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001005",
+        "label": "tissue",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical entity consisting of similar cells and intercellular matrix.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000479"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001006",
+        "label": "cardiovascular system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system that circulates blood through the body.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0004535"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001007",
+        "label": "respiratory system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system that carries out gas exchange.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001004"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001008",
+        "label": "nervous system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system that coordinates actions by transmitting signals between body parts.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001016"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001009",
+        "label": "digestive system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system that ingests and digests food and absorbs nutrients.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001007"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001010",
+        "label": "endocrine system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system of glands that secrete hormones into the blood.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000949"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001011",
+        "label": "renal system",
+        "type": "Term",
+        "aliases": [
+          "urinary system"
+        ],
+        "attrs": {
+          "def": "An anatomical system that produces, stores and eliminates urine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "urinary system (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0001008"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001012",
+        "label": "immune system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system that protects the organism against disease.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002405"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001013",
+        "label": "musculoskeletal system",
+        "type": "Term",
+        "attrs": {
+          "def": "An anatomical system that provides form, support, stability and movement.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002204"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001014",
+        "label": "integumental system",
+        "type": "Term",
+        "aliases": [
+          "integumentary system"
+        ],
+        "attrs": {
+          "def": "An anatomical system that forms the external covering of the body.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "integumentary system (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0002416"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001015",
+        "label": "heart",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ that pumps blood through the circulatory system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000948"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001016",
+        "label": "myocardium",
+        "type": "Term",
+        "aliases": [
+          "heart muscle"
+        ],
+        "attrs": {
+          "def": "A tissue that forms the muscular wall of the heart.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "heart muscle (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0002349"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001017",
+        "label": "blood vessel",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ that conveys blood through the body.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001981"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001018",
+        "label": "artery",
+        "type": "Term",
+        "attrs": {
+          "def": "A blood vessel that carries blood away from the heart.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001637"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001019",
+        "label": "coronary artery",
+        "type": "Term",
+        "attrs": {
+          "def": "An artery that supplies blood to the myocardium.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001621"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001020",
+        "label": "lung",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ of the respiratory system in which gas exchange takes place.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002048"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001021",
+        "label": "bronchus",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part that conducts air from the trachea into the lungs.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002185"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001022",
+        "label": "pulmonary alveolus",
+        "type": "Term",
+        "aliases": [
+          "alveolus"
+        ],
+        "attrs": {
+          "def": "An organ part of the lung where gas exchange with the blood occurs.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "alveolus (BROAD)"
+          ],
+          "xref": [
+            "UBERON:0002299"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001023",
+        "label": "brain",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ of the central nervous system enclosed in the cranium.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000955"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001024",
+        "label": "cerebral cortex",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part that forms the outer layer of grey matter of the cerebrum.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000956"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001025",
+        "label": "hippocampal formation",
+        "type": "Term",
+        "aliases": [
+          "hippocampus"
+        ],
+        "attrs": {
+          "def": "An organ part of the medial temporal lobe involved in memory consolidation.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "hippocampus (RELATED)"
+          ],
+          "xref": [
+            "UBERON:0002421"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001026",
+        "label": "substantia nigra",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part of the midbrain containing dopaminergic neurons.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002038"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001027",
+        "label": "hypothalamus",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part of the forebrain that links the nervous system to the endocrine system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001898"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001028",
+        "label": "spinal cord",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ of the central nervous system extending from the brainstem through the vertebral canal.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002240"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001029",
+        "label": "pituitary gland",
+        "type": "Term",
+        "aliases": [
+          "hypophysis"
+        ],
+        "attrs": {
+          "def": "An organ at the base of the brain that secretes hormones regulating other endocrine glands.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "hypophysis (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0000007"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001030",
+        "label": "thyroid gland",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ in the neck that produces thyroid hormones.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002046"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001031",
+        "label": "pancreas",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ with exocrine digestive and endocrine functions.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001264"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001032",
+        "label": "islet of Langerhans",
+        "type": "Term",
+        "aliases": [
+          "pancreatic islet"
+        ],
+        "attrs": {
+          "def": "An organ part of the pancreas that contains hormone-producing cells, including insulin-secreting beta cells.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "pancreatic islet (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0000006"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001033",
+        "label": "liver",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ of the digestive system that metabolizes nutrients and detoxifies the blood.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002107"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001034",
+        "label": "stomach",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ of the digestive tract between the esophagus and the duodenum.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000945"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001035",
+        "label": "intestine",
+        "type": "Term",
+        "aliases": [
+          "bowel"
+        ],
+        "attrs": {
+          "def": "An organ of the digestive tract extending from the pylorus to the anus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "bowel (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0000160"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001036",
+        "label": "small intestine",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part of the intestine where most nutrient absorption occurs.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002108"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001037",
+        "label": "colon",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part of the large intestine between the cecum and the rectum.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0001155"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001038",
+        "label": "kidney",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ of the renal system that filters blood and produces urine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002113"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001039",
+        "label": "renal glomerulus",
+        "type": "Term",
+        "aliases": [
+          "glomerulus"
+        ],
+        "attrs": {
+          "def": "An organ part of the kidney consisting of a capillary tuft where blood is filtered.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "glomerulus (BROAD)"
+          ],
+          "xref": [
+            "UBERON:0000074"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001040",
+        "label": "skin of body",
+        "type": "Term",
+        "aliases": [
+          "skin"
+        ],
+        "attrs": {
+          "def": "An organ that covers the external surface of the body.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "skin (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0002097"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001041",
+        "label": "bone element",
+        "type": "Term",
+        "aliases": [
+          "bone"
+        ],
+        "attrs": {
+          "def": "An organ composed mainly of mineralized bone tissue.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "synonyms": [
+            "bone (EXACT)"
+          ],
+          "xref": [
+            "UBERON:0001474"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001042",
+        "label": "synovial joint",
+        "type": "Term",
+        "attrs": {
+          "def": "An organ part that forms a movable articulation between bones.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0002217"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0001043",
+        "label": "blood",
+        "type": "Term",
+        "attrs": {
+          "def": "A tissue consisting of plasma and blood cells that circulates through the cardiovascular system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "anatomy",
+          "xref": [
+            "UBERON:0000178"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002001",
+        "label": "sign or symptom",
+        "type": "Term",
+        "attrs": {
+          "def": "A clinically observable abnormality reported by a patient or detected on examination.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "subset": [
+            "mhd_slim"
+          ],
+          "xref": [
+            "HP:0000118"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002002",
+        "label": "pain",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign or symptom consisting of an unpleasant sensory and emotional experience associated with actual or potential tissue damage.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0012531"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002003",
+        "label": "chest pain",
+        "type": "Term",
+        "attrs": {
+          "def": "A pain that is perceived in the chest.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0100749"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002004",
+        "label": "headache",
+        "type": "Term",
+        "aliases": [
+          "cephalalgia"
+        ],
+        "attrs": {
+          "def": "A pain that is perceived in the head.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "cephalalgia (EXACT)"
+          ],
+          "xref": [
+            "HP:0002315"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002005",
+        "label": "abdominal pain",
+        "type": "Term",
+        "attrs": {
+          "def": "A pain that is perceived in the abdomen.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0002027"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002006",
+        "label": "arthralgia",
+        "type": "Term",
+        "aliases": [
+          "joint pain"
+        ],
+        "attrs": {
+          "def": "A pain that is perceived in a joint.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "joint pain (EXACT)"
+          ],
+          "xref": [
+            "HP:0002829"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002007",
+        "label": "myalgia",
+        "type": "Term",
+        "aliases": [
+          "muscle pain"
+        ],
+        "attrs": {
+          "def": "A pain that is perceived in a muscle.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "muscle pain (EXACT)"
+          ],
+          "xref": [
+            "HP:0003326"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002008",
+        "label": "respiratory symptom",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign or symptom that involves the respiratory system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype"
+        }
+      },
+      {
+        "id": "MHD:0002009",
+        "label": "cough",
+        "type": "Term",
+        "attrs": {
+          "def": "A respiratory symptom consisting of a sudden, forceful expulsion of air from the lungs.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0012735"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002010",
+        "label": "dyspnea",
+        "type": "Term",
+        "aliases": [
+          "dyspnoea"
+        ],
+        "attrs": {
+          "def": "A respiratory symptom consisting of a subjective sensation of difficult or labored breathing.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "dyspnoea (EXACT)"
+          ],
+          "xref": [
+            "HP:0002094"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002011",
+        "label": "wheezing",
+        "type": "Term",
+        "attrs": {
+          "def": "A respiratory symptom consisting of a high-pitched whistling sound during breathing.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0030828"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002012",
+        "label": "hemoptysis",
+        "type": "Term",
+        "attrs": {
+          "def": "A respiratory symptom consisting of coughing up blood.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0002105"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002013",
+        "label": "constitutional symptom",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign or symptom that affects general well-being or the body as a whole.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype"
+        }
+      },
+      {
+        "id": "MHD:0002014",
+        "label": "fever",
+        "type": "Term",
+        "aliases": [
+          "pyrexia"
+        ],
+        "attrs": {
+          "def": "A constitutional symptom consisting of an elevated body temperature.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "pyrexia (EXACT)"
+          ],
+          "xref": [
+            "HP:0001945"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002015",
+        "label": "fatigue",
+        "type": "Term",
+        "attrs": {
+          "def": "A constitutional symptom consisting of a subjective feeling of tiredness that is not relieved by rest.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0012378"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002016",
+        "label": "weight loss",
+        "type": "Term",
+        "attrs": {
+          "def": "A constitutional symptom consisting of an unintended reduction in body weight.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001824"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002017",
+        "label": "weight gain",
+        "type": "Term",
+        "attrs": {
+          "def": "A constitutional symptom consisting of an unintended increase in body weight.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0004324"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002018",
+        "label": "night sweats",
+        "type": "Term",
+        "attrs": {
+          "def": "A constitutional symptom consisting of excessive sweating during sleep.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0030166"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002019",
+        "label": "neurological symptom",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign or symptom that involves the nervous system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype"
+        }
+      },
+      {
+        "id": "MHD:0002020",
+        "label": "tremor",
+        "type": "Term",
+        "attrs": {
+          "def": "A neurological symptom consisting of an involuntary, rhythmic oscillation of a body part.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001337"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002021",
+        "label": "seizure",
+        "type": "Term",
+        "attrs": {
+          "def": "A neurological symptom consisting of a transient occurrence of signs due to abnormal synchronous neuronal activity in the brain.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001250"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002022",
+        "label": "memory impairment",
+        "type": "Term",
+        "aliases": [
+          "forgetfulness"
+        ],
+        "attrs": {
+          "def": "A neurological symptom consisting of a reduced ability to store or recall information.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "forgetfulness (RELATED)"
+          ],
+          "xref": [
+            "HP:0002354"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002023",
+        "label": "bradykinesia",
+        "type": "Term",
+        "attrs": {
+          "def": "A neurological symptom consisting of slowness of initiation and execution of movement.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0002067"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002024",
+        "label": "paresthesia",
+        "type": "Term",
+        "attrs": {
+          "def": "A neurological symptom consisting of abnormal skin sensations such as tingling or numbness.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0003401"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002026",
+        "label": "hemiparesis",
+        "type": "Term",
+        "attrs": {
+          "def": "A neurological symptom consisting of weakness of one side of the body.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001269"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002028",
+        "label": "gastrointestinal symptom",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign or symptom that involves the digestive system.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype"
+        }
+      },
+      {
+        "id": "MHD:0002030",
+        "label": "nausea",
+        "type": "Term",
+        "attrs": {
+          "def": "A gastrointestinal symptom consisting of an urge to vomit.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0002018"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002031",
+        "label": "diarrhea",
+        "type": "Term",
+        "aliases": [
+          "diarrhoea"
+        ],
+        "attrs": {
+          "def": "A gastrointestinal symptom consisting of abnormally frequent, loose bowel movements.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "diarrhoea (EXACT)"
+          ],
+          "xref": [
+            "HP:0002014"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002032",
+        "label": "hematochezia",
+        "type": "Term",
+        "aliases": [
+          "rectal bleeding"
+        ],
+        "attrs": {
+          "def": "A gastrointestinal symptom consisting of the passage of fresh blood per anus.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "rectal bleeding (RELATED)"
+          ],
+          "xref": [
+            "HP:0002573"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002033",
+        "label": "jaundice",
+        "type": "Term",
+        "aliases": [
+          "icterus"
+        ],
+        "attrs": {
+          "def": "A sign consisting of yellow discoloration of the skin and sclerae due to hyperbilirubinemia.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "icterus (EXACT)"
+          ],
+          "xref": [
+            "HP:0000952"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002034",
+        "label": "polyuria",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign consisting of an abnormally large production of urine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0000103"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002035",
+        "label": "polydipsia",
+        "type": "Term",
+        "attrs": {
+          "def": "A symptom consisting of excessive thirst and fluid intake.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001959"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002036",
+        "label": "hematuria",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign consisting of the presence of blood in the urine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0000790"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002040",
+        "label": "edema",
+        "type": "Term",
+        "aliases": [
+          "oedema"
+        ],
+        "attrs": {
+          "def": "A sign consisting of abnormal accumulation of fluid in the interstitium.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "oedema (EXACT)"
+          ],
+          "xref": [
+            "HP:0000969"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002041",
+        "label": "palpitations",
+        "type": "Term",
+        "attrs": {
+          "def": "A symptom consisting of an unpleasant awareness of the heartbeat.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001962"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002042",
+        "label": "pruritus",
+        "type": "Term",
+        "aliases": [
+          "itching"
+        ],
+        "attrs": {
+          "def": "A symptom consisting of an itching sensation that provokes the desire to scratch.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "itching (EXACT)"
+          ],
+          "xref": [
+            "HP:0000989"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002043",
+        "label": "goiter",
+        "type": "Term",
+        "aliases": [
+          "goitre"
+        ],
+        "attrs": {
+          "def": "A sign consisting of enlargement of the thyroid gland.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "goitre (EXACT)"
+          ],
+          "xref": [
+            "HP:0000853"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002044",
+        "label": "ascites",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign consisting of accumulation of fluid in the peritoneal cavity.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0001541"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002045",
+        "label": "anosmia",
+        "type": "Term",
+        "aliases": [
+          "loss of smell"
+        ],
+        "attrs": {
+          "def": "A symptom consisting of the loss of the sense of smell.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "loss of smell (EXACT)"
+          ],
+          "xref": [
+            "HP:0000458"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002046",
+        "label": "abnormal blood glucose concentration",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign consisting of a deviation of the blood glucose concentration from the normal range.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0011014"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002047",
+        "label": "hypoglycemia",
+        "type": "Term",
+        "aliases": [
+          "low blood sugar"
+        ],
+        "attrs": {
+          "def": "An abnormal blood glucose concentration below the normal range.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "synonyms": [
+            "low blood sugar (EXACT)"
+          ],
+          "xref": [
+            "HP:0001943"
+          ]
+        }
+      },
+      {
+        "id": "MHD:0002048",
+        "label": "nocturia",
+        "type": "Term",
+        "attrs": {
+          "def": "A sign consisting of the need to wake at night to pass urine.",
+          "def_xrefs": [
+            "MHD:curators"
+          ],
+          "namespace": "phenotype",
+          "xref": [
+            "HP:0000017"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "MHD:0000002",
+        "target": "MHD:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000003",
+        "target": "MHD:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000004",
+        "target": "MHD:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000005",
+        "target": "MHD:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000006",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000006",
+        "target": "MHD:0001006",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000007",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000007",
+        "target": "MHD:0001007",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000008",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000008",
+        "target": "MHD:0001008",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000009",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000009",
+        "target": "MHD:0001009",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000010",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000010",
+        "target": "MHD:0001010",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000011",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000011",
+        "target": "MHD:0001011",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000012",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000012",
+        "target": "MHD:0001012",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000013",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000013",
+        "target": "MHD:0001013",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000014",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000014",
+        "target": "MHD:0001014",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000015",
+        "target": "MHD:0000002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000015",
+        "target": "MHD:0001043",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000016",
+        "target": "MHD:0000006",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000016",
+        "target": "MHD:0001015",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000017",
+        "target": "MHD:0002003",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000017",
+        "target": "MHD:0000016",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000017",
+        "target": "MHD:0001019",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000018",
+        "target": "MHD:0002003",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000018",
+        "target": "MHD:0002010",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000018",
+        "target": "MHD:0000017",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000018",
+        "target": "MHD:0001016",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000019",
+        "target": "MHD:0002003",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000019",
+        "target": "MHD:0002030",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000019",
+        "target": "MHD:0000017",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000019",
+        "target": "MHD:0001015",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000020",
+        "target": "MHD:0002003",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000020",
+        "target": "MHD:0000017",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000021",
+        "target": "MHD:0002010",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000021",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000021",
+        "target": "MHD:0002040",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000021",
+        "target": "MHD:0000016",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000022",
+        "target": "MHD:0002041",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000022",
+        "target": "MHD:0000016",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000023",
+        "target": "MHD:0002004",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000023",
+        "target": "MHD:0000006",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000023",
+        "target": "MHD:0001018",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000024",
+        "target": "MHD:0000006",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000024",
+        "target": "MHD:0001018",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000025",
+        "target": "MHD:0000006",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000025",
+        "target": "MHD:0001023",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000026",
+        "target": "MHD:0002026",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000026",
+        "target": "MHD:0000025",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000026",
+        "target": "MHD:0001023",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000027",
+        "target": "MHD:0002004",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000027",
+        "target": "MHD:0000025",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000027",
+        "target": "MHD:0001023",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000028",
+        "target": "MHD:0000007",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000028",
+        "target": "MHD:0001020",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000029",
+        "target": "MHD:0000028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000029",
+        "target": "MHD:0001021",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000030",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000030",
+        "target": "MHD:0002010",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000030",
+        "target": "MHD:0002011",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000030",
+        "target": "MHD:0000029",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000031",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000031",
+        "target": "MHD:0002010",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000031",
+        "target": "MHD:0000028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000032",
+        "target": "MHD:0002010",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000032",
+        "target": "MHD:0002011",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000032",
+        "target": "MHD:0000028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000033",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000033",
+        "target": "MHD:0000029",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000034",
+        "target": "MHD:0002010",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000034",
+        "target": "MHD:0000031",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000034",
+        "target": "MHD:0001022",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000035",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000035",
+        "target": "MHD:0002014",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000035",
+        "target": "MHD:0000028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000035",
+        "target": "MHD:0001022",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000036",
+        "target": "MHD:0000035",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000036",
+        "target": "MHD:0000047",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000037",
+        "target": "MHD:0000035",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000037",
+        "target": "MHD:0000048",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000038",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000038",
+        "target": "MHD:0002012",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000038",
+        "target": "MHD:0002016",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000038",
+        "target": "MHD:0002018",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000038",
+        "target": "MHD:0000028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000039",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000039",
+        "target": "MHD:0002012",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000039",
+        "target": "MHD:0000028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000039",
+        "target": "MHD:0000042",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000039",
+        "target": "MHD:0001020",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000040",
+        "target": "MHD:0000039",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000041",
+        "target": "MHD:0000039",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000042",
+        "target": "MHD:0000004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000043",
+        "target": "MHD:0002016",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000043",
+        "target": "MHD:0002032",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000043",
+        "target": "MHD:0000042",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000043",
+        "target": "MHD:0000085",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000043",
+        "target": "MHD:0001037",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000047",
+        "target": "MHD:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000048",
+        "target": "MHD:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000049",
+        "target": "MHD:0002007",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000049",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000049",
+        "target": "MHD:0002014",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000049",
+        "target": "MHD:0000048",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000050",
+        "target": "MHD:0002009",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000050",
+        "target": "MHD:0002014",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000050",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000050",
+        "target": "MHD:0002045",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000050",
+        "target": "MHD:0000048",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000051",
+        "target": "MHD:0000048",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000051",
+        "target": "MHD:0000077",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000053",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000053",
+        "target": "MHD:0002033",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000053",
+        "target": "MHD:0000051",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000054",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000054",
+        "target": "MHD:0000051",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000055",
+        "target": "MHD:0000008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000056",
+        "target": "MHD:0002022",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000056",
+        "target": "MHD:0000055",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000056",
+        "target": "MHD:0001025",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000057",
+        "target": "MHD:0002020",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000057",
+        "target": "MHD:0002023",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000057",
+        "target": "MHD:0000055",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000057",
+        "target": "MHD:0001026",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000058",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000058",
+        "target": "MHD:0002024",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000058",
+        "target": "MHD:0000008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000058",
+        "target": "MHD:0000076",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000058",
+        "target": "MHD:0001028",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000059",
+        "target": "MHD:0002021",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000059",
+        "target": "MHD:0000008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000059",
+        "target": "MHD:0001024",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000060",
+        "target": "MHD:0002004",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000060",
+        "target": "MHD:0002030",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000060",
+        "target": "MHD:0000008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000061",
+        "target": "MHD:0000074",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000061",
+        "target": "MHD:0002034",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000061",
+        "target": "MHD:0002035",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000061",
+        "target": "MHD:0000005",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000061",
+        "target": "MHD:0000010",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000062",
+        "target": "MHD:0000061",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000062",
+        "target": "MHD:0000076",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000062",
+        "target": "MHD:0001032",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000063",
+        "target": "MHD:0000061",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000064",
+        "target": "MHD:0002016",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000064",
+        "target": "MHD:0000061",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000065",
+        "target": "MHD:0000061",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000065",
+        "target": "MHD:0001032",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000067",
+        "target": "MHD:0002034",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000067",
+        "target": "MHD:0002035",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000067",
+        "target": "MHD:0002048",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000067",
+        "target": "MHD:0000075",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000068",
+        "target": "MHD:0000010",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000068",
+        "target": "MHD:0001030",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000069",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000069",
+        "target": "MHD:0002017",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000069",
+        "target": "MHD:0000068",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000070",
+        "target": "MHD:0002016",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000070",
+        "target": "MHD:0002020",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000070",
+        "target": "MHD:0002041",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000070",
+        "target": "MHD:0000068",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000071",
+        "target": "MHD:0000068",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000071",
+        "target": "MHD:0000076",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000072",
+        "target": "MHD:0002043",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000072",
+        "target": "MHD:0000069",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000073",
+        "target": "MHD:0002043",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000073",
+        "target": "MHD:0000070",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000073",
+        "target": "MHD:0000071",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000074",
+        "target": "MHD:0000005",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000075",
+        "target": "MHD:0000010",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000075",
+        "target": "MHD:0001029",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000076",
+        "target": "MHD:0000012",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000077",
+        "target": "MHD:0000078",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000078",
+        "target": "MHD:0000009",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000078",
+        "target": "MHD:0001033",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000079",
+        "target": "MHD:0000078",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000080",
+        "target": "MHD:0000079",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000081",
+        "target": "MHD:0000077",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000081",
+        "target": "MHD:0000080",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000082",
+        "target": "MHD:0000078",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000083",
+        "target": "MHD:0002033",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000083",
+        "target": "MHD:0000077",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000083",
+        "target": "MHD:0000082",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000084",
+        "target": "MHD:0002033",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000084",
+        "target": "MHD:0002044",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000084",
+        "target": "MHD:0000078",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000085",
+        "target": "MHD:0000009",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000085",
+        "target": "MHD:0001035",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000086",
+        "target": "MHD:0002005",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000086",
+        "target": "MHD:0002031",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000086",
+        "target": "MHD:0000012",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000086",
+        "target": "MHD:0000085",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000087",
+        "target": "MHD:0002005",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000087",
+        "target": "MHD:0002016",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000087",
+        "target": "MHD:0002031",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000087",
+        "target": "MHD:0000085",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000087",
+        "target": "MHD:0001036",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000088",
+        "target": "MHD:0002031",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000088",
+        "target": "MHD:0002032",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000088",
+        "target": "MHD:0000086",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000088",
+        "target": "MHD:0001037",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000089",
+        "target": "MHD:0002005",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000089",
+        "target": "MHD:0002030",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000089",
+        "target": "MHD:0000009",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000089",
+        "target": "MHD:0001034",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000090",
+        "target": "MHD:0002016",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000090",
+        "target": "MHD:0002031",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000090",
+        "target": "MHD:0000076",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000090",
+        "target": "MHD:0000085",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000090",
+        "target": "MHD:0001036",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000092",
+        "target": "MHD:0000011",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000092",
+        "target": "MHD:0001038",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000093",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000093",
+        "target": "MHD:0002040",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000093",
+        "target": "MHD:0000092",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000094",
+        "target": "MHD:0002036",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000094",
+        "target": "MHD:0002040",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000094",
+        "target": "MHD:0000092",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000094",
+        "target": "MHD:0001039",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000096",
+        "target": "MHD:0002006",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000096",
+        "target": "MHD:0000013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000096",
+        "target": "MHD:0000076",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000096",
+        "target": "MHD:0001042",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000097",
+        "target": "MHD:0002006",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000097",
+        "target": "MHD:0000013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000097",
+        "target": "MHD:0001042",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000098",
+        "target": "MHD:0000013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000098",
+        "target": "MHD:0001041",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000100",
+        "target": "MHD:0002042",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000100",
+        "target": "MHD:0000014",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000100",
+        "target": "MHD:0001040",
+        "predicate": "located_in",
+        "label": "located in"
+      },
+      {
+        "source": "MHD:0000102",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000102",
+        "target": "MHD:0000015",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0000103",
+        "target": "MHD:0002015",
+        "predicate": "has_symptom",
+        "label": "has symptom"
+      },
+      {
+        "source": "MHD:0000103",
+        "target": "MHD:0000102",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001002",
+        "target": "MHD:0001001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001003",
+        "target": "MHD:0001001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001004",
+        "target": "MHD:0001001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001005",
+        "target": "MHD:0001001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001006",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001007",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001008",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001009",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001010",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001011",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001012",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001013",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001014",
+        "target": "MHD:0001002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001015",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001015",
+        "target": "MHD:0001006",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001016",
+        "target": "MHD:0001005",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001016",
+        "target": "MHD:0001015",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001017",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001017",
+        "target": "MHD:0001006",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001018",
+        "target": "MHD:0001017",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001019",
+        "target": "MHD:0001018",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001019",
+        "target": "MHD:0001015",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001020",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001020",
+        "target": "MHD:0001007",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001021",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001021",
+        "target": "MHD:0001007",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001022",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001022",
+        "target": "MHD:0001020",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001023",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001023",
+        "target": "MHD:0001008",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001024",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001024",
+        "target": "MHD:0001023",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001025",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001025",
+        "target": "MHD:0001023",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001026",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001026",
+        "target": "MHD:0001023",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001027",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001027",
+        "target": "MHD:0001023",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001028",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001028",
+        "target": "MHD:0001008",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001029",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001029",
+        "target": "MHD:0001010",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001030",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001030",
+        "target": "MHD:0001010",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001031",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001031",
+        "target": "MHD:0001009",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001032",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001032",
+        "target": "MHD:0001031",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001033",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001033",
+        "target": "MHD:0001009",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001034",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001034",
+        "target": "MHD:0001009",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001035",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001035",
+        "target": "MHD:0001009",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001036",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001036",
+        "target": "MHD:0001035",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001037",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001037",
+        "target": "MHD:0001035",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001038",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001038",
+        "target": "MHD:0001011",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001039",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001039",
+        "target": "MHD:0001038",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001040",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001040",
+        "target": "MHD:0001014",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001041",
+        "target": "MHD:0001003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001041",
+        "target": "MHD:0001013",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001042",
+        "target": "MHD:0001004",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001042",
+        "target": "MHD:0001013",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0001043",
+        "target": "MHD:0001005",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0001043",
+        "target": "MHD:0001006",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "MHD:0002002",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002003",
+        "target": "MHD:0002002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002004",
+        "target": "MHD:0002002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002005",
+        "target": "MHD:0002002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002006",
+        "target": "MHD:0002002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002007",
+        "target": "MHD:0002002",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002008",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002009",
+        "target": "MHD:0002008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002010",
+        "target": "MHD:0002008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002011",
+        "target": "MHD:0002008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002012",
+        "target": "MHD:0002008",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002013",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002014",
+        "target": "MHD:0002013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002015",
+        "target": "MHD:0002013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002016",
+        "target": "MHD:0002013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002017",
+        "target": "MHD:0002013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002018",
+        "target": "MHD:0002013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002019",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002020",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002021",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002022",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002023",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002024",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002026",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002028",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002030",
+        "target": "MHD:0002028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002031",
+        "target": "MHD:0002028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002032",
+        "target": "MHD:0002028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002033",
+        "target": "MHD:0002028",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002034",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002035",
+        "target": "MHD:0002013",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002036",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002040",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002041",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002042",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002043",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002044",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002045",
+        "target": "MHD:0002019",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002046",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002047",
+        "target": "MHD:0002046",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "MHD:0002048",
+        "target": "MHD:0002001",
+        "predicate": "is_a",
+        "label": "is a"
+      }
+    ],
+    "meta": {
+      "name": "mhd",
+      "predicateLabels": {
+        "has_symptom": "has symptom",
+        "located_in": "located in",
+        "part_of": "part of"
+      },
+      "source": "before.obo",
+      "version": "2026-09-01"
+    }
+  },
+  "format": "obo",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {
+    "has_symptom": "has symptom",
+    "located_in": "located in",
+    "part_of": "part of"
+  },
+  "warnings": []
+}

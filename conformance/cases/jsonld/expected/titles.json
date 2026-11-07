@@ -1,0 +1,56 @@
+{
+  "en": [
+    {
+      "id": "modify:http://example.org/alice",
+      "title": "Renamed “Alice” → “Alice Liddell”",
+      "subtitle": "~2 attributes"
+    },
+    {
+      "id": "add:http://example.org/carol",
+      "title": "Added “Carol” and 1 relation",
+      "subtitle": "type schema:Person · linked to “Alice Liddell”"
+    },
+    {
+      "id": "add:_:b01b7df874a952b",
+      "title": "Added “_:b01b7df874a952b”",
+      "subtitle": "standalone"
+    },
+    {
+      "id": "relations:http://example.org/acme",
+      "title": "“Acme”: address now points to “_:b01b7df874a952b” (was “_:b187a4b8e554203”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "remove:_:b187a4b8e554203",
+      "title": "Removed “_:b187a4b8e554203”",
+      "subtitle": "standalone"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:http://example.org/alice",
+      "title": "「Alice」改名为「Alice Liddell」",
+      "subtitle": "属性 ~2"
+    },
+    {
+      "id": "add:http://example.org/carol",
+      "title": "新增「Carol」及 1 条关系",
+      "subtitle": "类型 schema:Person · 关联「Alice Liddell」"
+    },
+    {
+      "id": "add:_:b01b7df874a952b",
+      "title": "新增「_:b01b7df874a952b」",
+      "subtitle": "无外部关联"
+    },
+    {
+      "id": "relations:http://example.org/acme",
+      "title": "「Acme」的「address」改为指向「_:b01b7df874a952b」（原为「_:b187a4b8e554203」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "remove:_:b187a4b8e554203",
+      "title": "删除「_:b187a4b8e554203」",
+      "subtitle": "无外部关联"
+    }
+  ]
+}

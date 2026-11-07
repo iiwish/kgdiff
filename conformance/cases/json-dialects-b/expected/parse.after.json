@@ -1,0 +1,70 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "alice",
+        "label": "Alice",
+        "type": "Person"
+      },
+      {
+        "id": "bob",
+        "label": "Bob",
+        "type": "Engineer"
+      },
+      {
+        "id": "carol",
+        "label": "Carol",
+        "type": "Person"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e2",
+        "source": "alice",
+        "target": "carol",
+        "predicate": "mentors",
+        "attrs": {
+          "since": 2022
+        }
+      },
+      {
+        "id": "e1",
+        "source": "bob",
+        "target": "alice",
+        "predicate": "reports_to"
+      },
+      {
+        "source": "carol",
+        "target": "carol",
+        "predicate": "self_review"
+      }
+    ],
+    "meta": {
+      "name": "team",
+      "source": "after.json"
+    }
+  },
+  "format": "json",
+  "dialect": "graphology",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": [
+    {
+      "code": "json-ignored-fields",
+      "message": "Ignored graphology fields that are not part of the graph: size (1), x (1), y (1)."
+    }
+  ]
+}

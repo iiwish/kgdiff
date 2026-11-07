@@ -1,0 +1,126 @@
+{
+  "en": [
+    {
+      "id": "remove:SPOT_CHECK",
+      "title": "Removed “抽查检查” and 2 relations",
+      "subtitle": "type 事件 · was linked to “经营风险” and “企业”"
+    },
+    {
+      "id": "merge:LEGAL_REP",
+      "title": "Merged “法人代表” into “法定代表人”",
+      "subtitle": "via replacement hint · 1 relation carried over · 2 duplicates collapsed · kept as deprecated · +1 synonym"
+    },
+    {
+      "id": "modify:EQUITY_PLEDGE",
+      "title": "Moved “股权出质” under “股权投资”",
+      "subtitle": "from “经营风险”"
+    },
+    {
+      "id": "relations:TOP10_HOLDERS",
+      "title": "“十大股东”: 持股 now points to “上市公司” (was “企业”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "relations:ACTUAL_CONTROL",
+      "title": "Added “实际控制” —穿透依据→ “投资”",
+      "subtitle": "new relation"
+    },
+    {
+      "id": "modify:ENTERPRISE",
+      "title": "Edited “企业”",
+      "subtitle": "+2 −1 attributes · ~1 relation"
+    },
+    {
+      "id": "modify:SINO_FOREIGN_JV",
+      "title": "Deprecated “中外合资企业”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:TRADEMARK",
+      "title": "Updated attributes of “商标”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:DISHONEST_EXECUTEE",
+      "title": "Updated synonyms of “失信被执行人”",
+      "subtitle": "+1 −1 synonyms"
+    },
+    {
+      "id": "modify:EXEC_TENURE",
+      "title": "Renamed “高管任职” → “董监高任职”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:CONSUMPTION_RESTRICTION",
+      "title": "Changed the type of “限制高消费”",
+      "subtitle": "+1 −1 types"
+    },
+    {
+      "id": "add:BENEFICIAL_OWNER",
+      "title": "Added “受益所有人” and 3 relations",
+      "subtitle": "type 角色 · linked to “股权投资”, “企业” and 1 more"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "remove:SPOT_CHECK",
+      "title": "删除「抽查检查」及 2 条关系",
+      "subtitle": "类型 事件 · 原关联「经营风险」和「企业」"
+    },
+    {
+      "id": "merge:LEGAL_REP",
+      "title": "「法人代表」合并入「法定代表人」",
+      "subtitle": "依据替代声明 · 迁移 1 条关系 · 合并 2 条重复关系 · 源节点保留为已弃用 · 别名 +1"
+    },
+    {
+      "id": "modify:EQUITY_PLEDGE",
+      "title": "「股权出质」移至「股权投资」下",
+      "subtitle": "原属「经营风险」"
+    },
+    {
+      "id": "relations:TOP10_HOLDERS",
+      "title": "「十大股东」的「持股」改为指向「上市公司」（原为「企业」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "relations:ACTUAL_CONTROL",
+      "title": "新增关系「实际控制」—穿透依据→「投资」",
+      "subtitle": "新关系"
+    },
+    {
+      "id": "modify:ENTERPRISE",
+      "title": "修改「企业」",
+      "subtitle": "属性 +2 −1 · 关系 ~1"
+    },
+    {
+      "id": "modify:SINO_FOREIGN_JV",
+      "title": "弃用「中外合资企业」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:TRADEMARK",
+      "title": "修改「商标」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:DISHONEST_EXECUTEE",
+      "title": "修改「失信被执行人」的别名",
+      "subtitle": "别名 +1 −1"
+    },
+    {
+      "id": "modify:EXEC_TENURE",
+      "title": "「高管任职」改名为「董监高任职」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:CONSUMPTION_RESTRICTION",
+      "title": "修改「限制高消费」的类型",
+      "subtitle": "类型 +1 −1"
+    },
+    {
+      "id": "add:BENEFICIAL_OWNER",
+      "title": "新增「受益所有人」及 3 条关系",
+      "subtitle": "类型 角色 · 关联「股权投资」、「企业」等 3 个节点"
+    }
+  ]
+}

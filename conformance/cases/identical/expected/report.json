@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.json → after.json",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "zoo same",
+      "format": "json"
+    },
+    "after": {
+      "name": "zoo same",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

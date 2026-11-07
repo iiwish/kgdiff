@@ -1,0 +1,76 @@
+{
+  "en": [
+    {
+      "id": "merge:g1",
+      "title": "Merged “Gamma ray burst” into “Gamma ray”",
+      "subtitle": "via replacement hint · 1 relation carried over · 1 duplicate collapsed"
+    },
+    {
+      "id": "relations:a",
+      "title": "Updated 2 relations of “Alpha”",
+      "subtitle": "~2 relations"
+    },
+    {
+      "id": "relations:b",
+      "title": "Removed “Beta” —next→ “Beta”",
+      "subtitle": "relation removed"
+    },
+    {
+      "id": "relations:d",
+      "title": "“Delta”: next now points to “Epsilon” (was “Delta”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "relations:e",
+      "title": "Edited “Epsilon” —cycle→ “Epsilon”",
+      "subtitle": "label “loop” → “cycle”"
+    },
+    {
+      "id": "relations:c",
+      "title": "Added “Gamma” —next→ “Gamma”",
+      "subtitle": "new relation"
+    },
+    {
+      "id": "modify:f",
+      "title": "Renamed “Phi” → “Phi prime”",
+      "subtitle": ""
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "merge:g1",
+      "title": "「Gamma ray burst」合并入「Gamma ray」",
+      "subtitle": "依据替代声明 · 迁移 1 条关系 · 合并 1 条重复关系"
+    },
+    {
+      "id": "relations:a",
+      "title": "修改「Alpha」的 2 条关系",
+      "subtitle": "关系 ~2"
+    },
+    {
+      "id": "relations:b",
+      "title": "删除关系「Beta」—next→「Beta」",
+      "subtitle": "关系已删除"
+    },
+    {
+      "id": "relations:d",
+      "title": "「Delta」的「next」改为指向「Epsilon」（原为「Delta」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "relations:e",
+      "title": "修改关系「Epsilon」—cycle→「Epsilon」",
+      "subtitle": "标签「loop」→「cycle」"
+    },
+    {
+      "id": "relations:c",
+      "title": "新增关系「Gamma」—next→「Gamma」",
+      "subtitle": "新关系"
+    },
+    {
+      "id": "modify:f",
+      "title": "「Phi」改名为「Phi prime」",
+      "subtitle": ""
+    }
+  ]
+}

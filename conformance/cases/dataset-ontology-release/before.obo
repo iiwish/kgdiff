@@ -1,0 +1,1838 @@
+format-version: 1.4
+data-version: 2026-09-01
+date: 01:09:2026 09:00
+saved-by: mhd-release-bot
+subsetdef: mhd_slim "MHD high-level slim"
+synonymtypedef: abbreviation "abbreviation" EXACT
+default-namespace: disease
+ontology: mhd
+property_value: http://purl.org/dc/elements/1.1/title "Mini Human Disease Ontology" xsd:string
+property_value: http://purl.org/dc/terms/license https://creativecommons.org/publicdomain/zero/1.0/
+remark: The Mini Human Disease Ontology (MHD) is a small teaching ontology written for the kgdiff examples. Identifiers are fictional; cross-references point to real vocabularies for realism and are not curated for clinical use.
+remark: Release 2026-09-01.
+
+[Term]
+id: MHD:0000001
+name: disease
+namespace: disease
+def: "A disposition to undergo pathological processes that exists in an organism because of one or more disorders in that organism." [MHD:curators]
+subset: mhd_slim
+xref: DOID:4
+
+[Term]
+id: MHD:0000002
+name: disease of anatomical entity
+namespace: disease
+def: "A disease that manifests in a defined anatomical structure." [MHD:curators]
+subset: mhd_slim
+xref: DOID:7
+is_a: MHD:0000001 ! disease
+
+[Term]
+id: MHD:0000003
+name: infectious disease
+namespace: disease
+def: "A disease resulting from the presence and activity of a microbial, viral, fungal or parasitic agent." [MHD:curators]
+subset: mhd_slim
+xref: DOID:0050117
+is_a: MHD:0000001 ! disease
+
+[Term]
+id: MHD:0000004
+name: disease of cellular proliferation
+namespace: disease
+def: "A disease characterized by abnormally rapid cell division." [MHD:curators]
+subset: mhd_slim
+xref: DOID:14566
+is_a: MHD:0000001 ! disease
+
+[Term]
+id: MHD:0000005
+name: disease of metabolism
+namespace: disease
+def: "A disease that involves errors in metabolic processes of building or degradation of molecules." [MHD:curators]
+subset: mhd_slim
+xref: DOID:0014667
+is_a: MHD:0000001 ! disease
+
+[Term]
+id: MHD:0000006
+name: cardiovascular system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in the heart or blood vessels." [MHD:curators]
+subset: mhd_slim
+xref: DOID:1287
+xref: MESH:D002318
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001006 ! cardiovascular system
+
+[Term]
+id: MHD:0000007
+name: respiratory system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in the airways, lungs or pleura." [MHD:curators]
+subset: mhd_slim
+xref: DOID:1579
+xref: MESH:D012140
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001007 ! respiratory system
+
+[Term]
+id: MHD:0000008
+name: nervous system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in the central or peripheral nervous system." [MHD:curators]
+subset: mhd_slim
+xref: DOID:863
+xref: MESH:D009422
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001008 ! nervous system
+
+[Term]
+id: MHD:0000009
+name: gastrointestinal system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in the digestive tract or its accessory organs." [MHD:curators]
+subset: mhd_slim
+xref: DOID:77
+xref: MESH:D004066
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001009 ! digestive system
+
+[Term]
+id: MHD:0000010
+name: endocrine system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in an endocrine gland." [MHD:curators]
+subset: mhd_slim
+xref: DOID:28
+xref: MESH:D004700
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001010 ! endocrine system
+
+[Term]
+id: MHD:0000011
+name: urinary system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in the kidneys or urinary tract." [MHD:curators]
+subset: mhd_slim
+xref: DOID:18
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001011 ! renal system
+
+[Term]
+id: MHD:0000012
+name: immune system disease
+namespace: disease
+def: "A disease of anatomical entity that results from a dysfunction of the immune system." [MHD:curators]
+subset: mhd_slim
+xref: DOID:2914
+xref: MESH:D007154
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001012 ! immune system
+
+[Term]
+id: MHD:0000013
+name: musculoskeletal system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in bones, joints or skeletal muscle." [MHD:curators]
+subset: mhd_slim
+xref: DOID:17
+xref: MESH:D009140
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001013 ! musculoskeletal system
+
+[Term]
+id: MHD:0000014
+name: integumentary system disease
+namespace: disease
+def: "A disease of anatomical entity that is located in the skin or its appendages." [MHD:curators]
+subset: mhd_slim
+xref: DOID:16
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001014 ! integumental system
+
+[Term]
+id: MHD:0000015
+name: hematologic disease
+namespace: disease
+def: "A disease of anatomical entity that affects the blood or blood-forming tissues." [MHD:curators]
+subset: mhd_slim
+xref: MESH:D006402
+is_a: MHD:0000002 ! disease of anatomical entity
+relationship: located_in MHD:0001043 ! blood
+
+[Term]
+id: MHD:0000016
+name: heart disease
+namespace: disease
+def: "A cardiovascular system disease that is located in the heart." [MHD:curators]
+xref: DOID:114
+xref: MESH:D006331
+is_a: MHD:0000006 ! cardiovascular system disease
+relationship: located_in MHD:0001015 ! heart
+
+[Term]
+id: MHD:0000017
+name: coronary artery disease
+namespace: disease
+def: "A heart disease in which atherosclerotic plaque narrows the coronary arteries and reduces blood flow to the myocardium." [MHD:curators]
+synonym: "coronary heart disease" EXACT []
+synonym: "CAD" EXACT abbreviation []
+xref: DOID:3393
+xref: ICD10CM:I25.10
+xref: MESH:D003324
+is_a: MHD:0000016 ! heart disease
+relationship: located_in MHD:0001019 ! coronary artery
+relationship: has_symptom MHD:0002003 ! chest pain
+
+[Term]
+id: MHD:0000018
+name: myocardial infarction
+namespace: disease
+def: "A coronary artery disease characterized by necrosis of myocardial tissue caused by prolonged ischemia." [MHD:curators]
+synonym: "MI" EXACT abbreviation []
+xref: DOID:5844
+xref: ICD10CM:I21
+xref: MESH:D009203
+is_a: MHD:0000017 ! coronary artery disease
+relationship: located_in MHD:0001016 ! myocardium
+relationship: has_symptom MHD:0002003 ! chest pain
+relationship: has_symptom MHD:0002010 ! dyspnea
+
+[Term]
+id: MHD:0000019
+name: heart attack
+namespace: disease
+def: "A coronary artery disease in which blood flow to part of the heart muscle is blocked." [MHD:curators]
+synonym: "cardiac infarction" RELATED []
+xref: ICD10CM:I21.9
+is_a: MHD:0000017 ! coronary artery disease
+relationship: located_in MHD:0001015 ! heart
+relationship: has_symptom MHD:0002003 ! chest pain
+relationship: has_symptom MHD:0002030 ! nausea
+
+[Term]
+id: MHD:0000020
+name: angina pectoris
+namespace: disease
+def: "A coronary artery disease characterized by episodic chest pain caused by transient myocardial ischemia." [MHD:curators]
+synonym: "angina" EXACT []
+xref: ICD10CM:I20
+xref: MESH:D000787
+is_a: MHD:0000017 ! coronary artery disease
+relationship: has_symptom MHD:0002003 ! chest pain
+
+[Term]
+id: MHD:0000021
+name: heart failure
+namespace: disease
+def: "A heart disease in which the heart cannot pump enough blood to meet the needs of the body." [MHD:curators]
+synonym: "cardiac failure" EXACT []
+xref: ICD10CM:I50
+xref: MESH:D006333
+is_a: MHD:0000016 ! heart disease
+relationship: has_symptom MHD:0002010 ! dyspnea
+relationship: has_symptom MHD:0002015 ! fatigue
+relationship: has_symptom MHD:0002040 ! edema
+
+[Term]
+id: MHD:0000022
+name: atrial fibrillation
+namespace: disease
+def: "A heart disease characterized by rapid and irregular contraction of the atria." [MHD:curators]
+synonym: "AF" EXACT abbreviation []
+xref: DOID:0060224
+xref: ICD10CM:I48
+xref: MESH:D001281
+is_a: MHD:0000016 ! heart disease
+relationship: has_symptom MHD:0002041 ! palpitations
+
+[Term]
+id: MHD:0000023
+name: hypertension
+namespace: disease
+def: "A cardiovascular system disease characterized by persistently elevated arterial blood pressure." [MHD:curators]
+synonym: "high blood pressure" EXACT []
+xref: DOID:10763
+xref: ICD10CM:I10
+xref: MESH:D006973
+is_a: MHD:0000006 ! cardiovascular system disease
+relationship: located_in MHD:0001018 ! artery
+relationship: has_symptom MHD:0002004 ! headache
+
+[Term]
+id: MHD:0000024
+name: atherosclerosis
+namespace: disease
+def: "A cardiovascular system disease characterized by the build-up of lipid-laden plaque in the intima of arteries." [MHD:curators]
+xref: DOID:1936
+xref: MESH:D050197
+is_a: MHD:0000006 ! cardiovascular system disease
+relationship: located_in MHD:0001018 ! artery
+
+[Term]
+id: MHD:0000025
+name: cerebrovascular disease
+namespace: disease
+def: "A cardiovascular system disease that affects the blood vessels supplying the brain." [MHD:curators]
+xref: MESH:D002561
+is_a: MHD:0000006 ! cardiovascular system disease
+relationship: located_in MHD:0001023 ! brain
+
+[Term]
+id: MHD:0000026
+name: ischemic stroke
+namespace: disease
+def: "A cerebrovascular disease in which an arterial occlusion causes focal infarction of brain tissue." [MHD:curators]
+synonym: "cerebral infarction" EXACT []
+xref: ICD10CM:I63
+is_a: MHD:0000025 ! cerebrovascular disease
+relationship: located_in MHD:0001023 ! brain
+relationship: has_symptom MHD:0002026 ! hemiparesis
+
+[Term]
+id: MHD:0000027
+name: hemorrhagic stroke
+namespace: disease
+def: "A cerebrovascular disease caused by rupture of a blood vessel and bleeding into or around the brain." [MHD:curators]
+xref: ICD10CM:I61
+is_a: MHD:0000025 ! cerebrovascular disease
+relationship: located_in MHD:0001023 ! brain
+relationship: has_symptom MHD:0002004 ! headache
+
+[Term]
+id: MHD:0000028
+name: lung disease
+namespace: disease
+def: "A respiratory system disease that is located in the lung." [MHD:curators]
+xref: DOID:850
+xref: MESH:D008171
+is_a: MHD:0000007 ! respiratory system disease
+relationship: located_in MHD:0001020 ! lung
+
+[Term]
+id: MHD:0000029
+name: bronchial disease
+namespace: disease
+def: "A lung disease that is located in the bronchi." [MHD:curators]
+xref: DOID:1176
+is_a: MHD:0000028 ! lung disease
+relationship: located_in MHD:0001021 ! bronchus
+
+[Term]
+id: MHD:0000030
+name: asthma
+namespace: disease
+def: "A bronchial disease characterized by chronic airway inflammation and reversible airflow obstruction." [MHD:curators]
+synonym: "bronchial asthma" EXACT []
+xref: DOID:2841
+xref: ICD10CM:J45
+xref: MESH:D001249
+xref: SNOMEDCT_US_2025_09_01:195967001
+is_a: MHD:0000029 ! bronchial disease
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002010 ! dyspnea
+relationship: has_symptom MHD:0002011 ! wheezing
+
+[Term]
+id: MHD:0000031
+name: chronic obstructive pulmonary disease
+namespace: disease
+def: "A lung disease characterized by persistent respiratory symptoms and airflow limitation." [MHD:curators]
+synonym: "COPD" EXACT abbreviation []
+synonym: "chronic obstructive lung disease" EXACT []
+xref: DOID:3083
+xref: ICD10CM:J44
+xref: MESH:D029424
+is_a: MHD:0000028 ! lung disease
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002010 ! dyspnea
+
+[Term]
+id: MHD:0000032
+name: chronic obstructive airway disease
+namespace: disease
+def: "A lung disease characterized by chronic obstruction of airflow through the airways." [MHD:curators]
+synonym: "COAD" EXACT abbreviation []
+xref: ICD10CM:J44.9
+is_a: MHD:0000028 ! lung disease
+relationship: has_symptom MHD:0002010 ! dyspnea
+relationship: has_symptom MHD:0002011 ! wheezing
+
+[Term]
+id: MHD:0000033
+name: chronic bronchitis
+namespace: disease
+def: "A bronchial disease characterized by productive cough lasting at least three months in two consecutive years." [MHD:curators]
+xref: ICD10CM:J42
+xref: MESH:D029481
+is_a: MHD:0000029 ! bronchial disease
+relationship: has_symptom MHD:0002009 ! cough
+
+[Term]
+id: MHD:0000034
+name: pulmonary emphysema
+namespace: disease
+def: "A chronic obstructive pulmonary disease characterized by permanent enlargement and destruction of the alveolar walls." [MHD:curators]
+synonym: "emphysema" EXACT []
+xref: DOID:9675
+xref: ICD10CM:J43
+xref: MESH:D011656
+is_a: MHD:0000031 ! chronic obstructive pulmonary disease
+relationship: located_in MHD:0001022 ! pulmonary alveolus
+relationship: has_symptom MHD:0002010 ! dyspnea
+
+[Term]
+id: MHD:0000035
+name: pneumonia
+namespace: disease
+def: "A lung disease characterized by inflammation of the alveoli, usually caused by infection." [MHD:curators]
+xref: DOID:552
+xref: ICD10CM:J18.9
+xref: MESH:D011014
+is_a: MHD:0000028 ! lung disease
+relationship: located_in MHD:0001022 ! pulmonary alveolus
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002014 ! fever
+
+[Term]
+id: MHD:0000036
+name: bacterial pneumonia
+namespace: disease
+def: "A pneumonia that is caused by a bacterial infection." [MHD:curators]
+xref: ICD10CM:J15.9
+is_a: MHD:0000035 ! pneumonia
+is_a: MHD:0000047 ! bacterial infectious disease
+
+[Term]
+id: MHD:0000037
+name: viral pneumonia
+namespace: disease
+def: "A pneumonia that is caused by a viral infection." [MHD:curators]
+xref: ICD10CM:J12.9
+is_a: MHD:0000035 ! pneumonia
+is_a: MHD:0000048 ! viral infectious disease
+
+[Term]
+id: MHD:0000038
+name: tuberculosis
+namespace: disease
+def: "An infectious disease caused by Mycobacterium tuberculosis that most often affects the lungs." [MHD:curators]
+synonym: "TB" EXACT abbreviation []
+xref: DOID:399
+xref: ICD10CM:A15
+xref: MESH:D014376
+is_a: MHD:0000028 ! lung disease
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002012 ! hemoptysis
+relationship: has_symptom MHD:0002016 ! weight loss
+relationship: has_symptom MHD:0002018 ! night sweats
+
+[Term]
+id: MHD:0000039
+name: lung cancer
+namespace: disease
+def: "A cancer that originates in the tissues of the lung." [MHD:curators]
+synonym: "lung neoplasm" RELATED []
+xref: DOID:1324
+xref: ICD10CM:C34
+xref: MESH:D008175
+is_a: MHD:0000042 ! cancer
+is_a: MHD:0000028 ! lung disease
+relationship: located_in MHD:0001020 ! lung
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002012 ! hemoptysis
+
+[Term]
+id: MHD:0000040
+name: non-small cell lung carcinoma
+namespace: disease
+def: "A lung cancer that is not a small cell carcinoma; includes adenocarcinoma, squamous cell carcinoma and large cell carcinoma." [MHD:curators]
+synonym: "NSCLC" EXACT abbreviation []
+xref: DOID:3908
+is_a: MHD:0000039 ! lung cancer
+
+[Term]
+id: MHD:0000041
+name: small cell lung carcinoma
+namespace: disease
+def: "A lung cancer composed of small cells with neuroendocrine features." [MHD:curators]
+synonym: "SCLC" EXACT abbreviation []
+synonym: "oat cell carcinoma" RELATED []
+xref: DOID:5409
+is_a: MHD:0000039 ! lung cancer
+
+[Term]
+id: MHD:0000042
+name: cancer
+namespace: disease
+def: "A disease of cellular proliferation that is malignant and primary, characterized by uncontrolled cellular proliferation, local cell invasion and metastasis." [MHD:curators]
+subset: mhd_slim
+synonym: "malignant neoplasm" EXACT []
+synonym: "malignant tumor" EXACT []
+xref: DOID:162
+is_a: MHD:0000004 ! disease of cellular proliferation
+
+[Term]
+id: MHD:0000043
+name: colorectal cancer
+namespace: disease
+def: "A cancer that is located in the colon or rectum." [MHD:curators]
+synonym: "CRC" EXACT abbreviation []
+xref: DOID:9256
+xref: MESH:D015179
+is_a: MHD:0000042 ! cancer
+is_a: MHD:0000085 ! intestinal disease
+relationship: located_in MHD:0001037 ! colon
+relationship: has_symptom MHD:0002032 ! hematochezia
+relationship: has_symptom MHD:0002016 ! weight loss
+
+[Term]
+id: MHD:0000047
+name: bacterial infectious disease
+namespace: disease
+def: "An infectious disease that is caused by a bacterium." [MHD:curators]
+xref: DOID:104
+is_a: MHD:0000003 ! infectious disease
+
+[Term]
+id: MHD:0000048
+name: viral infectious disease
+namespace: disease
+def: "An infectious disease that is caused by a virus." [MHD:curators]
+xref: DOID:934
+is_a: MHD:0000003 ! infectious disease
+
+[Term]
+id: MHD:0000049
+name: influenza
+namespace: disease
+def: "A viral infectious disease of the respiratory tract caused by influenza A or B virus." [MHD:curators]
+synonym: "flu" EXACT []
+xref: DOID:8469
+xref: MESH:D007251
+is_a: MHD:0000048 ! viral infectious disease
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002014 ! fever
+relationship: has_symptom MHD:0002007 ! myalgia
+
+[Term]
+id: MHD:0000050
+name: COVID-19
+namespace: disease
+def: "A viral infectious disease caused by severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2)." [MHD:curators]
+synonym: "coronavirus disease 2019" EXACT []
+synonym: "2019 novel coronavirus infection" EXACT []
+xref: DOID:0080600
+xref: ICD10CM:U07.1
+xref: MESH:D000086382
+is_a: MHD:0000048 ! viral infectious disease
+relationship: has_symptom MHD:0002009 ! cough
+relationship: has_symptom MHD:0002014 ! fever
+relationship: has_symptom MHD:0002015 ! fatigue
+relationship: has_symptom MHD:0002045 ! anosmia
+
+[Term]
+id: MHD:0000051
+name: viral hepatitis
+namespace: disease
+def: "A hepatitis that is caused by a hepatotropic virus." [MHD:curators]
+xref: MESH:D006525
+is_a: MHD:0000048 ! viral infectious disease
+is_a: MHD:0000077 ! hepatitis
+
+[Term]
+id: MHD:0000053
+name: hepatitis B
+namespace: disease
+def: "A viral hepatitis caused by hepatitis B virus." [MHD:curators]
+xref: DOID:2043
+xref: ICD10CM:B18.1
+xref: MESH:D006509
+is_a: MHD:0000051 ! viral hepatitis
+relationship: has_symptom MHD:0002033 ! jaundice
+relationship: has_symptom MHD:0002015 ! fatigue
+
+[Term]
+id: MHD:0000054
+name: hepatitis C
+namespace: disease
+def: "A viral hepatitis caused by hepatitis C virus." [MHD:curators]
+xref: DOID:1883
+xref: ICD10CM:B18.2
+xref: MESH:D006526
+is_a: MHD:0000051 ! viral hepatitis
+relationship: has_symptom MHD:0002015 ! fatigue
+
+[Term]
+id: MHD:0000055
+name: neurodegenerative disease
+namespace: disease
+def: "A nervous system disease characterized by progressive loss of structure or function of neurons." [MHD:curators]
+xref: MESH:D019636
+is_a: MHD:0000008 ! nervous system disease
+
+[Term]
+id: MHD:0000056
+name: Alzheimer's disease
+namespace: disease
+def: "A neurodegenerative disease characterized by progressive memory loss and cognitive decline, with extracellular amyloid-beta plaques and intracellular tau tangles." [MHD:curators]
+synonym: "AD" EXACT abbreviation []
+xref: DOID:10652
+xref: ICD10CM:G30
+xref: MESH:D000544
+is_a: MHD:0000055 ! neurodegenerative disease
+relationship: located_in MHD:0001025 ! hippocampal formation
+relationship: has_symptom MHD:0002022 ! memory impairment
+
+[Term]
+id: MHD:0000057
+name: Parkinson disease
+namespace: disease
+def: "A neurodegenerative disease characterized by loss of dopaminergic neurons in the substantia nigra." [MHD:curators]
+synonym: "paralysis agitans" EXACT []
+synonym: "PD" EXACT abbreviation []
+xref: DOID:14330
+xref: MESH:D010300
+is_a: MHD:0000055 ! neurodegenerative disease
+relationship: located_in MHD:0001026 ! substantia nigra
+relationship: has_symptom MHD:0002020 ! tremor
+relationship: has_symptom MHD:0002023 ! bradykinesia
+
+[Term]
+id: MHD:0000058
+name: multiple sclerosis
+namespace: disease
+def: "A nervous system disease characterized by immune-mediated demyelination in the central nervous system." [MHD:curators]
+synonym: "MS" EXACT abbreviation []
+xref: DOID:2377
+xref: ICD10CM:G35
+xref: MESH:D009103
+is_a: MHD:0000008 ! nervous system disease
+is_a: MHD:0000076 ! autoimmune disease
+relationship: located_in MHD:0001028 ! spinal cord
+relationship: has_symptom MHD:0002015 ! fatigue
+relationship: has_symptom MHD:0002024 ! paresthesia
+
+[Term]
+id: MHD:0000059
+name: epilepsy
+namespace: disease
+def: "A nervous system disease characterized by an enduring predisposition to generate epileptic seizures." [MHD:curators]
+xref: DOID:1826
+xref: ICD10CM:G40
+xref: MESH:D004827
+is_a: MHD:0000008 ! nervous system disease
+relationship: located_in MHD:0001024 ! cerebral cortex
+relationship: has_symptom MHD:0002021 ! seizure
+
+[Term]
+id: MHD:0000060
+name: migraine
+namespace: disease
+def: "A nervous system disease characterized by recurrent attacks of moderate to severe headache, often with nausea and sensitivity to light." [MHD:curators]
+synonym: "migraine disorder" EXACT []
+synonym: "headache" RELATED []
+xref: DOID:6364
+xref: ICD10CM:G43
+xref: MESH:D008881
+is_a: MHD:0000008 ! nervous system disease
+relationship: has_symptom MHD:0002004 ! headache
+relationship: has_symptom MHD:0002030 ! nausea
+
+[Term]
+id: MHD:0000061
+name: diabetes mellitus
+namespace: disease
+def: "A disease of metabolism characterized by chronic hyperglycemia resulting from defects in insulin secretion, insulin action, or both." [MHD:curators]
+xref: DOID:9351
+xref: MESH:D003920
+is_a: MHD:0000005 ! disease of metabolism
+is_a: MHD:0000010 ! endocrine system disease
+relationship: has_symptom MHD:0002034 ! polyuria
+relationship: has_symptom MHD:0002035 ! polydipsia
+relationship: has_symptom MHD:0000074 ! hyperglycemia
+
+[Term]
+id: MHD:0000062
+name: type 1 diabetes mellitus
+namespace: disease
+def: "A diabetes mellitus caused by autoimmune destruction of the insulin-producing beta cells of the pancreatic islets." [MHD:curators]
+synonym: "T1DM" EXACT abbreviation []
+synonym: "type I diabetes" EXACT []
+xref: DOID:9744
+xref: ICD10CM:E10
+xref: MESH:D003922
+is_a: MHD:0000061 ! diabetes mellitus
+is_a: MHD:0000076 ! autoimmune disease
+relationship: located_in MHD:0001032 ! islet of Langerhans
+
+[Term]
+id: MHD:0000063
+name: type 2 diabetes mellitus
+namespace: disease
+def: "A diabetes mellitus characterized by insulin resistance and relative insulin deficiency." [MHD:curators]
+synonym: "T2DM" EXACT abbreviation []
+synonym: "adult-onset diabetes" RELATED []
+xref: DOID:9352
+xref: ICD10CM:E11
+xref: MESH:D003924
+is_a: MHD:0000061 ! diabetes mellitus
+
+[Term]
+id: MHD:0000064
+name: juvenile diabetes
+namespace: disease
+def: "A diabetes mellitus with onset in childhood that requires insulin treatment." [MHD:curators]
+synonym: "juvenile-onset diabetes" EXACT []
+xref: ICD10CM:E10.9
+is_a: MHD:0000061 ! diabetes mellitus
+relationship: has_symptom MHD:0002016 ! weight loss
+
+[Term]
+id: MHD:0000065
+name: insulin-dependent diabetes mellitus
+namespace: disease
+def: "A diabetes mellitus in which survival depends on exogenous insulin." [MHD:curators]
+synonym: "IDDM" EXACT abbreviation []
+xref: UMLS:C0011854
+is_a: MHD:0000061 ! diabetes mellitus
+relationship: located_in MHD:0001032 ! islet of Langerhans
+
+[Term]
+id: MHD:0000067
+name: diabetes insipidus
+namespace: disease
+def: "A pituitary gland disease characterized by the excretion of large volumes of dilute urine." [MHD:curators]
+synonym: "DI" EXACT abbreviation []
+synonym: "central diabetes insipidus" NARROW []
+synonym: "nephrogenic diabetes insipidus" NARROW []
+synonym: "arginine vasopressin deficiency" NARROW []
+synonym: "arginine vasopressin resistance" NARROW []
+xref: DOID:9409
+xref: MESH:D003919
+is_a: MHD:0000075 ! pituitary gland disease
+relationship: has_symptom MHD:0002034 ! polyuria
+relationship: has_symptom MHD:0002035 ! polydipsia
+relationship: has_symptom MHD:0002048 ! nocturia
+
+[Term]
+id: MHD:0000068
+name: thyroid disease
+namespace: disease
+def: "An endocrine system disease that is located in the thyroid gland." [MHD:curators]
+xref: DOID:50
+xref: MESH:D013959
+is_a: MHD:0000010 ! endocrine system disease
+relationship: located_in MHD:0001030 ! thyroid gland
+
+[Term]
+id: MHD:0000069
+name: hypothyroidism
+namespace: disease
+def: "A thyroid disease characterized by insufficient production of thyroid hormones." [MHD:curators]
+xref: DOID:1459
+xref: ICD10CM:E03.9
+xref: MESH:D007037
+is_a: MHD:0000068 ! thyroid disease
+relationship: has_symptom MHD:0002015 ! fatigue
+relationship: has_symptom MHD:0002017 ! weight gain
+
+[Term]
+id: MHD:0000070
+name: hyperthyroidism
+namespace: disease
+def: "A thyroid disease characterized by excessive production of thyroid hormones." [MHD:curators]
+synonym: "thyrotoxicosis" RELATED []
+xref: DOID:7998
+xref: MESH:D006980
+is_a: MHD:0000068 ! thyroid disease
+relationship: has_symptom MHD:0002016 ! weight loss
+relationship: has_symptom MHD:0002020 ! tremor
+relationship: has_symptom MHD:0002041 ! palpitations
+
+[Term]
+id: MHD:0000071
+name: autoimmune thyroid disease
+namespace: disease
+def: "A thyroid disease in which the immune system targets thyroid antigens." [MHD:curators]
+synonym: "AITD" EXACT abbreviation []
+is_a: MHD:0000068 ! thyroid disease
+is_a: MHD:0000076 ! autoimmune disease
+
+[Term]
+id: MHD:0000072
+name: Hashimoto thyroiditis
+namespace: disease
+def: "A thyroid disease characterized by chronic lymphocytic infiltration of the thyroid gland, often resulting in hypothyroidism." [MHD:curators]
+synonym: "chronic lymphocytic thyroiditis" EXACT []
+synonym: "Hashimoto's disease" EXACT []
+xref: DOID:7188
+xref: ICD10CM:E06.3
+xref: MESH:D050031
+is_a: MHD:0000069 ! hypothyroidism
+relationship: has_symptom MHD:0002043 ! goiter
+
+[Term]
+id: MHD:0000073
+name: Graves disease
+namespace: disease
+def: "An autoimmune thyroid disease in which thyroid-stimulating antibodies cause hyperthyroidism and diffuse goiter." [MHD:curators]
+synonym: "Graves' disease" EXACT []
+xref: DOID:12361
+xref: ICD10CM:E05.0
+xref: MESH:D006111
+is_a: MHD:0000070 ! hyperthyroidism
+is_a: MHD:0000071 ! autoimmune thyroid disease
+relationship: has_symptom MHD:0002043 ! goiter
+
+[Term]
+id: MHD:0000074
+name: hyperglycemia
+namespace: disease
+def: "An abnormally high concentration of glucose in the blood." [MHD:curators]
+synonym: "high blood sugar" EXACT []
+xref: HP:0003074
+xref: MESH:D006943
+is_a: MHD:0000005 ! disease of metabolism
+
+[Term]
+id: MHD:0000075
+name: pituitary gland disease
+namespace: disease
+def: "An endocrine system disease that is located in the pituitary gland." [MHD:curators]
+xref: MESH:D010900
+is_a: MHD:0000010 ! endocrine system disease
+relationship: located_in MHD:0001029 ! pituitary gland
+
+[Term]
+id: MHD:0000076
+name: autoimmune disease
+namespace: disease
+def: "An immune system disease in which the immune response is directed against the body’s own tissues." [MHD:curators]
+subset: mhd_slim
+xref: DOID:417
+xref: MESH:D001327
+is_a: MHD:0000012 ! immune system disease
+
+[Term]
+id: MHD:0000077
+name: hepatitis
+namespace: disease
+def: "A liver disease characterized by inflammation of the liver parenchyma." [MHD:curators]
+xref: DOID:2237
+xref: MESH:D006505
+is_a: MHD:0000078 ! liver disease
+
+[Term]
+id: MHD:0000078
+name: liver disease
+namespace: disease
+def: "A gastrointestinal system disease that is located in the liver." [MHD:curators]
+xref: DOID:409
+xref: MESH:D008107
+is_a: MHD:0000009 ! gastrointestinal system disease
+relationship: located_in MHD:0001033 ! liver
+
+[Term]
+id: MHD:0000079
+name: fatty liver disease
+namespace: disease
+def: "A liver disease characterized by accumulation of triglycerides in hepatocytes." [MHD:curators]
+synonym: "hepatic steatosis" RELATED []
+synonym: "steatosis of liver" RELATED []
+xref: DOID:9452
+xref: MESH:D005234
+is_a: MHD:0000078 ! liver disease
+
+[Term]
+id: MHD:0000080
+name: non-alcoholic fatty liver disease
+namespace: disease
+def: "A fatty liver disease that occurs in people who drink little or no alcohol." [MHD:curators]
+synonym: "NAFLD" EXACT abbreviation []
+xref: DOID:0080208
+xref: ICD10CM:K76.0
+xref: MESH:D065626
+is_a: MHD:0000079 ! fatty liver disease
+
+[Term]
+id: MHD:0000081
+name: non-alcoholic steatohepatitis
+namespace: disease
+def: "A non-alcoholic fatty liver disease with hepatocellular injury and lobular inflammation." [MHD:curators]
+synonym: "NASH" EXACT abbreviation []
+xref: DOID:0080547
+xref: ICD10CM:K75.81
+is_a: MHD:0000080 ! non-alcoholic fatty liver disease
+is_a: MHD:0000077 ! hepatitis
+
+[Term]
+id: MHD:0000082
+name: alcoholic liver disease
+namespace: disease
+def: "A liver disease caused by chronic excessive alcohol consumption." [MHD:curators]
+synonym: "ALD" EXACT abbreviation []
+xref: ICD10CM:K70
+xref: MESH:D008108
+is_a: MHD:0000078 ! liver disease
+
+[Term]
+id: MHD:0000083
+name: alcoholic hepatitis
+namespace: disease
+def: "An alcoholic liver disease characterized by acute inflammation and necrosis of the liver." [MHD:curators]
+xref: ICD10CM:K70.1
+xref: MESH:D006519
+is_a: MHD:0000082 ! alcoholic liver disease
+is_a: MHD:0000077 ! hepatitis
+relationship: has_symptom MHD:0002033 ! jaundice
+
+[Term]
+id: MHD:0000084
+name: liver cirrhosis
+namespace: disease
+def: "A liver disease characterized by diffuse fibrosis and regenerative nodules replacing normal liver architecture." [MHD:curators]
+synonym: "cirrhosis of liver" EXACT []
+xref: DOID:5082
+xref: MESH:D008103
+is_a: MHD:0000078 ! liver disease
+relationship: has_symptom MHD:0002033 ! jaundice
+relationship: has_symptom MHD:0002044 ! ascites
+
+[Term]
+id: MHD:0000085
+name: intestinal disease
+namespace: disease
+def: "A gastrointestinal system disease that is located in the intestine." [MHD:curators]
+xref: MESH:D007410
+is_a: MHD:0000009 ! gastrointestinal system disease
+relationship: located_in MHD:0001035 ! intestine
+
+[Term]
+id: MHD:0000086
+name: inflammatory bowel disease
+namespace: disease
+def: "An intestinal disease characterized by chronic inflammation of the gastrointestinal tract." [MHD:curators]
+synonym: "IBD" EXACT abbreviation []
+xref: DOID:0050589
+xref: MESH:D015212
+is_a: MHD:0000085 ! intestinal disease
+is_a: MHD:0000012 ! immune system disease
+relationship: has_symptom MHD:0002031 ! diarrhea
+relationship: has_symptom MHD:0002005 ! abdominal pain
+
+[Term]
+id: MHD:0000087
+name: Crohn disease
+namespace: disease
+def: "A chronic inflammatory disease that may affect any segment of the gastrointestinal tract, most often the terminal ileum." [MHD:curators]
+synonym: "Crohn's disease" EXACT []
+synonym: "regional enteritis" EXACT []
+xref: DOID:8778
+xref: ICD10CM:K50
+xref: MESH:D003424
+is_a: MHD:0000085 ! intestinal disease
+relationship: located_in MHD:0001036 ! small intestine
+relationship: has_symptom MHD:0002031 ! diarrhea
+relationship: has_symptom MHD:0002005 ! abdominal pain
+relationship: has_symptom MHD:0002016 ! weight loss
+
+[Term]
+id: MHD:0000088
+name: ulcerative colitis
+namespace: disease
+def: "An inflammatory bowel disease characterized by continuous mucosal inflammation of the colon and rectum." [MHD:curators]
+synonym: "UC" EXACT abbreviation []
+xref: DOID:8577
+xref: ICD10CM:K51
+xref: MESH:D003093
+is_a: MHD:0000086 ! inflammatory bowel disease
+relationship: located_in MHD:0001037 ! colon
+relationship: has_symptom MHD:0002031 ! diarrhea
+relationship: has_symptom MHD:0002032 ! hematochezia
+
+[Term]
+id: MHD:0000089
+name: gastritis
+namespace: disease
+def: "A gastrointestinal system disease characterized by inflammation of the gastric mucosa." [MHD:curators]
+xref: DOID:4029
+xref: ICD10CM:K29
+xref: MESH:D005756
+is_a: MHD:0000009 ! gastrointestinal system disease
+relationship: located_in MHD:0001034 ! stomach
+relationship: has_symptom MHD:0002005 ! abdominal pain
+relationship: has_symptom MHD:0002030 ! nausea
+
+[Term]
+id: MHD:0000090
+name: celiac disease
+namespace: disease
+def: "An intestinal disease in which gluten triggers immune-mediated damage of the small intestinal mucosa." [MHD:curators]
+synonym: "coeliac disease" EXACT []
+synonym: "gluten-sensitive enteropathy" EXACT []
+xref: DOID:10608
+xref: ICD10CM:K90.0
+xref: MESH:D002446
+is_a: MHD:0000085 ! intestinal disease
+is_a: MHD:0000076 ! autoimmune disease
+relationship: located_in MHD:0001036 ! small intestine
+relationship: has_symptom MHD:0002031 ! diarrhea
+relationship: has_symptom MHD:0002016 ! weight loss
+
+[Term]
+id: MHD:0000092
+name: kidney disease
+namespace: disease
+def: "A urinary system disease that is located in the kidney." [MHD:curators]
+xref: DOID:557
+xref: MESH:D007674
+is_a: MHD:0000011 ! urinary system disease
+relationship: located_in MHD:0001038 ! kidney
+
+[Term]
+id: MHD:0000093
+name: chronic kidney disease
+namespace: disease
+def: "A kidney disease characterized by a gradual loss of kidney function over months or years." [MHD:curators]
+synonym: "CKD" EXACT abbreviation []
+synonym: "chronic renal failure" RELATED []
+xref: DOID:784
+xref: ICD10CM:N18
+xref: MESH:D051436
+is_a: MHD:0000092 ! kidney disease
+relationship: has_symptom MHD:0002015 ! fatigue
+relationship: has_symptom MHD:0002040 ! edema
+
+[Term]
+id: MHD:0000094
+name: glomerulonephritis
+namespace: disease
+def: "A kidney disease characterized by inflammation of the renal glomeruli." [MHD:curators]
+xref: DOID:2921
+xref: MESH:D005921
+is_a: MHD:0000092 ! kidney disease
+relationship: located_in MHD:0001039 ! renal glomerulus
+relationship: has_symptom MHD:0002036 ! hematuria
+relationship: has_symptom MHD:0002040 ! edema
+
+[Term]
+id: MHD:0000096
+name: rheumatoid arthritis
+namespace: disease
+def: "A musculoskeletal system disease characterized by chronic immune-mediated inflammation of synovial joints." [MHD:curators]
+synonym: "RA" EXACT abbreviation []
+xref: DOID:7148
+xref: MESH:D001172
+is_a: MHD:0000013 ! musculoskeletal system disease
+is_a: MHD:0000076 ! autoimmune disease
+relationship: located_in MHD:0001042 ! synovial joint
+relationship: has_symptom MHD:0002006 ! arthralgia
+
+[Term]
+id: MHD:0000097
+name: osteoarthritis
+namespace: disease
+def: "A musculoskeletal system disease characterized by degeneration of articular cartilage and remodelling of subchondral bone." [MHD:curators]
+synonym: "degenerative joint disease" EXACT []
+xref: DOID:8398
+xref: MESH:D010003
+is_a: MHD:0000013 ! musculoskeletal system disease
+relationship: located_in MHD:0001042 ! synovial joint
+relationship: has_symptom MHD:0002006 ! arthralgia
+
+[Term]
+id: MHD:0000098
+name: osteoporosis
+namespace: disease
+def: "A musculoskeletal system disease characterized by low bone mass and deterioration of bone microarchitecture." [MHD:curators]
+xref: DOID:11476
+xref: ICD10CM:M81
+xref: MESH:D010024
+is_a: MHD:0000013 ! musculoskeletal system disease
+relationship: located_in MHD:0001041 ! bone element
+
+[Term]
+id: MHD:0000100
+name: psoriasis
+namespace: disease
+def: "An integumentary system disease characterized by immune-mediated hyperproliferation of keratinocytes forming scaly plaques." [MHD:curators]
+xref: DOID:8893
+xref: ICD10CM:L40
+xref: MESH:D011565
+is_a: MHD:0000014 ! integumentary system disease
+relationship: located_in MHD:0001040 ! skin of body
+relationship: has_symptom MHD:0002042 ! pruritus
+
+[Term]
+id: MHD:0000102
+name: anemia
+namespace: disease
+def: "A hematologic disease characterized by a decrease in the total amount of hemoglobin or red blood cells." [MHD:curators]
+xref: MESH:D000740
+is_a: MHD:0000015 ! hematologic disease
+relationship: has_symptom MHD:0002015 ! fatigue
+
+[Term]
+id: MHD:0000103
+name: iron deficiency anemia
+namespace: disease
+def: "An anemia caused by insufficient iron for hemoglobin synthesis." [MHD:curators]
+xref: DOID:11758
+xref: ICD10CM:D50
+xref: MESH:D018798
+is_a: MHD:0000102 ! anemia
+relationship: has_symptom MHD:0002015 ! fatigue
+
+[Term]
+id: MHD:0001001
+name: anatomical entity
+namespace: anatomy
+def: "A material entity that is part of a human organism." [MHD:curators]
+subset: mhd_slim
+xref: UBERON:0001062
+
+[Term]
+id: MHD:0001002
+name: anatomical system
+namespace: anatomy
+def: "An anatomical entity that consists of multiple organs that together perform a common function." [MHD:curators]
+xref: UBERON:0000467
+is_a: MHD:0001001 ! anatomical entity
+
+[Term]
+id: MHD:0001003
+name: organ
+namespace: anatomy
+def: "An anatomical entity that is a discrete structural unit performing a specific function." [MHD:curators]
+xref: UBERON:0000062
+is_a: MHD:0001001 ! anatomical entity
+
+[Term]
+id: MHD:0001004
+name: organ part
+namespace: anatomy
+def: "An anatomical entity that is part of an organ." [MHD:curators]
+xref: UBERON:0000064
+is_a: MHD:0001001 ! anatomical entity
+
+[Term]
+id: MHD:0001005
+name: tissue
+namespace: anatomy
+def: "An anatomical entity consisting of similar cells and intercellular matrix." [MHD:curators]
+xref: UBERON:0000479
+is_a: MHD:0001001 ! anatomical entity
+
+[Term]
+id: MHD:0001006
+name: cardiovascular system
+namespace: anatomy
+def: "An anatomical system that circulates blood through the body." [MHD:curators]
+xref: UBERON:0004535
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001007
+name: respiratory system
+namespace: anatomy
+def: "An anatomical system that carries out gas exchange." [MHD:curators]
+xref: UBERON:0001004
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001008
+name: nervous system
+namespace: anatomy
+def: "An anatomical system that coordinates actions by transmitting signals between body parts." [MHD:curators]
+xref: UBERON:0001016
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001009
+name: digestive system
+namespace: anatomy
+def: "An anatomical system that ingests and digests food and absorbs nutrients." [MHD:curators]
+xref: UBERON:0001007
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001010
+name: endocrine system
+namespace: anatomy
+def: "An anatomical system of glands that secrete hormones into the blood." [MHD:curators]
+xref: UBERON:0000949
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001011
+name: renal system
+namespace: anatomy
+def: "An anatomical system that produces, stores and eliminates urine." [MHD:curators]
+synonym: "urinary system" EXACT []
+xref: UBERON:0001008
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001012
+name: immune system
+namespace: anatomy
+def: "An anatomical system that protects the organism against disease." [MHD:curators]
+xref: UBERON:0002405
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001013
+name: musculoskeletal system
+namespace: anatomy
+def: "An anatomical system that provides form, support, stability and movement." [MHD:curators]
+xref: UBERON:0002204
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001014
+name: integumental system
+namespace: anatomy
+def: "An anatomical system that forms the external covering of the body." [MHD:curators]
+synonym: "integumentary system" EXACT []
+xref: UBERON:0002416
+is_a: MHD:0001002 ! anatomical system
+
+[Term]
+id: MHD:0001015
+name: heart
+namespace: anatomy
+def: "An organ that pumps blood through the circulatory system." [MHD:curators]
+xref: UBERON:0000948
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001006 ! cardiovascular system
+
+[Term]
+id: MHD:0001016
+name: myocardium
+namespace: anatomy
+def: "A tissue that forms the muscular wall of the heart." [MHD:curators]
+synonym: "heart muscle" EXACT []
+xref: UBERON:0002349
+is_a: MHD:0001005 ! tissue
+relationship: part_of MHD:0001015 ! heart
+
+[Term]
+id: MHD:0001017
+name: blood vessel
+namespace: anatomy
+def: "An organ that conveys blood through the body." [MHD:curators]
+xref: UBERON:0001981
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001006 ! cardiovascular system
+
+[Term]
+id: MHD:0001018
+name: artery
+namespace: anatomy
+def: "A blood vessel that carries blood away from the heart." [MHD:curators]
+xref: UBERON:0001637
+is_a: MHD:0001017 ! blood vessel
+
+[Term]
+id: MHD:0001019
+name: coronary artery
+namespace: anatomy
+def: "An artery that supplies blood to the myocardium." [MHD:curators]
+xref: UBERON:0001621
+is_a: MHD:0001018 ! artery
+relationship: part_of MHD:0001015 ! heart
+
+[Term]
+id: MHD:0001020
+name: lung
+namespace: anatomy
+def: "An organ of the respiratory system in which gas exchange takes place." [MHD:curators]
+xref: UBERON:0002048
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001007 ! respiratory system
+
+[Term]
+id: MHD:0001021
+name: bronchus
+namespace: anatomy
+def: "An organ part that conducts air from the trachea into the lungs." [MHD:curators]
+xref: UBERON:0002185
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001007 ! respiratory system
+
+[Term]
+id: MHD:0001022
+name: pulmonary alveolus
+namespace: anatomy
+def: "An organ part of the lung where gas exchange with the blood occurs." [MHD:curators]
+synonym: "alveolus" BROAD []
+xref: UBERON:0002299
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001020 ! lung
+
+[Term]
+id: MHD:0001023
+name: brain
+namespace: anatomy
+def: "An organ of the central nervous system enclosed in the cranium." [MHD:curators]
+xref: UBERON:0000955
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001008 ! nervous system
+
+[Term]
+id: MHD:0001024
+name: cerebral cortex
+namespace: anatomy
+def: "An organ part that forms the outer layer of grey matter of the cerebrum." [MHD:curators]
+xref: UBERON:0000956
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001023 ! brain
+
+[Term]
+id: MHD:0001025
+name: hippocampal formation
+namespace: anatomy
+def: "An organ part of the medial temporal lobe involved in memory consolidation." [MHD:curators]
+synonym: "hippocampus" RELATED []
+xref: UBERON:0002421
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001023 ! brain
+
+[Term]
+id: MHD:0001026
+name: substantia nigra
+namespace: anatomy
+def: "An organ part of the midbrain containing dopaminergic neurons." [MHD:curators]
+xref: UBERON:0002038
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001023 ! brain
+
+[Term]
+id: MHD:0001027
+name: hypothalamus
+namespace: anatomy
+def: "An organ part of the forebrain that links the nervous system to the endocrine system." [MHD:curators]
+xref: UBERON:0001898
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001023 ! brain
+
+[Term]
+id: MHD:0001028
+name: spinal cord
+namespace: anatomy
+def: "An organ of the central nervous system extending from the brainstem through the vertebral canal." [MHD:curators]
+xref: UBERON:0002240
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001008 ! nervous system
+
+[Term]
+id: MHD:0001029
+name: pituitary gland
+namespace: anatomy
+def: "An organ at the base of the brain that secretes hormones regulating other endocrine glands." [MHD:curators]
+synonym: "hypophysis" EXACT []
+xref: UBERON:0000007
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001010 ! endocrine system
+
+[Term]
+id: MHD:0001030
+name: thyroid gland
+namespace: anatomy
+def: "An organ in the neck that produces thyroid hormones." [MHD:curators]
+xref: UBERON:0002046
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001010 ! endocrine system
+
+[Term]
+id: MHD:0001031
+name: pancreas
+namespace: anatomy
+def: "An organ with exocrine digestive and endocrine functions." [MHD:curators]
+xref: UBERON:0001264
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001009 ! digestive system
+
+[Term]
+id: MHD:0001032
+name: islet of Langerhans
+namespace: anatomy
+def: "An organ part of the pancreas that contains hormone-producing cells, including insulin-secreting beta cells." [MHD:curators]
+synonym: "pancreatic islet" EXACT []
+xref: UBERON:0000006
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001031 ! pancreas
+
+[Term]
+id: MHD:0001033
+name: liver
+namespace: anatomy
+def: "An organ of the digestive system that metabolizes nutrients and detoxifies the blood." [MHD:curators]
+xref: UBERON:0002107
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001009 ! digestive system
+
+[Term]
+id: MHD:0001034
+name: stomach
+namespace: anatomy
+def: "An organ of the digestive tract between the esophagus and the duodenum." [MHD:curators]
+xref: UBERON:0000945
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001009 ! digestive system
+
+[Term]
+id: MHD:0001035
+name: intestine
+namespace: anatomy
+def: "An organ of the digestive tract extending from the pylorus to the anus." [MHD:curators]
+synonym: "bowel" EXACT []
+xref: UBERON:0000160
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001009 ! digestive system
+
+[Term]
+id: MHD:0001036
+name: small intestine
+namespace: anatomy
+def: "An organ part of the intestine where most nutrient absorption occurs." [MHD:curators]
+xref: UBERON:0002108
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001035 ! intestine
+
+[Term]
+id: MHD:0001037
+name: colon
+namespace: anatomy
+def: "An organ part of the large intestine between the cecum and the rectum." [MHD:curators]
+xref: UBERON:0001155
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001035 ! intestine
+
+[Term]
+id: MHD:0001038
+name: kidney
+namespace: anatomy
+def: "An organ of the renal system that filters blood and produces urine." [MHD:curators]
+xref: UBERON:0002113
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001011 ! renal system
+
+[Term]
+id: MHD:0001039
+name: renal glomerulus
+namespace: anatomy
+def: "An organ part of the kidney consisting of a capillary tuft where blood is filtered." [MHD:curators]
+synonym: "glomerulus" BROAD []
+xref: UBERON:0000074
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001038 ! kidney
+
+[Term]
+id: MHD:0001040
+name: skin of body
+namespace: anatomy
+def: "An organ that covers the external surface of the body." [MHD:curators]
+synonym: "skin" EXACT []
+xref: UBERON:0002097
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001014 ! integumental system
+
+[Term]
+id: MHD:0001041
+name: bone element
+namespace: anatomy
+def: "An organ composed mainly of mineralized bone tissue." [MHD:curators]
+synonym: "bone" EXACT []
+xref: UBERON:0001474
+is_a: MHD:0001003 ! organ
+relationship: part_of MHD:0001013 ! musculoskeletal system
+
+[Term]
+id: MHD:0001042
+name: synovial joint
+namespace: anatomy
+def: "An organ part that forms a movable articulation between bones." [MHD:curators]
+xref: UBERON:0002217
+is_a: MHD:0001004 ! organ part
+relationship: part_of MHD:0001013 ! musculoskeletal system
+
+[Term]
+id: MHD:0001043
+name: blood
+namespace: anatomy
+def: "A tissue consisting of plasma and blood cells that circulates through the cardiovascular system." [MHD:curators]
+xref: UBERON:0000178
+is_a: MHD:0001005 ! tissue
+relationship: part_of MHD:0001006 ! cardiovascular system
+
+[Term]
+id: MHD:0002001
+name: sign or symptom
+namespace: phenotype
+def: "A clinically observable abnormality reported by a patient or detected on examination." [MHD:curators]
+subset: mhd_slim
+xref: HP:0000118
+
+[Term]
+id: MHD:0002002
+name: pain
+namespace: phenotype
+def: "A sign or symptom consisting of an unpleasant sensory and emotional experience associated with actual or potential tissue damage." [MHD:curators]
+xref: HP:0012531
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002003
+name: chest pain
+namespace: phenotype
+def: "A pain that is perceived in the chest." [MHD:curators]
+xref: HP:0100749
+is_a: MHD:0002002 ! pain
+
+[Term]
+id: MHD:0002004
+name: headache
+namespace: phenotype
+def: "A pain that is perceived in the head." [MHD:curators]
+synonym: "cephalalgia" EXACT []
+xref: HP:0002315
+is_a: MHD:0002002 ! pain
+
+[Term]
+id: MHD:0002005
+name: abdominal pain
+namespace: phenotype
+def: "A pain that is perceived in the abdomen." [MHD:curators]
+xref: HP:0002027
+is_a: MHD:0002002 ! pain
+
+[Term]
+id: MHD:0002006
+name: arthralgia
+namespace: phenotype
+def: "A pain that is perceived in a joint." [MHD:curators]
+synonym: "joint pain" EXACT []
+xref: HP:0002829
+is_a: MHD:0002002 ! pain
+
+[Term]
+id: MHD:0002007
+name: myalgia
+namespace: phenotype
+def: "A pain that is perceived in a muscle." [MHD:curators]
+synonym: "muscle pain" EXACT []
+xref: HP:0003326
+is_a: MHD:0002002 ! pain
+
+[Term]
+id: MHD:0002008
+name: respiratory symptom
+namespace: phenotype
+def: "A sign or symptom that involves the respiratory system." [MHD:curators]
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002009
+name: cough
+namespace: phenotype
+def: "A respiratory symptom consisting of a sudden, forceful expulsion of air from the lungs." [MHD:curators]
+xref: HP:0012735
+is_a: MHD:0002008 ! respiratory symptom
+
+[Term]
+id: MHD:0002010
+name: dyspnea
+namespace: phenotype
+def: "A respiratory symptom consisting of a subjective sensation of difficult or labored breathing." [MHD:curators]
+synonym: "dyspnoea" EXACT []
+xref: HP:0002094
+is_a: MHD:0002008 ! respiratory symptom
+
+[Term]
+id: MHD:0002011
+name: wheezing
+namespace: phenotype
+def: "A respiratory symptom consisting of a high-pitched whistling sound during breathing." [MHD:curators]
+xref: HP:0030828
+is_a: MHD:0002008 ! respiratory symptom
+
+[Term]
+id: MHD:0002012
+name: hemoptysis
+namespace: phenotype
+def: "A respiratory symptom consisting of coughing up blood." [MHD:curators]
+xref: HP:0002105
+is_a: MHD:0002008 ! respiratory symptom
+
+[Term]
+id: MHD:0002013
+name: constitutional symptom
+namespace: phenotype
+def: "A sign or symptom that affects general well-being or the body as a whole." [MHD:curators]
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002014
+name: fever
+namespace: phenotype
+def: "A constitutional symptom consisting of an elevated body temperature." [MHD:curators]
+synonym: "pyrexia" EXACT []
+xref: HP:0001945
+is_a: MHD:0002013 ! constitutional symptom
+
+[Term]
+id: MHD:0002015
+name: fatigue
+namespace: phenotype
+def: "A constitutional symptom consisting of a subjective feeling of tiredness that is not relieved by rest." [MHD:curators]
+xref: HP:0012378
+is_a: MHD:0002013 ! constitutional symptom
+
+[Term]
+id: MHD:0002016
+name: weight loss
+namespace: phenotype
+def: "A constitutional symptom consisting of an unintended reduction in body weight." [MHD:curators]
+xref: HP:0001824
+is_a: MHD:0002013 ! constitutional symptom
+
+[Term]
+id: MHD:0002017
+name: weight gain
+namespace: phenotype
+def: "A constitutional symptom consisting of an unintended increase in body weight." [MHD:curators]
+xref: HP:0004324
+is_a: MHD:0002013 ! constitutional symptom
+
+[Term]
+id: MHD:0002018
+name: night sweats
+namespace: phenotype
+def: "A constitutional symptom consisting of excessive sweating during sleep." [MHD:curators]
+xref: HP:0030166
+is_a: MHD:0002013 ! constitutional symptom
+
+[Term]
+id: MHD:0002019
+name: neurological symptom
+namespace: phenotype
+def: "A sign or symptom that involves the nervous system." [MHD:curators]
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002020
+name: tremor
+namespace: phenotype
+def: "A neurological symptom consisting of an involuntary, rhythmic oscillation of a body part." [MHD:curators]
+xref: HP:0001337
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002021
+name: seizure
+namespace: phenotype
+def: "A neurological symptom consisting of a transient occurrence of signs due to abnormal synchronous neuronal activity in the brain." [MHD:curators]
+xref: HP:0001250
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002022
+name: memory impairment
+namespace: phenotype
+def: "A neurological symptom consisting of a reduced ability to store or recall information." [MHD:curators]
+synonym: "forgetfulness" RELATED []
+xref: HP:0002354
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002023
+name: bradykinesia
+namespace: phenotype
+def: "A neurological symptom consisting of slowness of initiation and execution of movement." [MHD:curators]
+xref: HP:0002067
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002024
+name: paresthesia
+namespace: phenotype
+def: "A neurological symptom consisting of abnormal skin sensations such as tingling or numbness." [MHD:curators]
+xref: HP:0003401
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002026
+name: hemiparesis
+namespace: phenotype
+def: "A neurological symptom consisting of weakness of one side of the body." [MHD:curators]
+xref: HP:0001269
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002028
+name: gastrointestinal symptom
+namespace: phenotype
+def: "A sign or symptom that involves the digestive system." [MHD:curators]
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002030
+name: nausea
+namespace: phenotype
+def: "A gastrointestinal symptom consisting of an urge to vomit." [MHD:curators]
+xref: HP:0002018
+is_a: MHD:0002028 ! gastrointestinal symptom
+
+[Term]
+id: MHD:0002031
+name: diarrhea
+namespace: phenotype
+def: "A gastrointestinal symptom consisting of abnormally frequent, loose bowel movements." [MHD:curators]
+synonym: "diarrhoea" EXACT []
+xref: HP:0002014
+is_a: MHD:0002028 ! gastrointestinal symptom
+
+[Term]
+id: MHD:0002032
+name: hematochezia
+namespace: phenotype
+def: "A gastrointestinal symptom consisting of the passage of fresh blood per anus." [MHD:curators]
+synonym: "rectal bleeding" RELATED []
+xref: HP:0002573
+is_a: MHD:0002028 ! gastrointestinal symptom
+
+[Term]
+id: MHD:0002033
+name: jaundice
+namespace: phenotype
+def: "A sign consisting of yellow discoloration of the skin and sclerae due to hyperbilirubinemia." [MHD:curators]
+synonym: "icterus" EXACT []
+xref: HP:0000952
+is_a: MHD:0002028 ! gastrointestinal symptom
+
+[Term]
+id: MHD:0002034
+name: polyuria
+namespace: phenotype
+def: "A sign consisting of an abnormally large production of urine." [MHD:curators]
+xref: HP:0000103
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002035
+name: polydipsia
+namespace: phenotype
+def: "A symptom consisting of excessive thirst and fluid intake." [MHD:curators]
+xref: HP:0001959
+is_a: MHD:0002013 ! constitutional symptom
+
+[Term]
+id: MHD:0002036
+name: hematuria
+namespace: phenotype
+def: "A sign consisting of the presence of blood in the urine." [MHD:curators]
+xref: HP:0000790
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002040
+name: edema
+namespace: phenotype
+def: "A sign consisting of abnormal accumulation of fluid in the interstitium." [MHD:curators]
+synonym: "oedema" EXACT []
+xref: HP:0000969
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002041
+name: palpitations
+namespace: phenotype
+def: "A symptom consisting of an unpleasant awareness of the heartbeat." [MHD:curators]
+xref: HP:0001962
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002042
+name: pruritus
+namespace: phenotype
+def: "A symptom consisting of an itching sensation that provokes the desire to scratch." [MHD:curators]
+synonym: "itching" EXACT []
+xref: HP:0000989
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002043
+name: goiter
+namespace: phenotype
+def: "A sign consisting of enlargement of the thyroid gland." [MHD:curators]
+synonym: "goitre" EXACT []
+xref: HP:0000853
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002044
+name: ascites
+namespace: phenotype
+def: "A sign consisting of accumulation of fluid in the peritoneal cavity." [MHD:curators]
+xref: HP:0001541
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002045
+name: anosmia
+namespace: phenotype
+def: "A symptom consisting of the loss of the sense of smell." [MHD:curators]
+synonym: "loss of smell" EXACT []
+xref: HP:0000458
+is_a: MHD:0002019 ! neurological symptom
+
+[Term]
+id: MHD:0002046
+name: abnormal blood glucose concentration
+namespace: phenotype
+def: "A sign consisting of a deviation of the blood glucose concentration from the normal range." [MHD:curators]
+xref: HP:0011014
+is_a: MHD:0002001 ! sign or symptom
+
+[Term]
+id: MHD:0002047
+name: hypoglycemia
+namespace: phenotype
+def: "An abnormal blood glucose concentration below the normal range." [MHD:curators]
+synonym: "low blood sugar" EXACT []
+xref: HP:0001943
+is_a: MHD:0002046 ! abnormal blood glucose concentration
+
+[Term]
+id: MHD:0002048
+name: nocturia
+namespace: phenotype
+def: "A sign consisting of the need to wake at night to pass urine." [MHD:curators]
+xref: HP:0000017
+is_a: MHD:0002001 ! sign or symptom
+
+[Typedef]
+id: part_of
+name: part of
+def: "A core relation that holds between a part and its whole." [MHD:curators]
+xref: BFO:0000050
+is_transitive: true
+
+[Typedef]
+id: located_in
+name: located in
+def: "A relation between a disease and the anatomical entity in which it manifests." [MHD:curators]
+xref: RO:0001025
+is_transitive: true
+
+[Typedef]
+id: has_symptom
+name: has symptom
+def: "A relation between a disease and a sign or symptom that is characteristic of it." [MHD:curators]
+xref: RO:0002452
+domain: MHD:0000001 ! disease
+range: MHD:0002001 ! sign or symptom

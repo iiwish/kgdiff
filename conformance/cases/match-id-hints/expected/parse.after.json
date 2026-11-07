@@ -1,0 +1,236 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "bundle",
+        "label": "Bundle",
+        "type": "Entity",
+        "attrs": {
+          "table": "pim.bundles"
+        },
+        "replaces": [
+          "dim_sku"
+        ]
+      },
+      {
+        "id": "category",
+        "label": "Category",
+        "type": "Entity",
+        "replaces": [
+          "dim_category"
+        ]
+      },
+      {
+        "id": "channel",
+        "label": "Channel",
+        "type": "Entity"
+      },
+      {
+        "id": "customer",
+        "label": "Customer",
+        "type": "Entity",
+        "aliases": [
+          "Client"
+        ],
+        "attrs": {
+          "rows": 128400,
+          "table": "crm.customers"
+        },
+        "replaces": [
+          "dim_client",
+          "dim_customer"
+        ]
+      },
+      {
+        "id": "dim_region",
+        "label": "Region",
+        "type": "Entity",
+        "deprecated": true,
+        "replacedBy": [
+          "sales_region"
+        ]
+      },
+      {
+        "id": "geo",
+        "label": "Geography",
+        "type": "Concept"
+      },
+      {
+        "id": "metric_revenue",
+        "label": "Net revenue",
+        "type": "Metric",
+        "attrs": {
+          "definition": "Sum of order line amounts net of refunds",
+          "owner": "finance",
+          "unit": "CNY"
+        }
+      },
+      {
+        "id": "order",
+        "label": "Order",
+        "type": "Event",
+        "attrs": {
+          "grain": "order",
+          "table": "sales.orders"
+        },
+        "replaces": [
+          "fct_order"
+        ]
+      },
+      {
+        "id": "order_line",
+        "label": "Order line",
+        "type": "Event",
+        "attrs": {
+          "grain": "line",
+          "table": "sales.order_lines"
+        },
+        "replaces": [
+          "fct_order_line"
+        ]
+      },
+      {
+        "id": "party",
+        "label": "Party",
+        "type": "Concept"
+      },
+      {
+        "id": "product",
+        "label": "Product",
+        "type": "Entity",
+        "attrs": {
+          "table": "pim.products"
+        },
+        "replaces": [
+          "dim_product"
+        ]
+      },
+      {
+        "id": "sales_region",
+        "label": "Sales region",
+        "type": "Entity"
+      },
+      {
+        "id": "sku",
+        "label": "SKU",
+        "type": "Entity",
+        "aliases": [
+          "Stock keeping unit"
+        ],
+        "attrs": {
+          "table": "pim.skus"
+        },
+        "replaces": [
+          "dim_sku"
+        ]
+      },
+      {
+        "id": "taxonomy",
+        "label": "Business taxonomy",
+        "type": "Concept"
+      }
+    ],
+    "edges": [
+      {
+        "source": "bundle",
+        "target": "product",
+        "predicate": "variant_of"
+      },
+      {
+        "source": "category",
+        "target": "category",
+        "predicate": "parent_category",
+        "label": "parent category"
+      },
+      {
+        "source": "channel",
+        "target": "taxonomy",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "customer",
+        "target": "party",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "metric_revenue",
+        "target": "order_line",
+        "predicate": "computed_from"
+      },
+      {
+        "source": "order",
+        "target": "customer",
+        "predicate": "billed_to",
+        "attrs": {
+          "cardinality": "N:1"
+        }
+      },
+      {
+        "source": "order",
+        "target": "customer",
+        "predicate": "placed_by",
+        "attrs": {
+          "cardinality": "N:1"
+        }
+      },
+      {
+        "source": "order",
+        "target": "sales_region",
+        "predicate": "ships_to"
+      },
+      {
+        "source": "order",
+        "target": "channel",
+        "predicate": "sold_via"
+      },
+      {
+        "source": "order_line",
+        "target": "sku",
+        "predicate": "of_item"
+      },
+      {
+        "source": "order_line",
+        "target": "order",
+        "predicate": "part_of"
+      },
+      {
+        "source": "product",
+        "target": "category",
+        "predicate": "in_category"
+      },
+      {
+        "source": "sales_region",
+        "target": "geo",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "sku",
+        "target": "product",
+        "predicate": "variant_of"
+      }
+    ],
+    "meta": {
+      "name": "retail",
+      "source": "after.json",
+      "version": "enriched"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

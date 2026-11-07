@@ -1,0 +1,1702 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "ABNORMAL_OPERATION",
+        "label": "经营异常",
+        "type": "名单",
+        "aliases": [
+          "经营异常名录"
+        ],
+        "attrs": {
+          "列入原因": "risk_abnormal_operation.in_reason",
+          "列入日期": "risk_abnormal_operation.in_date",
+          "移出原因": "risk_abnormal_operation.out_reason",
+          "移出日期": "risk_abnormal_operation.out_date"
+        }
+      },
+      {
+        "id": "ACTUAL_CONTROL",
+        "label": "实际控制",
+        "type": "关系",
+        "attrs": {
+          "控制方式": "ent_actual_control.control_type",
+          "控制比例": "ent_actual_control.control_ratio",
+          "控制路径": "ent_actual_control.control_path"
+        }
+      },
+      {
+        "id": "ACTUAL_CONTROLLER",
+        "label": "实际控制人",
+        "type": "角色",
+        "aliases": [
+          "实控人"
+        ],
+        "attrs": {
+          "认定依据": "ent_actual_control.basis"
+        }
+      },
+      {
+        "id": "ADMIN_AUTHORITY",
+        "label": "行政机关",
+        "type": "主体",
+        "attrs": {
+          "机关名称": "org_authority.name",
+          "行政区划代码": "org_authority.region_code"
+        }
+      },
+      {
+        "id": "ADMIN_LICENSE",
+        "label": "行政许可",
+        "type": "资质",
+        "attrs": {
+          "有效期至": "ent_admin_license.valid_to",
+          "许可内容": "ent_admin_license.content",
+          "许可文件编号": "ent_admin_license.license_no"
+        }
+      },
+      {
+        "id": "ADMIN_PENALTY",
+        "label": "行政处罚",
+        "type": "事件",
+        "attrs": {
+          "决定书文号": "risk_admin_penalty.doc_no",
+          "决定日期": "risk_admin_penalty.decision_date",
+          "处罚内容": "risk_admin_penalty.content",
+          "罚没金额": "risk_admin_penalty.amount",
+          "违法行为类型": "risk_admin_penalty.violation_type"
+        }
+      },
+      {
+        "id": "ANNOUNCEMENT",
+        "label": "公告",
+        "type": "文书",
+        "attrs": {
+          "公告日期": "sec_announcement.ann_date",
+          "公告标题": "sec_announcement.title",
+          "公告类型": "sec_announcement.ann_type"
+        }
+      },
+      {
+        "id": "ANNUAL_REPORT",
+        "label": "企业年报",
+        "type": "文书",
+        "aliases": [
+          "年度报告"
+        ],
+        "attrs": {
+          "从业人数": "ent_annual_report.employee_count",
+          "公示日期": "ent_annual_report.publish_date",
+          "报告年度": "ent_annual_report.report_year",
+          "资产总额": "ent_annual_report.total_assets"
+        }
+      },
+      {
+        "id": "BANKRUPTCY",
+        "label": "破产重整",
+        "type": "事件",
+        "attrs": {
+          "破产案号": "jud_bankruptcy.case_no",
+          "管理人": "jud_bankruptcy.administrator"
+        }
+      },
+      {
+        "id": "BOARD",
+        "label": "董事会",
+        "type": "机构",
+        "attrs": {
+          "届次": "ent_board.term_no",
+          "成员人数": "ent_board.member_count"
+        }
+      },
+      {
+        "id": "BRANCH",
+        "label": "分支机构",
+        "type": "主体",
+        "attrs": {
+          "负责人": "ent_branch.principal",
+          "隶属企业信用代码": "ent_branch.parent_credit_code"
+        }
+      },
+      {
+        "id": "BSE",
+        "label": "北交所",
+        "type": "板块",
+        "aliases": [
+          "北京证券交易所"
+        ]
+      },
+      {
+        "id": "CHATTEL_MORTGAGE",
+        "label": "动产抵押",
+        "type": "事件",
+        "attrs": {
+          "登记日期": "risk_chattel_mortgage.reg_date",
+          "登记编号": "risk_chattel_mortgage.reg_no",
+          "被担保债权数额": "risk_chattel_mortgage.secured_amount"
+        }
+      },
+      {
+        "id": "CHINEXT",
+        "label": "创业板",
+        "type": "板块"
+      },
+      {
+        "id": "CONSUMPTION_RESTRICTION",
+        "label": "限制高消费",
+        "type": "名单",
+        "aliases": [
+          "限消令"
+        ],
+        "attrs": {
+          "限制令发布日期": "jud_consumption_restriction.publish_date",
+          "限制对象": "jud_consumption_restriction.restricted_party"
+        }
+      },
+      {
+        "id": "COURT",
+        "label": "法院",
+        "type": "主体",
+        "aliases": [
+          "人民法院"
+        ],
+        "attrs": {
+          "法院名称": "org_court.name",
+          "法院层级": "org_court.level"
+        }
+      },
+      {
+        "id": "COURT_NOTICE",
+        "label": "开庭公告",
+        "type": "文书",
+        "attrs": {
+          "开庭日期": "jud_court_notice.hearing_date",
+          "法庭": "jud_court_notice.courtroom"
+        }
+      },
+      {
+        "id": "DEREGISTRATION",
+        "label": "注销登记",
+        "type": "事件",
+        "attrs": {
+          "是否简易注销": "ent_cancel_record.is_simple",
+          "注销原因": "ent_cancel_record.cancel_reason",
+          "注销日期": "ent_cancel_record.cancel_date"
+        }
+      },
+      {
+        "id": "DIRECTOR",
+        "label": "董事",
+        "type": "角色"
+      },
+      {
+        "id": "DISHONEST_EXECUTEE",
+        "label": "失信被执行人",
+        "type": "角色",
+        "aliases": [
+          "老赖"
+        ],
+        "attrs": {
+          "发布日期": "jud_dishonest.publish_date",
+          "失信行为情形": "jud_dishonest.behavior",
+          "履行情况": "jud_dishonest.performance"
+        }
+      },
+      {
+        "id": "DOM_EQUITY",
+        "label": "股权投资",
+        "type": "领域",
+        "attrs": {
+          "描述": "出资、持股、股权变动与控制关系"
+        }
+      },
+      {
+        "id": "DOM_GOVERNANCE",
+        "label": "任职治理",
+        "type": "领域",
+        "attrs": {
+          "描述": "法定代表人、董监高任职与公司治理机构"
+        }
+      },
+      {
+        "id": "DOM_IP",
+        "label": "知识产权",
+        "type": "领域",
+        "attrs": {
+          "描述": "专利、商标、著作权及其出质登记"
+        }
+      },
+      {
+        "id": "DOM_JUDICIAL",
+        "label": "司法诉讼",
+        "type": "领域",
+        "attrs": {
+          "描述": "诉讼案件、裁判文书与强制执行信息"
+        }
+      },
+      {
+        "id": "DOM_MARKET",
+        "label": "市场主体",
+        "type": "领域",
+        "attrs": {
+          "描述": "依法登记的经营主体，以及与其发生关系的自然人和行政、司法机关"
+        }
+      },
+      {
+        "id": "DOM_REGISTRATION",
+        "label": "工商变更",
+        "type": "领域",
+        "attrs": {
+          "描述": "设立、变更、注销登记，年度报告与行政许可公示"
+        }
+      },
+      {
+        "id": "DOM_RISK",
+        "label": "经营风险",
+        "type": "领域",
+        "attrs": {
+          "描述": "行政监管、异常名录、抵质押与担保风险"
+        }
+      },
+      {
+        "id": "DOM_SECURITIES",
+        "label": "上市证券",
+        "type": "领域",
+        "attrs": {
+          "描述": "证券发行、交易板块、信息披露与股本结构"
+        }
+      },
+      {
+        "id": "ENTERPRISE",
+        "label": "企业",
+        "type": "主体",
+        "attrs": {
+          "企业名称": "ent_basic_info.ent_name",
+          "企业类型": "ent_basic_info.ent_type",
+          "成立日期": "ent_basic_info.es_date",
+          "所属行业": "ent_basic_info.industry_code",
+          "注册地址": "ent_basic_info.reg_addr",
+          "注册资本": "ent_basic_info.reg_cap",
+          "登记机关": "ent_basic_info.reg_org",
+          "登记状态": "ent_basic_info.reg_status",
+          "统一社会信用代码": "ent_basic_info.credit_code"
+        }
+      },
+      {
+        "id": "EQUITY_FREEZE",
+        "label": "股权冻结",
+        "type": "措施",
+        "attrs": {
+          "冻结期限": "jud_equity_freeze.period",
+          "冻结股权数额": "jud_equity_freeze.amount",
+          "执行通知书文号": "jud_equity_freeze.notice_no"
+        }
+      },
+      {
+        "id": "EQUITY_PLEDGE",
+        "label": "股权出质",
+        "type": "事件",
+        "aliases": [
+          "股权质押"
+        ],
+        "attrs": {
+          "出质股权数额": "risk_equity_pledge.amount",
+          "状态": "risk_equity_pledge.status",
+          "登记日期": "risk_equity_pledge.reg_date",
+          "登记编号": "risk_equity_pledge.reg_no"
+        }
+      },
+      {
+        "id": "EQUITY_TRANSFER",
+        "label": "股权转让",
+        "type": "事件",
+        "attrs": {
+          "变更日期": "ent_equity_transfer.change_date",
+          "转让价格": "ent_equity_transfer.price",
+          "转让比例": "ent_equity_transfer.ratio"
+        }
+      },
+      {
+        "id": "EXECUTEE",
+        "label": "被执行人",
+        "type": "角色",
+        "attrs": {
+          "执行标的": "jud_executee.target_amount",
+          "执行法院": "jud_executee.court_name",
+          "立案日期": "jud_executee.filing_date"
+        }
+      },
+      {
+        "id": "EXEC_TENURE",
+        "label": "高管任职",
+        "type": "关系",
+        "attrs": {
+          "任职终止日期": "ent_member.end_date",
+          "任职起始日期": "ent_member.start_date",
+          "是否在任": "ent_member.is_current",
+          "职务": "ent_member.position"
+        }
+      },
+      {
+        "id": "FARMER_COOP",
+        "label": "农民专业合作社",
+        "type": "主体",
+        "attrs": {
+          "成员人数": "coop_basic_info.member_count",
+          "成员出资总额": "coop_basic_info.total_contribution",
+          "统一社会信用代码": "coop_basic_info.credit_code"
+        }
+      },
+      {
+        "id": "FINAL_EXECUTION",
+        "label": "终本案件",
+        "type": "事件",
+        "aliases": [
+          "终结本次执行程序"
+        ],
+        "attrs": {
+          "未履行金额": "jud_final_case.unperformed_amount",
+          "终本日期": "jud_final_case.final_date"
+        }
+      },
+      {
+        "id": "FIN_INST",
+        "label": "金融机构",
+        "type": "主体",
+        "attrs": {
+          "机构类型": "fin_institution.inst_type",
+          "监管机构": "fin_institution.regulator",
+          "金融许可证号": "fin_institution.license_no"
+        }
+      },
+      {
+        "id": "GUARANTEE",
+        "label": "对外担保",
+        "type": "事件",
+        "attrs": {
+          "担保方式": "risk_guarantee.guarantee_type",
+          "担保期限": "risk_guarantee.period",
+          "担保金额": "risk_guarantee.amount"
+        }
+      },
+      {
+        "id": "INDIVIDUAL_BIZ",
+        "label": "个体工商户",
+        "type": "主体",
+        "aliases": [
+          "个体户"
+        ],
+        "attrs": {
+          "字号名称": "ind_biz_info.trade_name",
+          "成立日期": "ind_biz_info.es_date",
+          "组成形式": "ind_biz_info.org_form",
+          "经营者姓名": "ind_biz_info.operator_name",
+          "统一社会信用代码": "ind_biz_info.credit_code"
+        }
+      },
+      {
+        "id": "INVENTOR",
+        "label": "发明人",
+        "type": "角色",
+        "attrs": {
+          "姓名": "ip_patent_inventor.name"
+        }
+      },
+      {
+        "id": "INVESTMENT",
+        "label": "投资",
+        "type": "关系",
+        "aliases": [
+          "出资"
+        ],
+        "attrs": {
+          "出资方式": "ent_investment.contribution_form",
+          "实缴出资额": "ent_investment.paid_amount",
+          "持股比例": "ent_investment.share_ratio",
+          "认缴出资日期": "ent_investment.subscribed_date",
+          "认缴出资额": "ent_investment.subscribed_amount"
+        }
+      },
+      {
+        "id": "IP_PLEDGE",
+        "label": "知识产权出质",
+        "type": "事件",
+        "attrs": {
+          "出质登记号": "ip_pledge.reg_no",
+          "质押期限": "ip_pledge.period"
+        }
+      },
+      {
+        "id": "JUDGMENT_DOC",
+        "label": "裁判文书",
+        "type": "文书",
+        "attrs": {
+          "文书标题": "jud_judgment_doc.title",
+          "文书类型": "jud_judgment_doc.doc_type",
+          "裁判日期": "jud_judgment_doc.judgment_date",
+          "裁判结果": "jud_judgment_doc.result"
+        }
+      },
+      {
+        "id": "LEGAL_CASE",
+        "label": "司法案件",
+        "type": "事件",
+        "attrs": {
+          "审理程序": "jud_case.trial_procedure",
+          "案件状态": "jud_case.status",
+          "案号": "jud_case.case_no",
+          "案由": "jud_case.cause",
+          "立案日期": "jud_case.filing_date"
+        }
+      },
+      {
+        "id": "LEGAL_PERSON_REP",
+        "label": "法人代表",
+        "type": "角色",
+        "attrs": {
+          "任职日期": "coop_legal_person.start_date",
+          "姓名": "coop_legal_person.name"
+        }
+      },
+      {
+        "id": "LEGAL_REP",
+        "label": "法定代表人",
+        "type": "角色",
+        "aliases": [
+          "法人"
+        ],
+        "attrs": {
+          "代表类型": "ent_legal_rep.rep_type",
+          "任职日期": "ent_legal_rep.start_date",
+          "姓名": "ent_legal_rep.name"
+        }
+      },
+      {
+        "id": "LIQUIDATION",
+        "label": "清算信息",
+        "type": "事件",
+        "attrs": {
+          "清算完结日期": "ent_liquidation.finish_date",
+          "清算组负责人": "ent_liquidation.leader"
+        }
+      },
+      {
+        "id": "LISTED_CO",
+        "label": "上市公司",
+        "type": "主体",
+        "attrs": {
+          "上市状态": "listed_company.list_status",
+          "董事会秘书": "listed_company.board_secretary",
+          "证监会行业": "listed_company.csrc_industry",
+          "首发上市日期": "listed_company.ipo_date"
+        }
+      },
+      {
+        "id": "MAIN_BOARD",
+        "label": "主板",
+        "type": "板块"
+      },
+      {
+        "id": "MARKET_BOARD",
+        "label": "交易板块",
+        "type": "板块",
+        "attrs": {
+          "交易所": "sec_board.exchange"
+        }
+      },
+      {
+        "id": "NEEQ",
+        "label": "新三板",
+        "type": "板块",
+        "aliases": [
+          "全国中小企业股份转让系统"
+        ]
+      },
+      {
+        "id": "PATENT",
+        "label": "专利",
+        "type": "资产",
+        "attrs": {
+          "专利类型": "ip_patent.patent_type",
+          "授权公告日": "ip_patent.grant_date",
+          "法律状态": "ip_patent.legal_status",
+          "申请号": "ip_patent.app_no",
+          "申请日": "ip_patent.app_date"
+        }
+      },
+      {
+        "id": "PERSON",
+        "label": "自然人",
+        "type": "主体",
+        "attrs": {
+          "人员标识": "person_basic_info.person_id",
+          "国籍": "person_basic_info.nationality",
+          "姓名": "person_basic_info.name",
+          "证件号码摘要": "person_basic_info.id_no_hash"
+        }
+      },
+      {
+        "id": "REG_AUTHORITY",
+        "label": "登记机关",
+        "type": "主体",
+        "aliases": [
+          "市场监管部门"
+        ],
+        "attrs": {
+          "机关代码": "org_authority.org_code"
+        }
+      },
+      {
+        "id": "REG_CHANGE",
+        "label": "工商变更记录",
+        "type": "事件",
+        "aliases": [
+          "变更记录"
+        ],
+        "attrs": {
+          "变更事项": "ent_change_record.change_item",
+          "变更前内容": "ent_change_record.before_content",
+          "变更后内容": "ent_change_record.after_content",
+          "变更日期": "ent_change_record.change_date"
+        }
+      },
+      {
+        "id": "RESTRICTED_UNLOCK",
+        "label": "限售解禁",
+        "type": "事件",
+        "attrs": {
+          "解禁数量": "sec_restricted_unlock.unlock_amount",
+          "解禁日期": "sec_restricted_unlock.unlock_date"
+        }
+      },
+      {
+        "id": "SECURITY",
+        "label": "证券",
+        "type": "资产",
+        "attrs": {
+          "上市日期": "sec_security_info.list_date",
+          "证券代码": "sec_security_info.sec_code",
+          "证券简称": "sec_security_info.sec_abbr",
+          "证券类别": "sec_security_info.sec_type"
+        }
+      },
+      {
+        "id": "SENIOR_MANAGER",
+        "label": "高级管理人员",
+        "type": "角色",
+        "aliases": [
+          "高管"
+        ]
+      },
+      {
+        "id": "SERIOUS_VIOLATION",
+        "label": "严重违法",
+        "type": "名单",
+        "aliases": [
+          "严重违法失信名单"
+        ],
+        "attrs": {
+          "作出决定机关": "risk_serious_violation.authority",
+          "列入原因": "risk_serious_violation.in_reason",
+          "列入日期": "risk_serious_violation.in_date"
+        }
+      },
+      {
+        "id": "SHAREHOLDER",
+        "label": "股东",
+        "type": "角色",
+        "attrs": {
+          "股东名称": "ent_shareholder.holder_name",
+          "股东类型": "ent_shareholder.holder_type"
+        }
+      },
+      {
+        "id": "SHAREHOLDERS_MEETING",
+        "label": "股东会",
+        "type": "机构",
+        "aliases": [
+          "股东大会"
+        ],
+        "attrs": {
+          "会议类型": "ent_shareholders_meeting.meeting_type"
+        }
+      },
+      {
+        "id": "SHARE_STRUCTURE",
+        "label": "股本结构",
+        "type": "披露",
+        "attrs": {
+          "变动日期": "sec_share_structure.change_date",
+          "总股本": "sec_share_structure.total_shares",
+          "流通A股": "sec_share_structure.float_a_shares",
+          "限售股份": "sec_share_structure.restricted_shares"
+        }
+      },
+      {
+        "id": "SINO_FOREIGN_JV",
+        "label": "中外合资企业",
+        "type": "主体",
+        "aliases": [
+          "中外合资经营企业"
+        ],
+        "attrs": {
+          "外方出资比例": "ent_foreign_invest.foreign_ratio",
+          "外方投资者国别": "ent_foreign_invest.investor_country"
+        }
+      },
+      {
+        "id": "SOFTWARE_COPYRIGHT",
+        "label": "软件著作权",
+        "type": "资产",
+        "aliases": [
+          "软著"
+        ],
+        "attrs": {
+          "版本号": "ip_software_copyright.version",
+          "登记号": "ip_software_copyright.reg_no",
+          "登记日期": "ip_software_copyright.reg_date",
+          "软件全称": "ip_software_copyright.full_name"
+        }
+      },
+      {
+        "id": "SPOT_CHECK",
+        "label": "抽查检查",
+        "type": "事件",
+        "aliases": [
+          "双随机抽查"
+        ],
+        "attrs": {
+          "检查日期": "risk_spot_check.check_date",
+          "检查类型": "risk_spot_check.check_type",
+          "检查结果": "risk_spot_check.result"
+        }
+      },
+      {
+        "id": "STAR_MARKET",
+        "label": "科创板",
+        "type": "板块"
+      },
+      {
+        "id": "SUPERVISOR",
+        "label": "监事",
+        "type": "角色"
+      },
+      {
+        "id": "SUPERVISORY_BOARD",
+        "label": "监事会",
+        "type": "机构",
+        "attrs": {
+          "成员人数": "ent_supervisory_board.member_count"
+        }
+      },
+      {
+        "id": "TAX_ARREARS",
+        "label": "欠税公告",
+        "type": "事件",
+        "attrs": {
+          "发布日期": "risk_tax_arrears.publish_date",
+          "欠税余额": "risk_tax_arrears.balance",
+          "欠税税种": "risk_tax_arrears.tax_type"
+        }
+      },
+      {
+        "id": "TAX_AUTHORITY",
+        "label": "税务机关",
+        "type": "主体",
+        "attrs": {
+          "机关代码": "org_tax_authority.org_code"
+        }
+      },
+      {
+        "id": "TOP10_FLOAT_HOLDERS",
+        "label": "十大流通股东",
+        "type": "披露",
+        "attrs": {
+          "报告期": "sec_top10_float_holders.report_date",
+          "持股数量": "sec_top10_float_holders.hold_amount",
+          "股东名称": "sec_top10_float_holders.holder_name"
+        }
+      },
+      {
+        "id": "TOP10_HOLDERS",
+        "label": "十大股东",
+        "type": "披露",
+        "attrs": {
+          "报告期": "sec_top10_holders.report_date",
+          "持股数量": "sec_top10_holders.hold_amount",
+          "持股比例": "sec_top10_holders.hold_ratio",
+          "股东名称": "sec_top10_holders.holder_name",
+          "股份性质": "sec_top10_holders.share_nature"
+        }
+      },
+      {
+        "id": "TRADEMARK",
+        "label": "商标",
+        "type": "资产",
+        "attrs": {
+          "商标状态": "ip_trademark.status",
+          "国际分类": "ip_trademark.nice_class",
+          "注册号": "ip_trademark.reg_no",
+          "申请日期": "ip_trademark.app_date"
+        }
+      },
+      {
+        "id": "WORK_COPYRIGHT",
+        "label": "作品著作权",
+        "type": "资产",
+        "attrs": {
+          "作品类别": "ip_work_copyright.category",
+          "登记号": "ip_work_copyright.reg_no",
+          "登记日期": "ip_work_copyright.reg_date"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "ABNORMAL_OPERATION",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ABNORMAL_OPERATION",
+        "target": "SERIOUS_VIOLATION",
+        "predicate": "届满转入"
+      },
+      {
+        "source": "ACTUAL_CONTROL",
+        "target": "DOM_EQUITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ACTUAL_CONTROL",
+        "target": "ACTUAL_CONTROLLER",
+        "predicate": "控制方"
+      },
+      {
+        "source": "ACTUAL_CONTROL",
+        "target": "ENTERPRISE",
+        "predicate": "被控制方"
+      },
+      {
+        "source": "ACTUAL_CONTROLLER",
+        "target": "DOM_EQUITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ACTUAL_CONTROLLER",
+        "target": "PERSON",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "ACTUAL_CONTROLLER",
+        "target": "ENTERPRISE",
+        "predicate": "控制"
+      },
+      {
+        "source": "ADMIN_AUTHORITY",
+        "target": "DOM_MARKET",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ADMIN_AUTHORITY",
+        "target": "ADMIN_LICENSE",
+        "predicate": "作出"
+      },
+      {
+        "source": "ADMIN_AUTHORITY",
+        "target": "ADMIN_PENALTY",
+        "predicate": "作出"
+      },
+      {
+        "source": "ADMIN_LICENSE",
+        "target": "DOM_REGISTRATION",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ADMIN_LICENSE",
+        "target": "ENTERPRISE",
+        "predicate": "许可对象"
+      },
+      {
+        "source": "ADMIN_PENALTY",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ADMIN_PENALTY",
+        "target": "ENTERPRISE",
+        "predicate": "处罚对象"
+      },
+      {
+        "source": "ADMIN_PENALTY",
+        "target": "INDIVIDUAL_BIZ",
+        "predicate": "处罚对象"
+      },
+      {
+        "source": "ANNOUNCEMENT",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ANNOUNCEMENT",
+        "target": "EQUITY_PLEDGE",
+        "predicate": "披露"
+      },
+      {
+        "source": "ANNOUNCEMENT",
+        "target": "RESTRICTED_UNLOCK",
+        "predicate": "披露"
+      },
+      {
+        "source": "ANNUAL_REPORT",
+        "target": "DOM_REGISTRATION",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "BANKRUPTCY",
+        "target": "LEGAL_CASE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "BANKRUPTCY",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "BOARD",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "BOARD",
+        "target": "SENIOR_MANAGER",
+        "predicate": "聘任"
+      },
+      {
+        "source": "BRANCH",
+        "target": "ENTERPRISE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "BRANCH",
+        "target": "ENTERPRISE",
+        "predicate": "隶属"
+      },
+      {
+        "source": "BSE",
+        "target": "MARKET_BOARD",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "CHATTEL_MORTGAGE",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "CHATTEL_MORTGAGE",
+        "target": "ENTERPRISE",
+        "predicate": "抵押人"
+      },
+      {
+        "source": "CHATTEL_MORTGAGE",
+        "target": "FIN_INST",
+        "predicate": "抵押权人"
+      },
+      {
+        "source": "CHINEXT",
+        "target": "MARKET_BOARD",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "CONSUMPTION_RESTRICTION",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "CONSUMPTION_RESTRICTION",
+        "target": "EXECUTEE",
+        "predicate": "限制对象"
+      },
+      {
+        "source": "COURT",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "COURT",
+        "target": "CONSUMPTION_RESTRICTION",
+        "predicate": "发布"
+      },
+      {
+        "source": "COURT",
+        "target": "DISHONEST_EXECUTEE",
+        "predicate": "发布"
+      },
+      {
+        "source": "COURT",
+        "target": "LEGAL_CASE",
+        "predicate": "审理"
+      },
+      {
+        "source": "COURT",
+        "target": "EQUITY_FREEZE",
+        "predicate": "裁定"
+      },
+      {
+        "source": "COURT_NOTICE",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "COURT_NOTICE",
+        "target": "LEGAL_CASE",
+        "predicate": "关联案件"
+      },
+      {
+        "source": "DEREGISTRATION",
+        "target": "DOM_REGISTRATION",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "DEREGISTRATION",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "DIRECTOR",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "DIRECTOR",
+        "target": "BOARD",
+        "predicate": "组成"
+      },
+      {
+        "source": "DISHONEST_EXECUTEE",
+        "target": "EXECUTEE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "DOM_MARKET",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "ANNUAL_REPORT",
+        "predicate": "公示"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "ABNORMAL_OPERATION",
+        "predicate": "列入"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "SERIOUS_VIOLATION",
+        "predicate": "列入"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "PATENT",
+        "predicate": "持有"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "SOFTWARE_COPYRIGHT",
+        "predicate": "持有"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "TRADEMARK",
+        "predicate": "持有"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "WORK_COPYRIGHT",
+        "predicate": "持有"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "BOARD",
+        "predicate": "设立"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "SHAREHOLDERS_MEETING",
+        "predicate": "设立"
+      },
+      {
+        "source": "ENTERPRISE",
+        "target": "SUPERVISORY_BOARD",
+        "predicate": "设立"
+      },
+      {
+        "source": "EQUITY_FREEZE",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "EQUITY_FREEZE",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "EQUITY_FREEZE",
+        "target": "EXECUTEE",
+        "predicate": "被执行人"
+      },
+      {
+        "source": "EQUITY_PLEDGE",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "EQUITY_PLEDGE",
+        "target": "SHAREHOLDER",
+        "predicate": "出质人"
+      },
+      {
+        "source": "EQUITY_PLEDGE",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "EQUITY_PLEDGE",
+        "target": "FIN_INST",
+        "predicate": "质权人"
+      },
+      {
+        "source": "EQUITY_TRANSFER",
+        "target": "DOM_EQUITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "EQUITY_TRANSFER",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "EQUITY_TRANSFER",
+        "target": "SHAREHOLDER",
+        "predicate": "转让方"
+      },
+      {
+        "source": "EXECUTEE",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "EXECUTEE",
+        "target": "ENTERPRISE",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "EXECUTEE",
+        "target": "PERSON",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "EXECUTEE",
+        "target": "LEGAL_CASE",
+        "predicate": "执行案件"
+      },
+      {
+        "source": "EXEC_TENURE",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "EXEC_TENURE",
+        "target": "PERSON",
+        "predicate": "任职人"
+      },
+      {
+        "source": "EXEC_TENURE",
+        "target": "ENTERPRISE",
+        "predicate": "任职单位"
+      },
+      {
+        "source": "EXEC_TENURE",
+        "target": "DIRECTOR",
+        "predicate": "职务"
+      },
+      {
+        "source": "EXEC_TENURE",
+        "target": "SENIOR_MANAGER",
+        "predicate": "职务"
+      },
+      {
+        "source": "EXEC_TENURE",
+        "target": "SUPERVISOR",
+        "predicate": "职务"
+      },
+      {
+        "source": "FARMER_COOP",
+        "target": "DOM_MARKET",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "FARMER_COOP",
+        "target": "ANNUAL_REPORT",
+        "predicate": "报送"
+      },
+      {
+        "source": "FINAL_EXECUTION",
+        "target": "LEGAL_CASE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "FINAL_EXECUTION",
+        "target": "EXECUTEE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "FIN_INST",
+        "target": "ENTERPRISE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "GUARANTEE",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "GUARANTEE",
+        "target": "ENTERPRISE",
+        "predicate": "担保方"
+      },
+      {
+        "source": "GUARANTEE",
+        "target": "ENTERPRISE",
+        "predicate": "被担保方"
+      },
+      {
+        "source": "INDIVIDUAL_BIZ",
+        "target": "DOM_MARKET",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "INDIVIDUAL_BIZ",
+        "target": "ANNUAL_REPORT",
+        "predicate": "报送"
+      },
+      {
+        "source": "INVENTOR",
+        "target": "DOM_IP",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "INVENTOR",
+        "target": "PATENT",
+        "predicate": "发明"
+      },
+      {
+        "source": "INVENTOR",
+        "target": "PERSON",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "INVESTMENT",
+        "target": "DOM_EQUITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "INVESTMENT",
+        "target": "ENTERPRISE",
+        "predicate": "出资方"
+      },
+      {
+        "source": "INVESTMENT",
+        "target": "PERSON",
+        "predicate": "出资方"
+      },
+      {
+        "source": "INVESTMENT",
+        "target": "SHAREHOLDER",
+        "predicate": "形成"
+      },
+      {
+        "source": "INVESTMENT",
+        "target": "ENTERPRISE",
+        "predicate": "被投资方"
+      },
+      {
+        "source": "IP_PLEDGE",
+        "target": "DOM_IP",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "IP_PLEDGE",
+        "target": "ENTERPRISE",
+        "predicate": "出质人"
+      },
+      {
+        "source": "IP_PLEDGE",
+        "target": "PATENT",
+        "predicate": "出质标的"
+      },
+      {
+        "source": "IP_PLEDGE",
+        "target": "TRADEMARK",
+        "predicate": "出质标的"
+      },
+      {
+        "source": "IP_PLEDGE",
+        "target": "FIN_INST",
+        "predicate": "质权人"
+      },
+      {
+        "source": "JUDGMENT_DOC",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "JUDGMENT_DOC",
+        "target": "LEGAL_CASE",
+        "predicate": "关联案件"
+      },
+      {
+        "source": "LEGAL_CASE",
+        "target": "DOM_JUDICIAL",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "LEGAL_CASE",
+        "target": "ENTERPRISE",
+        "predicate": "当事人"
+      },
+      {
+        "source": "LEGAL_CASE",
+        "target": "PERSON",
+        "predicate": "当事人"
+      },
+      {
+        "source": "LEGAL_PERSON_REP",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "LEGAL_PERSON_REP",
+        "target": "ENTERPRISE",
+        "predicate": "代表"
+      },
+      {
+        "source": "LEGAL_PERSON_REP",
+        "target": "FARMER_COOP",
+        "predicate": "代表"
+      },
+      {
+        "source": "LEGAL_PERSON_REP",
+        "target": "PERSON",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "LEGAL_REP",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "LEGAL_REP",
+        "target": "ENTERPRISE",
+        "predicate": "代表"
+      },
+      {
+        "source": "LEGAL_REP",
+        "target": "PERSON",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "LIQUIDATION",
+        "target": "DOM_REGISTRATION",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "LIQUIDATION",
+        "target": "DEREGISTRATION",
+        "predicate": "先于"
+      },
+      {
+        "source": "LIQUIDATION",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "LISTED_CO",
+        "target": "ENTERPRISE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "LISTED_CO",
+        "target": "ANNOUNCEMENT",
+        "predicate": "发布"
+      },
+      {
+        "source": "LISTED_CO",
+        "target": "SECURITY",
+        "predicate": "发行"
+      },
+      {
+        "source": "LISTED_CO",
+        "target": "GUARANTEE",
+        "predicate": "披露"
+      },
+      {
+        "source": "LISTED_CO",
+        "target": "SHARE_STRUCTURE",
+        "predicate": "披露"
+      },
+      {
+        "source": "MAIN_BOARD",
+        "target": "MARKET_BOARD",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "MARKET_BOARD",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "NEEQ",
+        "target": "MARKET_BOARD",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "PATENT",
+        "target": "DOM_IP",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "PERSON",
+        "target": "DOM_MARKET",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "PERSON",
+        "target": "ENTERPRISE",
+        "predicate": "任职"
+      },
+      {
+        "source": "PERSON",
+        "target": "INDIVIDUAL_BIZ",
+        "predicate": "经营"
+      },
+      {
+        "source": "REG_AUTHORITY",
+        "target": "ADMIN_AUTHORITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "REG_AUTHORITY",
+        "target": "ABNORMAL_OPERATION",
+        "predicate": "决定"
+      },
+      {
+        "source": "REG_AUTHORITY",
+        "target": "DEREGISTRATION",
+        "predicate": "核准"
+      },
+      {
+        "source": "REG_AUTHORITY",
+        "target": "REG_CHANGE",
+        "predicate": "核准"
+      },
+      {
+        "source": "REG_CHANGE",
+        "target": "DOM_REGISTRATION",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "REG_CHANGE",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "RESTRICTED_UNLOCK",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "RESTRICTED_UNLOCK",
+        "target": "SECURITY",
+        "predicate": "涉及"
+      },
+      {
+        "source": "SECURITY",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SECURITY",
+        "target": "BSE",
+        "predicate": "上市于"
+      },
+      {
+        "source": "SECURITY",
+        "target": "CHINEXT",
+        "predicate": "上市于"
+      },
+      {
+        "source": "SECURITY",
+        "target": "MAIN_BOARD",
+        "predicate": "上市于"
+      },
+      {
+        "source": "SECURITY",
+        "target": "STAR_MARKET",
+        "predicate": "上市于"
+      },
+      {
+        "source": "SECURITY",
+        "target": "NEEQ",
+        "predicate": "挂牌于"
+      },
+      {
+        "source": "SENIOR_MANAGER",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SERIOUS_VIOLATION",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SERIOUS_VIOLATION",
+        "target": "ADMIN_PENALTY",
+        "predicate": "认定依据"
+      },
+      {
+        "source": "SHAREHOLDER",
+        "target": "DOM_EQUITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SHAREHOLDER",
+        "target": "ENTERPRISE",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "SHAREHOLDER",
+        "target": "PERSON",
+        "predicate": "对应主体"
+      },
+      {
+        "source": "SHAREHOLDER",
+        "target": "ENTERPRISE",
+        "predicate": "持股"
+      },
+      {
+        "source": "SHAREHOLDER",
+        "target": "SHAREHOLDERS_MEETING",
+        "predicate": "组成"
+      },
+      {
+        "source": "SHAREHOLDERS_MEETING",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SHAREHOLDERS_MEETING",
+        "target": "BOARD",
+        "predicate": "选举"
+      },
+      {
+        "source": "SHARE_STRUCTURE",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SHARE_STRUCTURE",
+        "target": "TOP10_FLOAT_HOLDERS",
+        "predicate": "包含"
+      },
+      {
+        "source": "SHARE_STRUCTURE",
+        "target": "TOP10_HOLDERS",
+        "predicate": "包含"
+      },
+      {
+        "source": "SINO_FOREIGN_JV",
+        "target": "ENTERPRISE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SOFTWARE_COPYRIGHT",
+        "target": "DOM_IP",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SPOT_CHECK",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SPOT_CHECK",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "STAR_MARKET",
+        "target": "MARKET_BOARD",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SUPERVISOR",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "SUPERVISOR",
+        "target": "SUPERVISORY_BOARD",
+        "predicate": "组成"
+      },
+      {
+        "source": "SUPERVISORY_BOARD",
+        "target": "DOM_GOVERNANCE",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "TAX_ARREARS",
+        "target": "DOM_RISK",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "TAX_ARREARS",
+        "target": "ENTERPRISE",
+        "predicate": "涉及"
+      },
+      {
+        "source": "TAX_AUTHORITY",
+        "target": "ADMIN_AUTHORITY",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "TAX_AUTHORITY",
+        "target": "TAX_ARREARS",
+        "predicate": "发布"
+      },
+      {
+        "source": "TOP10_FLOAT_HOLDERS",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "TOP10_FLOAT_HOLDERS",
+        "target": "LISTED_CO",
+        "predicate": "持股"
+      },
+      {
+        "source": "TOP10_HOLDERS",
+        "target": "DOM_SECURITIES",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "TOP10_HOLDERS",
+        "target": "ENTERPRISE",
+        "predicate": "持股"
+      },
+      {
+        "source": "TRADEMARK",
+        "target": "DOM_IP",
+        "predicate": "is_a",
+        "label": "属于"
+      },
+      {
+        "source": "WORK_COPYRIGHT",
+        "target": "DOM_IP",
+        "predicate": "is_a",
+        "label": "属于"
+      }
+    ],
+    "meta": {
+      "name": "企业信用知识图谱本体",
+      "released": "2026-07-01",
+      "source": "before.json",
+      "version": "v12"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

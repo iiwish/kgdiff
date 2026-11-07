@@ -1,0 +1,6 @@
+E	x	“Ex”: rel now points to “Second” (was “nowhere”)
+D	nowhere	Removed “nowhere”
+E	1e+21	Added “Huge id” —next→ “One”
+E	10	Removed “Ten” —next→ “Two”
+R	ghost	Renamed “ghost” → “Ghost, now declared”
+M	dup	Updated attributes of “Second”

@@ -1,0 +1,1 @@
+{"format":"kgdiff.graph","version":1,"meta":{"name":"catalog","version":"1.0.0"},"nodes":[{"id":"column","label":"Column"},{"id":"dataset","label":"Dataset"},{"id":"lonely","label":"Isolated node"},{"id":"table","label":"Table"}],"edges":[{"source":"column","target":"table","predicate":"part_of"},{"source":"table","target":"dataset","predicate":"part_of"}]}

@@ -1,0 +1,11 @@
+kgdiff  before.json → team 2                   3 → 4 nodes · 2 → 3 edges
+
+  +1 added   ~3 modified                            5 changes in 4 hunks
+  ++~~~
+
+         added  removed  modified  unchanged
+  nodes      1        0         3          0
+  edges      1        0         0          2
+
+  By type
+  (untyped)  4 +~~~

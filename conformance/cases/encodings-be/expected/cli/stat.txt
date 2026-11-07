@@ -1,0 +1,11 @@
+kgdiff  encodings utf-16be → utf-8-bom-crlf        3 → 4 nodes · 2 edges
+
+  +1 added   ~1 modified                            4 changes in 2 hunks
+  ++~~
+
+         added  removed  modified  unchanged
+  nodes      1        0         1          2
+  edges      1        1         0          1
+
+  By type
+  (untyped)  2 +~

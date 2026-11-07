@@ -1,0 +1,30 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 242,
+  "nodes": [
+    "dataset",
+    "emoji",
+    "old",
+    "table",
+    "view"
+  ],
+  "radii": {
+    "dataset": 7.11,
+    "emoji": 6.2,
+    "old": 6.2,
+    "table": 7.81,
+    "view": 6.2
+  },
+  "hidden": {},
+  "components": [
+    [
+      "dataset",
+      "emoji",
+      "old",
+      "table",
+      "view"
+    ]
+  ]
+}

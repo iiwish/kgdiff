@@ -1,0 +1,1122 @@
+{
+  "meta": {
+    "name": "Enterprise credit KG ontology",
+    "version": "v12",
+    "released": "2026-07-01",
+    "source": "Example data: a fictional enterprise-credit KG ontology catalog (the column mappings are illustrative)"
+  },
+  "nodes": [
+    {
+      "id": "DOM_MARKET",
+      "label": "Market entities",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Registered businesses, and the people and the administrative and judicial authorities they deal with"
+      }
+    },
+    {
+      "id": "DOM_EQUITY",
+      "label": "Equity and investment",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Capital contributions, shareholdings, equity changes and control"
+      }
+    },
+    {
+      "id": "DOM_GOVERNANCE",
+      "label": "Positions and governance",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Legal representatives, directors, supervisors and executives, and governance bodies"
+      }
+    },
+    {
+      "id": "DOM_REGISTRATION",
+      "label": "Business registration",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Incorporation, change and deregistration filings, annual reports and published licenses"
+      }
+    },
+    {
+      "id": "DOM_RISK",
+      "label": "Operational risk",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Regulatory actions, abnormal-operations lists, pledges, mortgages and guarantee risk"
+      }
+    },
+    {
+      "id": "DOM_JUDICIAL",
+      "label": "Litigation",
+      "type": "Domain",
+      "attrs": { "Description": "Lawsuits, judgments and enforcement" }
+    },
+    {
+      "id": "DOM_IP",
+      "label": "Intellectual property",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Patents, trademarks, copyrights and their pledge registrations"
+      }
+    },
+    {
+      "id": "DOM_SECURITIES",
+      "label": "Listed securities",
+      "type": "Domain",
+      "attrs": {
+        "Description": "Securities issuance, trading boards, disclosures and share capital"
+      }
+    },
+    {
+      "id": "ENTERPRISE",
+      "label": "Enterprise",
+      "type": "Entity",
+      "attrs": {
+        "Unified social credit code": "ent_basic_info.credit_code",
+        "Company name": "ent_basic_info.ent_name",
+        "Company type": "ent_basic_info.ent_type",
+        "Registration status": "ent_basic_info.reg_status",
+        "Date of establishment": "ent_basic_info.es_date",
+        "Registered capital": "ent_basic_info.reg_cap",
+        "Registered address": "ent_basic_info.reg_addr",
+        "Industry": "ent_basic_info.industry_code",
+        "Registration authority": "ent_basic_info.reg_org"
+      }
+    },
+    {
+      "id": "INDIVIDUAL_BIZ",
+      "label": "Individual business",
+      "type": "Entity",
+      "aliases": ["Sole trader"],
+      "attrs": {
+        "Unified social credit code": "ind_biz_info.credit_code",
+        "Trade name": "ind_biz_info.trade_name",
+        "Operator": "ind_biz_info.operator_name",
+        "Form of organization": "ind_biz_info.org_form",
+        "Date of establishment": "ind_biz_info.es_date"
+      }
+    },
+    {
+      "id": "LISTED_CO",
+      "label": "Listed company",
+      "type": "Entity",
+      "attrs": {
+        "Listing status": "listed_company.list_status",
+        "IPO date": "listed_company.ipo_date",
+        "Board secretary": "listed_company.board_secretary",
+        "CSRC industry": "listed_company.csrc_industry"
+      }
+    },
+    {
+      "id": "PERSON",
+      "label": "Natural person",
+      "type": "Entity",
+      "attrs": {
+        "Person ID": "person_basic_info.person_id",
+        "Name": "person_basic_info.name",
+        "ID number hash": "person_basic_info.id_no_hash",
+        "Nationality": "person_basic_info.nationality"
+      }
+    },
+    {
+      "id": "FIN_INST",
+      "label": "Financial institution",
+      "type": "Entity",
+      "attrs": {
+        "Financial license number": "fin_institution.license_no",
+        "Institution type": "fin_institution.inst_type",
+        "Regulator": "fin_institution.regulator"
+      }
+    },
+    {
+      "id": "BRANCH",
+      "label": "Branch",
+      "type": "Entity",
+      "attrs": {
+        "Person in charge": "ent_branch.principal",
+        "Parent credit code": "ent_branch.parent_credit_code"
+      }
+    },
+    {
+      "id": "SINO_FOREIGN_JV",
+      "label": "Sino-foreign joint venture",
+      "type": "Entity",
+      "aliases": ["Equity joint venture"],
+      "attrs": {
+        "Foreign capital share": "ent_foreign_invest.foreign_ratio",
+        "Foreign investor country": "ent_foreign_invest.investor_country"
+      }
+    },
+    {
+      "id": "FARMER_COOP",
+      "label": "Farmers' cooperative",
+      "type": "Entity",
+      "attrs": {
+        "Unified social credit code": "coop_basic_info.credit_code",
+        "Total member capital": "coop_basic_info.total_contribution",
+        "Members": "coop_basic_info.member_count"
+      }
+    },
+    {
+      "id": "ADMIN_AUTHORITY",
+      "label": "Administrative authority",
+      "type": "Entity",
+      "attrs": {
+        "Authority name": "org_authority.name",
+        "Division code": "org_authority.region_code"
+      }
+    },
+    {
+      "id": "REG_AUTHORITY",
+      "label": "Registration authority",
+      "type": "Entity",
+      "aliases": ["Market regulator"],
+      "attrs": { "Authority code": "org_authority.org_code" }
+    },
+    {
+      "id": "TAX_AUTHORITY",
+      "label": "Tax authority",
+      "type": "Entity",
+      "attrs": { "Authority code": "org_tax_authority.org_code" }
+    },
+    {
+      "id": "COURT",
+      "label": "Court",
+      "type": "Entity",
+      "aliases": ["People's court"],
+      "attrs": { "Court name": "org_court.name", "Court level": "org_court.level" }
+    },
+    {
+      "id": "INVESTMENT",
+      "label": "Investment",
+      "type": "Relation",
+      "aliases": ["Capital contribution"],
+      "attrs": {
+        "Subscribed capital": "ent_investment.subscribed_amount",
+        "Contributed capital": "ent_investment.paid_amount",
+        "Shareholding": "ent_investment.share_ratio",
+        "Form of contribution": "ent_investment.contribution_form",
+        "Subscription due date": "ent_investment.subscribed_date"
+      }
+    },
+    {
+      "id": "SHAREHOLDER",
+      "label": "Shareholder",
+      "type": "Role",
+      "attrs": {
+        "Shareholder type": "ent_shareholder.holder_type",
+        "Shareholder name": "ent_shareholder.holder_name"
+      }
+    },
+    {
+      "id": "ACTUAL_CONTROL",
+      "label": "Actual control",
+      "type": "Relation",
+      "attrs": {
+        "Means of control": "ent_actual_control.control_type",
+        "Control share": "ent_actual_control.control_ratio",
+        "Control path": "ent_actual_control.control_path"
+      }
+    },
+    {
+      "id": "ACTUAL_CONTROLLER",
+      "label": "Actual controller",
+      "type": "Role",
+      "aliases": ["Controlling person"],
+      "attrs": { "Basis": "ent_actual_control.basis" }
+    },
+    {
+      "id": "EQUITY_TRANSFER",
+      "label": "Equity transfer",
+      "type": "Event",
+      "attrs": {
+        "Share transferred": "ent_equity_transfer.ratio",
+        "Transfer price": "ent_equity_transfer.price",
+        "Change date": "ent_equity_transfer.change_date"
+      }
+    },
+    {
+      "id": "EXEC_TENURE",
+      "label": "Executive tenure",
+      "type": "Relation",
+      "attrs": {
+        "Position": "ent_member.position",
+        "Start date": "ent_member.start_date",
+        "End date": "ent_member.end_date",
+        "In office": "ent_member.is_current"
+      }
+    },
+    {
+      "id": "LEGAL_REP",
+      "label": "Legal representative",
+      "type": "Role",
+      "aliases": ["Legal person"],
+      "attrs": {
+        "Name": "ent_legal_rep.name",
+        "Appointment date": "ent_legal_rep.start_date",
+        "Representative type": "ent_legal_rep.rep_type"
+      }
+    },
+    {
+      "id": "LEGAL_PERSON_REP",
+      "label": "Legal person representative",
+      "type": "Role",
+      "attrs": {
+        "Name": "coop_legal_person.name",
+        "Appointment date": "coop_legal_person.start_date"
+      }
+    },
+    {
+      "id": "BOARD",
+      "label": "Board of directors",
+      "type": "Organization",
+      "attrs": { "Members": "ent_board.member_count", "Term": "ent_board.term_no" }
+    },
+    {
+      "id": "SUPERVISORY_BOARD",
+      "label": "Board of supervisors",
+      "type": "Organization",
+      "attrs": { "Members": "ent_supervisory_board.member_count" }
+    },
+    {
+      "id": "SHAREHOLDERS_MEETING",
+      "label": "Shareholders' meeting",
+      "type": "Organization",
+      "aliases": ["General meeting"],
+      "attrs": { "Meeting type": "ent_shareholders_meeting.meeting_type" }
+    },
+    { "id": "DIRECTOR", "label": "Director", "type": "Role" },
+    { "id": "SUPERVISOR", "label": "Supervisor", "type": "Role" },
+    {
+      "id": "SENIOR_MANAGER",
+      "label": "Senior executive",
+      "type": "Role",
+      "aliases": ["Executive"]
+    },
+    {
+      "id": "REG_CHANGE",
+      "label": "Registration change",
+      "type": "Event",
+      "aliases": ["Change record"],
+      "attrs": {
+        "Changed item": "ent_change_record.change_item",
+        "Value before": "ent_change_record.before_content",
+        "Value after": "ent_change_record.after_content",
+        "Change date": "ent_change_record.change_date"
+      }
+    },
+    {
+      "id": "ANNUAL_REPORT",
+      "label": "Annual report",
+      "type": "Document",
+      "aliases": ["Annual return"],
+      "attrs": {
+        "Report year": "ent_annual_report.report_year",
+        "Employees": "ent_annual_report.employee_count",
+        "Total assets": "ent_annual_report.total_assets",
+        "Publication date": "ent_annual_report.publish_date"
+      }
+    },
+    {
+      "id": "DEREGISTRATION",
+      "label": "Deregistration",
+      "type": "Event",
+      "attrs": {
+        "Deregistration reason": "ent_cancel_record.cancel_reason",
+        "Deregistration date": "ent_cancel_record.cancel_date",
+        "Simplified deregistration": "ent_cancel_record.is_simple"
+      }
+    },
+    {
+      "id": "LIQUIDATION",
+      "label": "Liquidation",
+      "type": "Event",
+      "attrs": {
+        "Liquidation team leader": "ent_liquidation.leader",
+        "Liquidation end date": "ent_liquidation.finish_date"
+      }
+    },
+    {
+      "id": "ADMIN_LICENSE",
+      "label": "Administrative license",
+      "type": "Qualification",
+      "attrs": {
+        "License number": "ent_admin_license.license_no",
+        "License scope": "ent_admin_license.content",
+        "Valid until": "ent_admin_license.valid_to"
+      }
+    },
+    {
+      "id": "ADMIN_PENALTY",
+      "label": "Administrative penalty",
+      "type": "Event",
+      "attrs": {
+        "Decision number": "risk_admin_penalty.doc_no",
+        "Violation type": "risk_admin_penalty.violation_type",
+        "Penalty": "risk_admin_penalty.content",
+        "Fines and confiscations": "risk_admin_penalty.amount",
+        "Decision date": "risk_admin_penalty.decision_date"
+      }
+    },
+    {
+      "id": "ABNORMAL_OPERATION",
+      "label": "Abnormal operations",
+      "type": "List",
+      "aliases": ["Abnormal operations list"],
+      "attrs": {
+        "Reason listed": "risk_abnormal_operation.in_reason",
+        "Date listed": "risk_abnormal_operation.in_date",
+        "Reason removed": "risk_abnormal_operation.out_reason",
+        "Date removed": "risk_abnormal_operation.out_date"
+      }
+    },
+    {
+      "id": "SERIOUS_VIOLATION",
+      "label": "Serious violation",
+      "type": "List",
+      "aliases": ["Serious violators list"],
+      "attrs": {
+        "Reason listed": "risk_serious_violation.in_reason",
+        "Date listed": "risk_serious_violation.in_date",
+        "Deciding authority": "risk_serious_violation.authority"
+      }
+    },
+    {
+      "id": "SPOT_CHECK",
+      "label": "Spot check",
+      "type": "Event",
+      "aliases": ["Random inspection"],
+      "attrs": {
+        "Inspection type": "risk_spot_check.check_type",
+        "Inspection result": "risk_spot_check.result",
+        "Inspection date": "risk_spot_check.check_date"
+      }
+    },
+    {
+      "id": "EQUITY_PLEDGE",
+      "label": "Equity pledge",
+      "type": "Event",
+      "aliases": ["Share pledge"],
+      "attrs": {
+        "Filing number": "risk_equity_pledge.reg_no",
+        "Pledged equity": "risk_equity_pledge.amount",
+        "Status": "risk_equity_pledge.status",
+        "Registration date": "risk_equity_pledge.reg_date"
+      }
+    },
+    {
+      "id": "CHATTEL_MORTGAGE",
+      "label": "Chattel mortgage",
+      "type": "Event",
+      "attrs": {
+        "Filing number": "risk_chattel_mortgage.reg_no",
+        "Secured claim": "risk_chattel_mortgage.secured_amount",
+        "Registration date": "risk_chattel_mortgage.reg_date"
+      }
+    },
+    {
+      "id": "TAX_ARREARS",
+      "label": "Tax arrears notice",
+      "type": "Event",
+      "attrs": {
+        "Tax type": "risk_tax_arrears.tax_type",
+        "Tax owed": "risk_tax_arrears.balance",
+        "Issue date": "risk_tax_arrears.publish_date"
+      }
+    },
+    {
+      "id": "GUARANTEE",
+      "label": "External guarantee",
+      "type": "Event",
+      "attrs": {
+        "Guarantee amount": "risk_guarantee.amount",
+        "Guarantee type": "risk_guarantee.guarantee_type",
+        "Guarantee period": "risk_guarantee.period"
+      }
+    },
+    {
+      "id": "LEGAL_CASE",
+      "label": "Court case",
+      "type": "Event",
+      "attrs": {
+        "Case number": "jud_case.case_no",
+        "Cause of action": "jud_case.cause",
+        "Procedure": "jud_case.trial_procedure",
+        "Case filed": "jud_case.filing_date",
+        "Case status": "jud_case.status"
+      }
+    },
+    {
+      "id": "JUDGMENT_DOC",
+      "label": "Judgment",
+      "type": "Document",
+      "attrs": {
+        "Title": "jud_judgment_doc.title",
+        "Document type": "jud_judgment_doc.doc_type",
+        "Judgment date": "jud_judgment_doc.judgment_date",
+        "Outcome": "jud_judgment_doc.result"
+      }
+    },
+    {
+      "id": "COURT_NOTICE",
+      "label": "Hearing notice",
+      "type": "Document",
+      "attrs": {
+        "Hearing date": "jud_court_notice.hearing_date",
+        "Courtroom": "jud_court_notice.courtroom"
+      }
+    },
+    {
+      "id": "EXECUTEE",
+      "label": "Judgment debtor",
+      "type": "Role",
+      "attrs": {
+        "Amount enforced": "jud_executee.target_amount",
+        "Enforcing court": "jud_executee.court_name",
+        "Case filed": "jud_executee.filing_date"
+      }
+    },
+    {
+      "id": "DISHONEST_EXECUTEE",
+      "label": "Defaulting judgment debtor",
+      "type": "Role",
+      "aliases": ["Deadbeat"],
+      "attrs": {
+        "Default conduct": "jud_dishonest.behavior",
+        "Performance": "jud_dishonest.performance",
+        "Issue date": "jud_dishonest.publish_date"
+      }
+    },
+    {
+      "id": "CONSUMPTION_RESTRICTION",
+      "label": "Consumption restriction",
+      "type": "List",
+      "aliases": ["Spending ban"],
+      "attrs": {
+        "Order date": "jud_consumption_restriction.publish_date",
+        "Restricted party": "jud_consumption_restriction.restricted_party"
+      }
+    },
+    {
+      "id": "EQUITY_FREEZE",
+      "label": "Equity freeze",
+      "type": "Measure",
+      "attrs": {
+        "Frozen equity": "jud_equity_freeze.amount",
+        "Freeze period": "jud_equity_freeze.period",
+        "Enforcement notice number": "jud_equity_freeze.notice_no"
+      }
+    },
+    {
+      "id": "FINAL_EXECUTION",
+      "label": "Suspended enforcement",
+      "type": "Event",
+      "aliases": ["Enforcement terminated for now"],
+      "attrs": {
+        "Suspension date": "jud_final_case.final_date",
+        "Amount outstanding": "jud_final_case.unperformed_amount"
+      }
+    },
+    {
+      "id": "BANKRUPTCY",
+      "label": "Bankruptcy reorganization",
+      "type": "Event",
+      "attrs": {
+        "Bankruptcy case number": "jud_bankruptcy.case_no",
+        "Administrator": "jud_bankruptcy.administrator"
+      }
+    },
+    {
+      "id": "PATENT",
+      "label": "Patent",
+      "type": "Asset",
+      "attrs": {
+        "Application number": "ip_patent.app_no",
+        "Patent type": "ip_patent.patent_type",
+        "Filing date": "ip_patent.app_date",
+        "Grant date": "ip_patent.grant_date",
+        "Legal status": "ip_patent.legal_status"
+      }
+    },
+    {
+      "id": "INVENTOR",
+      "label": "Inventor",
+      "type": "Role",
+      "attrs": { "Name": "ip_patent_inventor.name" }
+    },
+    {
+      "id": "TRADEMARK",
+      "label": "Trademark",
+      "type": "Asset",
+      "attrs": {
+        "Registration number": "ip_trademark.reg_no",
+        "Nice class": "ip_trademark.nice_class",
+        "Trademark status": "ip_trademark.status",
+        "Application date": "ip_trademark.app_date"
+      }
+    },
+    {
+      "id": "SOFTWARE_COPYRIGHT",
+      "label": "Software copyright",
+      "type": "Asset",
+      "aliases": ["Software registration"],
+      "attrs": {
+        "Registration number": "ip_software_copyright.reg_no",
+        "Software name": "ip_software_copyright.full_name",
+        "Version": "ip_software_copyright.version",
+        "Registration date": "ip_software_copyright.reg_date"
+      }
+    },
+    {
+      "id": "WORK_COPYRIGHT",
+      "label": "Copyright in a work",
+      "type": "Asset",
+      "attrs": {
+        "Registration number": "ip_work_copyright.reg_no",
+        "Work category": "ip_work_copyright.category",
+        "Registration date": "ip_work_copyright.reg_date"
+      }
+    },
+    {
+      "id": "IP_PLEDGE",
+      "label": "IP pledge",
+      "type": "Event",
+      "attrs": {
+        "Pledge registration number": "ip_pledge.reg_no",
+        "Pledge period": "ip_pledge.period"
+      }
+    },
+    {
+      "id": "SECURITY",
+      "label": "Security",
+      "type": "Asset",
+      "attrs": {
+        "Security code": "sec_security_info.sec_code",
+        "Short name": "sec_security_info.sec_abbr",
+        "Security class": "sec_security_info.sec_type",
+        "Listing date": "sec_security_info.list_date"
+      }
+    },
+    {
+      "id": "ANNOUNCEMENT",
+      "label": "Announcement",
+      "type": "Document",
+      "attrs": {
+        "Title": "sec_announcement.title",
+        "Announcement type": "sec_announcement.ann_type",
+        "Announcement date": "sec_announcement.ann_date"
+      }
+    },
+    {
+      "id": "SHARE_STRUCTURE",
+      "label": "Share capital",
+      "type": "Disclosure",
+      "attrs": {
+        "Total shares": "sec_share_structure.total_shares",
+        "Float A shares": "sec_share_structure.float_a_shares",
+        "Restricted shares": "sec_share_structure.restricted_shares",
+        "Change date": "sec_share_structure.change_date"
+      }
+    },
+    {
+      "id": "TOP10_HOLDERS",
+      "label": "Top 10 shareholders",
+      "type": "Disclosure",
+      "attrs": {
+        "Shareholder name": "sec_top10_holders.holder_name",
+        "Shares held": "sec_top10_holders.hold_amount",
+        "Shareholding": "sec_top10_holders.hold_ratio",
+        "Share type": "sec_top10_holders.share_nature",
+        "Reporting period": "sec_top10_holders.report_date"
+      }
+    },
+    {
+      "id": "TOP10_FLOAT_HOLDERS",
+      "label": "Top 10 float shareholders",
+      "type": "Disclosure",
+      "attrs": {
+        "Shareholder name": "sec_top10_float_holders.holder_name",
+        "Shares held": "sec_top10_float_holders.hold_amount",
+        "Reporting period": "sec_top10_float_holders.report_date"
+      }
+    },
+    {
+      "id": "RESTRICTED_UNLOCK",
+      "label": "Lock-up expiry",
+      "type": "Event",
+      "attrs": {
+        "Unlock date": "sec_restricted_unlock.unlock_date",
+        "Shares unlocked": "sec_restricted_unlock.unlock_amount"
+      }
+    },
+    {
+      "id": "MARKET_BOARD",
+      "label": "Trading board",
+      "type": "Market board",
+      "attrs": { "Exchange": "sec_board.exchange" }
+    },
+    { "id": "MAIN_BOARD", "label": "Main Board", "type": "Market board" },
+    { "id": "CHINEXT", "label": "ChiNext", "type": "Market board" },
+    { "id": "STAR_MARKET", "label": "STAR Market", "type": "Market board" },
+    {
+      "id": "BSE",
+      "label": "BSE",
+      "type": "Market board",
+      "aliases": ["Beijing Stock Exchange"]
+    },
+    {
+      "id": "NEEQ",
+      "label": "NEEQ",
+      "type": "Market board",
+      "aliases": ["National Equities Exchange and Quotations"]
+    }
+  ],
+  "edges": [
+    {
+      "source": "ENTERPRISE",
+      "predicate": "is_a",
+      "target": "DOM_MARKET",
+      "label": "belongs to"
+    },
+    {
+      "source": "INDIVIDUAL_BIZ",
+      "predicate": "is_a",
+      "target": "DOM_MARKET",
+      "label": "belongs to"
+    },
+    {
+      "source": "LISTED_CO",
+      "predicate": "is_a",
+      "target": "ENTERPRISE",
+      "label": "belongs to"
+    },
+    { "source": "PERSON", "predicate": "is_a", "target": "DOM_MARKET", "label": "belongs to" },
+    { "source": "FIN_INST", "predicate": "is_a", "target": "ENTERPRISE", "label": "belongs to" },
+    { "source": "BRANCH", "predicate": "is_a", "target": "ENTERPRISE", "label": "belongs to" },
+    {
+      "source": "SINO_FOREIGN_JV",
+      "predicate": "is_a",
+      "target": "ENTERPRISE",
+      "label": "belongs to"
+    },
+    {
+      "source": "FARMER_COOP",
+      "predicate": "is_a",
+      "target": "DOM_MARKET",
+      "label": "belongs to"
+    },
+    {
+      "source": "ADMIN_AUTHORITY",
+      "predicate": "is_a",
+      "target": "DOM_MARKET",
+      "label": "belongs to"
+    },
+    {
+      "source": "REG_AUTHORITY",
+      "predicate": "is_a",
+      "target": "ADMIN_AUTHORITY",
+      "label": "belongs to"
+    },
+    {
+      "source": "TAX_AUTHORITY",
+      "predicate": "is_a",
+      "target": "ADMIN_AUTHORITY",
+      "label": "belongs to"
+    },
+    { "source": "COURT", "predicate": "is_a", "target": "DOM_JUDICIAL", "label": "belongs to" },
+    {
+      "source": "INVESTMENT",
+      "predicate": "is_a",
+      "target": "DOM_EQUITY",
+      "label": "belongs to"
+    },
+    {
+      "source": "SHAREHOLDER",
+      "predicate": "is_a",
+      "target": "DOM_EQUITY",
+      "label": "belongs to"
+    },
+    {
+      "source": "ACTUAL_CONTROL",
+      "predicate": "is_a",
+      "target": "DOM_EQUITY",
+      "label": "belongs to"
+    },
+    {
+      "source": "ACTUAL_CONTROLLER",
+      "predicate": "is_a",
+      "target": "DOM_EQUITY",
+      "label": "belongs to"
+    },
+    {
+      "source": "EQUITY_TRANSFER",
+      "predicate": "is_a",
+      "target": "DOM_EQUITY",
+      "label": "belongs to"
+    },
+    {
+      "source": "EXEC_TENURE",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "LEGAL_REP",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "LEGAL_PERSON_REP",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "BOARD",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "SUPERVISORY_BOARD",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "SHAREHOLDERS_MEETING",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "DIRECTOR",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "SUPERVISOR",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "SENIOR_MANAGER",
+      "predicate": "is_a",
+      "target": "DOM_GOVERNANCE",
+      "label": "belongs to"
+    },
+    {
+      "source": "REG_CHANGE",
+      "predicate": "is_a",
+      "target": "DOM_REGISTRATION",
+      "label": "belongs to"
+    },
+    {
+      "source": "ANNUAL_REPORT",
+      "predicate": "is_a",
+      "target": "DOM_REGISTRATION",
+      "label": "belongs to"
+    },
+    {
+      "source": "DEREGISTRATION",
+      "predicate": "is_a",
+      "target": "DOM_REGISTRATION",
+      "label": "belongs to"
+    },
+    {
+      "source": "LIQUIDATION",
+      "predicate": "is_a",
+      "target": "DOM_REGISTRATION",
+      "label": "belongs to"
+    },
+    {
+      "source": "ADMIN_LICENSE",
+      "predicate": "is_a",
+      "target": "DOM_REGISTRATION",
+      "label": "belongs to"
+    },
+    {
+      "source": "ADMIN_PENALTY",
+      "predicate": "is_a",
+      "target": "DOM_RISK",
+      "label": "belongs to"
+    },
+    {
+      "source": "ABNORMAL_OPERATION",
+      "predicate": "is_a",
+      "target": "DOM_RISK",
+      "label": "belongs to"
+    },
+    {
+      "source": "SERIOUS_VIOLATION",
+      "predicate": "is_a",
+      "target": "DOM_RISK",
+      "label": "belongs to"
+    },
+    { "source": "SPOT_CHECK", "predicate": "is_a", "target": "DOM_RISK", "label": "belongs to" },
+    {
+      "source": "EQUITY_PLEDGE",
+      "predicate": "is_a",
+      "target": "DOM_RISK",
+      "label": "belongs to"
+    },
+    {
+      "source": "CHATTEL_MORTGAGE",
+      "predicate": "is_a",
+      "target": "DOM_RISK",
+      "label": "belongs to"
+    },
+    {
+      "source": "TAX_ARREARS",
+      "predicate": "is_a",
+      "target": "DOM_RISK",
+      "label": "belongs to"
+    },
+    { "source": "GUARANTEE", "predicate": "is_a", "target": "DOM_RISK", "label": "belongs to" },
+    {
+      "source": "LEGAL_CASE",
+      "predicate": "is_a",
+      "target": "DOM_JUDICIAL",
+      "label": "belongs to"
+    },
+    {
+      "source": "JUDGMENT_DOC",
+      "predicate": "is_a",
+      "target": "DOM_JUDICIAL",
+      "label": "belongs to"
+    },
+    {
+      "source": "COURT_NOTICE",
+      "predicate": "is_a",
+      "target": "DOM_JUDICIAL",
+      "label": "belongs to"
+    },
+    {
+      "source": "EXECUTEE",
+      "predicate": "is_a",
+      "target": "DOM_JUDICIAL",
+      "label": "belongs to"
+    },
+    {
+      "source": "DISHONEST_EXECUTEE",
+      "predicate": "is_a",
+      "target": "EXECUTEE",
+      "label": "belongs to"
+    },
+    {
+      "source": "CONSUMPTION_RESTRICTION",
+      "predicate": "is_a",
+      "target": "DOM_JUDICIAL",
+      "label": "belongs to"
+    },
+    {
+      "source": "EQUITY_FREEZE",
+      "predicate": "is_a",
+      "target": "DOM_JUDICIAL",
+      "label": "belongs to"
+    },
+    {
+      "source": "FINAL_EXECUTION",
+      "predicate": "is_a",
+      "target": "LEGAL_CASE",
+      "label": "belongs to"
+    },
+    {
+      "source": "BANKRUPTCY",
+      "predicate": "is_a",
+      "target": "LEGAL_CASE",
+      "label": "belongs to"
+    },
+    { "source": "PATENT", "predicate": "is_a", "target": "DOM_IP", "label": "belongs to" },
+    { "source": "INVENTOR", "predicate": "is_a", "target": "DOM_IP", "label": "belongs to" },
+    { "source": "TRADEMARK", "predicate": "is_a", "target": "DOM_IP", "label": "belongs to" },
+    {
+      "source": "SOFTWARE_COPYRIGHT",
+      "predicate": "is_a",
+      "target": "DOM_IP",
+      "label": "belongs to"
+    },
+    {
+      "source": "WORK_COPYRIGHT",
+      "predicate": "is_a",
+      "target": "DOM_IP",
+      "label": "belongs to"
+    },
+    { "source": "IP_PLEDGE", "predicate": "is_a", "target": "DOM_IP", "label": "belongs to" },
+    {
+      "source": "SECURITY",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "ANNOUNCEMENT",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "SHARE_STRUCTURE",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "TOP10_HOLDERS",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "TOP10_FLOAT_HOLDERS",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "RESTRICTED_UNLOCK",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "MARKET_BOARD",
+      "predicate": "is_a",
+      "target": "DOM_SECURITIES",
+      "label": "belongs to"
+    },
+    {
+      "source": "MAIN_BOARD",
+      "predicate": "is_a",
+      "target": "MARKET_BOARD",
+      "label": "belongs to"
+    },
+    {
+      "source": "CHINEXT",
+      "predicate": "is_a",
+      "target": "MARKET_BOARD",
+      "label": "belongs to"
+    },
+    {
+      "source": "STAR_MARKET",
+      "predicate": "is_a",
+      "target": "MARKET_BOARD",
+      "label": "belongs to"
+    },
+    { "source": "BSE", "predicate": "is_a", "target": "MARKET_BOARD", "label": "belongs to" },
+    { "source": "NEEQ", "predicate": "is_a", "target": "MARKET_BOARD", "label": "belongs to" },
+    { "source": "PERSON", "predicate": "servesAt", "target": "ENTERPRISE" },
+    { "source": "PERSON", "predicate": "operates", "target": "INDIVIDUAL_BIZ" },
+    { "source": "BRANCH", "predicate": "branchOf", "target": "ENTERPRISE" },
+    { "source": "INVESTMENT", "predicate": "investor", "target": "PERSON" },
+    { "source": "INVESTMENT", "predicate": "investor", "target": "ENTERPRISE" },
+    { "source": "INVESTMENT", "predicate": "investee", "target": "ENTERPRISE" },
+    { "source": "INVESTMENT", "predicate": "yields", "target": "SHAREHOLDER" },
+    { "source": "SHAREHOLDER", "predicate": "holdsSharesIn", "target": "ENTERPRISE" },
+    { "source": "SHAREHOLDER", "predicate": "playedBy", "target": "PERSON" },
+    { "source": "SHAREHOLDER", "predicate": "playedBy", "target": "ENTERPRISE" },
+    { "source": "ACTUAL_CONTROL", "predicate": "controller", "target": "ACTUAL_CONTROLLER" },
+    { "source": "ACTUAL_CONTROL", "predicate": "controlled", "target": "ENTERPRISE" },
+    { "source": "ACTUAL_CONTROLLER", "predicate": "controls", "target": "ENTERPRISE" },
+    { "source": "ACTUAL_CONTROLLER", "predicate": "playedBy", "target": "PERSON" },
+    { "source": "EQUITY_TRANSFER", "predicate": "transferor", "target": "SHAREHOLDER" },
+    { "source": "EQUITY_TRANSFER", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "EXEC_TENURE", "predicate": "officer", "target": "PERSON" },
+    { "source": "EXEC_TENURE", "predicate": "employer", "target": "ENTERPRISE" },
+    { "source": "EXEC_TENURE", "predicate": "position", "target": "DIRECTOR" },
+    { "source": "EXEC_TENURE", "predicate": "position", "target": "SUPERVISOR" },
+    { "source": "EXEC_TENURE", "predicate": "position", "target": "SENIOR_MANAGER" },
+    { "source": "LEGAL_REP", "predicate": "playedBy", "target": "PERSON" },
+    { "source": "LEGAL_REP", "predicate": "represents", "target": "ENTERPRISE" },
+    { "source": "LEGAL_PERSON_REP", "predicate": "playedBy", "target": "PERSON" },
+    { "source": "LEGAL_PERSON_REP", "predicate": "represents", "target": "ENTERPRISE" },
+    { "source": "LEGAL_PERSON_REP", "predicate": "represents", "target": "FARMER_COOP" },
+    { "source": "ENTERPRISE", "predicate": "establishes", "target": "BOARD" },
+    { "source": "ENTERPRISE", "predicate": "establishes", "target": "SUPERVISORY_BOARD" },
+    { "source": "ENTERPRISE", "predicate": "establishes", "target": "SHAREHOLDERS_MEETING" },
+    { "source": "SHAREHOLDER", "predicate": "memberOf", "target": "SHAREHOLDERS_MEETING" },
+    { "source": "DIRECTOR", "predicate": "memberOf", "target": "BOARD" },
+    { "source": "SUPERVISOR", "predicate": "memberOf", "target": "SUPERVISORY_BOARD" },
+    { "source": "SHAREHOLDERS_MEETING", "predicate": "elects", "target": "BOARD" },
+    { "source": "BOARD", "predicate": "appoints", "target": "SENIOR_MANAGER" },
+    { "source": "REG_CHANGE", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "REG_AUTHORITY", "predicate": "approves", "target": "REG_CHANGE" },
+    { "source": "REG_AUTHORITY", "predicate": "approves", "target": "DEREGISTRATION" },
+    { "source": "DEREGISTRATION", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "LIQUIDATION", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "LIQUIDATION", "predicate": "precedes", "target": "DEREGISTRATION" },
+    { "source": "ENTERPRISE", "predicate": "publishes", "target": "ANNUAL_REPORT" },
+    { "source": "INDIVIDUAL_BIZ", "predicate": "submits", "target": "ANNUAL_REPORT" },
+    { "source": "FARMER_COOP", "predicate": "submits", "target": "ANNUAL_REPORT" },
+    { "source": "ADMIN_AUTHORITY", "predicate": "decides", "target": "ADMIN_LICENSE" },
+    { "source": "ADMIN_LICENSE", "predicate": "licensee", "target": "ENTERPRISE" },
+    { "source": "ADMIN_AUTHORITY", "predicate": "decides", "target": "ADMIN_PENALTY" },
+    { "source": "ADMIN_PENALTY", "predicate": "penalized", "target": "ENTERPRISE" },
+    { "source": "ADMIN_PENALTY", "predicate": "penalized", "target": "INDIVIDUAL_BIZ" },
+    { "source": "ENTERPRISE", "predicate": "listedIn", "target": "ABNORMAL_OPERATION" },
+    { "source": "ENTERPRISE", "predicate": "listedIn", "target": "SERIOUS_VIOLATION" },
+    { "source": "REG_AUTHORITY", "predicate": "determines", "target": "ABNORMAL_OPERATION" },
+    {
+      "source": "ABNORMAL_OPERATION",
+      "predicate": "escalatesTo",
+      "target": "SERIOUS_VIOLATION"
+    },
+    { "source": "SERIOUS_VIOLATION", "predicate": "basedOn", "target": "ADMIN_PENALTY" },
+    { "source": "SPOT_CHECK", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "EQUITY_PLEDGE", "predicate": "pledgor", "target": "SHAREHOLDER" },
+    { "source": "EQUITY_PLEDGE", "predicate": "pledgee", "target": "FIN_INST" },
+    { "source": "EQUITY_PLEDGE", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "CHATTEL_MORTGAGE", "predicate": "mortgagor", "target": "ENTERPRISE" },
+    { "source": "CHATTEL_MORTGAGE", "predicate": "mortgagee", "target": "FIN_INST" },
+    { "source": "TAX_AUTHORITY", "predicate": "releases", "target": "TAX_ARREARS" },
+    { "source": "TAX_ARREARS", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "GUARANTEE", "predicate": "guarantor", "target": "ENTERPRISE" },
+    { "source": "GUARANTEE", "predicate": "guaranteed", "target": "ENTERPRISE" },
+    { "source": "LEGAL_CASE", "predicate": "party", "target": "ENTERPRISE" },
+    { "source": "LEGAL_CASE", "predicate": "party", "target": "PERSON" },
+    { "source": "COURT", "predicate": "hears", "target": "LEGAL_CASE" },
+    { "source": "JUDGMENT_DOC", "predicate": "case", "target": "LEGAL_CASE" },
+    { "source": "COURT_NOTICE", "predicate": "case", "target": "LEGAL_CASE" },
+    { "source": "EXECUTEE", "predicate": "enforcementCase", "target": "LEGAL_CASE" },
+    { "source": "EXECUTEE", "predicate": "playedBy", "target": "ENTERPRISE" },
+    { "source": "EXECUTEE", "predicate": "playedBy", "target": "PERSON" },
+    { "source": "COURT", "predicate": "releases", "target": "DISHONEST_EXECUTEE" },
+    { "source": "COURT", "predicate": "releases", "target": "CONSUMPTION_RESTRICTION" },
+    { "source": "CONSUMPTION_RESTRICTION", "predicate": "restricts", "target": "EXECUTEE" },
+    { "source": "COURT", "predicate": "orders", "target": "EQUITY_FREEZE" },
+    { "source": "EQUITY_FREEZE", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "EQUITY_FREEZE", "predicate": "debtor", "target": "EXECUTEE" },
+    { "source": "FINAL_EXECUTION", "predicate": "concerns", "target": "EXECUTEE" },
+    { "source": "BANKRUPTCY", "predicate": "concerns", "target": "ENTERPRISE" },
+    { "source": "ENTERPRISE", "predicate": "owns", "target": "PATENT" },
+    { "source": "ENTERPRISE", "predicate": "owns", "target": "TRADEMARK" },
+    { "source": "ENTERPRISE", "predicate": "owns", "target": "SOFTWARE_COPYRIGHT" },
+    { "source": "ENTERPRISE", "predicate": "owns", "target": "WORK_COPYRIGHT" },
+    { "source": "INVENTOR", "predicate": "invented", "target": "PATENT" },
+    { "source": "INVENTOR", "predicate": "playedBy", "target": "PERSON" },
+    { "source": "IP_PLEDGE", "predicate": "pledgedAsset", "target": "PATENT" },
+    { "source": "IP_PLEDGE", "predicate": "pledgedAsset", "target": "TRADEMARK" },
+    { "source": "IP_PLEDGE", "predicate": "pledgor", "target": "ENTERPRISE" },
+    { "source": "IP_PLEDGE", "predicate": "pledgee", "target": "FIN_INST" },
+    { "source": "LISTED_CO", "predicate": "issues", "target": "SECURITY" },
+    { "source": "LISTED_CO", "predicate": "releases", "target": "ANNOUNCEMENT" },
+    { "source": "LISTED_CO", "predicate": "discloses", "target": "SHARE_STRUCTURE" },
+    { "source": "LISTED_CO", "predicate": "discloses", "target": "GUARANTEE" },
+    { "source": "SHARE_STRUCTURE", "predicate": "includes", "target": "TOP10_HOLDERS" },
+    { "source": "SHARE_STRUCTURE", "predicate": "includes", "target": "TOP10_FLOAT_HOLDERS" },
+    { "source": "TOP10_HOLDERS", "predicate": "holdsSharesIn", "target": "ENTERPRISE" },
+    { "source": "TOP10_FLOAT_HOLDERS", "predicate": "holdsSharesIn", "target": "LISTED_CO" },
+    { "source": "SECURITY", "predicate": "listedOn", "target": "MAIN_BOARD" },
+    { "source": "SECURITY", "predicate": "listedOn", "target": "CHINEXT" },
+    { "source": "SECURITY", "predicate": "listedOn", "target": "STAR_MARKET" },
+    { "source": "SECURITY", "predicate": "listedOn", "target": "BSE" },
+    { "source": "SECURITY", "predicate": "quotedOn", "target": "NEEQ" },
+    { "source": "RESTRICTED_UNLOCK", "predicate": "concerns", "target": "SECURITY" },
+    { "source": "ANNOUNCEMENT", "predicate": "discloses", "target": "RESTRICTED_UNLOCK" },
+    { "source": "ANNOUNCEMENT", "predicate": "discloses", "target": "EQUITY_PLEDGE" }
+  ]
+}

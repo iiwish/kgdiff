@@ -1,0 +1,8 @@
+kgdiff  before.json → catalog 1.0.0            0 → 4 nodes · 0 → 2 edges
+
+  +2 added                                          6 changes in 2 hunks
+  ++++++
+
+  Added 2
+  + Added “Table”, 2 more nodes and 2 relations   added · standalone
+  + Added “Isolated node”                         added · standalone

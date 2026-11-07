@@ -1,0 +1,46 @@
+{
+  "en": [
+    {
+      "id": "modify:n2",
+      "title": "Edited “Keys”",
+      "subtitle": "+1 ~5 attributes · ~1 relation"
+    },
+    {
+      "id": "modify:n1",
+      "title": "Edited “Numbers”",
+      "subtitle": "~6 attributes · ~1 relation"
+    },
+    {
+      "id": "modify:n4",
+      "title": "Updated attributes of “Arrays”",
+      "subtitle": "~2 attributes"
+    },
+    {
+      "id": "modify:n3",
+      "title": "Updated attributes of “Duplicate key: the last one wins”",
+      "subtitle": "~1 attribute"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:n2",
+      "title": "修改「Keys」",
+      "subtitle": "属性 +1 ~5 · 关系 ~1"
+    },
+    {
+      "id": "modify:n1",
+      "title": "修改「Numbers」",
+      "subtitle": "属性 ~6 · 关系 ~1"
+    },
+    {
+      "id": "modify:n4",
+      "title": "修改「Arrays」的属性",
+      "subtitle": "属性 ~2"
+    },
+    {
+      "id": "modify:n3",
+      "title": "修改「Duplicate key: the last one wins」的属性",
+      "subtitle": "属性 ~1"
+    }
+  ]
+}

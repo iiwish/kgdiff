@@ -33,6 +33,10 @@ pnpm changeset                        # describe a change to a published package
 - `action.yml`, `action/`: the GitHub Action (`uses: iiwish/kgdiff@v0`); its tests run in
   `pnpm test`, and `.github/workflows/action.yml` runs it on the example datasets.
 - `apps/site`: landing page and playground. `examples/datasets`: demo and acceptance data.
+- `conformance/`: the language-neutral conformance corpus — inputs, options and the expected
+  diffs, deltas, hashes and CLI outputs of every case ([README](conformance/README.md)). It runs
+  in `pnpm test`; after an intended behaviour change, `pnpm conformance:update` regenerates it
+  and its diff is part of the review.
 - `docs/`: architecture, algorithms, visual language, interaction, delta format, CLI.
 
 ## Ground rules

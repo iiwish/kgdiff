@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "pnpm -r --filter \"./packages/**\" build",
-    "typecheck": "pnpm -r typecheck && tsc -p tests && tsc -p action",
+    "typecheck": "pnpm -r typecheck && tsc -p tests && tsc -p action && tsc -p conformance",
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "vitest bench --run",
@@ -20,6 +20,7 @@
     "format": "biome format --write .",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "check:packages": "tsx scripts/check-packages.ts",
+    "conformance:update": "tsx conformance/update.ts",
     "dev:site": "pnpm --filter @kgdiff/site dev",
     "dev:docs": "pnpm --filter @kgdiff/docs dev",
     "build:docs": "pnpm --filter @kgdiff/docs build",

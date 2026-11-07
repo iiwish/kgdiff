@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+         xmlns:pizza="http://example.org/pizza#">
+  <owl:Ontology rdf:about="http://example.org/pizza">
+    <rdfs:label>Pizza ontology</rdfs:label>
+    <owl:versionInfo>1.1</owl:versionInfo>
+  </owl:Ontology>
+  <owl:ObjectProperty rdf:about="http://example.org/pizza#hasTopping">
+    <rdfs:label xml:lang="en">has topping</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:Class rdf:about="http://example.org/pizza#Pizza">
+    <rdfs:label xml:lang="it">Pizza</rdfs:label>
+    <rdfs:label xml:lang="en">Pizza</rdfs:label>
+    <rdfs:comment rdf:parseType="Literal"><p xmlns="http://www.w3.org/1999/xhtml" id="p1" class="note">A <b>wood-fired</b> dish</p></rdfs:comment>
+  </owl:Class>
+  <owl:Class rdf:about="http://example.org/pizza#Margherita">
+    <rdfs:subClassOf rdf:resource="http://example.org/pizza#Pizza"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty rdf:resource="http://example.org/pizza#hasTopping"/>
+        <owl:someValuesFrom rdf:resource="http://example.org/pizza#Mozzarella"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label xml:lang="en">Margherita</rdfs:label>
+    <skos:altLabel xml:lang="en">Pizza Margherita</skos:altLabel>
+    <skos:altLabel xml:lang="it">Margherita classica</skos:altLabel>
+    <pizza:price rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.00</pizza:price>
+  </owl:Class>
+  <owl:Class rdf:about="http://example.org/pizza#QuattroFormaggi">
+    <rdfs:subClassOf rdf:resource="http://example.org/pizza#Pizza"/>
+    <rdfs:label xml:lang="en">Quattro formaggi</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://example.org/pizza#Mozzarella">
+    <rdfs:label xml:lang="en">Mozzarella</rdfs:label>
+    <owl:equivalentClass>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://example.org/pizza#Cheese"/>
+          <owl:Class rdf:about="http://example.org/pizza#Dairy"/>
+          <owl:Class rdf:about="http://example.org/pizza#Buffalo"/>
+        </owl:unionOf>
+      </owl:Class>
+    </owl:equivalentClass>
+  </owl:Class>
+  <owl:Class rdf:about="http://example.org/pizza#Cheese"><rdfs:label>Cheese</rdfs:label></owl:Class>
+  <owl:Class rdf:about="http://example.org/pizza#Dairy"><rdfs:label>Dairy</rdfs:label></owl:Class>
+  <owl:Class rdf:about="http://example.org/pizza#Buffalo"><rdfs:label>Buffalo milk</rdfs:label></owl:Class>
+  <owl:Axiom>
+    <owl:annotatedSource rdf:resource="http://example.org/pizza#Margherita"/>
+    <owl:annotatedProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#subClassOf"/>
+    <owl:annotatedTarget rdf:resource="http://example.org/pizza#Pizza"/>
+    <rdfs:comment>Classic, since 1889</rdfs:comment>
+  </owl:Axiom>
+  <rdf:Description rdf:nodeID="b0">
+    <rdfs:label>Anonymous oven</rdfs:label>
+  </rdf:Description>
+  <owl:Class rdf:about="http://example.org/pizza#WoodOven">
+    <rdfs:seeAlso rdf:nodeID="b0"/>
+    <rdfs:label xml:lang="en">Wood-fired oven</rdfs:label>
+  </owl:Class>
+</rdf:RDF>

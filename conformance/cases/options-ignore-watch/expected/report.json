@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "glossary 2026-05 → 2026-06",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "glossary 2026-05",
+      "format": "json"
+    },
+    "after": {
+      "name": "glossary 2026-06",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

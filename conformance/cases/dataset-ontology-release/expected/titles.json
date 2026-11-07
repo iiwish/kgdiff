@@ -1,0 +1,226 @@
+{
+  "en": [
+    {
+      "id": "merge:MHD:0000062",
+      "title": "Merged “juvenile diabetes” and “insulin-dependent diabetes mellitus” into “type 1 diabetes mellitus”",
+      "subtitle": "via replacement hint · 1 relation carried over · 3 duplicates collapsed · kept as deprecated · ~2 attributes · +3 synonyms"
+    },
+    {
+      "id": "merge:MHD:0000018",
+      "title": "Merged “heart attack” into “myocardial infarction”",
+      "subtitle": "via replacement hint · 1 relation carried over · 2 duplicates collapsed · −1 relation · kept as deprecated · ~2 attributes · +1 synonym"
+    },
+    {
+      "id": "merge:MHD:0000031",
+      "title": "Merged “chronic obstructive airway disease” into “chronic obstructive pulmonary disease”",
+      "subtitle": "via replacement hint · 1 relation carried over · 2 duplicates collapsed · kept as deprecated · ~1 attribute · +2 synonyms"
+    },
+    {
+      "id": "modify:MHD:0000087",
+      "title": "Moved “Crohn disease” under “inflammatory bowel disease”",
+      "subtitle": "from “intestinal disease”"
+    },
+    {
+      "id": "modify:MHD:0000072",
+      "title": "Moved “Hashimoto thyroiditis” under “autoimmune thyroid disease”",
+      "subtitle": "from “hypothyroidism”"
+    },
+    {
+      "id": "modify:MHD:0000038",
+      "title": "Moved “tuberculosis” under “bacterial infectious disease”",
+      "subtitle": "from “lung disease”"
+    },
+    {
+      "id": "modify:MHD:0000082",
+      "title": "Renamed “alcoholic liver disease” → “alcohol-related liver disease”",
+      "subtitle": "~1 attribute · +1 synonym · moved under “steatotic liver disease”"
+    },
+    {
+      "id": "modify:MHD:0000074",
+      "title": "Moved “hyperglycemia” under “abnormal blood glucose concentration”",
+      "subtitle": "~2 attributes · from “disease of metabolism”"
+    },
+    {
+      "id": "modify:MHD:0000056",
+      "title": "Renamed “Alzheimer's disease” → “Alzheimer disease”",
+      "subtitle": "~1 attribute · +1 synonym"
+    },
+    {
+      "id": "modify:MHD:0000050",
+      "title": "Updated attributes of “COVID-19”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:MHD:0000030",
+      "title": "Updated attributes of “asthma”",
+      "subtitle": "~2 attributes"
+    },
+    {
+      "id": "modify:MHD:0000093",
+      "title": "Updated attributes of “chronic kidney disease”",
+      "subtitle": "~2 attributes"
+    },
+    {
+      "id": "modify:MHD:0002010",
+      "title": "Edited “dyspnea”",
+      "subtitle": "~1 attribute · +2 synonyms"
+    },
+    {
+      "id": "modify:MHD:0000081",
+      "title": "Renamed “non-alcoholic steatohepatitis” → “metabolic dysfunction-associated steato…”",
+      "subtitle": "~1 attribute · +2 synonyms"
+    },
+    {
+      "id": "modify:MHD:0000080",
+      "title": "Renamed “non-alcoholic fatty liver disease” → “metabolic dysfunction-associated steato…”",
+      "subtitle": "~2 attributes · +2 synonyms"
+    },
+    {
+      "id": "modify:MHD:0000060",
+      "title": "Edited “migraine”",
+      "subtitle": "~1 attribute · −1 synonym"
+    },
+    {
+      "id": "modify:MHD:0000079",
+      "title": "Renamed “fatty liver disease” → “steatotic liver disease”",
+      "subtitle": "+1 ~2 attributes · +2 synonyms"
+    },
+    {
+      "id": "modify:MHD:0000063",
+      "title": "Updated attributes of “type 2 diabetes mellitus”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:MHD:0000203",
+      "title": "Added “arginine vasopressin disorder” and 1 relation",
+      "subtitle": "type Term · linked to “endocrine system disease”"
+    },
+    {
+      "id": "split:MHD:0000067",
+      "title": "Split “diabetes insipidus” into “arginine vasopressin deficiency” and “arginine vasopressin resistance”",
+      "subtitle": "inferred · 80% confidence · 4 relations carried over · +7 relations · source kept as deprecated"
+    },
+    {
+      "id": "add:MHD:0000202",
+      "title": "Added “cryptogenic steatotic liver disease” and 1 relation",
+      "subtitle": "type Term · linked to “steatotic liver disease”"
+    },
+    {
+      "id": "add:MHD:0000201",
+      "title": "Added “metabolic dysfunction and alcohol-relat…” and 1 relation",
+      "subtitle": "type Term · linked to “steatotic liver disease”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "merge:MHD:0000062",
+      "title": "「juvenile diabetes」和「insulin-dependent diabetes mellitus」合并入「type 1 diabetes mellitus」",
+      "subtitle": "依据替代声明 · 迁移 1 条关系 · 合并 3 条重复关系 · 源节点保留为已弃用 · 属性 ~2 · 别名 +3"
+    },
+    {
+      "id": "merge:MHD:0000018",
+      "title": "「heart attack」合并入「myocardial infarction」",
+      "subtitle": "依据替代声明 · 迁移 1 条关系 · 合并 2 条重复关系 · 关系 −1 · 源节点保留为已弃用 · 属性 ~2 · 别名 +1"
+    },
+    {
+      "id": "merge:MHD:0000031",
+      "title": "「chronic obstructive airway disease」合并入「chronic obstructive pulmonary disease」",
+      "subtitle": "依据替代声明 · 迁移 1 条关系 · 合并 2 条重复关系 · 源节点保留为已弃用 · 属性 ~1 · 别名 +2"
+    },
+    {
+      "id": "modify:MHD:0000087",
+      "title": "「Crohn disease」移至「inflammatory bowel disease」下",
+      "subtitle": "原属「intestinal disease」"
+    },
+    {
+      "id": "modify:MHD:0000072",
+      "title": "「Hashimoto thyroiditis」移至「autoimmune thyroid disease」下",
+      "subtitle": "原属「hypothyroidism」"
+    },
+    {
+      "id": "modify:MHD:0000038",
+      "title": "「tuberculosis」移至「bacterial infectious disease」下",
+      "subtitle": "原属「lung disease」"
+    },
+    {
+      "id": "modify:MHD:0000082",
+      "title": "「alcoholic liver disease」改名为「alcohol-related liver disease」",
+      "subtitle": "属性 ~1 · 别名 +1 · 移至「steatotic liver disease」下"
+    },
+    {
+      "id": "modify:MHD:0000074",
+      "title": "「hyperglycemia」移至「abnormal blood glucose concentration」下",
+      "subtitle": "属性 ~2 · 原属「disease of metabolism」"
+    },
+    {
+      "id": "modify:MHD:0000056",
+      "title": "「Alzheimer's disease」改名为「Alzheimer disease」",
+      "subtitle": "属性 ~1 · 别名 +1"
+    },
+    {
+      "id": "modify:MHD:0000050",
+      "title": "修改「COVID-19」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:MHD:0000030",
+      "title": "修改「asthma」的属性",
+      "subtitle": "属性 ~2"
+    },
+    {
+      "id": "modify:MHD:0000093",
+      "title": "修改「chronic kidney disease」的属性",
+      "subtitle": "属性 ~2"
+    },
+    {
+      "id": "modify:MHD:0002010",
+      "title": "修改「dyspnea」",
+      "subtitle": "属性 ~1 · 别名 +2"
+    },
+    {
+      "id": "modify:MHD:0000081",
+      "title": "「non-alcoholic steatohepatitis」改名为「metabolic dysfunction-associated steato…」",
+      "subtitle": "属性 ~1 · 别名 +2"
+    },
+    {
+      "id": "modify:MHD:0000080",
+      "title": "「non-alcoholic fatty liver disease」改名为「metabolic dysfunction-associated steato…」",
+      "subtitle": "属性 ~2 · 别名 +2"
+    },
+    {
+      "id": "modify:MHD:0000060",
+      "title": "修改「migraine」",
+      "subtitle": "属性 ~1 · 别名 −1"
+    },
+    {
+      "id": "modify:MHD:0000079",
+      "title": "「fatty liver disease」改名为「steatotic liver disease」",
+      "subtitle": "属性 +1 ~2 · 别名 +2"
+    },
+    {
+      "id": "modify:MHD:0000063",
+      "title": "修改「type 2 diabetes mellitus」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:MHD:0000203",
+      "title": "新增「arginine vasopressin disorder」及 1 条关系",
+      "subtitle": "类型 Term · 关联「endocrine system disease」"
+    },
+    {
+      "id": "split:MHD:0000067",
+      "title": "「diabetes insipidus」拆分为「arginine vasopressin deficiency」和「arginine vasopressin resistance」",
+      "subtitle": "推断 · 置信度 80% · 迁移 4 条关系 · 关系 +7 · 源节点保留为已弃用"
+    },
+    {
+      "id": "add:MHD:0000202",
+      "title": "新增「cryptogenic steatotic liver disease」及 1 条关系",
+      "subtitle": "类型 Term · 关联「steatotic liver disease」"
+    },
+    {
+      "id": "add:MHD:0000201",
+      "title": "新增「metabolic dysfunction and alcohol-relat…」及 1 条关系",
+      "subtitle": "类型 Term · 关联「steatotic liver disease」"
+    }
+  ]
+}

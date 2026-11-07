@@ -1,0 +1,11 @@
+kgdiff  numbers 1 → 2                                  4 nodes · 3 edges
+
+  ~4 modified                                       6 changes in 4 hunks
+  ~~~~~~
+
+         added  removed  modified  unchanged
+  nodes      0        0         4          0
+  edges      0        0         2          1
+
+  By type
+  (untyped)  4 ~~~~

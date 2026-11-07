@@ -1,0 +1,16 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "team", "version": "2" },
+  "nodes": [
+    { "id": "1", "label": "Alice", "attrs": { "group": "Person", "title": "Team lead" }, "position": { "x": 0, "y": 0 } },
+    { "id": "3", "label": "Carol", "aliases": ["Caz"], "attrs": { "group": "Person" }, "position": { "x": 120.5, "y": -40.25 } },
+    { "id": "4", "label": "Bob", "replaces": ["2"], "attrs": { "group": "Person" } },
+    { "id": "5", "label": "Dana", "attrs": { "group": "Person" } }
+  ],
+  "edges": [
+    { "source": "4", "target": "1", "predicate": "reports to" },
+    { "source": "1", "target": "3", "predicate": "mentors" },
+    { "source": "5", "target": "1", "predicate": "reports to" }
+  ]
+}

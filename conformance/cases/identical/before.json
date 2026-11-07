@@ -1,0 +1,15 @@
+{
+  "meta": { "name": "zoo", "version": "same" },
+  "nodes": [
+    { "id": "animal", "label": "Animal", "types": ["Class"] },
+    { "id": "mammal", "label": "Mammal", "types": ["Class", "Taxon"], "aliases": ["mammals", "Mammalia"] },
+    { "id": "cat", "label": "Café cat", "types": ["Species"], "attrs": { "legs": 4, "sound": "meow", "colors": ["black", "white"] } },
+    { "id": "dog", "label": "Dog", "types": ["Species"], "attrs": { "legs": 4 } }
+  ],
+  "edges": [
+    { "source": "mammal", "target": "animal", "predicate": "subClassOf" },
+    { "source": "cat", "target": "mammal", "predicate": "subClassOf" },
+    { "source": "dog", "target": "mammal", "predicate": "subClassOf" },
+    { "source": "dog", "target": "cat", "predicate": "chases", "attrs": { "often": true, "since": 1 } }
+  ]
+}

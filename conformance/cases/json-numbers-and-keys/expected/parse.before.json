@@ -1,0 +1,151 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "n1",
+        "label": "Numbers",
+        "attrs": {
+          "big": 12345678901234567000,
+          "denormal": 5e-324,
+          "e20": 100000000000000000000,
+          "e21": 1e+21,
+          "huge": 1.5e+300,
+          "hundred": 100,
+          "int_like_string": "007",
+          "max": 1.7976931348623157e+308,
+          "neg_zero": 0,
+          "neg_zero_float": 0,
+          "one": 1,
+          "pi": 3.141592653589793,
+          "safe_plus_one": 9007199254740992,
+          "shortest": 123456789012345680000,
+          "small": 0.000001,
+          "smaller": 1.2345e-7,
+          "sum": 0.30000000000000004,
+          "tiny": 1e-7,
+          "unchanged_float": 0.1
+        }
+      },
+      {
+        "id": "n2",
+        "label": "Keys",
+        "attrs": {
+          "2": "two",
+          "10": "ten",
+          "4294967294": "largest index",
+          "-1": "minus-one",
+          "01": "zero-one",
+          "1.5": "one-and-a-half",
+          "4294967295": "not an index",
+          "__proto__": {
+            "polluted": false
+          },
+          "a": true,
+          "b": 1,
+          "constructor": "plain data",
+          "nested": {
+            "1": {
+              "0": false,
+              "y": null
+            },
+            "3": [
+              3,
+              1,
+              2
+            ],
+            "z": 1
+          }
+        }
+      },
+      {
+        "id": "n3",
+        "label": "Duplicate key: the last one wins",
+        "attrs": {
+          "k": 2
+        }
+      },
+      {
+        "id": "n4",
+        "label": "Arrays",
+        "attrs": {
+          "empty": [],
+          "mixed": [
+            null,
+            true,
+            "x",
+            1.5,
+            [
+              1,
+              [
+                2
+              ]
+            ],
+            {
+              "a": 2,
+              "b": 1
+            }
+          ],
+          "obj": {},
+          "with_beyond": [
+            1,
+            null,
+            null
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "n1",
+        "target": "n2",
+        "predicate": "weighs",
+        "attrs": {
+          "w": 0.1,
+          "w2": 1e-7,
+          "w3": 1e+21
+        }
+      },
+      {
+        "source": "n2",
+        "target": "n3",
+        "predicate": "keys",
+        "attrs": {
+          "3": 2,
+          "20": 1
+        }
+      },
+      {
+        "source": "n3",
+        "target": "n4",
+        "predicate": "arrays"
+      }
+    ],
+    "meta": {
+      "2": "two",
+      "10": "ten",
+      "build": 1e+21,
+      "name": "numbers",
+      "release": 1,
+      "source": "before.json",
+      "version": "1"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

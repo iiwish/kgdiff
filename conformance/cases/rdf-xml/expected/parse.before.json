@@ -1,0 +1,117 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "_:b1628ed2e039c8b",
+        "label": "Anonymous oven"
+      },
+      {
+        "id": "http://example.org/pizza#Cheese",
+        "label": "Cheese",
+        "type": "owl:Class"
+      },
+      {
+        "id": "http://example.org/pizza#Dairy",
+        "label": "Dairy",
+        "type": "owl:Class"
+      },
+      {
+        "id": "http://example.org/pizza#Margherita",
+        "label": "Margherita",
+        "type": "owl:Class",
+        "aliases": [
+          "Pizza Margherita"
+        ],
+        "attrs": {
+          "http://example.org/pizza#price": 7.5
+        }
+      },
+      {
+        "id": "http://example.org/pizza#Mozzarella",
+        "label": "Mozzarella",
+        "type": "owl:Class"
+      },
+      {
+        "id": "http://example.org/pizza#Pizza",
+        "label": "Pizza",
+        "type": "owl:Class",
+        "attrs": {
+          "rdfs:comment": "<p xmlns=\"http://www.w3.org/1999/xhtml\" class=\"note\" id=\"p1\">A <b>baked</b> dish</p>"
+        }
+      },
+      {
+        "id": "http://example.org/pizza#WoodOven",
+        "label": "Wood oven",
+        "type": "owl:Class"
+      },
+      {
+        "id": "http://example.org/pizza#hasTopping",
+        "label": "has topping",
+        "type": "owl:ObjectProperty"
+      }
+    ],
+    "edges": [
+      {
+        "source": "http://example.org/pizza#Margherita",
+        "target": "http://example.org/pizza#Mozzarella",
+        "predicate": "http://example.org/pizza#hasTopping",
+        "label": "hasTopping"
+      },
+      {
+        "source": "http://example.org/pizza#Margherita",
+        "target": "http://example.org/pizza#Pizza",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf",
+        "attrs": {
+          "rdfs:comment": "Classic"
+        }
+      },
+      {
+        "source": "http://example.org/pizza#Mozzarella",
+        "target": "http://example.org/pizza#Cheese",
+        "predicate": "owl:unionOf",
+        "label": "unionOf"
+      },
+      {
+        "source": "http://example.org/pizza#Mozzarella",
+        "target": "http://example.org/pizza#Dairy",
+        "predicate": "owl:unionOf",
+        "label": "unionOf"
+      },
+      {
+        "source": "http://example.org/pizza#WoodOven",
+        "target": "_:b1628ed2e039c8b",
+        "predicate": "rdfs:seeAlso",
+        "label": "seeAlso"
+      }
+    ],
+    "meta": {
+      "name": "Pizza ontology",
+      "predicateLabels": {
+        "http://example.org/pizza#hasTopping": "has topping"
+      },
+      "source": "before.owl",
+      "version": "1.0"
+    }
+  },
+  "format": "rdfxml",
+  "prefixes": {
+    "": "http://example.org/pizza#",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {
+    "http://example.org/pizza#hasTopping": "has topping"
+  },
+  "warnings": []
+}

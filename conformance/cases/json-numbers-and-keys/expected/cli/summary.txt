@@ -1,0 +1,10 @@
+kgdiff  numbers 1 → 2                                                              4 nodes · 3 edges
+
+  ~4 modified                                                                   6 changes in 4 hunks
+  ~~~~~~
+
+  Modified 4
+  ~ Edited “Keys”                                              content · +1 ~5 attributes · ~1 rela…
+  ~ Edited “Numbers”                                           content · ~6 attributes · ~1 relation
+  ~ Updated attributes of “Arrays”                             content · ~2 attributes
+  ~ Updated attributes of “Duplicate key: the last one wins”   content · ~1 attribute

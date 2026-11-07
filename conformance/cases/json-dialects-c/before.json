@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    { "id": 1, "label": "Alice", "group": "Person", "title": "Team lead" },
+    { "id": 2, "label": "Bob", "group": "Person" },
+    { "id": 3, "label": "Carol", "group": "Person", "color": "red" }
+  ],
+  "edges": [
+    { "from": 2, "to": 1, "label": "reports to", "arrows": "to" },
+    { "from": 1, "to": 3, "label": "mentors" }
+  ]
+}

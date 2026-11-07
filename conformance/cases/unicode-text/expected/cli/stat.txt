@@ -1,0 +1,11 @@
+kgdiff  unicode before → after                               18 nodes · 12 edges
+
+  +1 added   −1 removed   ~7 modified   ⇄1 restructured   12 changes in 10 hunks
+  ++−−~~~~~~~⇄
+
+         added  removed  modified  unchanged
+  nodes      1        1         7         10
+  edges      1        1         1         10
+
+  By type
+  (untyped)  9 +−~~~~~~~

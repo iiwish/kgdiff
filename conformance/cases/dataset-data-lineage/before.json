@@ -1,0 +1,571 @@
+{
+  "meta": {
+    "name": "shop dbt project",
+    "version": "main@4f2c9e1",
+    "generated_at": "2026-10-12T06:00:00Z",
+    "dbt_version": "1.10.11"
+  },
+  "nodes": [
+    {
+      "id": "source.shop.shopify.orders",
+      "label": "shopify.orders",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_shopify",
+        "loader": "fivetran",
+        "freshness": "warn after 6 hours",
+        "columns_count": 38
+      }
+    },
+    {
+      "id": "source.shop.shopify.order_lines",
+      "label": "shopify.order_lines",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_shopify",
+        "loader": "fivetran",
+        "freshness": "warn after 6 hours",
+        "columns_count": 21
+      }
+    },
+    {
+      "id": "source.shop.shopify.customers",
+      "label": "shopify.customers",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_shopify",
+        "loader": "fivetran",
+        "freshness": "warn after 24 hours",
+        "columns_count": 27
+      }
+    },
+    {
+      "id": "source.shop.shopify.products",
+      "label": "shopify.products",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_shopify",
+        "loader": "fivetran",
+        "freshness": "warn after 24 hours",
+        "columns_count": 19
+      }
+    },
+    {
+      "id": "source.shop.stripe.payments",
+      "label": "stripe.payments",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_stripe",
+        "loader": "fivetran",
+        "freshness": "warn after 6 hours",
+        "columns_count": 33
+      }
+    },
+    {
+      "id": "source.shop.stripe.refunds",
+      "label": "stripe.refunds",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_stripe",
+        "loader": "fivetran",
+        "freshness": "warn after 12 hours",
+        "columns_count": 14
+      }
+    },
+    {
+      "id": "source.shop.ga4.events",
+      "label": "ga4.events",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_ga4",
+        "loader": "bigquery-export",
+        "freshness": "warn after 24 hours",
+        "columns_count": 52
+      }
+    },
+    {
+      "id": "source.shop.google_ads.ad_spend",
+      "label": "google_ads.ad_spend",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_google_ads",
+        "loader": "airbyte",
+        "freshness": "warn after 24 hours",
+        "columns_count": 18
+      }
+    },
+    {
+      "id": "source.shop.erp.inventory_levels",
+      "label": "erp.inventory_levels",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_erp",
+        "loader": "airbyte",
+        "freshness": "warn after 12 hours",
+        "columns_count": 12
+      }
+    },
+    {
+      "id": "source.shop.zendesk.tickets",
+      "label": "zendesk.tickets",
+      "type": "source",
+      "attrs": {
+        "schema": "raw_zendesk",
+        "loader": "fivetran",
+        "freshness": "warn after 24 hours",
+        "columns_count": 31
+      }
+    },
+    {
+      "id": "seed.shop.country_codes",
+      "label": "country_codes",
+      "type": "seed",
+      "attrs": { "schema": "seeds", "owner": "analytics-engineering", "columns_count": 4 }
+    },
+    {
+      "id": "seed.shop.fx_rates",
+      "label": "fx_rates",
+      "type": "seed",
+      "attrs": { "schema": "seeds", "owner": "finance-analytics", "columns_count": 5 }
+    },
+    {
+      "id": "model.shop.stg_orders",
+      "label": "stg_orders",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["shopify"],
+        "owner": "analytics-engineering",
+        "columns_count": 14
+      }
+    },
+    {
+      "id": "model.shop.stg_order_lines",
+      "label": "stg_order_lines",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["shopify"],
+        "owner": "analytics-engineering",
+        "columns_count": 11
+      }
+    },
+    {
+      "id": "model.shop.stg_customers",
+      "label": "stg_customers",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["pii", "shopify"],
+        "owner": "analytics-engineering",
+        "columns_count": 12
+      }
+    },
+    {
+      "id": "model.shop.stg_products",
+      "label": "stg_products",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["shopify"],
+        "owner": "analytics-engineering",
+        "columns_count": 10
+      }
+    },
+    {
+      "id": "model.shop.stg_payments",
+      "label": "stg_payments",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["stripe"],
+        "owner": "analytics-engineering",
+        "columns_count": 13
+      }
+    },
+    {
+      "id": "model.shop.stg_refunds",
+      "label": "stg_refunds",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["stripe"],
+        "owner": "analytics-engineering",
+        "columns_count": 8
+      }
+    },
+    {
+      "id": "model.shop.stg_ga4_events",
+      "label": "stg_ga4_events",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["ga4"],
+        "owner": "analytics-engineering",
+        "columns_count": 16
+      }
+    },
+    {
+      "id": "model.shop.stg_ad_spend",
+      "label": "stg_ad_spend",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["marketing"],
+        "owner": "analytics-engineering",
+        "columns_count": 9
+      }
+    },
+    {
+      "id": "model.shop.stg_inventory_levels",
+      "label": "stg_inventory_levels",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["erp"],
+        "owner": "analytics-engineering",
+        "columns_count": 7
+      }
+    },
+    {
+      "id": "model.shop.stg_tickets",
+      "label": "stg_tickets",
+      "type": "model",
+      "attrs": {
+        "layer": "staging",
+        "materialization": "view",
+        "schema": "staging",
+        "tags": ["zendesk"],
+        "owner": "analytics-engineering",
+        "columns_count": 12
+      }
+    },
+    {
+      "id": "model.shop.int_orders_enriched",
+      "label": "int_orders_enriched",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "ephemeral",
+        "schema": "intermediate",
+        "tags": [],
+        "owner": "analytics-engineering",
+        "columns_count": 24
+      }
+    },
+    {
+      "id": "model.shop.int_payments_reconciled",
+      "label": "int_payments_reconciled",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "ephemeral",
+        "schema": "intermediate",
+        "tags": ["finance"],
+        "owner": "finance-analytics",
+        "columns_count": 15
+      }
+    },
+    {
+      "id": "model.shop.int_customer_orders",
+      "label": "int_customer_orders",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "ephemeral",
+        "schema": "intermediate",
+        "tags": [],
+        "owner": "analytics-engineering",
+        "columns_count": 9
+      }
+    },
+    {
+      "id": "model.shop.int_marketing_attribution",
+      "label": "int_marketing_attribution",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "table",
+        "schema": "intermediate",
+        "tags": ["marketing"],
+        "owner": "marketing-analytics",
+        "columns_count": 18
+      }
+    },
+    {
+      "id": "model.shop.int_inventory_snapshots",
+      "label": "int_inventory_snapshots",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "table",
+        "schema": "intermediate",
+        "tags": ["erp"],
+        "owner": "operations-analytics",
+        "columns_count": 9
+      }
+    },
+    {
+      "id": "model.shop.int_legacy_discounts",
+      "label": "int_legacy_discounts",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "ephemeral",
+        "schema": "intermediate",
+        "tags": ["deprecated"],
+        "owner": "analytics-engineering",
+        "columns_count": 6
+      }
+    },
+    {
+      "id": "model.shop.int_support_contacts",
+      "label": "int_support_contacts",
+      "type": "model",
+      "attrs": {
+        "layer": "intermediate",
+        "materialization": "ephemeral",
+        "schema": "intermediate",
+        "tags": ["pii"],
+        "owner": "support-analytics",
+        "columns_count": 10
+      }
+    },
+    {
+      "id": "model.shop.fct_orders",
+      "label": "fct_orders",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["core", "finance"],
+        "owner": "analytics-engineering",
+        "columns_count": 22
+      }
+    },
+    {
+      "id": "model.shop.fct_order_items",
+      "label": "fct_order_items",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["core"],
+        "owner": "analytics-engineering",
+        "columns_count": 17
+      }
+    },
+    {
+      "id": "model.shop.dim_customers",
+      "label": "dim_customers",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["core", "pii"],
+        "owner": "analytics-engineering",
+        "columns_count": 19
+      }
+    },
+    {
+      "id": "model.shop.dim_products",
+      "label": "dim_products",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["core"],
+        "owner": "analytics-engineering",
+        "columns_count": 14
+      }
+    },
+    {
+      "id": "model.shop.fct_payments",
+      "label": "fct_payments",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["finance"],
+        "owner": "finance-analytics",
+        "columns_count": 16
+      }
+    },
+    {
+      "id": "model.shop.fct_daily_revenue",
+      "label": "fct_daily_revenue",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["finance"],
+        "owner": "finance-analytics",
+        "columns_count": 8
+      }
+    },
+    {
+      "id": "model.shop.fct_channel_performance",
+      "label": "fct_channel_performance",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": ["marketing"],
+        "owner": "marketing-analytics",
+        "columns_count": 12
+      }
+    },
+    {
+      "id": "model.shop.fct_inventory_daily",
+      "label": "fct_inventory_daily",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "incremental",
+        "schema": "analytics",
+        "tags": ["erp"],
+        "owner": "operations-analytics",
+        "columns_count": 9
+      }
+    },
+    {
+      "id": "model.shop.fct_support_tickets",
+      "label": "fct_support_tickets",
+      "type": "model",
+      "attrs": {
+        "layer": "marts",
+        "materialization": "table",
+        "schema": "analytics",
+        "tags": [],
+        "owner": "support-analytics",
+        "columns_count": 15
+      }
+    },
+    {
+      "id": "exposure.shop.executive_revenue_dashboard",
+      "label": "executive_revenue_dashboard",
+      "type": "exposure",
+      "attrs": {
+        "exposure_type": "dashboard",
+        "owner": "finance-analytics",
+        "maturity": "high",
+        "tool": "Looker"
+      }
+    },
+    {
+      "id": "exposure.shop.marketing_roi_dashboard",
+      "label": "marketing_roi_dashboard",
+      "type": "exposure",
+      "attrs": {
+        "exposure_type": "dashboard",
+        "owner": "marketing-analytics",
+        "maturity": "medium",
+        "tool": "Looker"
+      }
+    },
+    {
+      "id": "exposure.shop.customer_churn_model",
+      "label": "customer_churn_model",
+      "type": "exposure",
+      "attrs": { "exposure_type": "ml", "owner": "data-science", "maturity": "medium", "tool": "Vertex AI" }
+    },
+    {
+      "id": "exposure.shop.inventory_planner",
+      "label": "inventory_planner",
+      "type": "exposure",
+      "attrs": {
+        "exposure_type": "application",
+        "owner": "operations-analytics",
+        "maturity": "high",
+        "tool": "internal app"
+      }
+    },
+    {
+      "id": "exposure.shop.support_ops_report",
+      "label": "support_ops_report",
+      "type": "exposure",
+      "attrs": {
+        "exposure_type": "notebook",
+        "owner": "support-analytics",
+        "maturity": "low",
+        "tool": "Hex"
+      }
+    }
+  ],
+  "edges": [
+    { "source": "model.shop.stg_orders", "predicate": "depends_on", "target": "source.shop.shopify.orders" },
+    { "source": "model.shop.stg_order_lines", "predicate": "depends_on", "target": "source.shop.shopify.order_lines" },
+    { "source": "model.shop.stg_customers", "predicate": "depends_on", "target": "source.shop.shopify.customers" },
+    { "source": "model.shop.stg_customers", "predicate": "depends_on", "target": "seed.shop.country_codes" },
+    { "source": "model.shop.stg_products", "predicate": "depends_on", "target": "source.shop.shopify.products" },
+    { "source": "model.shop.stg_payments", "predicate": "depends_on", "target": "source.shop.stripe.payments" },
+    { "source": "model.shop.stg_refunds", "predicate": "depends_on", "target": "source.shop.stripe.refunds" },
+    { "source": "model.shop.stg_ga4_events", "predicate": "depends_on", "target": "source.shop.ga4.events" },
+    { "source": "model.shop.stg_ad_spend", "predicate": "depends_on", "target": "source.shop.google_ads.ad_spend" },
+    { "source": "model.shop.stg_inventory_levels", "predicate": "depends_on", "target": "source.shop.erp.inventory_levels" },
+    { "source": "model.shop.stg_tickets", "predicate": "depends_on", "target": "source.shop.zendesk.tickets" },
+    { "source": "model.shop.int_orders_enriched", "predicate": "depends_on", "target": "model.shop.stg_orders" },
+    { "source": "model.shop.int_orders_enriched", "predicate": "depends_on", "target": "model.shop.stg_order_lines" },
+    { "source": "model.shop.int_orders_enriched", "predicate": "depends_on", "target": "model.shop.stg_products" },
+    { "source": "model.shop.int_payments_reconciled", "predicate": "depends_on", "target": "model.shop.stg_payments" },
+    { "source": "model.shop.int_payments_reconciled", "predicate": "depends_on", "target": "model.shop.stg_refunds" },
+    { "source": "model.shop.int_payments_reconciled", "predicate": "depends_on", "target": "seed.shop.fx_rates" },
+    { "source": "model.shop.int_customer_orders", "predicate": "depends_on", "target": "model.shop.stg_customers" },
+    { "source": "model.shop.int_customer_orders", "predicate": "depends_on", "target": "model.shop.int_orders_enriched" },
+    { "source": "model.shop.int_marketing_attribution", "predicate": "depends_on", "target": "model.shop.stg_ga4_events" },
+    { "source": "model.shop.int_marketing_attribution", "predicate": "depends_on", "target": "model.shop.int_orders_enriched" },
+    { "source": "model.shop.int_inventory_snapshots", "predicate": "depends_on", "target": "model.shop.stg_inventory_levels" },
+    { "source": "model.shop.int_inventory_snapshots", "predicate": "depends_on", "target": "model.shop.stg_products" },
+    { "source": "model.shop.int_legacy_discounts", "predicate": "depends_on", "target": "model.shop.stg_orders" },
+    { "source": "model.shop.int_support_contacts", "predicate": "depends_on", "target": "model.shop.stg_tickets" },
+    { "source": "model.shop.int_support_contacts", "predicate": "depends_on", "target": "model.shop.stg_customers" },
+    { "source": "model.shop.fct_orders", "predicate": "depends_on", "target": "model.shop.int_orders_enriched" },
+    { "source": "model.shop.fct_orders", "predicate": "depends_on", "target": "model.shop.int_payments_reconciled" },
+    { "source": "model.shop.fct_orders", "predicate": "depends_on", "target": "model.shop.int_legacy_discounts" },
+    { "source": "model.shop.fct_order_items", "predicate": "depends_on", "target": "model.shop.int_orders_enriched" },
+    { "source": "model.shop.dim_customers", "predicate": "depends_on", "target": "model.shop.stg_customers" },
+    { "source": "model.shop.dim_customers", "predicate": "depends_on", "target": "model.shop.int_customer_orders" },
+    { "source": "model.shop.dim_products", "predicate": "depends_on", "target": "model.shop.stg_products" },
+    { "source": "model.shop.dim_products", "predicate": "depends_on", "target": "model.shop.int_inventory_snapshots" },
+    { "source": "model.shop.fct_payments", "predicate": "depends_on", "target": "model.shop.int_payments_reconciled" },
+    { "source": "model.shop.fct_daily_revenue", "predicate": "depends_on", "target": "model.shop.fct_orders" },
+    { "source": "model.shop.fct_daily_revenue", "predicate": "depends_on", "target": "seed.shop.fx_rates" },
+    { "source": "model.shop.fct_channel_performance", "predicate": "depends_on", "target": "model.shop.int_marketing_attribution" },
+    { "source": "model.shop.fct_channel_performance", "predicate": "depends_on", "target": "model.shop.stg_ad_spend" },
+    { "source": "model.shop.fct_inventory_daily", "predicate": "depends_on", "target": "model.shop.int_inventory_snapshots" },
+    { "source": "model.shop.fct_support_tickets", "predicate": "depends_on", "target": "model.shop.int_support_contacts" },
+    { "source": "exposure.shop.executive_revenue_dashboard", "predicate": "depends_on", "target": "model.shop.fct_daily_revenue" },
+    { "source": "exposure.shop.executive_revenue_dashboard", "predicate": "depends_on", "target": "model.shop.fct_orders" },
+    { "source": "exposure.shop.marketing_roi_dashboard", "predicate": "depends_on", "target": "model.shop.fct_channel_performance" },
+    { "source": "exposure.shop.customer_churn_model", "predicate": "depends_on", "target": "model.shop.dim_customers" },
+    { "source": "exposure.shop.customer_churn_model", "predicate": "depends_on", "target": "model.shop.fct_orders" },
+    { "source": "exposure.shop.inventory_planner", "predicate": "depends_on", "target": "model.shop.fct_inventory_daily" },
+    { "source": "exposure.shop.inventory_planner", "predicate": "depends_on", "target": "model.shop.dim_products" },
+    { "source": "exposure.shop.support_ops_report", "predicate": "depends_on", "target": "model.shop.fct_support_tickets" }
+  ]
+}

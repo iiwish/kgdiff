@@ -1,0 +1,5 @@
+R	http://example.org/alice	Renamed “Alice” → “Alice Liddell”
+A	http://example.org/carol	Added “Carol” and 1 relation
+A	_:b01b7df874a952b	Added “_:b01b7df874a952b”
+E	http://example.org/acme	“Acme”: address now points to “_:b01b7df874a952b” (was “_:b187a4b8e554203”)
+D	_:b187a4b8e554203	Removed “_:b187a4b8e554203”

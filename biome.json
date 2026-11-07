@@ -12,6 +12,9 @@
       "!**/node_modules",
       "!**/coverage",
       "!examples/datasets",
+      "!conformance/cases",
+      "!conformance/primitives",
+      "!conformance/manifest.json",
       "!.changeset/*.md"
     ]
   },

@@ -1,0 +1,146 @@
+{
+  "en": [
+    {
+      "id": "merge:https://schema.org/SoftwareSourceCode",
+      "title": "Merged “Code” into “Software source code”",
+      "subtitle": "via replacement hint · kept as deprecated"
+    },
+    {
+      "id": "merge:https://schema.org/employee",
+      "title": "Merged “employees” into “employee”",
+      "subtitle": "via replacement hint · kept as deprecated"
+    },
+    {
+      "id": "relations:https://schema.org/Review",
+      "title": "Added “Review” —itemReviewed→ “Thing”",
+      "subtitle": "new relation"
+    },
+    {
+      "id": "modify:https://schema.org/Corporation",
+      "title": "Updated synonyms of “Corporation”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:https://schema.org/Dataset",
+      "title": "Updated attributes of “Dataset”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:https://schema.org/Event",
+      "title": "Updated attributes of “Event”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:https://schema.org/NGO",
+      "title": "Renamed “NGO” → “Non-governmental organization”",
+      "subtitle": "+1 synonym"
+    },
+    {
+      "id": "modify:https://schema.org/ScholarlyArticle",
+      "title": "Renamed “Scholarly artcle” → “Scholarly article”",
+      "subtitle": ""
+    },
+    {
+      "id": "add:https://schema.org/FoodEstablishment",
+      "title": "Added “Food establishment”, “Cafe or coffee shop” and 2 relations",
+      "subtitle": "type rdfs:Class · linked to “Local business”"
+    },
+    {
+      "id": "modify:https://schema.org/Restaurant",
+      "title": "Moved “Restaurant” under “Food establishment”",
+      "subtitle": "from “Local business”"
+    },
+    {
+      "id": "modify:https://schema.org/servesCuisine",
+      "title": "Edited “serves cuisine”",
+      "subtitle": "~1 attribute · ~1 relation"
+    },
+    {
+      "id": "add:https://schema.org/SocialMediaPosting",
+      "title": "Added “Social media posting”, “Discussion forum posting” and 2 relations",
+      "subtitle": "type rdfs:Class · linked to “Article”"
+    },
+    {
+      "id": "modify:https://schema.org/BlogPosting",
+      "title": "Moved “Blog posting” under “Social media posting”",
+      "subtitle": "from “Article”"
+    },
+    {
+      "id": "add:https://schema.org/VirtualLocation",
+      "title": "Added “Virtual location” and 2 relations",
+      "subtitle": "type rdfs:Class · linked to “Intangible” and “location”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "merge:https://schema.org/SoftwareSourceCode",
+      "title": "「Code」合并入「Software source code」",
+      "subtitle": "依据替代声明 · 源节点保留为已弃用"
+    },
+    {
+      "id": "merge:https://schema.org/employee",
+      "title": "「employees」合并入「employee」",
+      "subtitle": "依据替代声明 · 源节点保留为已弃用"
+    },
+    {
+      "id": "relations:https://schema.org/Review",
+      "title": "新增关系「Review」—itemReviewed→「Thing」",
+      "subtitle": "新关系"
+    },
+    {
+      "id": "modify:https://schema.org/Corporation",
+      "title": "修改「Corporation」的别名",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:https://schema.org/Dataset",
+      "title": "修改「Dataset」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:https://schema.org/Event",
+      "title": "修改「Event」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:https://schema.org/NGO",
+      "title": "「NGO」改名为「Non-governmental organization」",
+      "subtitle": "别名 +1"
+    },
+    {
+      "id": "modify:https://schema.org/ScholarlyArticle",
+      "title": "「Scholarly artcle」改名为「Scholarly article」",
+      "subtitle": ""
+    },
+    {
+      "id": "add:https://schema.org/FoodEstablishment",
+      "title": "新增「Food establishment」和「Cafe or coffee shop」及 2 条关系",
+      "subtitle": "类型 rdfs:Class · 关联「Local business」"
+    },
+    {
+      "id": "modify:https://schema.org/Restaurant",
+      "title": "「Restaurant」移至「Food establishment」下",
+      "subtitle": "原属「Local business」"
+    },
+    {
+      "id": "modify:https://schema.org/servesCuisine",
+      "title": "修改「serves cuisine」",
+      "subtitle": "属性 ~1 · 关系 ~1"
+    },
+    {
+      "id": "add:https://schema.org/SocialMediaPosting",
+      "title": "新增「Social media posting」和「Discussion forum posting」及 2 条关系",
+      "subtitle": "类型 rdfs:Class · 关联「Article」"
+    },
+    {
+      "id": "modify:https://schema.org/BlogPosting",
+      "title": "「Blog posting」移至「Social media posting」下",
+      "subtitle": "原属「Article」"
+    },
+    {
+      "id": "add:https://schema.org/VirtualLocation",
+      "title": "新增「Virtual location」及 2 条关系",
+      "subtitle": "类型 rdfs:Class · 关联「Intangible」和「location」"
+    }
+  ]
+}

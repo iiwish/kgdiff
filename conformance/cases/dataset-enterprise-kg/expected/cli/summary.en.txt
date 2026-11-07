@@ -1,0 +1,21 @@
+kgdiff  企业信用知识图谱本体 v12 → v13                                          74 nodes · 171 edges
+
+  +1 added   −1 removed   ~6 modified   ⇄4 restructured                       23 changes in 12 hunks
+  ++++−−−~~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+  Removed 1
+  − Removed “抽查检查” and 2 relations                       removed · type 事件 · was linked to “…
+  Restructured 4
+  ⊕ Merged “法人代表” into “法定代表人”                      identity · via replacement hint · 1 re…
+  ⇄ Moved “股权出质” under “股权投资”                        structure · from “经营风险”
+  ⇄ “十大股东”: 持股 now points to “上市公司” (was “企业”)   structure · relation retargeted
+  ⇄ Added “实际控制” —穿透依据→ “投资”                       structure · new relation
+  Modified 6
+  ~ Edited “企业”                                            content · +2 −1 attributes · ~1 relati…
+  ~ Deprecated “中外合资企业”                                content
+  ~ Updated attributes of “商标”                             content · ~1 attribute
+  ~ Updated synonyms of “失信被执行人”                       content · +1 −1 synonyms
+  ~ Renamed “高管任职” → “董监高任职”                        content · +1 synonym
+  ~ Changed the type of “限制高消费”                         content · +1 −1 types
+  Added 1
+  + Added “受益所有人” and 3 relations                       added · type 角色 · linked to “股权投…

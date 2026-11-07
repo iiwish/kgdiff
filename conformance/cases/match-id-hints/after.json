@@ -1,0 +1,37 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "retail", "version": "enriched" },
+  "nodes": [
+    { "id": "party", "label": "Party", "type": "Concept" },
+    { "id": "taxonomy", "label": "Business taxonomy", "type": "Concept" },
+    { "id": "geo", "label": "Geography", "type": "Concept" },
+    { "id": "customer", "label": "Customer", "type": "Entity", "aliases": ["Client"], "replaces": ["dim_customer", "dim_client"], "attrs": { "table": "crm.customers", "rows": 128400 } },
+    { "id": "order", "label": "Order", "type": "Event", "replaces": ["fct_order"], "attrs": { "table": "sales.orders", "grain": "order" } },
+    { "id": "order_line", "label": "Order line", "type": "Event", "replaces": ["fct_order_line"], "attrs": { "table": "sales.order_lines", "grain": "line" } },
+    { "id": "product", "label": "Product", "type": "Entity", "replaces": ["dim_product"], "attrs": { "table": "pim.products" } },
+    { "id": "sku", "label": "SKU", "type": "Entity", "aliases": ["Stock keeping unit"], "replaces": ["dim_sku"], "attrs": { "table": "pim.skus" } },
+    { "id": "bundle", "label": "Bundle", "type": "Entity", "replaces": ["dim_sku"], "attrs": { "table": "pim.bundles" } },
+    { "id": "category", "label": "Category", "type": "Entity", "replaces": ["dim_category"] },
+    { "id": "dim_region", "label": "Region", "type": "Entity", "deprecated": true, "replacedBy": ["sales_region"] },
+    { "id": "sales_region", "label": "Sales region", "type": "Entity" },
+    { "id": "channel", "label": "Channel", "type": "Entity" },
+    { "id": "metric_revenue", "label": "Net revenue", "type": "Metric", "attrs": { "definition": "Sum of order line amounts net of refunds", "unit": "CNY", "owner": "finance" } }
+  ],
+  "edges": [
+    { "source": "customer", "target": "party", "predicate": "subClassOf" },
+    { "source": "sales_region", "target": "geo", "predicate": "subClassOf" },
+    { "source": "channel", "target": "taxonomy", "predicate": "subClassOf" },
+    { "source": "order", "target": "customer", "predicate": "placed_by", "attrs": { "cardinality": "N:1" } },
+    { "source": "order", "target": "customer", "predicate": "billed_to", "attrs": { "cardinality": "N:1" } },
+    { "source": "order", "target": "sales_region", "predicate": "ships_to" },
+    { "source": "order", "target": "channel", "predicate": "sold_via" },
+    { "source": "order_line", "target": "order", "predicate": "part_of" },
+    { "source": "order_line", "target": "sku", "predicate": "of_item" },
+    { "source": "sku", "target": "product", "predicate": "variant_of" },
+    { "source": "bundle", "target": "product", "predicate": "variant_of" },
+    { "source": "product", "target": "category", "predicate": "in_category" },
+    { "source": "category", "target": "category", "predicate": "parent_category", "label": "parent category" },
+    { "source": "metric_revenue", "target": "order_line", "predicate": "computed_from" }
+  ]
+}

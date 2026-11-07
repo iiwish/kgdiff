@@ -1,0 +1,1406 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "https://schema.org/AggregateRating",
+        "label": "Aggregate rating",
+        "type": "rdfs:Class",
+        "aliases": [
+          "综合评分"
+        ],
+        "attrs": {
+          "rdfs:comment": "A rating computed from many individual ratings or reviews."
+        }
+      },
+      {
+        "id": "https://schema.org/Article",
+        "label": "Article",
+        "type": "rdfs:Class",
+        "aliases": [
+          "文章"
+        ],
+        "attrs": {
+          "rdfs:comment": "A written piece published on its own, for example in a newspaper, magazine or website."
+        }
+      },
+      {
+        "id": "https://schema.org/BlogPosting",
+        "label": "Blog posting",
+        "type": "rdfs:Class",
+        "aliases": [
+          "博客文章"
+        ],
+        "attrs": {
+          "rdfs:comment": "An entry published on a blog."
+        }
+      },
+      {
+        "id": "https://schema.org/Book",
+        "label": "Book",
+        "type": "rdfs:Class",
+        "aliases": [
+          "图书"
+        ],
+        "attrs": {
+          "rdfs:comment": "A book, in print or electronic form."
+        }
+      },
+      {
+        "id": "https://schema.org/BusinessEvent",
+        "label": "Business event",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "An event organized for business purposes, such as a trade fair."
+        }
+      },
+      {
+        "id": "https://schema.org/CafeOrCoffeeShop",
+        "label": "Cafe or coffee shop",
+        "type": "rdfs:Class",
+        "aliases": [
+          "咖啡馆"
+        ],
+        "attrs": {
+          "rdfs:comment": "A small establishment serving coffee, tea and light meals."
+        }
+      },
+      {
+        "id": "https://schema.org/Code",
+        "label": "Code",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "Program text, such as a snippet or a complete program. Deprecated: use SoftwareSourceCode."
+        },
+        "deprecated": true,
+        "replacedBy": [
+          "https://schema.org/SoftwareSourceCode"
+        ]
+      },
+      {
+        "id": "https://schema.org/CollegeOrUniversity",
+        "label": "College or university",
+        "type": "rdfs:Class",
+        "aliases": [
+          "高等院校"
+        ],
+        "attrs": {
+          "rdfs:comment": "An institution of higher education."
+        }
+      },
+      {
+        "id": "https://schema.org/Comment",
+        "label": "Comment",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "A short remark attached to another piece of content, such as a blog post."
+        }
+      },
+      {
+        "id": "https://schema.org/ContactPoint",
+        "label": "Contact point",
+        "type": "rdfs:Class",
+        "aliases": [
+          "联系方式"
+        ],
+        "attrs": {
+          "rdfs:comment": "A way to get in touch with an organization or person, such as a support line."
+        }
+      },
+      {
+        "id": "https://schema.org/Corporation",
+        "label": "Corporation",
+        "type": "rdfs:Class",
+        "aliases": [
+          "Company",
+          "公司"
+        ],
+        "attrs": {
+          "rdfs:comment": "A company incorporated as a legal entity."
+        }
+      },
+      {
+        "id": "https://schema.org/CreativeWork",
+        "label": "Creative work",
+        "type": "rdfs:Class",
+        "aliases": [
+          "创作作品"
+        ],
+        "attrs": {
+          "rdfs:comment": "Something produced by creative effort, such as a text, a recording, a program or a data collection."
+        }
+      },
+      {
+        "id": "https://schema.org/Dataset",
+        "label": "Dataset",
+        "type": "rdfs:Class",
+        "aliases": [
+          "数据集"
+        ],
+        "attrs": {
+          "rdfs:comment": "A collection of structured data about one or more topics, published as a unit with one or more distributions."
+        }
+      },
+      {
+        "id": "https://schema.org/Date",
+        "label": "Date",
+        "type": [
+          "rdfs:Class",
+          "schema:DataType"
+        ],
+        "attrs": {
+          "rdfs:comment": "Data type for calendar dates in ISO 8601 form (YYYY-MM-DD)."
+        }
+      },
+      {
+        "id": "https://schema.org/DateTime",
+        "label": "DateTime",
+        "type": [
+          "rdfs:Class",
+          "schema:DataType"
+        ],
+        "attrs": {
+          "rdfs:comment": "Data type for a date with a time of day, in ISO 8601 form."
+        }
+      },
+      {
+        "id": "https://schema.org/DiscussionForumPosting",
+        "label": "Discussion forum posting",
+        "type": "rdfs:Class",
+        "aliases": [
+          "论坛帖子"
+        ],
+        "attrs": {
+          "rdfs:comment": "A message posted to an online discussion forum."
+        }
+      },
+      {
+        "id": "https://schema.org/EducationalOrganization",
+        "label": "Educational organization",
+        "type": "rdfs:Class",
+        "aliases": [
+          "教育机构"
+        ],
+        "attrs": {
+          "rdfs:comment": "An organization whose main purpose is teaching."
+        }
+      },
+      {
+        "id": "https://schema.org/Event",
+        "label": "Event",
+        "type": "rdfs:Class",
+        "aliases": [
+          "事件"
+        ],
+        "attrs": {
+          "rdfs:comment": "Something that happens at a given time and place, such as a concert, a lecture or a festival. Recurring events are described as one Event per occurrence."
+        }
+      },
+      {
+        "id": "https://schema.org/FoodEstablishment",
+        "label": "Food establishment",
+        "type": "rdfs:Class",
+        "aliases": [
+          "餐饮场所"
+        ],
+        "attrs": {
+          "rdfs:comment": "A business that prepares or serves food or drink."
+        }
+      },
+      {
+        "id": "https://schema.org/Intangible",
+        "label": "Intangible",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "Umbrella type for things without physical form, such as quantities, ratings and structured values."
+        }
+      },
+      {
+        "id": "https://schema.org/Integer",
+        "label": "Integer",
+        "type": [
+          "rdfs:Class",
+          "schema:DataType"
+        ],
+        "attrs": {
+          "rdfs:comment": "Data type for whole numbers."
+        }
+      },
+      {
+        "id": "https://schema.org/LocalBusiness",
+        "label": "Local business",
+        "type": "rdfs:Class",
+        "aliases": [
+          "本地商家"
+        ],
+        "attrs": {
+          "rdfs:comment": "A business, or one branch of it, that serves customers at a physical location, for example a shop, a bank branch or a clinic."
+        }
+      },
+      {
+        "id": "https://schema.org/Movie",
+        "label": "Movie",
+        "type": "rdfs:Class",
+        "aliases": [
+          "电影"
+        ],
+        "attrs": {
+          "rdfs:comment": "A motion picture."
+        }
+      },
+      {
+        "id": "https://schema.org/MusicEvent",
+        "label": "Music event",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "An event where music is performed."
+        }
+      },
+      {
+        "id": "https://schema.org/MusicRecording",
+        "label": "Music recording",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "A single recorded piece of music, such as one track of an album."
+        }
+      },
+      {
+        "id": "https://schema.org/NGO",
+        "label": "Non-governmental organization",
+        "type": "rdfs:Class",
+        "aliases": [
+          "NGO",
+          "非政府组织"
+        ],
+        "attrs": {
+          "rdfs:comment": "An organization that operates independently of any government."
+        }
+      },
+      {
+        "id": "https://schema.org/NewsArticle",
+        "label": "News article",
+        "type": "rdfs:Class",
+        "aliases": [
+          "新闻报道"
+        ],
+        "attrs": {
+          "rdfs:comment": "An article that reports on current events or gives background to them."
+        }
+      },
+      {
+        "id": "https://schema.org/Number",
+        "label": "Number",
+        "type": [
+          "rdfs:Class",
+          "schema:DataType"
+        ],
+        "attrs": {
+          "rdfs:comment": "Data type for numeric values."
+        }
+      },
+      {
+        "id": "https://schema.org/Offer",
+        "label": "Offer",
+        "type": "rdfs:Class",
+        "aliases": [
+          "报价"
+        ],
+        "attrs": {
+          "rdfs:comment": "A proposal to sell, rent or provide something, under stated conditions."
+        }
+      },
+      {
+        "id": "https://schema.org/Organization",
+        "label": "Organization",
+        "type": "rdfs:Class",
+        "aliases": [
+          "组织"
+        ],
+        "attrs": {
+          "rdfs:comment": "A group of people organized for a purpose, such as a company, school, club or charity."
+        }
+      },
+      {
+        "id": "https://schema.org/Person",
+        "label": "Person",
+        "type": "rdfs:Class",
+        "aliases": [
+          "人"
+        ],
+        "attrs": {
+          "rdfs:comment": "A human being, living, dead or fictional."
+        }
+      },
+      {
+        "id": "https://schema.org/Place",
+        "label": "Place",
+        "type": "rdfs:Class",
+        "aliases": [
+          "地点"
+        ],
+        "attrs": {
+          "rdfs:comment": "A location with a more or less fixed physical extent."
+        }
+      },
+      {
+        "id": "https://schema.org/PostalAddress",
+        "label": "Postal address",
+        "type": "rdfs:Class",
+        "aliases": [
+          "邮政地址"
+        ],
+        "attrs": {
+          "rdfs:comment": "An address for sending mail."
+        }
+      },
+      {
+        "id": "https://schema.org/Product",
+        "label": "Product",
+        "type": "rdfs:Class",
+        "aliases": [
+          "产品"
+        ],
+        "attrs": {
+          "rdfs:comment": "Something offered for sale or use, whether a physical good or a service."
+        }
+      },
+      {
+        "id": "https://schema.org/Rating",
+        "label": "Rating",
+        "type": "rdfs:Class",
+        "aliases": [
+          "评分"
+        ],
+        "attrs": {
+          "rdfs:comment": "A score on a numeric scale, for example from one to five stars."
+        }
+      },
+      {
+        "id": "https://schema.org/Restaurant",
+        "label": "Restaurant",
+        "type": "rdfs:Class",
+        "aliases": [
+          "餐厅"
+        ],
+        "attrs": {
+          "rdfs:comment": "A business that prepares and serves meals."
+        }
+      },
+      {
+        "id": "https://schema.org/Review",
+        "label": "Review",
+        "type": "rdfs:Class",
+        "aliases": [
+          "评论"
+        ],
+        "attrs": {
+          "rdfs:comment": "An assessment of something, such as a book, a product or a restaurant."
+        }
+      },
+      {
+        "id": "https://schema.org/ScholarlyArticle",
+        "label": "Scholarly article",
+        "type": "rdfs:Class",
+        "aliases": [
+          "学术论文"
+        ],
+        "attrs": {
+          "rdfs:comment": "An article written for an academic audience, usually peer reviewed."
+        }
+      },
+      {
+        "id": "https://schema.org/SocialMediaPosting",
+        "label": "Social media posting",
+        "type": "rdfs:Class",
+        "aliases": [
+          "社交媒体帖子"
+        ],
+        "attrs": {
+          "rdfs:comment": "A post published on a social or community platform, including blog entries and forum messages."
+        }
+      },
+      {
+        "id": "https://schema.org/SoftwareApplication",
+        "label": "Software application",
+        "type": "rdfs:Class",
+        "aliases": [
+          "软件应用"
+        ],
+        "attrs": {
+          "rdfs:comment": "A program that end users install or run."
+        }
+      },
+      {
+        "id": "https://schema.org/SoftwareSourceCode",
+        "label": "Software source code",
+        "type": "rdfs:Class",
+        "aliases": [
+          "源代码"
+        ],
+        "attrs": {
+          "rdfs:comment": "Human-readable program text, from a short snippet to a complete project."
+        }
+      },
+      {
+        "id": "https://schema.org/Store",
+        "label": "Store",
+        "type": "rdfs:Class",
+        "aliases": [
+          "商店"
+        ],
+        "attrs": {
+          "rdfs:comment": "A business that sells goods at retail."
+        }
+      },
+      {
+        "id": "https://schema.org/StructuredValue",
+        "label": "Structured value",
+        "type": "rdfs:Class",
+        "attrs": {
+          "rdfs:comment": "A value made of several parts, used when plain text or a link is not enough."
+        }
+      },
+      {
+        "id": "https://schema.org/Text",
+        "label": "Text",
+        "type": [
+          "rdfs:Class",
+          "schema:DataType"
+        ],
+        "attrs": {
+          "rdfs:comment": "Data type for character strings."
+        }
+      },
+      {
+        "id": "https://schema.org/Thing",
+        "label": "Thing",
+        "type": "rdfs:Class",
+        "aliases": [
+          "事物"
+        ],
+        "attrs": {
+          "rdfs:comment": "Root type: anything that can be described."
+        }
+      },
+      {
+        "id": "https://schema.org/URL",
+        "label": "URL",
+        "type": [
+          "rdfs:Class",
+          "schema:DataType"
+        ],
+        "attrs": {
+          "rdfs:comment": "Data type for web addresses."
+        }
+      },
+      {
+        "id": "https://schema.org/VirtualLocation",
+        "label": "Virtual location",
+        "type": "rdfs:Class",
+        "aliases": [
+          "线上地点"
+        ],
+        "attrs": {
+          "rdfs:comment": "A location that exists only online, such as a video-conference room or a live stream."
+        }
+      },
+      {
+        "id": "https://schema.org/WebPage",
+        "label": "Web page",
+        "type": "rdfs:Class",
+        "aliases": [
+          "网页"
+        ],
+        "attrs": {
+          "rdfs:comment": "A single page of a website."
+        }
+      },
+      {
+        "id": "https://schema.org/address",
+        "label": "address",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "The physical address of the item."
+        }
+      },
+      {
+        "id": "https://schema.org/author",
+        "label": "author",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "Who wrote or created the work or rating."
+        }
+      },
+      {
+        "id": "https://schema.org/codeRepository",
+        "label": "code repository",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "Where the source code is hosted, for example a Git repository."
+        }
+      },
+      {
+        "id": "https://schema.org/datePublished",
+        "label": "date published",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "When the work was first published or broadcast."
+        }
+      },
+      {
+        "id": "https://schema.org/description",
+        "label": "description",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "A free-text account of the item."
+        }
+      },
+      {
+        "id": "https://schema.org/employee",
+        "label": "employee",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "A person employed by the organization."
+        }
+      },
+      {
+        "id": "https://schema.org/employees",
+        "label": "employees",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "People employed by the organization. Deprecated: use employee, which is repeatable."
+        },
+        "deprecated": true,
+        "replacedBy": [
+          "https://schema.org/employee"
+        ]
+      },
+      {
+        "id": "https://schema.org/founder",
+        "label": "founder",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "A person who founded the organization."
+        }
+      },
+      {
+        "id": "https://schema.org/itemReviewed",
+        "label": "item reviewed",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "The thing that the review or rating is about."
+        }
+      },
+      {
+        "id": "https://schema.org/location",
+        "label": "location",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "Where the event takes place or where the organization is based."
+        }
+      },
+      {
+        "id": "https://schema.org/name",
+        "label": "name",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "What the item is called."
+        }
+      },
+      {
+        "id": "https://schema.org/numberOfPages",
+        "label": "number of pages",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "How many pages the book has."
+        }
+      },
+      {
+        "id": "https://schema.org/offers",
+        "label": "offers",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "An offer under which the item is available."
+        }
+      },
+      {
+        "id": "https://schema.org/organizer",
+        "label": "organizer",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "Who organizes the event."
+        }
+      },
+      {
+        "id": "https://schema.org/price",
+        "label": "price",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "The amount asked in the offer."
+        }
+      },
+      {
+        "id": "https://schema.org/publisher",
+        "label": "publisher",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "Who published the work."
+        }
+      },
+      {
+        "id": "https://schema.org/ratingValue",
+        "label": "rating value",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "The value of the rating."
+        }
+      },
+      {
+        "id": "https://schema.org/review",
+        "label": "review",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "A review of this item."
+        }
+      },
+      {
+        "id": "https://schema.org/reviewRating",
+        "label": "review rating",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "The score that this review gives."
+        }
+      },
+      {
+        "id": "https://schema.org/servesCuisine",
+        "label": "serves cuisine",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "The style of food the establishment serves."
+        }
+      },
+      {
+        "id": "https://schema.org/startDate",
+        "label": "start date",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "When the item starts, in ISO 8601 form."
+        }
+      },
+      {
+        "id": "https://schema.org/url",
+        "label": "url",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "Web address of the item."
+        }
+      },
+      {
+        "id": "https://schema.org/worksFor",
+        "label": "works for",
+        "type": "rdf:Property",
+        "attrs": {
+          "rdfs:comment": "An organization the person is employed by."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "https://schema.org/AggregateRating",
+        "target": "https://schema.org/Rating",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Article",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/BlogPosting",
+        "target": "https://schema.org/SocialMediaPosting",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Book",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/BusinessEvent",
+        "target": "https://schema.org/Event",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/CafeOrCoffeeShop",
+        "target": "https://schema.org/FoodEstablishment",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Code",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/CollegeOrUniversity",
+        "target": "https://schema.org/EducationalOrganization",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Comment",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/ContactPoint",
+        "target": "https://schema.org/StructuredValue",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Corporation",
+        "target": "https://schema.org/Organization",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/CreativeWork",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Dataset",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/DiscussionForumPosting",
+        "target": "https://schema.org/SocialMediaPosting",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/EducationalOrganization",
+        "target": "https://schema.org/Organization",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Event",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/FoodEstablishment",
+        "target": "https://schema.org/LocalBusiness",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Intangible",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Integer",
+        "target": "https://schema.org/Number",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/LocalBusiness",
+        "target": "https://schema.org/Organization",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/LocalBusiness",
+        "target": "https://schema.org/Place",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Movie",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/MusicEvent",
+        "target": "https://schema.org/Event",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/MusicRecording",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/NGO",
+        "target": "https://schema.org/Organization",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/NewsArticle",
+        "target": "https://schema.org/Article",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Offer",
+        "target": "https://schema.org/Intangible",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Organization",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Person",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Place",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/PostalAddress",
+        "target": "https://schema.org/ContactPoint",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Product",
+        "target": "https://schema.org/Thing",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Rating",
+        "target": "https://schema.org/Intangible",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Restaurant",
+        "target": "https://schema.org/FoodEstablishment",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Review",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Review",
+        "target": "https://schema.org/Thing",
+        "predicate": "schema:itemReviewed",
+        "label": "itemReviewed"
+      },
+      {
+        "source": "https://schema.org/ScholarlyArticle",
+        "target": "https://schema.org/Article",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/SocialMediaPosting",
+        "target": "https://schema.org/Article",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/SoftwareApplication",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/SoftwareSourceCode",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/Store",
+        "target": "https://schema.org/LocalBusiness",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/StructuredValue",
+        "target": "https://schema.org/Intangible",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/URL",
+        "target": "https://schema.org/Text",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/VirtualLocation",
+        "target": "https://schema.org/Intangible",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/WebPage",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "rdfs:subClassOf",
+        "label": "subClassOf"
+      },
+      {
+        "source": "https://schema.org/address",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/address",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/address",
+        "target": "https://schema.org/Place",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/address",
+        "target": "https://schema.org/PostalAddress",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/address",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/author",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/author",
+        "target": "https://schema.org/Rating",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/author",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/author",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/codeRepository",
+        "target": "https://schema.org/SoftwareSourceCode",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/codeRepository",
+        "target": "https://schema.org/URL",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/datePublished",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/datePublished",
+        "target": "https://schema.org/Date",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/datePublished",
+        "target": "https://schema.org/DateTime",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/description",
+        "target": "https://schema.org/Thing",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/description",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/employee",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/employee",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/employees",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/employees",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/founder",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/founder",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/itemReviewed",
+        "target": "https://schema.org/AggregateRating",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/itemReviewed",
+        "target": "https://schema.org/Review",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/itemReviewed",
+        "target": "https://schema.org/Thing",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/location",
+        "target": "https://schema.org/Event",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/location",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/location",
+        "target": "https://schema.org/Place",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/location",
+        "target": "https://schema.org/PostalAddress",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/location",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/location",
+        "target": "https://schema.org/VirtualLocation",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/name",
+        "target": "https://schema.org/Thing",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/name",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/numberOfPages",
+        "target": "https://schema.org/Book",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/numberOfPages",
+        "target": "https://schema.org/Integer",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/offers",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/offers",
+        "target": "https://schema.org/Event",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/offers",
+        "target": "https://schema.org/Product",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/offers",
+        "target": "https://schema.org/Offer",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/organizer",
+        "target": "https://schema.org/Event",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/organizer",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/organizer",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/price",
+        "target": "https://schema.org/Offer",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/price",
+        "target": "https://schema.org/Number",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/price",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/publisher",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/publisher",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/publisher",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/ratingValue",
+        "target": "https://schema.org/Rating",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/ratingValue",
+        "target": "https://schema.org/Number",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/ratingValue",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/review",
+        "target": "https://schema.org/CreativeWork",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/review",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/review",
+        "target": "https://schema.org/Place",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/review",
+        "target": "https://schema.org/Product",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/review",
+        "target": "https://schema.org/Review",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/reviewRating",
+        "target": "https://schema.org/Review",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/reviewRating",
+        "target": "https://schema.org/Rating",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/servesCuisine",
+        "target": "https://schema.org/FoodEstablishment",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/servesCuisine",
+        "target": "https://schema.org/Text",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/startDate",
+        "target": "https://schema.org/Event",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/startDate",
+        "target": "https://schema.org/Date",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/startDate",
+        "target": "https://schema.org/DateTime",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/url",
+        "target": "https://schema.org/Thing",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/url",
+        "target": "https://schema.org/URL",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      },
+      {
+        "source": "https://schema.org/worksFor",
+        "target": "https://schema.org/Person",
+        "predicate": "schema:domainIncludes",
+        "label": "domainIncludes"
+      },
+      {
+        "source": "https://schema.org/worksFor",
+        "target": "https://schema.org/Organization",
+        "predicate": "schema:rangeIncludes",
+        "label": "rangeIncludes"
+      }
+    ],
+    "meta": {
+      "predicateLabels": {
+        "schema:itemReviewed": "item reviewed"
+      },
+      "source": "after.ttl"
+    }
+  },
+  "format": "turtle",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {
+    "schema:itemReviewed": "item reviewed"
+  },
+  "warnings": []
+}

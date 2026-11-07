@@ -1,0 +1,27 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 250,
+  "nodes": [
+    "animal",
+    "cat",
+    "dog",
+    "mammal"
+  ],
+  "radii": {
+    "animal": 6.2,
+    "cat": 7.11,
+    "dog": 7.11,
+    "mammal": 7.81
+  },
+  "hidden": {},
+  "components": [
+    [
+      "animal",
+      "cat",
+      "dog",
+      "mammal"
+    ]
+  ]
+}

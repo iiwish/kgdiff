@@ -1,0 +1,11 @@
+kgdiff  before.json → catalog 1.0.0            0 → 4 nodes · 0 → 2 edges
+
+  +2 added                                          6 changes in 2 hunks
+  ++++++
+
+         added  removed  modified  unchanged
+  nodes      4        0         0          0
+  edges      2        0         0          0
+
+  By type
+  (untyped)  4 ++++

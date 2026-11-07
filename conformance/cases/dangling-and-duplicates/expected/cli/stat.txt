@@ -1,0 +1,11 @@
+kgdiff  before.json → after.json                   8 → 7 nodes · 5 edges
+
+  −1 removed   ~2 modified   ⇄3 restructured        6 changes in 6 hunks
+  −~~⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      0        1         2          5
+  edges      1        1         1          3
+
+  By type
+  (untyped)  3 −~~

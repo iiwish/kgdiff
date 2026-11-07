@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.ttl → after.ttl",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "before.ttl",
+      "format": "turtle"
+    },
+    "after": {
+      "name": "after.ttl",
+      "format": "turtle"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

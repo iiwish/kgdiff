@@ -1,0 +1,10 @@
+kgdiff  before.nq → after.trig                 3 → 4 nodes · 2 → 3 edges
+
+  +1 added   ~2 modified                            4 changes in 3 hunks
+  ++~~
+
+  Modified 2
+  ~ Renamed “B” → “B (renamed)”   content
+  ~ Updated attributes of “C”     content · ~1 attribute
+  Added 1
+  + Added “D” and 1 relation      added · linked to “A”

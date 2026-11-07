@@ -1,0 +1,11 @@
+kgdiff  Pizza ontology 1.0 → 1.1              8 → 10 nodes · 5 → 7 edges
+
+  +2 added   ~3 modified                            8 changes in 5 hunks
+  ++++~~~~
+
+         added  removed  modified  unchanged
+  nodes      2        0         3          5
+  edges      2        0         1          4
+
+  By type
+  owl:Class  5 ++~~~

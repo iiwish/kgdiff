@@ -1,0 +1,20 @@
+kgdiff  shop dbt project main@4f2c9e1 → main@b81d07a                   43 → 44 nodes · 49 → 50 edges
+
+  +1 added   −1 removed   ~6 modified   ⇄3 restructured                       21 changes in 11 hunks
+  +++−−−~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+  Removed 1
+  − Removed “int_legacy_discounts” and 2 relations                   removed · type model · was lin…
+  Restructured 3
+  ⑂ Split “int_marketing_attribution” into “int_order_touchpoints…   identity · via replacement hin…
+  ⇄ “fct_daily_revenue”: depends on now points to “fct_payments”…    structure · relation retargeted
+  ⇄ “customer_churn_model”: depends on now points to “fct_custome…   structure · relation retargeted
+  Modified 6
+  ~ Updated attributes of “dim_customers”                            content · ~1 attribute
+  ~ Updated attributes of “fct_channel_performance”                  content · ~1 attribute
+  ~ Updated attributes of “fct_orders”                               content · ~1 attribute
+  ~ Updated attributes of “fct_support_tickets”                      content · ~1 attribute
+  ~ Renamed “stg_orders” → “stg_orders_v2”                           content · model.shop.stg_order…
+  ~ Updated attributes of “support_ops_report”                       content · ~1 attribute
+  Added 1
+  + Added “fct_customer_ltv” and 2 relations                         added · type model · linked to…

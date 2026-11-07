@@ -1,0 +1,66 @@
+{
+  "en": [
+    {
+      "id": "remove:term:facet",
+      "title": "Removed “Facet” and 1 relation",
+      "subtitle": "was linked to “Dimension”"
+    },
+    {
+      "id": "modify:term:indicator",
+      "title": "Moved “Indicator” under “Key performance indicator”",
+      "subtitle": "from “Metric”"
+    },
+    {
+      "id": "modify:term:okr",
+      "title": "Renamed “Objective and key results” → “Objectives and key results”",
+      "subtitle": "~1 attribute · moved under “Key performance indicator”"
+    },
+    {
+      "id": "modify:term:dimension",
+      "title": "Edited “Dimension”",
+      "subtitle": "~1 attribute · replaces “Attribute” and “Facet”"
+    },
+    {
+      "id": "modify:term:metric",
+      "title": "Updated attributes of “Metric”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:term:arpu",
+      "title": "Renamed “Revenue per user” → “Revenue per user (ARPU)”",
+      "subtitle": "term:old-name → term:arpu · 91% match"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "remove:term:facet",
+      "title": "删除「Facet」及 1 条关系",
+      "subtitle": "原关联「Dimension」"
+    },
+    {
+      "id": "modify:term:indicator",
+      "title": "「Indicator」移至「Key performance indicator」下",
+      "subtitle": "原属「Metric」"
+    },
+    {
+      "id": "modify:term:okr",
+      "title": "「Objective and key results」改名为「Objectives and key results」",
+      "subtitle": "属性 ~1 · 移至「Key performance indicator」下"
+    },
+    {
+      "id": "modify:term:dimension",
+      "title": "修改「Dimension」",
+      "subtitle": "属性 ~1 · 替代「Attribute」和「Facet」"
+    },
+    {
+      "id": "modify:term:metric",
+      "title": "修改「Metric」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:term:arpu",
+      "title": "「Revenue per user」改名为「Revenue per user (ARPU)」",
+      "subtitle": "ID term:old-name → term:arpu · 匹配度 91%"
+    }
+  ]
+}

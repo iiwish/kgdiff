@@ -1,0 +1,7 @@
+G	g1	Merged “Gamma ray burst” into “Gamma ray”
+E	a	Updated 2 relations of “Alpha”
+E	b	Removed “Beta” —next→ “Beta”
+E	d	“Delta”: next now points to “Epsilon” (was “Delta”)
+E	e	Edited “Epsilon” —cycle→ “Epsilon”
+E	c	Added “Gamma” —next→ “Gamma”
+R	f	Renamed “Phi” → “Phi prime”

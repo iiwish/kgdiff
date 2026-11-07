@@ -1,0 +1,8 @@
+G	EX:0000005	Merged “bush” into “shrub”
+R	EX:0000002	Renamed “animal” → “Animal”
+M	EX:0000009	Edited “ecosystem”
+M	EX:0000044	Changed the id of “flower”
+M	EX:0000001	Updated attributes of “organism”
+A	EX:0000010	Added “biome” and 1 relation
+M	EX:0000003	Edited “plant”
+A	EX:0000007	Added “tree” and 1 relation

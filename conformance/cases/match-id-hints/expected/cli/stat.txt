@@ -1,0 +1,14 @@
+kgdiff  retail skeleton → enriched                           14 nodes · 14 edges
+
+  +1 added   −1 removed   ~6 modified   ⇄3 restructured   28 changes in 11 hunks
+  ++−−~~~~~~~~~⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄
+  ⚑ Review first: definition changed in 1 hunk
+
+         added  removed  modified  unchanged
+  nodes      4        4         7          3
+  edges      3        3         7          4
+
+  By type
+  Entity  11 ++++−−−~~~~
+  Event    2 ~~
+  Metric   2 −~

@@ -1,0 +1,46 @@
+{
+  "en": [
+    {
+      "id": "modify:1",
+      "title": "Edited “Alice”",
+      "subtitle": "+1 attribute · −1 type"
+    },
+    {
+      "id": "modify:4",
+      "title": "Changed the id of “Bob”",
+      "subtitle": "2 → 4 · +1 attribute · −1 type · replaces “Bob”"
+    },
+    {
+      "id": "modify:3",
+      "title": "Edited “Carol”",
+      "subtitle": "+1 attribute · −1 type · +1 synonym"
+    },
+    {
+      "id": "add:5",
+      "title": "Added “Dana” and 1 relation",
+      "subtitle": "linked to “Alice”"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "modify:1",
+      "title": "修改「Alice」",
+      "subtitle": "属性 +1 · 类型 −1"
+    },
+    {
+      "id": "modify:4",
+      "title": "「Bob」的 ID 已变更",
+      "subtitle": "ID 2 → 4 · 属性 +1 · 类型 −1 · 替代「Bob」"
+    },
+    {
+      "id": "modify:3",
+      "title": "修改「Carol」",
+      "subtitle": "属性 +1 · 类型 −1 · 别名 +1"
+    },
+    {
+      "id": "add:5",
+      "title": "新增「Dana」及 1 条关系",
+      "subtitle": "关联「Alice」"
+    }
+  ]
+}

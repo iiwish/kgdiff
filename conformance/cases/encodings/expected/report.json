@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "encodings utf-16 → gzip",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "encodings utf-16",
+      "format": "json"
+    },
+    "after": {
+      "name": "encodings gzip",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

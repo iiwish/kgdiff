@@ -1,0 +1,4 @@
+D	c1	Removed “Core” and 1 relation
+V	carol	Detached “Carol” from “Core”
+E	alice	Edited “Alice” —mentors→ “Carol”
+M	bob	Changed the type of “Bob”

@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "name": "curie-extraction",
+    "version": "run-b",
+    "model": "extractor-v1 (temperature 0.7)",
+    "source": "Marie Curie and the discovery of radioactivity (examples/datasets/llm-extraction/README.md)",
+    "extracted_at": "2026-10-30T09:16:47Z"
+  },
+  "nodes": [
+    {
+      "id": "e_37c6",
+      "label": "Marie Skłodowska-Curie",
+      "type": "Person",
+      "aliases": ["Marie Curie", "Maria Skłodowska"],
+      "attrs": { "born": 1867, "died": 1934, "nationality": "Polish-French" }
+    },
+    {
+      "id": "e_13af",
+      "label": "Pierre Curie",
+      "type": "Person",
+      "attrs": { "born": 1859, "died": 1906 }
+    },
+    { "id": "e_076a", "label": "Jacques Curie", "type": "Person", "attrs": { "born": 1855 } },
+    {
+      "id": "e_7e22",
+      "label": "Antoine Henri Becquerel",
+      "type": "Person",
+      "attrs": { "born": 1852, "died": 1908 }
+    },
+    {
+      "id": "e_b4da",
+      "label": "Wilhelm Conrad Röntgen",
+      "type": "Person",
+      "attrs": { "born": 1845 }
+    },
+    { "id": "e_764a", "label": "Gabriel Lippmann", "type": "Person", "attrs": { "born": 1845 } },
+    { "id": "e_e1f0", "label": "André-Louis Debierne", "type": "Person", "attrs": { "born": 1874 } },
+    { "id": "e_0792", "label": "Irene Joliot-Curie", "type": "Person", "attrs": { "born": 1897 } },
+    {
+      "id": "e_6cfd",
+      "label": "Frédéric Joliot-Curie",
+      "type": "Person",
+      "aliases": ["Frédéric Joliot"],
+      "attrs": { "born": 1900 }
+    },
+    { "id": "e_149b", "label": "Ève Curie", "type": "Person", "attrs": { "born": 1904 } },
+    { "id": "e_00ce", "label": "Gustave Bémont", "type": "Person", "attrs": { "born": 1857 } },
+    {
+      "id": "e_b206",
+      "label": "Thorium",
+      "type": "Element",
+      "attrs": { "symbol": "Th", "atomic_number": 90 }
+    },
+    { "id": "e_5cd4", "label": "aplastic anaemia", "type": "Disease" },
+    {
+      "id": "e_3c48",
+      "label": "Uranium",
+      "type": "Element",
+      "attrs": { "symbol": "U", "atomic_number": 92 }
+    },
+    { "id": "e_914c", "label": "Poland", "type": "Place" },
+    { "id": "e_9dea", "label": "X-rays", "type": "Phenomenon", "attrs": { "year": 1895 } },
+    {
+      "id": "e_a587",
+      "label": "Jáchymov",
+      "type": "Place",
+      "aliases": ["St. Joachimsthal", "Joachimsthal"]
+    },
+    { "id": "e_3775", "label": "Bohemia", "type": "Place" },
+    {
+      "id": "e_e4de",
+      "label": "French Academy of Sciences",
+      "type": "Organization",
+      "aliases": ["Académie des sciences"],
+      "attrs": { "founded": 1666 }
+    },
+    {
+      "id": "e_1c8f",
+      "label": "École supérieure de physique et de chimie industrielles",
+      "type": "Organization",
+      "aliases": ["ESPCI", "ESPCI Paris"],
+      "attrs": { "founded": 1882 }
+    },
+    {
+      "id": "e_f6eb",
+      "label": "Polonium",
+      "type": "Element",
+      "attrs": { "symbol": "Po", "atomic_number": 84 }
+    },
+    { "id": "e_cc4e", "label": "Paris", "type": "Place", "attrs": { "country": "France" } },
+    {
+      "id": "e_0d5c",
+      "label": "Becquerel rays",
+      "type": "Phenomenon",
+      "aliases": ["uranic rays", "uranium rays"],
+      "attrs": { "year": 1896 }
+    },
+    {
+      "id": "e_e1a6",
+      "label": "Radium",
+      "type": "Element",
+      "attrs": { "symbol": "Ra", "atomic_number": 88 }
+    },
+    {
+      "id": "e_dc2d",
+      "label": "University of Paris",
+      "type": "Organization",
+      "aliases": ["Univ. of Paris", "Sorbonne"]
+    },
+    {
+      "id": "e_d48f",
+      "label": "Flying University",
+      "type": "Organization",
+      "aliases": ["Uniwersytet Latający"],
+      "attrs": { "city": "Warsaw" }
+    },
+    { "id": "e_6fc0", "label": "Nobel Prize in Physics", "type": "Award" },
+    {
+      "id": "e_c177",
+      "label": "induced radioactivity",
+      "type": "Phenomenon",
+      "aliases": ["artificial radioactivity"],
+      "attrs": { "year": 1934 }
+    },
+    {
+      "id": "e_6884",
+      "label": "World War I",
+      "type": "Event",
+      "aliases": ["First World War", "WWI"],
+      "attrs": { "start": 1914, "end": 1918 }
+    },
+    {
+      "id": "e_df3b",
+      "label": "piezoelectric quartz electrometer",
+      "type": "Instrument",
+      "aliases": ["Curie electrometer"]
+    },
+    {
+      "id": "e_ca47",
+      "label": "mobile radiography units",
+      "type": "Instrument",
+      "aliases": ["petites Curies", "Little Curies"],
+      "attrs": { "year": 1914 }
+    },
+    { "id": "e_c314", "label": "radiography", "type": "Technique" },
+    {
+      "id": "e_5c50",
+      "label": "Research on Radioactive Substances",
+      "type": "Work",
+      "aliases": ["Recherches sur les substances radioactives"],
+      "attrs": { "year": 1903 }
+    },
+    { "id": "e_7f5c", "label": "Nobel Prize in Chemistry", "type": "Award" },
+    { "id": "e_8186", "label": "Panthéon", "type": "Place", "attrs": { "city": "Paris" } },
+    {
+      "id": "e_71d3",
+      "label": "Radium Institute",
+      "type": "Organization",
+      "aliases": ["Institut du Radium"],
+      "attrs": { "founded": 1914 }
+    },
+    {
+      "id": "e_261f",
+      "label": "uraninite (pitchblende)",
+      "type": "Mineral",
+      "attrs": { "formula": "UO2" }
+    },
+    { "id": "e_23dd", "label": "Warsaw", "type": "Place", "attrs": { "country": "Poland" } },
+    {
+      "id": "e_f19e",
+      "label": "Passy (Haute-Savoie)",
+      "type": "Place",
+      "aliases": ["Passy"],
+      "attrs": { "country": "France" }
+    },
+    { "id": "e_ed24", "label": "radioactivity", "type": "Phenomenon", "attrs": { "year": 1898 } }
+  ],
+  "edges": [
+    { "source": "e_37c6", "predicate": "collaborated_with", "target": "e_e1f0" },
+    { "source": "e_13af", "predicate": "discovered", "target": "e_f6eb" },
+    { "source": "e_13af", "predicate": "worked_at", "target": "e_1c8f" },
+    { "source": "e_13af", "predicate": "parent_of", "target": "e_0792" },
+    { "source": "e_3c48", "predicate": "emits", "target": "e_0d5c" },
+    { "source": "e_f6eb", "predicate": "named_after", "target": "e_914c" },
+    { "source": "e_6cfd", "predicate": "awarded", "target": "e_7f5c", "attrs": { "year": 1935 } },
+    { "source": "e_7e22", "predicate": "discovered", "target": "e_0d5c" },
+    { "source": "e_37c6", "predicate": "authored", "target": "e_5c50" },
+    { "source": "e_37c6", "predicate": "died_of", "target": "e_5cd4" },
+    { "source": "e_37c6", "predicate": "studied_at", "target": "e_d48f" },
+    { "source": "e_37c6", "predicate": "parent_of", "target": "e_149b" },
+    { "source": "e_a587", "predicate": "located_in", "target": "e_3775" },
+    { "source": "e_8186", "predicate": "located_in", "target": "e_cc4e" },
+    { "source": "e_6cfd", "predicate": "discovered", "target": "e_c177" },
+    { "source": "e_1c8f", "predicate": "located_in", "target": "e_cc4e" },
+    { "source": "e_37c6", "predicate": "studied_at", "target": "e_dc2d" },
+    { "source": "e_076a", "predicate": "sibling_of", "target": "e_13af" },
+    { "source": "e_b4da", "predicate": "discovered", "target": "e_9dea" },
+    { "source": "e_ca47", "predicate": "used_in", "target": "e_6884" },
+    { "source": "e_13af", "predicate": "awarded", "target": "e_6fc0", "attrs": { "year": 1903 } },
+    { "source": "e_dc2d", "predicate": "located_in", "target": "e_cc4e" },
+    { "source": "e_37c6", "predicate": "influenced_by", "target": "e_7e22" },
+    { "source": "e_7e22", "predicate": "awarded", "target": "e_6fc0", "attrs": { "year": 1903 } },
+    { "source": "e_37c6", "predicate": "died_in", "target": "e_f19e" },
+    { "source": "e_37c6", "predicate": "advised_by", "target": "e_764a" },
+    { "source": "e_37c6", "predicate": "parent_of", "target": "e_0792" },
+    { "source": "e_37c6", "predicate": "buried_in", "target": "e_8186" },
+    { "source": "e_ca47", "predicate": "used_for", "target": "e_c314" },
+    { "source": "e_d48f", "predicate": "located_in", "target": "e_23dd" },
+    { "source": "e_13af", "predicate": "died_in", "target": "e_cc4e" },
+    { "source": "e_23dd", "predicate": "located_in", "target": "e_914c" },
+    { "source": "e_7e22", "predicate": "influenced_by", "target": "e_b4da" },
+    { "source": "e_076a", "predicate": "built", "target": "e_df3b" },
+    { "source": "e_37c6", "predicate": "discovered", "target": "e_e1a6" },
+    { "source": "e_37c6", "predicate": "used", "target": "e_df3b" },
+    { "source": "e_37c6", "predicate": "founded", "target": "e_71d3" },
+    { "source": "e_37c6", "predicate": "awarded", "target": "e_6fc0", "attrs": { "year": 1903 } },
+    { "source": "e_0792", "predicate": "married_to", "target": "e_6cfd" },
+    { "source": "e_13af", "predicate": "built", "target": "e_df3b" },
+    { "source": "e_71d3", "predicate": "located_in", "target": "e_cc4e" },
+    { "source": "e_0792", "predicate": "discovered", "target": "e_c177" },
+    { "source": "e_37c6", "predicate": "awarded", "target": "e_7f5c", "attrs": { "year": 1911 } },
+    { "source": "e_37c6", "predicate": "organized", "target": "e_ca47" },
+    { "source": "e_37c6", "predicate": "coined", "target": "e_ed24" },
+    { "source": "e_13af", "predicate": "discovered", "target": "e_e1a6" },
+    { "source": "e_37c6", "predicate": "discovered", "target": "e_f6eb" },
+    { "source": "e_37c6", "predicate": "married_to", "target": "e_13af", "attrs": { "year": 1895, "date": "1895-07-26" } },
+    { "source": "e_37c6", "predicate": "born_in", "target": "e_23dd" },
+    { "source": "e_37c6", "predicate": "affiliated_with", "target": "e_1c8f" },
+    { "source": "e_b206", "predicate": "exhibits", "target": "e_ed24" },
+    { "source": "e_f6eb", "predicate": "isolated_from", "target": "e_261f" },
+    { "source": "e_e1a6", "predicate": "extracted_from", "target": "e_261f" },
+    { "source": "e_261f", "predicate": "mined_in", "target": "e_a587" },
+    { "source": "e_0792", "predicate": "awarded", "target": "e_7f5c", "attrs": { "year": 1935 } },
+    { "source": "e_00ce", "predicate": "co_discovered", "target": "e_e1a6" },
+    { "source": "e_00ce", "predicate": "collaborated_with", "target": "e_13af" },
+    { "source": "e_f6eb", "predicate": "announced_at", "target": "e_e4de" },
+    { "source": "e_e1a6", "predicate": "announced_at", "target": "e_e4de" }
+  ]
+}

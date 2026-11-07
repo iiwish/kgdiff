@@ -1,0 +1,27 @@
+{
+  "options": {},
+  "strategy": "union",
+  "scope": "all",
+  "iterations": 250,
+  "nodes": [
+    "a",
+    "b",
+    "c",
+    "d"
+  ],
+  "radii": {
+    "a": 8.92,
+    "b": 9.39,
+    "c": 8.4,
+    "d": 8.4
+  },
+  "hidden": {},
+  "components": [
+    [
+      "a",
+      "b",
+      "c",
+      "d"
+    ]
+  ]
+}

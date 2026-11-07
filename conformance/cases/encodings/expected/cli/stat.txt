@@ -1,0 +1,11 @@
+kgdiff  encodings utf-16 → gzip                        4 nodes · 3 edges
+
+  +1 added   −1 removed   ~2 modified               6 changes in 4 hunks
+  ++−−~~
+
+         added  removed  modified  unchanged
+  nodes      1        1         2          1
+  edges      1        1         0          2
+
+  By type
+  (untyped)  4 +−~~

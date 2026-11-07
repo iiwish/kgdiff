@@ -1,0 +1,9 @@
+kgdiff  edges 1 → 2                                    4 nodes · 9 edges
+
+  ⇄4 restructured                                   7 changes in 4 hunks
+  ⇄⇄⇄⇄⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      0        0         0          4
+  edges      1        1         5          3
+

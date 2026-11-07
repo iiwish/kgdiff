@@ -1,0 +1,249 @@
+{
+  "id": "rdf-nquads-trig",
+  "description": "N-Quads before, TriG after: named graphs merged (with a warning), repeated triples counted once.",
+  "covers": [
+    "nquads",
+    "trig",
+    "named-graphs",
+    "warnings",
+    "cross-format"
+  ],
+  "inputs": {
+    "before": "before.nq",
+    "after": "after.trig"
+  },
+  "parse": {
+    "before": {
+      "format": "auto",
+      "filename": "before.nq",
+      "allowEmpty": false
+    },
+    "after": {
+      "format": "auto",
+      "filename": "after.trig",
+      "allowEmpty": false
+    }
+  },
+  "options": {
+    "match": {
+      "strategy": "id"
+    }
+  },
+  "resolvedOptions": {
+    "match": {
+      "strategy": "id",
+      "threshold": 0.82,
+      "suggestThreshold": 0.6,
+      "maxCandidates": 8
+    },
+    "edgeIdentity": "structure",
+    "hierarchyPredicates": [
+      "rdfs:subClassOf",
+      "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "rdfs:subPropertyOf",
+      "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+      "skos:broader",
+      "http://www.w3.org/2004/02/skos/core#broader",
+      "is_a",
+      "subClassOf",
+      "parent"
+    ],
+    "detectMerges": true,
+    "detectSplits": true,
+    "ignoreAttrs": []
+  },
+  "locale": "en",
+  "layoutOptions": {},
+  "identical": false,
+  "cli": [
+    {
+      "name": "summary",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.txt"
+      },
+      "stderr": {
+        "text": "warning: before.nq: Merged 3 named graphs into one graph.\nwarning: after.trig: Merged 2 named graphs into one graph.\n"
+      },
+      "exit": 0
+    },
+    {
+      "name": "stat",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--stat"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/stat.txt"
+      },
+      "stderr": {
+        "text": "warning: before.nq: Merged 3 named graphs into one graph.\nwarning: after.trig: Merged 2 named graphs into one graph.\n"
+      },
+      "exit": 0
+    },
+    {
+      "name": "name-status",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--name-status"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/name-status.tsv"
+      },
+      "stderr": {
+        "text": "warning: before.nq: Merged 3 named graphs into one graph.\nwarning: after.trig: Merged 2 named graphs into one graph.\n"
+      },
+      "exit": 0
+    },
+    {
+      "name": "markdown",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--markdown"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/cli/summary.md"
+      },
+      "versionPlaceholder": true,
+      "stderr": {
+        "text": "warning: before.nq: Merged 3 named graphs into one graph.\nwarning: after.trig: Merged 2 named graphs into one graph.\n"
+      },
+      "exit": 0
+    },
+    {
+      "name": "json",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--json"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/diff.json"
+      },
+      "stderr": {
+        "text": "warning: before.nq: Merged 3 named graphs into one graph.\nwarning: after.trig: Merged 2 named graphs into one graph.\n"
+      },
+      "exit": 0
+    },
+    {
+      "name": "delta",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--delta"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/delta.json"
+      },
+      "stderr": {
+        "text": "warning: before.nq: Merged 3 named graphs into one graph.\nwarning: after.trig: Merged 2 named graphs into one graph.\n"
+      },
+      "exit": 0
+    },
+    {
+      "name": "exit-code",
+      "args": [
+        "before.nq",
+        "after.trig",
+        "--match",
+        "id",
+        "--locale",
+        "en",
+        "--color",
+        "never",
+        "--exit-code",
+        "--quiet"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 1
+    },
+    {
+      "name": "apply",
+      "args": [
+        "apply",
+        "before.nq",
+        "expected/delta.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "file": "expected/apply.json"
+      },
+      "stderr": {
+        "text": ""
+      },
+      "exit": 0
+    }
+  ]
+}

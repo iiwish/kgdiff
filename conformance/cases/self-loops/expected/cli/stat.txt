@@ -1,0 +1,11 @@
+kgdiff  loops 1 → 2                          8 → 7 nodes · 13 → 12 edges
+
+  ~1 modified   ⇄6 restructured                    11 changes in 7 hunks
+  ~⇄⇄⇄⇄⇄⇄⇄⇄⇄⇄
+
+         added  removed  modified  unchanged
+  nodes      0        1         2          5
+  edges      1        2         5          6
+
+  By type
+  (untyped)  3 −~~

@@ -1,0 +1,3 @@
+kgdiff  extraction run-1 → run-2                       4 nodes · 3 edges
+
+  ✓ No differences  Both versions have 4 nodes and 3 edges.

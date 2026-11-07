@@ -1,0 +1,46 @@
+{
+  "en": [
+    {
+      "id": "remove:c1",
+      "title": "Removed “Core” and 1 relation",
+      "subtitle": "was linked to “Carol”"
+    },
+    {
+      "id": "modify:carol",
+      "title": "Detached “Carol” from “Core”",
+      "subtitle": "+1 relation"
+    },
+    {
+      "id": "relations:alice",
+      "title": "Edited “Alice” —mentors→ “Carol”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:bob",
+      "title": "Changed the type of “Bob”",
+      "subtitle": "+1 −1 types"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "remove:c1",
+      "title": "删除「Core」及 1 条关系",
+      "subtitle": "原关联「Carol」"
+    },
+    {
+      "id": "modify:carol",
+      "title": "「Carol」脱离「Core」",
+      "subtitle": "关系 +1"
+    },
+    {
+      "id": "relations:alice",
+      "title": "修改关系「Alice」—mentors→「Carol」",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:bob",
+      "title": "修改「Bob」的类型",
+      "subtitle": "类型 +1 −1"
+    }
+  ]
+}

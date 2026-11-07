@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.json → team",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "before.json",
+      "format": "json"
+    },
+    "after": {
+      "name": "team",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "EX:0000001",
+        "label": "organism",
+        "type": "Term",
+        "attrs": {
+          "def": "A living thing.",
+          "def_xrefs": [
+            "EX:curator"
+          ],
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000002",
+        "label": "animal",
+        "type": "Term",
+        "aliases": [
+          "beast",
+          "creature"
+        ],
+        "attrs": {
+          "namespace": "example",
+          "synonyms": [
+            "beast (EXACT)",
+            "creature (RELATED)"
+          ]
+        }
+      },
+      {
+        "id": "EX:0000003",
+        "label": "plant",
+        "type": "Term",
+        "attrs": {
+          "namespace": "example",
+          "xref": [
+            "WIKI:Plant"
+          ]
+        }
+      },
+      {
+        "id": "EX:0000004",
+        "label": "flower",
+        "type": "Term",
+        "attrs": {
+          "alt_id": [
+            "EX:0000040"
+          ],
+          "comment": "Has petals.",
+          "namespace": "example"
+        },
+        "replaces": [
+          "EX:0000040"
+        ]
+      },
+      {
+        "id": "EX:0000005",
+        "label": "shrub",
+        "type": "Term",
+        "attrs": {
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000006",
+        "label": "bush",
+        "type": "Term",
+        "attrs": {
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:0000009",
+        "label": "ecosystem",
+        "type": "Term",
+        "attrs": {
+          "namespace": "example"
+        }
+      },
+      {
+        "id": "EX:I001",
+        "label": "Fido",
+        "type": "Instance",
+        "attrs": {
+          "namespace": "example"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "EX:0000002",
+        "target": "EX:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000003",
+        "target": "EX:0000001",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000003",
+        "target": "EX:0000009",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "EX:0000004",
+        "target": "EX:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000005",
+        "target": "EX:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000006",
+        "target": "EX:0000003",
+        "predicate": "is_a",
+        "label": "is a"
+      },
+      {
+        "source": "EX:0000006",
+        "target": "EX:0000009",
+        "predicate": "part_of",
+        "label": "part of"
+      },
+      {
+        "source": "EX:I001",
+        "target": "EX:0000002",
+        "predicate": "instance_of",
+        "label": "instance of"
+      }
+    ],
+    "meta": {
+      "name": "ex",
+      "predicateLabels": {
+        "part_of": "part of"
+      },
+      "source": "before.obo",
+      "version": "ex/2026-01-01"
+    }
+  },
+  "format": "obo",
+  "prefixes": {
+    "EX": "http://example.org/ex_",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {
+    "part_of": "part of"
+  },
+  "warnings": [
+    {
+      "code": "obo-unknown-stanza",
+      "message": "Skipped unsupported [Foo] stanza.",
+      "line": 59
+    }
+  ]
+}

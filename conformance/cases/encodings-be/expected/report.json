@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "encodings utf-16be → utf-8-bom-crlf",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "encodings utf-16be",
+      "format": "json"
+    },
+    "after": {
+      "name": "encodings utf-8-bom-crlf",
+      "format": "json"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

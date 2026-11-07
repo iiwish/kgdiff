@@ -1,0 +1,17 @@
+kgdiff  ex ex/2026-01-01 → ex/2026-02-01                                      8 → 10 nodes · 8 edges
+
+  +2 added   ~5 modified   ⇄1 restructured                                     14 changes in 8 hunks
+  ++++~~~~~~⇄⇄⇄⇄
+  ⚑ Review first: definition changed in 1 hunk
+
+  Restructured 1
+  ⊕ Merged “bush” into “shrub”         identity · via replacement hint · 1 duplicate collapsed · −1…
+  Modified 5
+  ~ Renamed “animal” → “Animal”        content · ~1 attribute · +1 synonym
+  ~ Edited “ecosystem”                 content · +1 attribute · +1 synonym
+  ~ Changed the id of “flower”         content · EX:0000004 → EX:0000044 · ~2 attributes · replaces…
+  ~ Updated attributes of “organism”   content · ⚑ definition · ~2 attributes
+  ~ Edited “plant”                     content · ~1 attribute · ~1 relation
+  Added 2
+  + Added “biome” and 1 relation       added · type Term · linked to “ecosystem”
+  + Added “tree” and 1 relation        added · type Term · linked to “plant”

@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "Zoo ontology 2026.1 → 2026.2",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "Zoo ontology 2026.1",
+      "format": "turtle"
+    },
+    "after": {
+      "name": "Zoo ontology 2026.2",
+      "format": "ntriples"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

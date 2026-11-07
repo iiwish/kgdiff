@@ -1,0 +1,210 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "channel",
+        "label": "Channel",
+        "type": "Entity"
+      },
+      {
+        "id": "dim_category",
+        "label": "Category",
+        "type": "Entity"
+      },
+      {
+        "id": "dim_client",
+        "label": "Client",
+        "type": "Entity",
+        "attrs": {
+          "rows": 8400,
+          "table": "erp.clients"
+        }
+      },
+      {
+        "id": "dim_customer",
+        "label": "Customer",
+        "type": "Entity",
+        "attrs": {
+          "rows": 120000,
+          "table": "crm.customers"
+        }
+      },
+      {
+        "id": "dim_product",
+        "label": "Product",
+        "type": "Entity",
+        "attrs": {
+          "table": "pim.products"
+        }
+      },
+      {
+        "id": "dim_region",
+        "label": "Region",
+        "type": "Entity"
+      },
+      {
+        "id": "dim_sku",
+        "label": "SKU",
+        "type": "Entity",
+        "aliases": [
+          "Stock keeping unit"
+        ],
+        "attrs": {
+          "table": "pim.skus"
+        }
+      },
+      {
+        "id": "fct_order",
+        "label": "Order",
+        "type": "Event",
+        "attrs": {
+          "grain": "order",
+          "table": "sales.orders"
+        }
+      },
+      {
+        "id": "fct_order_line",
+        "label": "Order line",
+        "type": "Event",
+        "attrs": {
+          "grain": "line",
+          "table": "sales.order_lines"
+        }
+      },
+      {
+        "id": "geo",
+        "label": "Geography",
+        "type": "Concept"
+      },
+      {
+        "id": "metric_gmv",
+        "label": "GMV",
+        "type": "Metric",
+        "attrs": {
+          "definition": "Gross merchandise value"
+        }
+      },
+      {
+        "id": "metric_revenue",
+        "label": "Revenue",
+        "type": "Metric",
+        "attrs": {
+          "definition": "Sum of order line amounts",
+          "unit": "CNY"
+        }
+      },
+      {
+        "id": "party",
+        "label": "Party",
+        "type": "Concept"
+      },
+      {
+        "id": "taxonomy",
+        "label": "Business taxonomy",
+        "type": "Concept"
+      }
+    ],
+    "edges": [
+      {
+        "source": "channel",
+        "target": "geo",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "dim_category",
+        "target": "dim_category",
+        "predicate": "parent_category",
+        "label": "parent category"
+      },
+      {
+        "source": "dim_client",
+        "target": "party",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "dim_customer",
+        "target": "party",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "dim_product",
+        "target": "dim_category",
+        "predicate": "in_category"
+      },
+      {
+        "source": "dim_region",
+        "target": "geo",
+        "predicate": "subClassOf"
+      },
+      {
+        "source": "dim_sku",
+        "target": "dim_product",
+        "predicate": "variant_of"
+      },
+      {
+        "source": "fct_order",
+        "target": "dim_client",
+        "predicate": "billed_to",
+        "attrs": {
+          "cardinality": "N:1"
+        }
+      },
+      {
+        "source": "fct_order",
+        "target": "dim_customer",
+        "predicate": "placed_by",
+        "attrs": {
+          "cardinality": "N:1"
+        }
+      },
+      {
+        "source": "fct_order",
+        "target": "dim_region",
+        "predicate": "ships_to"
+      },
+      {
+        "source": "fct_order_line",
+        "target": "dim_sku",
+        "predicate": "of_item"
+      },
+      {
+        "source": "fct_order_line",
+        "target": "fct_order",
+        "predicate": "part_of"
+      },
+      {
+        "source": "metric_gmv",
+        "target": "fct_order",
+        "predicate": "computed_from"
+      },
+      {
+        "source": "metric_revenue",
+        "target": "fct_order_line",
+        "predicate": "computed_from"
+      }
+    ],
+    "meta": {
+      "name": "retail",
+      "source": "before.json",
+      "version": "skeleton"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

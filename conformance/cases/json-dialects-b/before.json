@@ -1,0 +1,12 @@
+{
+  "nodes": [
+    { "id": "alice", "data": { "label": "Alice", "type": "Person" }, "style": { "fill": "#f00" } },
+    { "id": "bob", "data": { "label": "Bob", "type": "Person" } },
+    { "id": "carol", "data": { "label": "Carol", "type": "Person" }, "combo": "c1" }
+  ],
+  "edges": [
+    { "id": "e1", "source": "bob", "target": "alice", "data": { "predicate": "reports_to" }, "style": { "stroke": "#999" } },
+    { "id": "e2", "source": "alice", "target": "carol", "data": { "predicate": "mentors", "since": 2021 } }
+  ],
+  "combos": [{ "id": "c1", "data": { "label": "Core" } }]
+}
