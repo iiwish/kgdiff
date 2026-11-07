@@ -145,7 +145,7 @@ HTML 属性和它们对应的 JavaScript 属性、其他 JavaScript 属性（`pa
 
 ## 元素（实验性）
 
-`<kgdiff-viewer>` 是由若干元素组成的默认布局，这些元素也可以单独摆放。它们在 0.6 中是实验性的：在稳定之前，名称、属性和结构可能在次版本中变化。
+`<kgdiff-viewer>` 是由若干元素组成的默认布局，这些元素也可以单独摆放。它们在 0.6 中是实验性的，0.7 起稳定（[RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md#decisions) 决定 7）：在此之前，名称、属性和结构可能在次版本中变化。每个元素的 HTML 属性、JavaScript 属性、事件、插槽和状态见[参考页](viewer-elements.md)；本节解释它们如何配合。
 
 | 元素                     | 显示的内容                                                   |
 | ------------------------ | ------------------------------------------------------------ |
@@ -174,7 +174,7 @@ HTML 属性和它们对应的 JavaScript 属性、其他 JavaScript 属性（`pa
 - **键盘。** 键盘映射归根元素所有（`shortcuts`、`keymap`）。在根元素内部的元素里按键，通过冒泡到达根元素；用 `for` 绑定的元素会转发它的按键。
 - **无障碍。** 变更列表和详情面板是带标签的区域；ARIA 的 id 引用都在同一个元素内部（列表的选项、搜索的结果）；跨元素只用焦点移动（选择搜索结果会聚焦变更列表）和根元素唯一的实时区域播报。
 - **主题。** 根元素上的令牌由它内部的元素继承；在根元素子树之外、用 `for` 绑定的元素采用根元素的内置令牌集；页面在根元素上的覆盖不会到达它，需要在该元素上也设置一遍。
-- **包。** `import '@kgdiff/viewer'` 定义所有元素。每个元素还有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`…/stage`、`…/change-list`、`…/change-detail`、`…/search`、`…/filters`、`…/view-dock`、`…/transport`、`…/legend`、`…/zoom`、`…/minimap`、`…/title`、`…/actions`。会话随根元素而来，渲染器随画布而来：其他子路径都不带它们。`@kgdiff/viewer/panels` 是不带 DOM 的面板写法解析（`parsePanels`、`PANEL_REGIONS`、`PANEL_STATES`），命令行的 `--panels` 也用它。
+- **包。** `import '@kgdiff/viewer'` 定义所有元素。每个元素还有只定义它自己的子路径：`@kgdiff/viewer/elements/root`、`…/stage`、`…/change-list`、`…/change-detail`、`…/search`、`…/filters`、`…/view-dock`、`…/transport`、`…/legend`、`…/zoom`、`…/minimap`、`…/title`、`…/actions`。会话随根元素而来，渲染器随画布而来：其他子路径都不带它们。`@kgdiff/viewer/panels` 是不带 DOM 的面板写法解析（`parsePanels`、`PANEL_REGIONS`、`PANEL_STATES`），命令行的 `--panels` 也用它。包里附带它的 Custom Elements Manifest（`custom-elements.json`，即 `customElements` 字段）、由它生成的 VS Code HTML 自定义数据，以及 React 19 的 JSX 类型（`@kgdiff/viewer/react`）：见[编辑器支持](guide/viewer.md#编辑器支持)。
 
 ## 主题
 

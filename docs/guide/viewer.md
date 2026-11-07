@@ -147,7 +147,8 @@ and the view stays fitted, labels included: no name is cut at the edge. `loop` r
 
 ## Compose your own layout
 
-The viewer is made of elements you can also place yourself (experimental in 0.6: they may
+The viewer is made of elements you can also place yourself (experimental in 0.6, stable from
+0.7: until then they may
 change in a minor release before they are stable). `<kgdiff-root>` holds the diff session and
 shows nothing; the other elements show its parts wherever they are: inside it, or anywhere on
 the page with `for="<root id>"`.
@@ -349,7 +350,7 @@ export function GraphDiff({ before, after, onSelect }: Props) {
 - `onkgdiff-select` listens to `kgdiff-select`: React 19 adds a listener for an `on…` prop the
   element has no property for. Its `event.detail` is typed.
 - Methods go through the ref: `viewer.current?.next()`.
-- `panels={{ detail: 'collapsed' }}` is a new object on every render, and that is fine: the
+- The `panels` object literal is a new object on every render, and that is fine: the
   viewer compares what the page declares, so a re-render declaring the same panels keeps what the
   reader opened or closed; only a region whose declaration changed gives way.
 - React 18 sets every prop as an attribute: use the text forms (`panels="detail:collapsed"`,
