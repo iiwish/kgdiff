@@ -234,37 +234,48 @@ viewer.addEventListener('kgdiff-ready', async () => {
 
 ## React
 
-用 ref 调用 `load()` 并监听事件：
+React 19 渲染自定义元素时会使用它们的属性：元素拥有的属性（`panels`、`keymap`、`mode` 等）按 JavaScript 属性设置，对象也一样；其余按 HTML 属性设置。渲染之前先导入 `@kgdiff/viewer`，这样 React 设置属性时元素已经定义好了。使用 TypeScript 时，`@kgdiff/viewer/react` 为它们提供类型（[编辑器支持](#编辑器支持)）。
 
-```jsx
+```tsx
 import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement } from '@kgdiff/viewer';
+import type {} from '@kgdiff/viewer/react';
 import { useEffect, useRef } from 'react';
 
-export function GraphDiff({ before, after, onSelect }) {
-  const viewer = useRef(null);
+interface Props {
+  readonly before: GraphSource;
+  readonly after: GraphSource;
+  readonly onSelect: (hunk: string | null) => void;
+}
+
+export function GraphDiff({ before, after, onSelect }: Props) {
+  const viewer = useRef<KgdiffViewerElement>(null);
 
   useEffect(() => {
-    viewer.current.load({ before, after });
+    void viewer.current?.load({ before, after });
   }, [before, after]);
 
-  useEffect(() => {
-    const element = viewer.current;
-    const listener = (event) => onSelect(event.detail.hunk);
-    element.addEventListener('kgdiff-select', listener);
-    return () => element.removeEventListener('kgdiff-select', listener);
-  }, [onSelect]);
-
-  return <kgdiff-viewer ref={viewer} theme="auto" style={{ height: 640 }} />;
+  return (
+    <kgdiff-viewer
+      ref={viewer}
+      theme="auto"
+      panels={{ detail: 'collapsed' }}
+      keymap={{ x: null, r: 'review' }}
+      onkgdiff-select={(event) => onSelect(event.detail.hunk)}
+      style={{ height: 640 }}
+    />
+  );
 }
 ```
 
-在 TypeScript 中，需要在 `JSX.IntrinsicElements` 里声明 `kgdiff-viewer`；包里导出了这个元素的类型 `KgdiffViewerElement`。
-
-`kgdiff-*` 事件已加入 TypeScript 的全局事件映射（`KgdiffEventMap`），所以在任何元素、document 或 window 上监听，`detail` 都有类型，不需要类型断言：`viewer.addEventListener('kgdiff-select', (event) => event.detail.hunk)`。
+- `onkgdiff-select` 监听 `kgdiff-select`：元素没有对应属性的 `on…` 属性，React 19 会为它添加事件监听。`event.detail` 有类型。
+- 方法通过 ref 调用：`viewer.current?.next()`。
+- `panels={{ detail: 'collapsed' }}` 每次渲染都是一个新对象，这没有关系：查看器比较的是页面声明的内容，所以重新渲染时声明同样的面板，会保留读者展开或收起的状态；只有声明变了的区域才会让位。
+- React 18 把所有属性都按 HTML 属性设置：请使用文本写法（`panels="detail:collapsed"`、`keymap="x:none r:review"`），并在 ref 上用 `addEventListener` 监听事件。
 
 ## Vue
 
-先在 `vite.config.js` 里告诉 Vue，`kgdiff-*` 标签是自定义元素：
+在 `vite.config.js` 中告诉 Vue，`kgdiff-*` 标签是自定义元素：
 
 ```js
 import vue from '@vitejs/plugin-vue';
@@ -279,21 +290,68 @@ export default {
 然后像普通元素一样使用：
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement, ViewerPanels } from '@kgdiff/viewer';
 import { onMounted, ref } from 'vue';
 
-const props = defineProps(['before', 'after']);
-const emit = defineEmits(['select']);
-const viewer = ref(null);
+const props = defineProps<{ before: GraphSource; after: GraphSource }>();
+const emit = defineEmits<{ select: [hunk: string | null] }>();
+const viewer = ref<KgdiffViewerElement | null>(null);
+const panels: ViewerPanels = { detail: 'collapsed' };
 
-onMounted(() => viewer.value.load({ before: props.before, after: props.after }));
-const onSelect = (event) => emit('select', event.detail.hunk);
+onMounted(() => viewer.value?.load({ before: props.before, after: props.after }));
+const onSelect = (event: CustomEvent<{ hunk: string | null }>) => emit('select', event.detail.hunk);
 </script>
 
 <template>
-  <kgdiff-viewer ref="viewer" theme="auto" style="height: 640px" @kgdiff-select="onSelect" />
+  <kgdiff-viewer
+    ref="viewer"
+    theme="auto"
+    :panels.prop="panels"
+    :keymap.prop="{ x: null, r: 'review' }"
+    style="height: 640px"
+    @kgdiff-select="onSelect"
+  />
 </template>
+```
+
+- `.prop` 把 `panels` 和 `keymap` 作为 JavaScript 属性（对象）绑定；元素拥有该属性时 Vue 本来也会这样绑定，`.prop` 确保在元素定义之前也是如此。
+- `@kgdiff-select` 监听事件。Vue 不知道元素的事件，所以由处理函数自己给 `event` 标注类型。
+- 模板 ref 拿到元素，用来调用它的方法。
+
+## Svelte
+
+Svelte 5 设置自定义元素的属性时，元素拥有该属性就按 JavaScript 属性设置（对象也一样），否则按 HTML 属性设置；`onkgdiff-select` 监听事件，`bind:this` 拿到元素。
+
+```svelte
+<script lang="ts">
+import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement, ViewerPanels } from '@kgdiff/viewer';
+
+interface Props {
+  before: GraphSource;
+  after: GraphSource;
+  onselect: (hunk: string | null) => void;
+}
+
+let { before, after, onselect }: Props = $props();
+let viewer = $state<KgdiffViewerElement>();
+const panels: ViewerPanels = { detail: 'collapsed' };
+
+$effect(() => {
+  void viewer?.load({ before, after });
+});
+</script>
+
+<kgdiff-viewer
+  bind:this={viewer}
+  theme="auto"
+  {panels}
+  keymap={{ x: null, r: 'review' }}
+  style="height: 640px"
+  onkgdiff-select={(event: CustomEvent<{ hunk: string | null }>) => onselect(event.detail.hunk)}
+></kgdiff-viewer>
 ```
 
 ## 不用打包工具

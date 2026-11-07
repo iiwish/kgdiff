@@ -15,6 +15,7 @@
     "noEmit": true,
     "paths": {
       "@kgdiff/viewer/panels": ["./packages/viewer/src/panels.ts"],
+      "@kgdiff/viewer/react": ["./packages/viewer/src/react.ts"],
       "@kgdiff/*": ["./packages/*/src/index.ts"]
     }
   }
