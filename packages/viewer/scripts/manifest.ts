@@ -816,6 +816,137 @@ function referencePage(manifest: Manifest, w: Words, generatedFrom: string): str
   return `${out.join('\n\n')}\n`;
 }
 
+const REFERENCE = 'https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md';
+
+/** An experimental part's description, said first. */
+const marked = (x: { experimental?: boolean | string }, description: string): string => {
+  if (!x.experimental) return description;
+  const note = typeof x.experimental === 'string' ? ` ${x.experimental}` : '';
+  return `**Experimental:**${note} ${description}`;
+};
+
+/** The literal values of an attribute's type (`'a' | 'b'`), if it has only those. */
+function valuesOf(type: Type | undefined): string[] | null {
+  const parts = type?.text.split('|').map((p) => p.trim()) ?? [];
+  if (parts.length === 0 || !parts.every((p) => /^'[^']*'$/.test(p))) return null;
+  return parts.map((p) => p.slice(1, -1));
+}
+
+/**
+ * VS Code's HTML custom data (`html.customData`): every tag and its attributes, with their
+ * values, so the editor completes and describes them.
+ */
+function customData(manifest: Manifest): string {
+  const tags = elementsOf(manifest).map((e) => ({
+    name: e.tagName,
+    description: { kind: 'markdown', value: marked(e, e.description) },
+    attributes: e.attributes.map((a) => {
+      const values = valuesOf(a.type);
+      return {
+        name: a.name,
+        description: { kind: 'markdown', value: marked(a, a.description ?? '') },
+        ...(a.type?.text === 'boolean' ? { valueSet: 'v' } : {}),
+        ...(values ? { values: values.map((name) => ({ name })) } : {}),
+      };
+    }),
+    references: [{ name: 'Reference', url: `${REFERENCE}#${e.tagName}` }],
+  }));
+  return `${JSON.stringify({ version: 1.1, tags }, null, 2)}\n`;
+}
+
+/** A TSDoc comment, indented, its lines wrapped at 100 columns. */
+function tsdoc(text: string, indent: string): string {
+  const width = 100 - indent.length - 3;
+  const lines: string[] = [];
+  text.split('\n\n').forEach((para, i) => {
+    if (i > 0) lines.push('');
+    let line = '';
+    for (const word of para.split(/\s+/)) {
+      if (line && line.length + word.length + 1 > width) {
+        lines.push(line);
+        line = word;
+      } else line = line ? `${line} ${word}` : word;
+    }
+    if (line) lines.push(line);
+  });
+  return [
+    `${indent}/**`,
+    ...lines.map((l) => `${indent} *${l ? ` ${l}` : ''}`),
+    `${indent} */`,
+  ].join('\n');
+}
+
+/**
+ * React 19's JSX types for the elements (`src/react.ts`): the properties a page sets (React
+ * sets a prop as the property when the element has one, as an attribute otherwise), the
+ * attributes without a property, and the roots' events as React listens to them
+ * (`onkgdiff-select`).
+ */
+function reactTypes(manifest: Manifest): string {
+  const names = new Set<string>();
+  const blocks: string[] = [];
+  for (const e of elementsOf(manifest)) {
+    const lines: string[] = [];
+    for (const m of e.members) {
+      if (m.kind !== 'field' || m.readonly || !m.type) continue;
+      const attr = e.attributes.find((a) => a.fieldName === m.name);
+      // A property that takes its attribute's text too (`panels`, `keymap`).
+      const own = `Tag<'${e.tagName}'>['${m.name}']`;
+      const type =
+        attr?.type?.text === 'string' && !/\bstring\b/.test(m.type.text) ? `${own} | string` : own;
+      lines.push(tsdoc(marked(m, m.description ?? ''), '        '));
+      lines.push(`        ${m.name}?: ${type};`);
+    }
+    for (const a of e.attributes.filter((x) => !x.fieldName)) {
+      lines.push(tsdoc(marked(a, a.description ?? ''), '        '));
+      const key = /^[a-z]\w*$/i.test(a.name) ? a.name : `'${a.name}'`;
+      lines.push(`        ${key}?: ${a.type?.text ?? 'string'};`);
+    }
+    for (const ev of e.events) {
+      lines.push(tsdoc(ev.description ?? '', '        '));
+      lines.push(`        'on${ev.name}'?: (event: KgdiffEventMap['${ev.name}']) => void;`);
+    }
+    if (e.events.length > 0) names.add('KgdiffEventMap');
+    const doc = tsdoc(marked(e, `\`<${e.tagName}>\`: ${REFERENCE}#${e.tagName}`), '      ');
+    blocks.push(
+      `${doc}\n      '${e.tagName}': Props<'${e.tagName}'> & {\n${lines.join('\n')}\n      };`,
+    );
+  }
+  const imports = [...names].sort();
+  return `/**
+ * React 19's JSX types for the viewer's elements (RFC 0001 §8). Generated from
+ * custom-elements.json by scripts/manifest.ts: do not edit; run
+ * \`pnpm --filter @kgdiff/viewer manifest\` after changing the sources.
+ *
+ * A TypeScript project with React 19 enables them once, anywhere:
+ *
+ *   import type {} from '@kgdiff/viewer/react';
+ *
+ * Props are the elements' properties (React 19 sets a prop as the property the element has,
+ * and as an attribute otherwise), their attributes without a property, and the roots' events
+ * as React 19 listens to them: \`onkgdiff-select\`. Methods go through a \`ref\`.
+ *
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7), as the elements it describes.
+ */
+import type { HTMLAttributes, Ref } from 'react';
+import type { ${imports.join(', ')} } from './index.js';
+
+/** The element of a tag: a prop's type is its property's. */
+type Tag<T extends keyof HTMLElementTagNameMap> = HTMLElementTagNameMap[T];
+
+/** What every element takes: React's HTML attributes and a ref to the element. */
+type Props<T extends keyof HTMLElementTagNameMap> = HTMLAttributes<Tag<T>> & { ref?: Ref<Tag<T>> };
+
+declare module 'react' {
+  namespace JSX {
+    interface IntrinsicElements {
+${blocks.join('\n')}
+    }
+  }
+}
+`;
+}
+
 const GENERATED =
   'Generated from packages/viewer/custom-elements.json by packages/viewer/scripts/manifest.ts: ' +
   'do not edit. Run `pnpm --filter @kgdiff/viewer manifest` after changing the sources.';
@@ -829,6 +960,8 @@ export function generate(): Generated[] {
     },
     { path: 'docs/viewer-elements.md', content: referencePage(manifest, EN, GENERATED) },
     { path: 'docs/zh/viewer-elements.md', content: referencePage(manifest, ZH, GENERATED) },
+    { path: 'packages/viewer/vscode.html-custom-data.json', content: customData(manifest) },
+    { path: 'packages/viewer/src/react.ts', content: reactTypes(manifest) },
   ];
 }
 
