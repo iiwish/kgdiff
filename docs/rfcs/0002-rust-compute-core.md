@@ -564,7 +564,8 @@ add-on. Size is tracked in CI from phase 2 on (`wasm-opt -Oz`, `twiggy` reports 
 #### Two toolchains in CI
 
 - The existing `check` job (Node 22 / 24 / 26 on Linux, Node 24 on Windows and macOS) stays and
-  runs the corpus check as part of `pnpm test` from phase 1 on.
+  runs the corpus check as part of `pnpm test` from phase 1 on; after `pnpm build` it replays
+  the corpus's CLI runs with the built CLI as a real process (`pnpm conformance:replay`).
 - A `rust` job (Linux, macOS, Windows; stable and the MSRV): `cargo fmt --check`,
   `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace` (unit,
   property and corpus tests), `cargo deny check`, `cargo doc --no-deps -D warnings`.
@@ -635,22 +636,25 @@ case with an issue).
 
 Before phase 4 deletes the CLI sources, the TypeScript generator drops every `@kgdiff/cli`
 import: `readInput` / `parseInput` (input decoding, which README step 1 specifies) move into the
-generator; `main`, `cliVersion`, `buildReportPayload`, `defaultTitle`, `graphLabel` and the
-`CliIO` type go with the CLI runs and `report.json` to the Rust generator.
+generator; `main`, `cliVersion` and the `CliIO` type go with the CLI runs and `report.json`
+(which the generator reads from a report `main` writes) to the Rust generator.
 
 #### Phase 1 — Conformance corpus (this change)
 
 Deliverables: [`conformance/`](../../conformance/README.md) — inputs, options and the expected
 outputs of the current TypeScript implementation for every case, primitive vectors for the
 JavaScript built-ins in §4, a README that specifies the format for any implementation, the
-generator (`pnpm conformance:update`) and a check that runs in `pnpm test`.
+generator (`pnpm conformance:update`), a check that runs in `pnpm test`, and a replay of the
+recorded CLI runs with the built CLI as a real process (`pnpm conformance:replay`, in CI after
+the build).
 
 As delivered: 29 cases (the six example datasets and 23 written for the corpus) with 255 recorded
 CLI runs, 12 of them error paths (exit code 2); 10 primitive vector files (1,070 doubles formatted
 four ways, 52 strings converted to numbers, 1,088 `log2` values plus a digest over 2²² inputs, 299
 strings in sort order, 61 similarity pairs, …); 635 files, 6.2 MB, of which the 600-node synthetic
 case is 2.4 MB. Every recorded graph, diff, packed diff and delta validates against its JSON
-Schema. Regenerating takes about a second; the check a few seconds (60 tests).
+Schema. Regenerating takes about a second; the check a few seconds (60 tests); the replay of the
+255 runs about six seconds on an M-class laptop.
 
 Acceptance:
 
@@ -661,6 +665,8 @@ Acceptance:
   own error paths.
 - `pnpm test` regenerates every expected file in memory and finds it byte-identical on every CI
   platform (Node 22, 24, 26; Linux, Windows, macOS).
+- Every recorded CLI run, replayed with the built `kgdiff` as a real process, gives the recorded
+  stdout, stderr and exit code on every CI platform.
 - The generator changes no existing output and no package; it only writes under `conformance/`.
 
 #### Phase 2 — `kgdiff-core`

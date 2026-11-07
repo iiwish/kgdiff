@@ -1,12 +1,16 @@
 /**
  * A `CliIO` for running the CLI in-process on the corpus: real files under the case directory
  * (overlaid with outputs generated earlier in the same run), stdin from a file, captured stdout and
- * stderr, no TTY,
- * a fixed clock and environment, and no way to write files, open browsers or load the viewer.
+ * stderr, no TTY, a fixed clock and environment, and no way to open browsers or create
+ * directories. Writing files and loading the viewer bundles are refused, except for the report
+ * run, which captures what it writes in memory and gets stand-ins for the bundles.
  */
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CliIO } from '@kgdiff/cli';
+
+/** `main` (the viewer) or `compute` (the add-on). */
+export type ViewerBundle = Parameters<CliIO['loadViewerBundle']>[0];
 
 export interface CapturedRun {
   readonly code: number;
@@ -23,7 +27,13 @@ export interface CorpusIOOptions {
   readonly overlay: ReadonlyMap<string, Uint8Array>;
   /** Bytes piped to stdin (empty when absent); stdin is never a terminal. */
   readonly stdin?: Uint8Array;
+  /** Where written files go, by absolute path; without it, writing a file is an error. */
+  readonly writes?: Map<string, Uint8Array>;
+  /** Sources of the viewer bundles; without them, building an HTML report is an error. */
+  readonly viewerBundles?: Readonly<Record<ViewerBundle, string>>;
 }
+
+const encoder = new TextEncoder();
 
 function enoent(path: string): Error {
   return Object.assign(new Error(`ENOENT: no such file or directory, open '${path}'`), {
@@ -48,6 +58,7 @@ export function corpusIO(options: CorpusIOOptions): {
   const refuse = (what: string) => async (): Promise<never> => {
     throw new Error(`The conformance corpus never ${what}.`);
   };
+  const { writes, viewerBundles } = options;
   const io: CliIO = {
     stdout: {
       write: (chunk) => {
@@ -70,7 +81,11 @@ export function corpusIO(options: CorpusIOOptions): {
         if (!data) throw enoent(path);
         return data;
       },
-      writeFile: refuse('writes files'),
+      writeFile: writes
+        ? async (path, data) => {
+            writes.set(resolve(path), typeof data === 'string' ? encoder.encode(data) : data);
+          }
+        : refuse('writes files'),
       stat: async (path) => {
         const data = read(path);
         if (!data) return undefined;
@@ -96,7 +111,9 @@ export function corpusIO(options: CorpusIOOptions): {
     now: () => new Date('2026-01-01T00:00:00.000Z'),
     makeTempDir: refuse('creates directories'),
     openFile: refuse('opens files'),
-    loadViewerBundle: refuse('builds HTML reports'),
+    loadViewerBundle: viewerBundles
+      ? async (part) => viewerBundles[part]
+      : refuse('builds HTML reports outside the report run'),
   };
   return { io, out };
 }

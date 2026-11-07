@@ -38,6 +38,8 @@ const SCHEMA_OF: Readonly<Record<string, string>> = {
   'graph.before.json': 'graph',
   'graph.after.json': 'graph',
   'apply.json': 'graph',
+  'cli/apply.stdin.json': 'graph',
+  'cli/apply.lenient.json': 'graph',
   'diff.json': 'diff',
   'cli/diff.pretty.json': 'diff',
   'diff.packed.json': 'diff-packed',

@@ -21,6 +21,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "check:packages": "tsx scripts/check-packages.ts",
     "conformance:update": "tsx conformance/update.ts",
+    "conformance:replay": "tsx conformance/replay.ts",
     "dev:site": "pnpm --filter @kgdiff/site dev",
     "dev:docs": "pnpm --filter @kgdiff/docs dev",
     "build:docs": "pnpm --filter @kgdiff/docs build",

@@ -107,10 +107,10 @@ With `before` and `after` the two inputs:
    - `delta.inverse.json` = `JSON.stringify(invertDelta(result.delta)) + "\n"`;
    - `titles.json` = for `en` and `zh-CN`,
      `result.hunks.map(h => ({ id: h.id, ...formatHunk(h, result, locale) }))`;
-   - `report.json` = `format`, `version`, `meta` and `view` of the `ReportPayload` that
-     `kgdiff <before> <after> -o report.html --reproducible --locale <locale>` embeds, with
-     `meta.generator` written `kgdiff <version>`. The payload's `diff` is `diff.packed.json`; its
-     `layout` is not normative;
+   - `report.json` = `format`, `version`, `meta` and `view` of the `ReportPayload` embedded in
+     the report that the arguments of the `summary` run plus `-o report.html --reproducible`
+     write, with `meta.generator` written `kgdiff <version>`. The payload's `diff` is
+     `diff.packed.json`; its `layout` is not normative;
    - `layout-contract.json`: from `layout = layoutDiff(result, layoutOptions)` and
      `json = layoutToJSON(layout)`: `options`, `strategy`, `scope`, `iterations` (union layouts
      only: an anchored layout simulates a window found by a range query on positions, so its tick
@@ -161,6 +161,10 @@ the bytes of stdout and stderr with the recorded file, or with the UTF-8 encodin
 text — the reference writes UTF-8, so a lone surrogate in a message reached the pipe as U+FFFD,
 and that is what is recorded (`cli-errors`, `obo-clipped-line`). With `versionPlaceholder`,
 replace `kgdiff <version>` by the implementation's `kgdiff X.Y.Z` before comparing.
+
+The reference does exactly this on every CI run: the generator records the runs with the CLI's
+`main()` in-process, and `pnpm conformance:replay` replays every one of them with the built CLI
+(`node packages/cli/dist/bin.js`) as a real process, after `pnpm build`.
 
 Every case has the standard runs `summary` (no output option), `stat` (`--stat`), `name-status`
 (`--name-status`), `markdown` (`--markdown`), `json` (`--json`, stdout = `expected/diff.json`),
@@ -262,6 +266,7 @@ The corpus is generated; never edit an expected file by hand.
 ```sh
 pnpm conformance:update                  # regenerate everything from the TypeScript packages
 pnpm vitest run --project conformance    # check (also part of pnpm test)
+pnpm build && pnpm conformance:replay    # replay the CLI runs with the real process (CI does too)
 ```
 
 - A behaviour change in the TypeScript packages shows up as a failing `pnpm test`; regenerate,

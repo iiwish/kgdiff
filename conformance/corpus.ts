@@ -5,13 +5,16 @@
  * on disk byte for byte, and `update.ts` can write it. Nothing here writes anywhere else.
  *
  * Library outputs come from the package APIs; CLI outputs from `main()` of `@kgdiff/cli`, run
- * in-process with `corpusIO` (no TTY, fixed environment). Where both exist (`--json`, `--delta`)
- * the generator checks that they agree, so the README's definitions hold.
+ * in-process with `corpusIO` (no TTY, fixed environment), and so does `report.json`, which is
+ * read back from the HTML report a `-o report.html --reproducible` run writes. Where both exist
+ * (`--json`, `--delta`, the report's packed diff) the generator checks that they agree, so the
+ * README's definitions hold. `replay.ts` replays the recorded runs with the real process.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildReportPayload, cliVersion, defaultTitle, graphLabel, main } from '@kgdiff/cli';
+import { gunzipSync } from 'node:zlib';
+import { cliVersion, main } from '@kgdiff/cli';
 import {
   type DiffOptions,
   type DiffResult,
@@ -138,8 +141,9 @@ interface RunRecord {
   readonly exit: number;
 }
 
-function runSpecs(def: CaseDefinition): RunSpec[] {
-  const base = [
+/** Arguments of the case's diff runs: inputs, how they are read, diff options, text and locale. */
+function diffArgs(def: CaseDefinition): string[] {
+  return [
     def.inputs.before,
     def.inputs.after,
     ...inputFlags(def),
@@ -150,6 +154,10 @@ function runSpecs(def: CaseDefinition): RunSpec[] {
     '--color',
     'never',
   ];
+}
+
+function runSpecs(def: CaseDefinition): RunSpec[] {
+  const base = diffArgs(def);
   const run = (name: string, flags: readonly string[], file: string | undefined): RunSpec => ({
     name,
     args: [...base, ...flags],
@@ -259,40 +267,68 @@ function layoutContract(def: CaseDefinition, result: DiffResult) {
   };
 }
 
+/** The parts of the report payload the corpus reads (the viewer's `ReportPayload`). */
+interface EmbeddedPayload {
+  readonly format: string;
+  readonly version: number;
+  readonly diff: unknown;
+  readonly meta: { readonly generator: string } & Readonly<Record<string, unknown>>;
+  readonly view: unknown;
+}
+
+/** The payload script of an HTML report: plain JSON, or gzip + base64 (`data-encoding`). */
+function embeddedPayload(html: string): EmbeddedPayload | undefined {
+  const match = /<script type="application\/kgdiff\+json"([^>]*)>([^<]*)<\/script>/.exec(html);
+  if (!match) return undefined;
+  const [, attrs = '', body = ''] = match;
+  const json = attrs.includes('data-encoding="gzip-base64"')
+    ? decoder.decode(gunzipSync(Buffer.from(body, 'base64')))
+    : body;
+  return JSON.parse(json) as EmbeddedPayload;
+}
+
+/** Stand-ins for the viewer bundles: the payload does not depend on them. */
+const VIEWER_STUBS = { main: '/* viewer */', compute: '/* compute add-on */' } as const;
+
 /**
- * What `kgdiff -o report.html --reproducible` puts in its payload besides the packed diff
- * (`diff.packed.json`) and the layout (not normative): format, version, meta and view.
+ * What `kgdiff <diff arguments> -o report.html --reproducible` embeds in its report besides the
+ * packed diff (checked to be `diff.packed.json`) and the layout (not normative): format, version,
+ * meta (with the generator's version replaced) and view. The run is in-process, with the
+ * report written to memory and stand-ins for the viewer bundles.
  */
 async function reportRecord(
   def: CaseDefinition,
-  parsed: { readonly before: ParseResult; readonly after: ParseResult },
-  result: DiffResult,
+  overlay: ReadonlyMap<string, Uint8Array>,
+  packedText: string,
+  version: string,
 ) {
-  const input = (side: 'before' | 'after') => ({
-    display: def.inputs[side],
-    text: '',
-    empty: false,
+  const dir = caseDir(def.id);
+  const writes = new Map<string, Uint8Array>();
+  const { io, out } = corpusIO({
+    cwd: dir,
+    env: BASE_ENV,
+    overlay,
+    writes,
+    viewerBundles: VIEWER_STUBS,
   });
-  const payload = await buildReportPayload(result, {
-    title: defaultTitle(
-      { meta: parsed.before.graph.meta, input: input('before') },
-      { meta: parsed.after.graph.meta, input: input('after') },
-    ),
-    generator: VERSION_PLACEHOLDER,
-    before: {
-      name: graphLabel(parsed.before.graph.meta, input('before')),
-      format: parsed.before.format,
-    },
-    after: {
-      name: graphLabel(parsed.after.graph.meta, input('after')),
-      format: parsed.after.format,
-    },
-    view: { locale: def.locale },
-  });
+  const code = await main([...diffArgs(def), '-o', 'report.html', '--reproducible'], io);
+  if (code !== 0) fail(def, `the report run exited with ${code}:\n${out.stderr}`);
+  const html = writes.get(resolve(dir, 'report.html'));
+  if (writes.size !== 1 || html === undefined) {
+    fail(def, `the report run wrote ${[...writes.keys()].join(', ') || 'nothing'}`);
+  }
+  const payload = embeddedPayload(decoder.decode(html));
+  if (!payload) fail(def, 'the report has no payload script');
+  if (compact(payload.diff) !== packedText) {
+    fail(def, "the report's diff differs from JSON.stringify(packDiffJSON(diffToJSON(diff(…))))");
+  }
+  if (payload.meta.generator !== version) {
+    fail(def, `the report names its generator "${payload.meta.generator}", not "${version}"`);
+  }
   return {
     format: payload.format,
     version: payload.version,
-    meta: payload.meta,
+    meta: { ...payload.meta, generator: VERSION_PLACEHOLDER },
     view: payload.view,
   };
 }
@@ -325,7 +361,9 @@ export async function generateCase(def: CaseDefinition): Promise<Corpus> {
   };
   const result = diff(parsed.before.graph, parsed.after.graph, def.options);
   const diffText = compact(diffToJSON(result));
+  const packedText = compact(packDiffJSON(diffToJSON(result)));
   const deltaText = compact(result.delta);
+  const version = `kgdiff ${cliVersion()}`;
   const hashes = { before: hashGraph(result.before), after: hashGraph(result.after) };
   if (result.delta.base.hash !== hashes.before || result.delta.target.hash !== hashes.after) {
     fail(def, 'the delta does not name the hashes of the two graphs');
@@ -339,15 +377,14 @@ export async function generateCase(def: CaseDefinition): Promise<Corpus> {
     bytes(pretty({ before: result.before.issues, after: result.after.issues })),
   );
   put('expected/hashes.json', bytes(pretty(hashes)));
-  put('expected/diff.packed.json', bytes(compact(packDiffJSON(diffToJSON(result)))));
+  put('expected/diff.packed.json', bytes(packedText));
   put('expected/delta.inverse.json', bytes(compact(invertDelta(result.delta))));
   put('expected/titles.json', bytes(pretty(titles(result))));
   put('expected/layout-contract.json', bytes(pretty(layoutContract(def, result))));
-  put('expected/report.json', bytes(pretty(await reportRecord(def, parsed, result))));
+  put('expected/report.json', bytes(pretty(await reportRecord(def, overlay, packedText, version))));
 
   // CLI outputs.
   const records: RunRecord[] = [];
-  const version = `kgdiff ${cliVersion()}`;
   for (const spec of runSpecs(def)) {
     const stdin = spec.stdin === undefined ? undefined : readFileSync(join(dir, spec.stdin));
     const { io, out } = corpusIO({ cwd: dir, env: spec.env, overlay, ...(stdin ? { stdin } : {}) });
