@@ -4,6 +4,7 @@ packages:
   - docs
 allowBuilds:
   esbuild: true
+  rs-module-lexer: false
 overrides:
   # VitePress 1.6.4, the latest stable release, depends on vite ^5.4.14, and no vite 5 release
   # fixes the dev server advisories (fixed in vite 6.4.4) or esbuild's (fixed in 0.25.0, which

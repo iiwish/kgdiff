@@ -1,11 +1,5 @@
 /**
- * `<kgdiff-legend>` (RFC 0001 §3; experimental): what the colors mean. `variant="full"` (the
- * default): a card of every family's swatch and name, folded to its head until opened; `open`
- * reflects whether it is (the user's toggle included, as on `<details>`). `variant="mini"`: one
- * line of dots for the families the root's diff has, then the unchanged context. Binds to a
- * root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's
- * built-in legend; placed anywhere else it is not kept clear of fits and flights unless
- * registered. Importing this module defines it.
+ * `<kgdiff-legend>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { Region } from '../bind.js';
 import type { KgdiffLegendElement, LegendVariant } from '../index.js';
@@ -15,7 +9,17 @@ import { BoundElement, define } from './bound.js';
 
 const VARIANTS: readonly LegendVariant[] = ['full', 'mini'];
 
-/** @experimental See the module's description. */
+/**
+ * What the colors mean. `variant="full"` (the default): a card of every family's swatch and name,
+ * folded to its head until opened; `open` reflects whether it is (the user's toggle included, as on
+ * `<details>`). `variant="mini"`: one line of dots for the families the root's diff has, then the
+ * unchanged context. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a
+ * `<kgdiff-stage>` it replaces the stage's built-in legend; placed anywhere else it is not kept
+ * clear of fits and flights unless registered.
+ *
+ * @tagname kgdiff-legend
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffLegend extends BoundElement implements KgdiffLegendElement {
   static override get observedAttributes(): readonly string[] {
     return ['for', 'variant', 'open'];

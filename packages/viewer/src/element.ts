@@ -69,6 +69,19 @@ function warnPanels(invalid: readonly string[]): void {
   if (invalid.length > 0) console.warn(`[kgdiff] ignoring invalid panels: ${invalid.join(' ')}`);
 }
 
+/**
+ * @tagname kgdiff-viewer
+ * @attr {'open' | 'closed'} sidebar - A preset: `closed` starts with the sidebar folded (`\` and the
+ *   sidebar button open it), `open` with its four regions open. Reflects the sidebar's state
+ *   once the user toggles it.
+ * @attr {'compact'} header - A preset: `compact` leaves the brand and the compared names out of
+ *   the canvas, for hosts that show their own (`panels="title:hidden"`).
+ * @slot top-start - The page's content over the canvas, top left (under the title while it shows).
+ * @slot top-end - The page's content over the canvas, top right (under the actions while they show).
+ * @slot bottom-start - The page's content over the canvas, bottom left, above the legend.
+ * @slot bottom-center - The page's content above the view dock and the transport.
+ * @slot bottom-end - The page's content over the canvas, bottom right, above the zoom buttons and the minimap.
+ */
 export class KgdiffViewer extends RootElement<ViewerController> implements KgdiffViewerElement {
   static get observedAttributes(): readonly string[] {
     return OBSERVED;

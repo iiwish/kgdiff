@@ -1,0 +1,2347 @@
+{
+  "schemaVersion": "2.1.0",
+  "readme": "README.md",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "dist/element.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffViewer",
+          "tagName": "kgdiff-viewer",
+          "description": "The drop-in viewer: a root (`KgdiffRootElement`) with the default layout, the canvas with its chrome, the change list, the search, the filters and the detail panel.\n\n`header=\"compact\"` leaves the brand and the compared names out of the canvas, for hosts that show their own (such as the playground): the preset `panels=\"title:hidden\"`. `sidebar=\"closed\"` starts with the sidebar folded (`\\` and the sidebar button open it).\n\nA small looping replay for another page: `mode=\"replay\" chrome=\"none\" loop` (with a height of your choosing, such as 320px).\n\nThe canvas has the slots of `<kgdiff-stage>` (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`; the top ones under the title and the actions while those show): a child with `slot=\"top-end\"` goes over the canvas, kept clear of fits and flights. A chrome element slotted in replaces the built-in region of its kind, the title and the actions included; `<kgdiff-zoom>` and `<kgdiff-minimap>` inside the viewer act on its canvas.",
+          "attributes": [
+            {
+              "name": "mode",
+              "fieldName": "mode",
+              "type": {
+                "text": "ViewerMode"
+              },
+              "description": "Reflected to the `mode` attribute. Default `overlay`."
+            },
+            {
+              "name": "scope",
+              "fieldName": "scope",
+              "type": {
+                "text": "ViewerScope"
+              },
+              "description": "Reflected to the `scope` attribute. Default `all` (`changes` for large graphs). Fixed to `changes` when the layout covers only the changes."
+            },
+            {
+              "name": "theme",
+              "fieldName": "theme",
+              "type": {
+                "text": "ThemePreference"
+              },
+              "description": "Reflected to the `theme` attribute. Default `auto`."
+            },
+            {
+              "name": "palette",
+              "fieldName": "palette",
+              "type": {
+                "text": "PaletteName"
+              },
+              "description": "Reflected to the `palette` attribute. Default `default`."
+            },
+            {
+              "name": "locale",
+              "fieldName": "locale",
+              "type": {
+                "text": "Locale"
+              },
+              "description": "Reflected to the `locale` attribute. Default from `navigator.language`."
+            },
+            {
+              "name": "sync-hash",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Keep the selection, mode and scope in the page's URL hash (`#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`) and follow it: deep links."
+            },
+            {
+              "name": "loop",
+              "fieldName": "loop",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Reflected to the boolean `loop` attribute. In `replay` mode the replay plays by itself and starts again `loopDelay` ms after it ends. `pause()` stops it until `play()`. Default false."
+            },
+            {
+              "name": "loop-delay",
+              "fieldName": "loopDelay",
+              "type": {
+                "text": "number"
+              },
+              "description": "Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200."
+            },
+            {
+              "name": "pause-on-hover",
+              "fieldName": "pauseOnHover",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "With `loop`, the replay pauses while the pointer is over the graph and continues when it leaves (a mouse or pen; not touch). Reflected as `pause-on-hover=\"false\"` when off. Default true."
+            },
+            {
+              "name": "shortcuts",
+              "fieldName": "shortcuts",
+              "type": {
+                "text": "ShortcutScope"
+              },
+              "description": "Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root, or in an element bound to it with `for` (those forward their keys). `global`: also when nothing on the page has focus (for full-page viewers such as HTML reports), for the first such root, except the keys pages scroll with (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and Enter)."
+            },
+            {
+              "name": "keymap",
+              "fieldName": "keymap",
+              "type": {
+                "text": "Keymap | null"
+              },
+              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
+              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6."
+            },
+            {
+              "name": "sidebar",
+              "type": {
+                "text": "'open' | 'closed'"
+              },
+              "description": "A preset: `closed` starts with the sidebar folded (`\\` and the sidebar button open it), `open` with its four regions open. Reflects the sidebar's state once the user toggles it."
+            },
+            {
+              "name": "header",
+              "type": {
+                "text": "'compact'"
+              },
+              "description": "A preset: `compact` leaves the brand and the compared names out of the canvas, for hosts that show their own (`panels=\"title:hidden\"`)."
+            },
+            {
+              "name": "chrome",
+              "fieldName": "chrome",
+              "type": {
+                "text": "ViewerChrome"
+              },
+              "description": "Reflected to the `chrome` attribute. `none` shows the graph alone: no title, actions, view dock (with the step caption and playback bar), change list, zoom buttons, minimap or legend card; the hover tooltip and a one-line legend stay. Clicks and keyboard shortcuts do nothing, the minimum height drops from 420px to 120px, and the view stays fitted: when the canvas is resized (unless the user panned or zoomed since) and at the start of every loop. Labels are never cut at the edge: one pushed from its spot by a neighbour moves inside or is left out. Default `full`."
+            },
+            {
+              "name": "legend",
+              "fieldName": "legend",
+              "type": {
+                "text": "ViewerLegend"
+              },
+              "description": "Reflected to the `legend` attribute: `full` (the card), `mini` (one line: the families this diff has, then unchanged), `none`. Default `auto`: `full`, or `mini` with `chrome=\"none\"`."
+            },
+            {
+              "name": "panels",
+              "fieldName": "panels",
+              "type": {
+                "text": "ViewerPanels"
+              },
+              "description": "The page's declaration of panel states, reflected to the `panels` attribute: a string (`\"detail:collapsed minimap:hidden\"`) or an object (`{ detail: 'collapsed' }`); reading it gives the object. Regions not named keep their state; entries that name no region or state are ignored with a warning. It wins over what the user chose before (remembered) and a report's `view.panels`; the user can still open and close collapsed regions, and declaring the same again keeps what they did. The presets `sidebar=\"closed\"` (list, detail, search and filters collapsed), `header=\"compact\"` (title hidden) and `chrome=\"none\"` (everything but the canvas and the legend hidden) are panel states too; `panels` wins over them for the regions it names. The states every region has now are in `layout`."
+            },
+            {
+              "name": "persist",
+              "fieldName": "persist",
+              "type": {
+                "text": "'local' | 'none'"
+              },
+              "description": "Reflected to the `persist` attribute. `local` (the default): the layout remembers the user's panel states, sizes, theme, palette and language in `localStorage` (under `persistKey`, shared by the viewers of the origin with the same key). `none`: it remembers nothing."
+            },
+            {
+              "name": "persist-key",
+              "fieldName": "persistKey",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflected to the `persist-key` attribute: the `localStorage` key the layout remembers under. Viewers with the same key share what they remember; give each app on a shared origin (a GitHub Pages user site, say) a key of its own. Default `kgdiff:viewer`."
+            },
+            {
+              "name": "global-shortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "The same as `shortcuts=\"global\"`."
+            }
+          ],
+          "members": [
+            {
+              "kind": "method",
+              "name": "load",
+              "description": "Parse (if needed), diff, lay out and show two graphs. Rejects with a KgdiffError on bad input.",
+              "parameters": [
+                {
+                  "name": "options",
+                  "type": {
+                    "text": "LoadOptions"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "chrome",
+              "type": {
+                "text": "ViewerChrome"
+              },
+              "description": "Reflected to the `chrome` attribute. `none` shows the graph alone: no title, actions, view dock (with the step caption and playback bar), change list, zoom buttons, minimap or legend card; the hover tooltip and a one-line legend stay. Clicks and keyboard shortcuts do nothing, the minimum height drops from 420px to 120px, and the view stays fitted: when the canvas is resized (unless the user panned or zoomed since) and at the start of every loop. Labels are never cut at the edge: one pushed from its spot by a neighbour moves inside or is left out. Default `full`.",
+              "attribute": "chrome"
+            },
+            {
+              "kind": "field",
+              "name": "legend",
+              "type": {
+                "text": "ViewerLegend"
+              },
+              "description": "Reflected to the `legend` attribute: `full` (the card), `mini` (one line: the families this diff has, then unchanged), `none`. Default `auto`: `full`, or `mini` with `chrome=\"none\"`.",
+              "attribute": "legend"
+            },
+            {
+              "kind": "field",
+              "name": "panels",
+              "type": {
+                "text": "ViewerPanels"
+              },
+              "description": "The page's declaration of panel states, reflected to the `panels` attribute: a string (`\"detail:collapsed minimap:hidden\"`) or an object (`{ detail: 'collapsed' }`); reading it gives the object. Regions not named keep their state; entries that name no region or state are ignored with a warning. It wins over what the user chose before (remembered) and a report's `view.panels`; the user can still open and close collapsed regions, and declaring the same again keeps what they did. The presets `sidebar=\"closed\"` (list, detail, search and filters collapsed), `header=\"compact\"` (title hidden) and `chrome=\"none\"` (everything but the canvas and the legend hidden) are panel states too; `panels` wins over them for the regions it names. The states every region has now are in `layout`.",
+              "attribute": "panels"
+            },
+            {
+              "kind": "field",
+              "name": "persist",
+              "type": {
+                "text": "'local' | 'none'"
+              },
+              "description": "Reflected to the `persist` attribute. `local` (the default): the layout remembers the user's panel states, sizes, theme, palette and language in `localStorage` (under `persistKey`, shared by the viewers of the origin with the same key). `none`: it remembers nothing.",
+              "attribute": "persist"
+            },
+            {
+              "kind": "field",
+              "name": "persistKey",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflected to the `persist-key` attribute: the `localStorage` key the layout remembers under. Viewers with the same key share what they remember; give each app on a shared origin (a GitHub Pages user site, say) a key of its own. Default `kgdiff:viewer`.",
+              "attribute": "persist-key"
+            },
+            {
+              "kind": "field",
+              "name": "layout",
+              "type": {
+                "text": "ViewerLayout"
+              },
+              "description": "Every region's state and the sizes now (what `kgdiff-layout` reports, without `source`).",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "mode",
+              "type": {
+                "text": "ViewerMode"
+              },
+              "description": "Reflected to the `mode` attribute. Default `overlay`.",
+              "attribute": "mode"
+            },
+            {
+              "kind": "field",
+              "name": "scope",
+              "type": {
+                "text": "ViewerScope"
+              },
+              "description": "Reflected to the `scope` attribute. Default `all` (`changes` for large graphs). Fixed to `changes` when the layout covers only the changes.",
+              "attribute": "scope"
+            },
+            {
+              "kind": "field",
+              "name": "theme",
+              "type": {
+                "text": "ThemePreference"
+              },
+              "description": "Reflected to the `theme` attribute. Default `auto`.",
+              "attribute": "theme"
+            },
+            {
+              "kind": "field",
+              "name": "palette",
+              "type": {
+                "text": "PaletteName"
+              },
+              "description": "Reflected to the `palette` attribute. Default `default`.",
+              "attribute": "palette"
+            },
+            {
+              "kind": "field",
+              "name": "locale",
+              "type": {
+                "text": "Locale"
+              },
+              "description": "Reflected to the `locale` attribute. Default from `navigator.language`.",
+              "attribute": "locale"
+            },
+            {
+              "kind": "field",
+              "name": "loop",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Reflected to the boolean `loop` attribute. In `replay` mode the replay plays by itself and starts again `loopDelay` ms after it ends. `pause()` stops it until `play()`. Default false.",
+              "attribute": "loop"
+            },
+            {
+              "kind": "field",
+              "name": "loopDelay",
+              "type": {
+                "text": "number"
+              },
+              "description": "Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200.",
+              "attribute": "loop-delay"
+            },
+            {
+              "kind": "field",
+              "name": "pauseOnHover",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "With `loop`, the replay pauses while the pointer is over the graph and continues when it leaves (a mouse or pen; not touch). Reflected as `pause-on-hover=\"false\"` when off. Default true.",
+              "attribute": "pause-on-hover"
+            },
+            {
+              "kind": "field",
+              "name": "shortcuts",
+              "type": {
+                "text": "ShortcutScope"
+              },
+              "description": "Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root, or in an element bound to it with `for` (those forward their keys). `global`: also when nothing on the page has focus (for full-page viewers such as HTML reports), for the first such root, except the keys pages scroll with (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and Enter).",
+              "attribute": "shortcuts"
+            },
+            {
+              "kind": "field",
+              "name": "keymap",
+              "type": {
+                "text": "Keymap | null"
+              },
+              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
+              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6.",
+              "attribute": "keymap"
+            },
+            {
+              "kind": "field",
+              "name": "payload",
+              "type": {
+                "text": "ReportPayload | null"
+              },
+              "description": "Set a precomputed report (no diff / layout work in the browser)."
+            },
+            {
+              "kind": "method",
+              "name": "selectHunk",
+              "description": "Select a hunk by id (null clears) and bring it into view.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "type": {
+                    "text": "string | null"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "next",
+              "description": "Select the next change (`j`), in the list's order, and bring it into view.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "prev",
+              "description": "Select the previous change (`k`).",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "play",
+              "description": "Play the replay (in `replay` mode), from where it is.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "pause",
+              "description": "Pause the replay; a looping one stays paused until `play()`.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "fit",
+              "description": "Fit the whole graph, labels included, into view.",
+              "parameters": [
+                {
+                  "name": "options",
+                  "type": {
+                    "text": "FitOptions"
+                  },
+                  "optional": true
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "exportDelta",
+              "description": "The full delta of the current diff.",
+              "return": {
+                "type": {
+                  "text": "Delta"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "reviewState",
+              "description": "Which changes are reviewed, and how many of all.",
+              "return": {
+                "type": {
+                  "text": "ReviewState"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setReviewed",
+              "description": "Mark a change (by its id) reviewed or not; saved per diff, as the reader's `x` is.",
+              "parameters": [
+                {
+                  "name": "hunkId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "reviewed",
+                  "type": {
+                    "text": "boolean"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "refreshTheme",
+              "description": "Draw the canvas with the `--kgdiff-*` tokens as computed now: after the page changed tokens in a way the root cannot observe (a class on an ancestor, a new stylesheet). Theme, palette and system color scheme changes are followed by themselves.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "kgdiff-ready",
+              "type": {
+                "text": "CustomEvent<{ readonly stats: DiffStats }>"
+              },
+              "description": "A diff is shown, from `load()` or a `payload`; `stats` counts its nodes, edges and changes."
+            },
+            {
+              "name": "kgdiff-select",
+              "type": {
+                "text": "CustomEvent<{ readonly hunk: string | null; readonly node: string | null }>"
+              },
+              "description": "The selection changed: a change (`hunk`, its id, with the node chosen in it if any), a node alone (`hunk` null), or nothing (both null)."
+            },
+            {
+              "name": "kgdiff-mode",
+              "type": {
+                "text": "CustomEvent<{ readonly mode: ViewerMode; readonly scope: ViewerScope }>"
+              },
+              "description": "The mode or the scope changed, by the user, a key or the host."
+            },
+            {
+              "name": "kgdiff-review",
+              "type": {
+                "text": "CustomEvent<{ readonly hunk: string; readonly reviewed: boolean; readonly progress: ReviewState; }>"
+              },
+              "description": "A change was marked reviewed, or not; `progress` is the review state after it."
+            },
+            {
+              "name": "kgdiff-error",
+              "type": {
+                "text": "CustomEvent<{ readonly error: Error }>"
+              },
+              "description": "Loading or showing a diff failed; `error` is a `KgdiffError` for bad input."
+            },
+            {
+              "name": "kgdiff-replay-end",
+              "type": {
+                "text": "CustomEvent<{ readonly loop: boolean }>"
+              },
+              "description": "Playback reached the end of the replay (not fired for seeking or stepping there). `loop`: it starts again after `loopDelay` ms; set `loop = false` or call `pause()` to stop it."
+            },
+            {
+              "name": "kgdiff-layout",
+              "type": {
+                "text": "CustomEvent<ViewerLayout & { readonly source: 'user' | 'host' }>"
+              },
+              "description": "The default layout changed: a panel opened, collapsed or was hidden, or a size changed (once a drag ends). `source`: the user did it in the viewer, or the host (attributes, properties, a report's `view.panels`)."
+            }
+          ],
+          "slots": [
+            {
+              "name": "top-start",
+              "description": "The page's content over the canvas, top left (under the title while it shows)."
+            },
+            {
+              "name": "top-end",
+              "description": "The page's content over the canvas, top right (under the actions while they show)."
+            },
+            {
+              "name": "bottom-start",
+              "description": "The page's content over the canvas, bottom left, above the legend."
+            },
+            {
+              "name": "bottom-center",
+              "description": "The page's content above the view dock and the transport."
+            },
+            {
+              "name": "bottom-end",
+              "description": "The page's content over the canvas, bottom right, above the zoom buttons and the minimap."
+            }
+          ],
+          "cssProperties": [
+            {
+              "name": "--kgdiff-background",
+              "syntax": "<color>",
+              "description": "The theme's `canvas.background`."
+            },
+            {
+              "name": "--kgdiff-grid",
+              "syntax": "<color>",
+              "description": "The theme's `canvas.grid`."
+            },
+            {
+              "name": "--kgdiff-panel",
+              "syntax": "<color>",
+              "description": "The theme's `surface.panel`."
+            },
+            {
+              "name": "--kgdiff-raised",
+              "syntax": "<color>",
+              "description": "The theme's `surface.raised`."
+            },
+            {
+              "name": "--kgdiff-overlay",
+              "syntax": "<color>",
+              "description": "The theme's `surface.overlay`."
+            },
+            {
+              "name": "--kgdiff-border",
+              "syntax": "<color>",
+              "description": "The theme's `surface.border`."
+            },
+            {
+              "name": "--kgdiff-border-strong",
+              "syntax": "<color>",
+              "description": "The theme's `surface.borderStrong`."
+            },
+            {
+              "name": "--kgdiff-control-border",
+              "syntax": "<color>",
+              "description": "The theme's `surface.controlBorder`."
+            },
+            {
+              "name": "--kgdiff-shadow",
+              "description": "The theme's `surface.shadow`."
+            },
+            {
+              "name": "--kgdiff-text",
+              "syntax": "<color>",
+              "description": "The theme's `text.primary`."
+            },
+            {
+              "name": "--kgdiff-text-secondary",
+              "syntax": "<color>",
+              "description": "The theme's `text.secondary`."
+            },
+            {
+              "name": "--kgdiff-text-muted",
+              "syntax": "<color>",
+              "description": "The theme's `text.muted`."
+            },
+            {
+              "name": "--kgdiff-accent",
+              "syntax": "<color>",
+              "description": "The theme's `accent.base`."
+            },
+            {
+              "name": "--kgdiff-accent-strong",
+              "syntax": "<color>",
+              "description": "The theme's `accent.strong`."
+            },
+            {
+              "name": "--kgdiff-accent-soft",
+              "syntax": "<color>",
+              "description": "The theme's `accent.soft`."
+            },
+            {
+              "name": "--kgdiff-accent-text",
+              "syntax": "<color>",
+              "description": "The theme's `accent.text`."
+            },
+            {
+              "name": "--kgdiff-neutral",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.node`."
+            },
+            {
+              "name": "--kgdiff-neutral-stroke",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.nodeStroke`."
+            },
+            {
+              "name": "--kgdiff-neutral-edge",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.edge`."
+            },
+            {
+              "name": "--kgdiff-neutral-label",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.label`."
+            },
+            {
+              "name": "--kgdiff-font",
+              "description": "The theme's `font.family`."
+            },
+            {
+              "name": "--kgdiff-font-mono",
+              "description": "The theme's `font.mono`."
+            },
+            {
+              "name": "--kgdiff-added",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.base`."
+            },
+            {
+              "name": "--kgdiff-added-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.strong`."
+            },
+            {
+              "name": "--kgdiff-added-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.soft`."
+            },
+            {
+              "name": "--kgdiff-added-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.text`."
+            },
+            {
+              "name": "--kgdiff-removed",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.base`."
+            },
+            {
+              "name": "--kgdiff-removed-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.strong`."
+            },
+            {
+              "name": "--kgdiff-removed-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.soft`."
+            },
+            {
+              "name": "--kgdiff-removed-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.text`."
+            },
+            {
+              "name": "--kgdiff-content",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.base`."
+            },
+            {
+              "name": "--kgdiff-content-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.strong`."
+            },
+            {
+              "name": "--kgdiff-content-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.soft`."
+            },
+            {
+              "name": "--kgdiff-content-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.text`."
+            },
+            {
+              "name": "--kgdiff-structure",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.base`."
+            },
+            {
+              "name": "--kgdiff-structure-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.strong`."
+            },
+            {
+              "name": "--kgdiff-structure-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.soft`."
+            },
+            {
+              "name": "--kgdiff-structure-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.text`."
+            },
+            {
+              "name": "--kgdiff-identity",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.base`."
+            },
+            {
+              "name": "--kgdiff-identity-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.strong`."
+            },
+            {
+              "name": "--kgdiff-identity-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.soft`."
+            },
+            {
+              "name": "--kgdiff-identity-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.text`."
+            }
+          ],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffViewer",
+          "declaration": {
+            "name": "KgdiffViewer",
+            "module": "dist/element.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/index.js",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-viewer",
+          "declaration": {
+            "name": "KgdiffViewer",
+            "module": "dist/element.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/root.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffRoot",
+          "tagName": "kgdiff-root",
+          "description": "A root without visuals. It owns the session and provides it to the elements inside it (`<kgdiff-stage>`, `<kgdiff-change-list>`, …) or naming it with `for`, and owns what they share: the keyboard map, the live region announcing navigation, the events and the theme tokens. It has the attributes, properties, methods and events of `<kgdiff-viewer>` except the layout's (`panels`, `sidebar`, `header`, `chrome`, `legend`, `persist`): the page lays the elements out, and nothing is remembered.\n\nIt renders as `display: contents`, so its children are laid out by the page as if it were not there.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "mode",
+              "fieldName": "mode",
+              "type": {
+                "text": "ViewerMode"
+              },
+              "description": "Reflected to the `mode` attribute. Default `overlay`."
+            },
+            {
+              "name": "scope",
+              "fieldName": "scope",
+              "type": {
+                "text": "ViewerScope"
+              },
+              "description": "Reflected to the `scope` attribute. Default `all` (`changes` for large graphs). Fixed to `changes` when the layout covers only the changes."
+            },
+            {
+              "name": "theme",
+              "fieldName": "theme",
+              "type": {
+                "text": "ThemePreference"
+              },
+              "description": "Reflected to the `theme` attribute. Default `auto`."
+            },
+            {
+              "name": "palette",
+              "fieldName": "palette",
+              "type": {
+                "text": "PaletteName"
+              },
+              "description": "Reflected to the `palette` attribute. Default `default`."
+            },
+            {
+              "name": "locale",
+              "fieldName": "locale",
+              "type": {
+                "text": "Locale"
+              },
+              "description": "Reflected to the `locale` attribute. Default from `navigator.language`."
+            },
+            {
+              "name": "sync-hash",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Keep the selection, mode and scope in the page's URL hash (`#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`) and follow it: deep links."
+            },
+            {
+              "name": "loop",
+              "fieldName": "loop",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Reflected to the boolean `loop` attribute. In `replay` mode the replay plays by itself and starts again `loopDelay` ms after it ends. `pause()` stops it until `play()`. Default false."
+            },
+            {
+              "name": "loop-delay",
+              "fieldName": "loopDelay",
+              "type": {
+                "text": "number"
+              },
+              "description": "Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200."
+            },
+            {
+              "name": "pause-on-hover",
+              "fieldName": "pauseOnHover",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "With `loop`, the replay pauses while the pointer is over the graph and continues when it leaves (a mouse or pen; not touch). Reflected as `pause-on-hover=\"false\"` when off. Default true."
+            },
+            {
+              "name": "shortcuts",
+              "fieldName": "shortcuts",
+              "type": {
+                "text": "ShortcutScope"
+              },
+              "description": "Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root, or in an element bound to it with `for` (those forward their keys). `global`: also when nothing on the page has focus (for full-page viewers such as HTML reports), for the first such root, except the keys pages scroll with (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and Enter)."
+            },
+            {
+              "name": "keymap",
+              "fieldName": "keymap",
+              "type": {
+                "text": "Keymap | null"
+              },
+              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
+              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6."
+            },
+            {
+              "name": "global-shortcuts",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "The same as `shortcuts=\"global\"`."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "mode",
+              "type": {
+                "text": "ViewerMode"
+              },
+              "description": "Reflected to the `mode` attribute. Default `overlay`.",
+              "attribute": "mode"
+            },
+            {
+              "kind": "field",
+              "name": "scope",
+              "type": {
+                "text": "ViewerScope"
+              },
+              "description": "Reflected to the `scope` attribute. Default `all` (`changes` for large graphs). Fixed to `changes` when the layout covers only the changes.",
+              "attribute": "scope"
+            },
+            {
+              "kind": "field",
+              "name": "theme",
+              "type": {
+                "text": "ThemePreference"
+              },
+              "description": "Reflected to the `theme` attribute. Default `auto`.",
+              "attribute": "theme"
+            },
+            {
+              "kind": "field",
+              "name": "palette",
+              "type": {
+                "text": "PaletteName"
+              },
+              "description": "Reflected to the `palette` attribute. Default `default`.",
+              "attribute": "palette"
+            },
+            {
+              "kind": "field",
+              "name": "locale",
+              "type": {
+                "text": "Locale"
+              },
+              "description": "Reflected to the `locale` attribute. Default from `navigator.language`.",
+              "attribute": "locale"
+            },
+            {
+              "kind": "field",
+              "name": "loop",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Reflected to the boolean `loop` attribute. In `replay` mode the replay plays by itself and starts again `loopDelay` ms after it ends. `pause()` stops it until `play()`. Default false.",
+              "attribute": "loop"
+            },
+            {
+              "kind": "field",
+              "name": "loopDelay",
+              "type": {
+                "text": "number"
+              },
+              "description": "Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200.",
+              "attribute": "loop-delay"
+            },
+            {
+              "kind": "field",
+              "name": "pauseOnHover",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "With `loop`, the replay pauses while the pointer is over the graph and continues when it leaves (a mouse or pen; not touch). Reflected as `pause-on-hover=\"false\"` when off. Default true.",
+              "attribute": "pause-on-hover"
+            },
+            {
+              "kind": "field",
+              "name": "shortcuts",
+              "type": {
+                "text": "ShortcutScope"
+              },
+              "description": "Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root, or in an element bound to it with `for` (those forward their keys). `global`: also when nothing on the page has focus (for full-page viewers such as HTML reports), for the first such root, except the keys pages scroll with (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and Enter).",
+              "attribute": "shortcuts"
+            },
+            {
+              "kind": "field",
+              "name": "keymap",
+              "type": {
+                "text": "Keymap | null"
+              },
+              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
+              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6.",
+              "attribute": "keymap"
+            },
+            {
+              "kind": "field",
+              "name": "payload",
+              "type": {
+                "text": "ReportPayload | null"
+              },
+              "description": "Set a precomputed report (no diff / layout work in the browser)."
+            },
+            {
+              "kind": "method",
+              "name": "load",
+              "description": "Parse (if needed), diff, lay out and show two graphs. Rejects with a KgdiffError on bad input.",
+              "parameters": [
+                {
+                  "name": "options",
+                  "type": {
+                    "text": "LoadOptions"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "selectHunk",
+              "description": "Select a hunk by id (null clears) and bring it into view.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "type": {
+                    "text": "string | null"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "next",
+              "description": "Select the next change (`j`), in the list's order, and bring it into view.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "prev",
+              "description": "Select the previous change (`k`).",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "play",
+              "description": "Play the replay (in `replay` mode), from where it is.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "pause",
+              "description": "Pause the replay; a looping one stays paused until `play()`.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "fit",
+              "description": "Fit the whole graph, labels included, into view.",
+              "parameters": [
+                {
+                  "name": "options",
+                  "type": {
+                    "text": "FitOptions"
+                  },
+                  "optional": true
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "Promise<void>"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "exportDelta",
+              "description": "The full delta of the current diff.",
+              "return": {
+                "type": {
+                  "text": "Delta"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "reviewState",
+              "description": "Which changes are reviewed, and how many of all.",
+              "return": {
+                "type": {
+                  "text": "ReviewState"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "setReviewed",
+              "description": "Mark a change (by its id) reviewed or not; saved per diff, as the reader's `x` is.",
+              "parameters": [
+                {
+                  "name": "hunkId",
+                  "type": {
+                    "text": "string"
+                  }
+                },
+                {
+                  "name": "reviewed",
+                  "type": {
+                    "text": "boolean"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "refreshTheme",
+              "description": "Draw the canvas with the `--kgdiff-*` tokens as computed now: after the page changed tokens in a way the root cannot observe (a class on an ancestor, a new stylesheet). Theme, palette and system color scheme changes are followed by themselves.",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            }
+          ],
+          "events": [
+            {
+              "name": "kgdiff-ready",
+              "type": {
+                "text": "CustomEvent<{ readonly stats: DiffStats }>"
+              },
+              "description": "A diff is shown, from `load()` or a `payload`; `stats` counts its nodes, edges and changes."
+            },
+            {
+              "name": "kgdiff-select",
+              "type": {
+                "text": "CustomEvent<{ readonly hunk: string | null; readonly node: string | null }>"
+              },
+              "description": "The selection changed: a change (`hunk`, its id, with the node chosen in it if any), a node alone (`hunk` null), or nothing (both null)."
+            },
+            {
+              "name": "kgdiff-mode",
+              "type": {
+                "text": "CustomEvent<{ readonly mode: ViewerMode; readonly scope: ViewerScope }>"
+              },
+              "description": "The mode or the scope changed, by the user, a key or the host."
+            },
+            {
+              "name": "kgdiff-review",
+              "type": {
+                "text": "CustomEvent<{ readonly hunk: string; readonly reviewed: boolean; readonly progress: ReviewState; }>"
+              },
+              "description": "A change was marked reviewed, or not; `progress` is the review state after it."
+            },
+            {
+              "name": "kgdiff-error",
+              "type": {
+                "text": "CustomEvent<{ readonly error: Error }>"
+              },
+              "description": "Loading or showing a diff failed; `error` is a `KgdiffError` for bad input."
+            },
+            {
+              "name": "kgdiff-replay-end",
+              "type": {
+                "text": "CustomEvent<{ readonly loop: boolean }>"
+              },
+              "description": "Playback reached the end of the replay (not fired for seeking or stepping there). `loop`: it starts again after `loopDelay` ms; set `loop = false` or call `pause()` to stop it."
+            }
+          ],
+          "slots": [],
+          "cssProperties": [
+            {
+              "name": "--kgdiff-background",
+              "syntax": "<color>",
+              "description": "The theme's `canvas.background`."
+            },
+            {
+              "name": "--kgdiff-grid",
+              "syntax": "<color>",
+              "description": "The theme's `canvas.grid`."
+            },
+            {
+              "name": "--kgdiff-panel",
+              "syntax": "<color>",
+              "description": "The theme's `surface.panel`."
+            },
+            {
+              "name": "--kgdiff-raised",
+              "syntax": "<color>",
+              "description": "The theme's `surface.raised`."
+            },
+            {
+              "name": "--kgdiff-overlay",
+              "syntax": "<color>",
+              "description": "The theme's `surface.overlay`."
+            },
+            {
+              "name": "--kgdiff-border",
+              "syntax": "<color>",
+              "description": "The theme's `surface.border`."
+            },
+            {
+              "name": "--kgdiff-border-strong",
+              "syntax": "<color>",
+              "description": "The theme's `surface.borderStrong`."
+            },
+            {
+              "name": "--kgdiff-control-border",
+              "syntax": "<color>",
+              "description": "The theme's `surface.controlBorder`."
+            },
+            {
+              "name": "--kgdiff-shadow",
+              "description": "The theme's `surface.shadow`."
+            },
+            {
+              "name": "--kgdiff-text",
+              "syntax": "<color>",
+              "description": "The theme's `text.primary`."
+            },
+            {
+              "name": "--kgdiff-text-secondary",
+              "syntax": "<color>",
+              "description": "The theme's `text.secondary`."
+            },
+            {
+              "name": "--kgdiff-text-muted",
+              "syntax": "<color>",
+              "description": "The theme's `text.muted`."
+            },
+            {
+              "name": "--kgdiff-accent",
+              "syntax": "<color>",
+              "description": "The theme's `accent.base`."
+            },
+            {
+              "name": "--kgdiff-accent-strong",
+              "syntax": "<color>",
+              "description": "The theme's `accent.strong`."
+            },
+            {
+              "name": "--kgdiff-accent-soft",
+              "syntax": "<color>",
+              "description": "The theme's `accent.soft`."
+            },
+            {
+              "name": "--kgdiff-accent-text",
+              "syntax": "<color>",
+              "description": "The theme's `accent.text`."
+            },
+            {
+              "name": "--kgdiff-neutral",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.node`."
+            },
+            {
+              "name": "--kgdiff-neutral-stroke",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.nodeStroke`."
+            },
+            {
+              "name": "--kgdiff-neutral-edge",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.edge`."
+            },
+            {
+              "name": "--kgdiff-neutral-label",
+              "syntax": "<color>",
+              "description": "The theme's `neutral.label`."
+            },
+            {
+              "name": "--kgdiff-font",
+              "description": "The theme's `font.family`."
+            },
+            {
+              "name": "--kgdiff-font-mono",
+              "description": "The theme's `font.mono`."
+            },
+            {
+              "name": "--kgdiff-added",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.base`."
+            },
+            {
+              "name": "--kgdiff-added-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.strong`."
+            },
+            {
+              "name": "--kgdiff-added-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.soft`."
+            },
+            {
+              "name": "--kgdiff-added-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.added.text`."
+            },
+            {
+              "name": "--kgdiff-removed",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.base`."
+            },
+            {
+              "name": "--kgdiff-removed-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.strong`."
+            },
+            {
+              "name": "--kgdiff-removed-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.soft`."
+            },
+            {
+              "name": "--kgdiff-removed-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.removed.text`."
+            },
+            {
+              "name": "--kgdiff-content",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.base`."
+            },
+            {
+              "name": "--kgdiff-content-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.strong`."
+            },
+            {
+              "name": "--kgdiff-content-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.soft`."
+            },
+            {
+              "name": "--kgdiff-content-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.content.text`."
+            },
+            {
+              "name": "--kgdiff-structure",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.base`."
+            },
+            {
+              "name": "--kgdiff-structure-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.strong`."
+            },
+            {
+              "name": "--kgdiff-structure-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.soft`."
+            },
+            {
+              "name": "--kgdiff-structure-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.structure.text`."
+            },
+            {
+              "name": "--kgdiff-identity",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.base`."
+            },
+            {
+              "name": "--kgdiff-identity-strong",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.strong`."
+            },
+            {
+              "name": "--kgdiff-identity-soft",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.soft`."
+            },
+            {
+              "name": "--kgdiff-identity-text",
+              "syntax": "<color>",
+              "description": "The theme's `family.identity.text`."
+            }
+          ],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffRoot",
+          "declaration": {
+            "name": "KgdiffRoot",
+            "module": "dist/elements/root.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-root",
+          "declaration": {
+            "name": "KgdiffRoot",
+            "module": "dist/elements/root.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/stage.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffStage",
+          "tagName": "kgdiff-stage",
+          "description": "The canvas of the root it is bound to: the graph, the hover tooltip, the swipe divider, the replay caption and the canvas chrome (view dock, replay transport, legend, zoom buttons and minimap). Each stage is a view of its own: a root draws every stage bound to it, each with its own camera, sharing the selection, the hover, the filters and the search; `version` pins one to a version.\n\nFive named slots take the page's content over the canvas. The stage positions it (12–16 px from the edges, stacked further from the corner than the chrome there), and every slotted element is an obstacle: fits and flights frame the graph in the free part of the canvas. A chrome element slotted in replaces the built-in region of its kind; `panels` keeps applying to the rest. Content positioned some other way registers itself with `registerObstacle`, on the element or on the stage context (`kgdiff.stage/1`) it provides to its descendants.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            },
+            {
+              "name": "panels",
+              "fieldName": "panels",
+              "type": {
+                "text": "StagePanels"
+              },
+              "description": "The states of the built-in chrome (`dock`, `transport`, `legend`, `zoom`, `minimap`), reflected to the `panels` attribute, in the syntax of `<kgdiff-viewer>`'s `panels`: `\"minimap:hidden zoom:hidden\"` or `{ minimap: 'hidden' }`; reading it gives the object. Other regions are ignored with a warning. Default: all open, the legend collapsed."
+            },
+            {
+              "name": "version",
+              "fieldName": "version",
+              "type": {
+                "text": "StageVersion | null"
+              },
+              "description": "Reflected to the `version` attribute: the version this stage draws whatever the root's mode, `before` or `after` (two stages of one root side by side), or null to follow the mode. Another value is ignored with a warning. Each stage has its own camera; the selection, hover, filters and search are the root's, so both bring the same change into view."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "panels",
+              "type": {
+                "text": "StagePanels"
+              },
+              "description": "The states of the built-in chrome (`dock`, `transport`, `legend`, `zoom`, `minimap`), reflected to the `panels` attribute, in the syntax of `<kgdiff-viewer>`'s `panels`: `\"minimap:hidden zoom:hidden\"` or `{ minimap: 'hidden' }`; reading it gives the object. Other regions are ignored with a warning. Default: all open, the legend collapsed.",
+              "attribute": "panels"
+            },
+            {
+              "kind": "field",
+              "name": "version",
+              "type": {
+                "text": "StageVersion | null"
+              },
+              "description": "Reflected to the `version` attribute: the version this stage draws whatever the root's mode, `before` or `after` (two stages of one root side by side), or null to follow the mode. Another value is ignored with a warning. Each stage has its own camera; the selection, hover, filters and search are the root's, so both bring the same change into view.",
+              "attribute": "version"
+            },
+            {
+              "kind": "method",
+              "name": "registerObstacle",
+              "description": "Keep `element` (content over the canvas the stage does not place) clear of fits and flights; returns the function that stops it. Also on the stage context descendants can request (`Symbol.for('kgdiff.stage/1')`).",
+              "parameters": [
+                {
+                  "name": "element",
+                  "type": {
+                    "text": "Element"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "() => void"
+                }
+              }
+            },
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [
+            {
+              "name": "top-start",
+              "description": "The page's content in the top left corner, below the version chip."
+            },
+            {
+              "name": "top-end",
+              "description": "The page's content in the top right corner."
+            },
+            {
+              "name": "bottom-start",
+              "description": "The page's content in the bottom left corner, above the legend."
+            },
+            {
+              "name": "bottom-center",
+              "description": "The page's content above the view dock and the transport."
+            },
+            {
+              "name": "bottom-end",
+              "description": "The page's content in the bottom right corner, above the zoom buttons and the minimap."
+            }
+          ],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffStage",
+          "declaration": {
+            "name": "KgdiffStage",
+            "module": "dist/elements/stage.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-stage",
+          "declaration": {
+            "name": "KgdiffStage",
+            "module": "dist/elements/stage.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/change-list.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffChangeList",
+          "tagName": "kgdiff-change-list",
+          "description": "The \"Changes\" title with the count and review progress, and the changes grouped by phase (a virtualized listbox; `j` / `k` / `x`, Enter, Home / End). A labelled region. While a search is active (the session's query is not blank) its rows step aside. Registers itself as the root's `list` focus target (choosing a search result moves focus here).",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffChangeList",
+          "declaration": {
+            "name": "KgdiffChangeList",
+            "module": "dist/elements/change-list.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-change-list",
+          "declaration": {
+            "name": "KgdiffChangeList",
+            "module": "dist/elements/change-list.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/change-detail.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffChangeDetail",
+          "tagName": "kgdiff-change-detail",
+          "description": "The selected change, or the selected node: what changed first, then the unchanged rest; prev / next and the reviewed toggle. A labelled region.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffChangeDetail",
+          "declaration": {
+            "name": "KgdiffChangeDetail",
+            "module": "dist/elements/change-detail.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-change-detail",
+          "declaration": {
+            "name": "KgdiffChangeDetail",
+            "module": "dist/elements/change-detail.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/search.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffSearch",
+          "tagName": "kgdiff-search",
+          "description": "Node search, a combobox and the results list it owns (its `aria-controls` and `aria-activedescendant` stay inside the element). The results open below the box while the query is not blank; ↑ / ↓ move through them, Enter chooses one (its node and change are selected, and focus moves to the change list), Esc clears. The query lives in the session, so a change list bound to the same root steps aside meanwhile. Registers itself as the root's `search` focus target: `/` focuses the one registered last that is shown.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffSearch",
+          "declaration": {
+            "name": "KgdiffSearch",
+            "module": "dist/elements/search.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-search",
+          "declaration": {
+            "name": "KgdiffSearch",
+            "module": "dist/elements/search.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/filters.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffFilters",
+          "tagName": "kgdiff-filters",
+          "description": "One chip per kind of change the diff has, with its count and the legend's swatch, toggling the session's family filter, and \"Show all\" while a filter is on.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffFilters",
+          "declaration": {
+            "name": "KgdiffFilters",
+            "module": "dist/elements/filters.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-filters",
+          "declaration": {
+            "name": "KgdiffFilters",
+            "module": "dist/elements/filters.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/view-dock.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffViewDock",
+          "tagName": "kgdiff-view-dock",
+          "description": "How the root's diff is viewed. The mode (overlay, swipe, replay; keys `1`–`3`) and \"Changes only\" (key `4`) with its context hops and the nearest \"+N\" expansion. Binds to a root like the other elements (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's built-in dock; placed anywhere else it is not kept clear of fits and flights unless registered (`stage.registerObstacle`).",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffViewDock",
+          "declaration": {
+            "name": "KgdiffViewDock",
+            "module": "dist/elements/view-dock.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-view-dock",
+          "declaration": {
+            "name": "KgdiffViewDock",
+            "module": "dist/elements/view-dock.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/transport.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffTransport",
+          "tagName": "kgdiff-transport",
+          "description": "The replay transport of the root's diff. Previous, play / pause, next, the scrubber with one tick per change, the position and the speed; at the end, \"Replay finished · Restart\" above it. Shown in replay mode only. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` (`slot=\"bottom-center\"`, say) it replaces the stage's built-in transport; placed anywhere else it is not kept clear of fits and flights unless registered. Importing this module defines it.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffTransport",
+          "declaration": {
+            "name": "KgdiffTransport",
+            "module": "dist/elements/transport.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-transport",
+          "declaration": {
+            "name": "KgdiffTransport",
+            "module": "dist/elements/transport.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/legend.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffLegend",
+          "tagName": "kgdiff-legend",
+          "description": "What the colors mean. `variant=\"full\"` (the default): a card of every family's swatch and name, folded to its head until opened; `open` reflects whether it is (the user's toggle included, as on `<details>`). `variant=\"mini\"`: one line of dots for the families the root's diff has, then the unchanged context. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's built-in legend; placed anywhere else it is not kept clear of fits and flights unless registered.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            },
+            {
+              "name": "variant",
+              "fieldName": "variant",
+              "type": {
+                "text": "LegendVariant"
+              },
+              "description": "Reflected to `variant`: `full` (default) or `mini`; another value reads `full`."
+            },
+            {
+              "name": "open",
+              "fieldName": "open",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Reflected to the boolean `open`: whether the card is open (the user's toggle too)."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "variant",
+              "type": {
+                "text": "LegendVariant"
+              },
+              "description": "Reflected to `variant`: `full` (default) or `mini`; another value reads `full`.",
+              "attribute": "variant"
+            },
+            {
+              "kind": "field",
+              "name": "open",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Reflected to the boolean `open`: whether the card is open (the user's toggle too).",
+              "attribute": "open"
+            },
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffLegend",
+          "declaration": {
+            "name": "KgdiffLegend",
+            "module": "dist/elements/legend.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-legend",
+          "declaration": {
+            "name": "KgdiffLegend",
+            "module": "dist/elements/legend.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/zoom.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffZoom",
+          "tagName": "kgdiff-zoom",
+          "description": "Zoom in, zoom out and fit, for one stage's view (the `+` / `−` / `f` keys act on every stage of the root). Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage=\"<id>\"` names (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in zoom buttons; placed anywhere else it is not kept clear of fits and flights unless registered.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "stage",
+              "fieldName": "stage",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `stage` attribute: the id of the stage to act on, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "stage",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `stage` attribute: the id of the stage to act on, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "stage"
+            },
+            {
+              "kind": "field",
+              "name": "stageElement",
+              "type": {
+                "text": "KgdiffStageElement | KgdiffViewerElement | null"
+              },
+              "description": "The stage this element acts on, or null while it waits for one. Inside a `<kgdiff-viewer>` (or naming one) it is the viewer, whose built-in stage it acts on.",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root whose session the stage shows, or null while the element or the stage waits.",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffZoom",
+          "declaration": {
+            "name": "KgdiffZoom",
+            "module": "dist/elements/zoom.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-zoom",
+          "declaration": {
+            "name": "KgdiffZoom",
+            "module": "dist/elements/zoom.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/minimap.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffMinimap",
+          "tagName": "kgdiff-minimap",
+          "description": "An overview of one stage's view, with the part in view outlined. While the whole graph is in view it has nothing to add: it is in the custom state `overview` then (`:state(overview)`, and the read-only `overview` property). A minimap the page places stays shown (`kgdiff-minimap:state(overview) { visibility: hidden }` hides it without moving the layout); one slotted into a stage replaces the stage's own and hides as it did. Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage=\"<id>\"` names (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in minimap; placed anywhere else it is not kept clear of fits and flights unless registered.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "stage",
+              "fieldName": "stage",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `stage` attribute: the id of the stage to act on, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "overview",
+              "type": {
+                "text": "boolean"
+              },
+              "description": "Whether the whole graph is in view: the element is in the custom state `overview` then (`kgdiff-minimap:state(overview)`). Placed by the page it stays shown (`kgdiff-minimap:state(overview) { visibility: hidden }` hides it in place); slotted into a stage it replaces the stage's own minimap and hides as that one does.",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "stage",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `stage` attribute: the id of the stage to act on, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "stage"
+            },
+            {
+              "kind": "field",
+              "name": "stageElement",
+              "type": {
+                "text": "KgdiffStageElement | KgdiffViewerElement | null"
+              },
+              "description": "The stage this element acts on, or null while it waits for one. Inside a `<kgdiff-viewer>` (or naming one) it is the viewer, whose built-in stage it acts on.",
+              "readonly": true
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root whose session the stage shows, or null while the element or the stage waits.",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": [
+            {
+              "name": "overview",
+              "description": "While the whole graph is in view. A minimap the page places stays shown; `kgdiff-minimap:state(overview) { visibility: hidden }` hides it in place. Slotted into a stage it hides then, as the stage's own does."
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffMinimap",
+          "declaration": {
+            "name": "KgdiffMinimap",
+            "module": "dist/elements/minimap.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-minimap",
+          "declaration": {
+            "name": "KgdiffMinimap",
+            "module": "dist/elements/minimap.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/title.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffTitle",
+          "tagName": "kgdiff-title",
+          "description": "The kgdiff mark and the root's compared names and versions. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-viewer>` it replaces the title over its canvas.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffTitle",
+          "declaration": {
+            "name": "KgdiffTitle",
+            "module": "dist/elements/title.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-title",
+          "declaration": {
+            "name": "KgdiffTitle",
+            "module": "dist/elements/title.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "dist/elements/actions.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "customElement": true,
+          "name": "KgdiffActions",
+          "tagName": "kgdiff-actions",
+          "description": "The appearance menu (theme, color palette, language: the root's `theme`, `palette` and `locale`) and the keyboard shortcuts dialog, which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); bound to a `<kgdiff-viewer>` it has the sidebar toggle too (a composed root has no sidebar). Slotted into a viewer it replaces the actions over its canvas.",
+          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
+          "attributes": [
+            {
+              "name": "for",
+              "fieldName": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again."
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "htmlFor",
+              "type": {
+                "text": "string"
+              },
+              "description": "Reflects the `for` attribute, as on `<label>` and `<output>`: the id of the root to show, or '' (no attribute; setting '' removes it) for the nearest one around the element. Changing it binds again.",
+              "attribute": "for"
+            },
+            {
+              "kind": "field",
+              "name": "rootElement",
+              "type": {
+                "text": "KgdiffRootElement | null"
+              },
+              "description": "The root this element shows, or null while it waits for one (`for`'s element, resolved).",
+              "readonly": true
+            }
+          ],
+          "events": [],
+          "slots": [],
+          "cssProperties": [],
+          "cssStates": []
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "KgdiffActions",
+          "declaration": {
+            "name": "KgdiffActions",
+            "module": "dist/elements/actions.js"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "kgdiff-actions",
+          "declaration": {
+            "name": "KgdiffActions",
+            "module": "dist/elements/actions.js"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,25 +1,5 @@
 /**
- * `<kgdiff-stage>` (RFC 0001 §3; experimental): the canvas of the root it is bound to, with the
- * graph, the hover tooltip, the swipe divider, the replay caption and, in this release, the
- * canvas chrome (view dock, replay transport, legend, zoom and minimap; they become elements of
- * their own in a later release).
- *
- * Five named slots take the page's content over the canvas: `top-start`, `top-end`,
- * `bottom-start`, `bottom-center` and `bottom-end`. The stage positions it (12–16 px from the
- * edges, stacked further from the corner than the chrome there), and every slotted element is
- * an obstacle: fits and flights frame the graph in the free part of the canvas, as they do for
- * the chrome. Content positioned some other way registers itself with `registerObstacle`, on the
- * element or on the stage context (`kgdiff.stage/1`) it provides to its descendants.
- *
- * `panels` turns the built-in chrome's regions (`dock`, `transport`, `legend`, `zoom`,
- * `minimap`) open, collapsed or hidden, in the syntax of `<kgdiff-viewer>`'s `panels`; the
- * user's changes (opening the legend) hold until the page declares another state for that
- * region. Nothing is remembered.
- *
- * Each stage has its own view of the root's session (canvas, camera, fits and flights, tooltip,
- * minimap); several stages of one root share selection, hover, mode, scope, the replay clock,
- * filters and search. `version` pins a stage to the before or after version (side by side).
- * Importing this module defines it.
+ * `<kgdiff-stage>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
 import type { Region, ViewerContext } from '../bind.js';
 import { provideContext } from '../context.js';
@@ -79,7 +59,28 @@ function stagePanels(value: unknown): StagePanels {
   return out;
 }
 
-/** @experimental See the module's description. */
+/**
+ * The canvas of the root it is bound to: the graph, the hover tooltip, the swipe divider, the
+ * replay caption and the canvas chrome (view dock, replay transport, legend, zoom buttons and
+ * minimap). Each stage is a view of its own: a root draws every stage bound to it, each with its
+ * own camera, sharing the selection, the hover, the filters and the search; `version` pins one
+ * to a version.
+ *
+ * Five named slots take the page's content over the canvas. The stage positions it (12–16 px
+ * from the edges, stacked further from the corner than the chrome there), and every slotted
+ * element is an obstacle: fits and flights frame the graph in the free part of the canvas. A
+ * chrome element slotted in replaces the built-in region of its kind; `panels` keeps applying
+ * to the rest. Content positioned some other way registers itself with `registerObstacle`, on
+ * the element or on the stage context (`kgdiff.stage/1`) it provides to its descendants.
+ *
+ * @tagname kgdiff-stage
+ * @slot top-start - The page's content in the top left corner, below the version chip.
+ * @slot top-end - The page's content in the top right corner.
+ * @slot bottom-start - The page's content in the bottom left corner, above the legend.
+ * @slot bottom-center - The page's content above the view dock and the transport.
+ * @slot bottom-end - The page's content in the bottom right corner, above the zoom buttons and the minimap.
+ * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
+ */
 export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   static override get observedAttributes(): readonly string[] {
     return ['for', 'panels', 'version'];

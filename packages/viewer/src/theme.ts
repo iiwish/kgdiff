@@ -11,8 +11,11 @@
 import { contrastRatio, type Theme } from '@kgdiff/scene';
 import { FAMILIES, sheetFor } from './styles.js';
 
-/** Token (after `--kgdiff-`) → where its value lives in a `Theme`. */
-const TOKENS: readonly (readonly [token: string, path: string])[] = [
+/**
+ * The public tokens (after `--kgdiff-`), each with where its value lives in a `Theme`: the
+ * manifest's CSS custom properties are generated from this list.
+ */
+export const TOKENS: readonly (readonly [token: string, path: string])[] = [
   ['background', 'canvas.background'],
   ['grid', 'canvas.grid'],
   ['panel', 'surface.panel'],
@@ -44,7 +47,7 @@ const TOKENS: readonly (readonly [token: string, path: string])[] = [
 ];
 
 /** Tokens that are not colors (taken as they are). */
-const VERBATIM: ReadonlySet<string> = new Set(['shadow', 'font', 'font-mono']);
+export const VERBATIM: ReadonlySet<string> = new Set(['shadow', 'font', 'font-mono']);
 
 type Tree = { readonly [key: string]: unknown };
 
