@@ -539,12 +539,12 @@ specifies; the Rust numbers are targets, to be confirmed by benchmarks (`divan`)
 | CLI, enterprise-kg summary end to end (warm)        | ~100 ms (measured)               | < 20 ms                 | —                                                         |
 | `kgdiff` binary (stripped, viewer bundles included) | —                                | < 12 MB                 | —                                                         |
 
-Sizes in the browser, measured on the current build (`pnpm build`, gzip level 9; "kB" here is
+Sizes in the browser, measured on `main` as of 2026-11-07 (`pnpm build`, gzip level 9; "kB" here is
 KiB, 1,024 bytes, as `packages/viewer/test/standalone.test.ts` computes it):
 
 | Artifact                                                             | Today                                                    | Budget after phase 5                                               |
 | -------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------ |
-| viewer standalone bundle (`kgdiff-viewer.js`)                        | 334.2 kB min, 105.5 kB gzip                              | **unchanged budget: < 130 kB gzip**; no WebAssembly in it, ever    |
+| viewer standalone bundle (`kgdiff-viewer.js`)                        | 374.2 kB min, 116.3 kB gzip                              | **unchanged budget: < 130 kB gzip**; no WebAssembly in it, ever    |
 | compute add-on, diff + layout (`kgdiff-viewer-compute.js`)           | 97.4 kB min, 33.9 kB gzip (TypeScript)                   | split in two, below                                                |
 | ↳ layout-only WebAssembly (`layout.wasm` + glue), inlined in reports | —                                                        | < 45 kB gzip                                                       |
 | ↳ full engine (`compute.wasm`: core + layout, no parsers)            | —                                                        | < 250 kB gzip; loaded on demand (playground, `load()` with graphs) |
