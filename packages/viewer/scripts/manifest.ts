@@ -680,13 +680,32 @@ const ZH: Words = {
   exp: '实验性',
 };
 
-/** A table cell: pipes escaped, paragraphs kept, `<` outside code made text. */
+/** Outside code in a table cell: backslashes and pipes escaped, `<` and `>` made text. */
+const TEXT_ESCAPES: Readonly<Record<string, string>> = {
+  '\\': '\\\\',
+  '|': '\\|',
+  '<': '&lt;',
+  '>': '&gt;',
+};
+
+/**
+ * Code in a table cell. GFM and markdown-it read `\|` as a pipe even inside code and take every
+ * other backslash there literally (the `\` key stays `\`), so only pipes are escaped; a
+ * backslash right before a pipe cannot be written in a cell at all.
+ */
+function codeInCell(span: string): string {
+  if (span.includes('\\|')) throw new Error(`A table cell cannot show "\\|" in code: ${span}`);
+  return span.replace(/[\\|]/g, (c) => (c === '|' ? '\\|' : c));
+}
+
+/** A table cell: code and text escaped for a table, paragraphs kept. */
 function cell(text: string): string {
   return text
     .split(/(`[^`]*`)/)
-    .map((part, i) => (i % 2 === 1 ? part : part.replace(/</g, '&lt;').replace(/>/g, '&gt;')))
+    .map((part, i) =>
+      i % 2 === 1 ? codeInCell(part) : part.replace(/[\\|<>]/g, (c) => TEXT_ESCAPES[c] ?? c),
+    )
     .join('')
-    .replace(/\|/g, '\\|')
     .replace(/\n\n/g, '<br><br>');
 }
 
