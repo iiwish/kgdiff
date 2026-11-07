@@ -215,6 +215,23 @@ viewer.addEventListener('kgdiff-ready', async () => {
 });
 ```
 
+## 编辑器支持
+
+`@kgdiff/viewer` 附带一份
+[Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest)（`custom-elements.json`，由包的 `customElements` 字段指明）供工具读取，以及由它生成的两个文件，和[参考页](../viewer-elements.md)一样：
+
+- **VS Code** 借助包里的自定义数据，在 HTML 中补全并说明这些元素和它们的属性。在项目的 `.vscode/settings.json` 中：
+
+  ```json
+  { "html.customData": ["./node_modules/@kgdiff/viewer/vscode.html-custom-data.json"] }
+  ```
+
+- **React 19 + TypeScript** 可以在 JSX 中为这些元素、它们的属性和事件提供类型（与元素一样是实验性的）：在项目中任意位置导入一次类型即可。
+
+  ```ts
+  import type {} from '@kgdiff/viewer/react';
+  ```
+
 ## React
 
 用 ref 调用 `load()` 并监听事件：

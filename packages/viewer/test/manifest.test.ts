@@ -97,4 +97,20 @@ describe('the Custom Elements Manifest', () => {
     expect(members).not.toContain('controller');
     expect(members).not.toContain('showError');
   });
+
+  it('gives editors and React 19 every element, from the manifest', () => {
+    const data = JSON.parse(
+      readFileSync(new URL('../vscode.html-custom-data.json', import.meta.url), 'utf8'),
+    );
+    expect(data.tags.map((t: { name: string }) => t.name)).toEqual([...ORDER]);
+    const mode = data.tags[0].attributes.find((a: { name: string }) => a.name === 'mode');
+    expect(mode.values.map((v: { name: string }) => v.name)).toEqual([
+      'overlay',
+      'swipe',
+      'replay',
+    ]);
+    const react = readFileSync(new URL('../src/react.ts', import.meta.url), 'utf8');
+    for (const tag of ORDER) expect(react).toContain(`'${tag}': Props<'${tag}'>`);
+    expect(react.match(/'onkgdiff-layout'/g)).toHaveLength(1);
+  });
 });

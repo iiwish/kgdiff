@@ -285,6 +285,27 @@ viewer.addEventListener('kgdiff-ready', async () => {
 });
 ```
 
+## Editor support
+
+`@kgdiff/viewer` ships a
+[Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest)
+(`custom-elements.json`, named by the package's `customElements` field) that tools read, and two
+files generated from it, like the [reference](../viewer-elements.md):
+
+- **VS Code** completes and describes the elements and their attributes in HTML with the
+  package's custom data. In your project's `.vscode/settings.json`:
+
+  ```json
+  { "html.customData": ["./node_modules/@kgdiff/viewer/vscode.html-custom-data.json"] }
+  ```
+
+- **React 19 with TypeScript** types the elements in JSX, their properties and their events
+  (experimental, with the elements): import the types once, anywhere in the project.
+
+  ```ts
+  import type {} from '@kgdiff/viewer/react';
+  ```
+
 ## React
 
 Use a ref to call `load()` and to listen to events:

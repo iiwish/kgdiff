@@ -98,14 +98,19 @@
       "default": "./dist/compute.js"
     },
     "./standalone": "./dist/standalone/kgdiff-viewer.js",
-    "./standalone/compute": "./dist/standalone/kgdiff-viewer-compute.js"
+    "./standalone/compute": "./dist/standalone/kgdiff-viewer-compute.js",
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    }
   },
   "customElements": "custom-elements.json",
   "files": [
     "dist",
     "src",
     "!src/**/*.test.ts",
-    "custom-elements.json"
+    "custom-elements.json",
+    "vscode.html-custom-data.json"
   ],
   "engines": {
     "node": ">=22"
@@ -127,5 +132,13 @@
     "@kgdiff/layout": "workspace:*",
     "@kgdiff/scene": "workspace:*",
     "@kgdiff/renderer": "workspace:*"
+  },
+  "peerDependencies": {
+    "@types/react": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
   }
 }
