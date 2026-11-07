@@ -13,6 +13,11 @@ export const alias = [
     find: /^@kgdiff\/viewer\/panels$/,
     replacement: `${root}packages/viewer/src/panels.ts`,
   },
+  // The React 19 JSX types, for the framework recipes (`@kgdiff/viewer/react`).
+  {
+    find: /^@kgdiff\/viewer\/react$/,
+    replacement: `${root}packages/viewer/src/react.ts`,
+  },
   {
     find: /^@kgdiff\/([\w-]+)$/,
     replacement: `${root}packages/$1/src/index.ts`,

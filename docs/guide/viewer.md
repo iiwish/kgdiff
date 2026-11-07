@@ -308,36 +308,52 @@ files generated from it, like the [reference](../viewer-elements.md):
 
 ## React
 
-Use a ref to call `load()` and to listen to events:
+React 19 renders custom elements with their properties: a prop the element has as a property
+(`panels`, `keymap`, `mode`, …) is set as that property, objects included, and any other as an
+attribute. Import `@kgdiff/viewer` before rendering, so the elements are defined by the time React
+sets their props. With TypeScript, `@kgdiff/viewer/react` types them ([Editor
+support](#editor-support)).
 
-```jsx
+```tsx
 import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement } from '@kgdiff/viewer';
+import type {} from '@kgdiff/viewer/react';
 import { useEffect, useRef } from 'react';
 
-export function GraphDiff({ before, after, onSelect }) {
-  const viewer = useRef(null);
+interface Props {
+  readonly before: GraphSource;
+  readonly after: GraphSource;
+  readonly onSelect: (hunk: string | null) => void;
+}
+
+export function GraphDiff({ before, after, onSelect }: Props) {
+  const viewer = useRef<KgdiffViewerElement>(null);
 
   useEffect(() => {
-    viewer.current.load({ before, after });
+    void viewer.current?.load({ before, after });
   }, [before, after]);
 
-  useEffect(() => {
-    const element = viewer.current;
-    const listener = (event) => onSelect(event.detail.hunk);
-    element.addEventListener('kgdiff-select', listener);
-    return () => element.removeEventListener('kgdiff-select', listener);
-  }, [onSelect]);
-
-  return <kgdiff-viewer ref={viewer} theme="auto" style={{ height: 640 }} />;
+  return (
+    <kgdiff-viewer
+      ref={viewer}
+      theme="auto"
+      panels={{ detail: 'collapsed' }}
+      keymap={{ x: null, r: 'review' }}
+      onkgdiff-select={(event) => onSelect(event.detail.hunk)}
+      style={{ height: 640 }}
+    />
+  );
 }
 ```
 
-In TypeScript, declare `kgdiff-viewer` in `JSX.IntrinsicElements`; the package exports the
-element's type as `KgdiffViewerElement`.
-
-The `kgdiff-*` events are in TypeScript's global event maps (`KgdiffEventMap`), so a listener on
-any element, the document or the window gets a typed `detail` without a cast:
-`viewer.addEventListener('kgdiff-select', (event) => event.detail.hunk)`.
+- `onkgdiff-select` listens to `kgdiff-select`: React 19 adds a listener for an `on…` prop the
+  element has no property for. Its `event.detail` is typed.
+- Methods go through the ref: `viewer.current?.next()`.
+- `panels={{ detail: 'collapsed' }}` is a new object on every render, and that is fine: the
+  viewer compares what the page declares, so a re-render declaring the same panels keeps what the
+  reader opened or closed; only a region whose declaration changed gives way.
+- React 18 sets every prop as an attribute: use the text forms (`panels="detail:collapsed"`,
+  `keymap="x:none r:review"`) and `addEventListener` on the ref for events.
 
 ## Vue
 
@@ -353,24 +369,75 @@ export default {
 };
 ```
 
-then use it like any element:
+then use them like any element:
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement, ViewerPanels } from '@kgdiff/viewer';
 import { onMounted, ref } from 'vue';
 
-const props = defineProps(['before', 'after']);
-const emit = defineEmits(['select']);
-const viewer = ref(null);
+const props = defineProps<{ before: GraphSource; after: GraphSource }>();
+const emit = defineEmits<{ select: [hunk: string | null] }>();
+const viewer = ref<KgdiffViewerElement | null>(null);
+const panels: ViewerPanels = { detail: 'collapsed' };
 
-onMounted(() => viewer.value.load({ before: props.before, after: props.after }));
-const onSelect = (event) => emit('select', event.detail.hunk);
+onMounted(() => viewer.value?.load({ before: props.before, after: props.after }));
+const onSelect = (event: CustomEvent<{ hunk: string | null }>) => emit('select', event.detail.hunk);
 </script>
 
 <template>
-  <kgdiff-viewer ref="viewer" theme="auto" style="height: 640px" @kgdiff-select="onSelect" />
+  <kgdiff-viewer
+    ref="viewer"
+    theme="auto"
+    :panels.prop="panels"
+    :keymap.prop="{ x: null, r: 'review' }"
+    style="height: 640px"
+    @kgdiff-select="onSelect"
+  />
 </template>
+```
+
+- `.prop` binds `panels` and `keymap` as properties, objects; Vue binds to the property anyway
+  when the element has it, and `.prop` makes sure even before the element is defined.
+- `@kgdiff-select` listens to the event. Vue does not know the element's events, so the handler
+  types `event` itself.
+- The template ref gives the element, for its methods.
+
+## Svelte
+
+Svelte 5 sets an attribute of a custom element as its property when the element has one,
+objects included, and as an attribute otherwise; `onkgdiff-select` listens to the event, and
+`bind:this` gives the element.
+
+```svelte
+<script lang="ts">
+import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement, ViewerPanels } from '@kgdiff/viewer';
+
+interface Props {
+  before: GraphSource;
+  after: GraphSource;
+  onselect: (hunk: string | null) => void;
+}
+
+let { before, after, onselect }: Props = $props();
+let viewer = $state<KgdiffViewerElement>();
+const panels: ViewerPanels = { detail: 'collapsed' };
+
+$effect(() => {
+  void viewer?.load({ before, after });
+});
+</script>
+
+<kgdiff-viewer
+  bind:this={viewer}
+  theme="auto"
+  {panels}
+  keymap={{ x: null, r: 'review' }}
+  style="height: 640px"
+  onkgdiff-select={(event: CustomEvent<{ hunk: string | null }>) => onselect(event.detail.hunk)}
+></kgdiff-viewer>
 ```
 
 ## Without a bundler
