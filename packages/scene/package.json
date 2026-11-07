@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/scene",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Renderer-agnostic visual model for graph diffs: design tokens, encodings, replay timeline and focus.",
   "keywords": [
     "kgdiff",
