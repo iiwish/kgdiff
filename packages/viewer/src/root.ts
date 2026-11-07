@@ -4,44 +4,55 @@
  * they share: the keyboard map, the live region, the events, the focus targets and the theme
  * tokens. Regions never reference each other; everything goes through the session or the root.
  *
- * In phase 1 the root lives inside `<kgdiff-viewer>` (the element is its host) and the regions
- * are the default layout's; phase 2 makes it `<kgdiff-root>` and the regions elements of their
- * own.
+ * Its host is `<kgdiff-viewer>` (the default layout, whose regions render into its shadow
+ * root) or `<kgdiff-root>` (whose elements are placed by the page).
  */
 import type { Theme } from '@kgdiff/scene';
-import { createContext, provideContext, requestContext } from './context.js';
-import { type ControllerHost, ViewerController } from './controller.js';
+import type { Region, ViewerContext } from './bind.js';
+import { viewerContext } from './bind.js';
+import { provideContext } from './context.js';
 import { h } from './dom.js';
 import type { ThemePreference } from './index.js';
-import { isTypingTarget, keyAction } from './keyboard.js';
+import { isTypingTarget, type Keymap, keyAction } from './keyboard.js';
 import { THEME_PREFERENCES } from './prefs.js';
 import { defaultStorage } from './review-store.js';
 import { cancelFrame, nextPaint, requestFrame } from './schedule.js';
 import type { Topic } from './session.js';
+import { DiffSession, type SessionDeps, type SessionHost } from './session.js';
 import { stylesheet } from './styles.js';
 import { themeFromStyle, tokenSheet } from './theme.js';
-import type { FocusTarget, UiActions, UiContext } from './ui/context.js';
+import type { FocusTarget, UiActions } from './ui/context.js';
 
-/** Something the root renders: a region, or the layout itself. */
-export interface Region {
-  update(topics: ReadonlySet<Topic>): void;
+export type { Region, ViewerContext } from './bind.js';
+export { bindRegion, uiContext, viewerContext, wasForwarded } from './bind.js';
+
+/** Hosts of roots (the nearest root acts on a key; an outer one leaves it alone). */
+const rootHosts = new WeakSet<EventTarget>();
+
+/** Whether `target` is the host of a root. */
+export function isRoot(target: EventTarget): boolean {
+  return rootHosts.has(target);
 }
 
-/** What a root provides to the regions that bind to it. */
-export interface ViewerContext {
-  readonly controller: ViewerController;
-  readonly actions: UiActions;
-  /** The element the root's events are dispatched on and its tokens are set on. */
-  readonly host: HTMLElement;
-  /** Render `region` on every notification (in binding order); returns the detach. */
-  attach(region: Region): () => void;
-  target(name: FocusTarget, focus: () => void): () => void;
-  focus(name: FocusTarget): boolean;
-  /** The keyboard map, for a key event that reached the root. */
-  handleKey(e: KeyboardEvent): void;
+/** What the element that owns a root adds to it. */
+export interface RootOptions<S extends DiffSession = DiffSession> {
+  /** The session to make (default: a plain `DiffSession`, without a canvas of its own). */
+  readonly session?: (host: SessionHost, deps: SessionDeps) => S;
+  /** The sheets the root's shadow root adopts before its token set (default: the viewer's). */
+  readonly sheets?: (doc: Document) => readonly CSSStyleSheet[];
+  /** A key forwarded by an element bound with `for` (default: the keyboard map). */
+  readonly key?: (e: KeyboardEvent) => void;
+  /** The pointer entered or left the graph. */
+  readonly hover?: (over: boolean) => void;
 }
 
-export const viewerContext = createContext<ViewerContext>('kgdiff.viewer/1');
+/** The shortcuts a focused list keeps with `shortcuts="none"` (the listbox's own keys). */
+const LIST_KEYS: ReadonlySet<string> = new Set(['next', 'prev', 'first', 'last', 'fly']);
+
+interface Target {
+  readonly focus: () => void;
+  readonly available: () => boolean;
+}
 
 function media(query: string): MediaQueryList | null {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
@@ -49,16 +60,23 @@ function media(query: string): MediaQueryList | null {
     : null;
 }
 
-export class ViewerRoot implements ViewerContext {
-  readonly controller: ViewerController;
+export class ViewerRoot<S extends DiffSession = DiffSession> implements ViewerContext {
+  readonly controller: S;
   /** The single polite live region announcing navigation ("Change 3 of 12: …"). */
   readonly live = h('div', { class: 'sr-only', 'aria-live': 'polite', 'aria-atomic': 'true' });
   readonly host: HTMLElement;
   readonly actions: UiActions;
   readonly #shadow: ShadowRoot;
   readonly #regions: Region[] = [];
-  readonly #targets = new Map<FocusTarget, (() => void)[]>();
+  readonly #targets = new Map<FocusTarget, Target[]>();
+  readonly #options: RootOptions<S>;
   #renderFailed = false;
+  /** The built-in theme of the token set applied last. */
+  #base: Theme | null = null;
+  /** `keymap`: single keys bound to other shortcuts, or unbound. */
+  keymap: Keymap | null = null;
+  /** `shortcuts="none"`: no shortcuts, but a focused list keeps its own keys. */
+  shortcutsOff = false;
 
   /**
    * `host` dispatches the events and computes the tokens set on `shadow` (its shadow root);
@@ -69,15 +87,18 @@ export class ViewerRoot implements ViewerContext {
     shadow: ShadowRoot,
     actions: UiActions,
     emitted?: (type: string) => void,
+    options: RootOptions<S> = {},
   ) {
     this.host = host;
     this.#shadow = shadow;
     this.actions = actions;
+    this.#options = options;
+    rootHosts.add(host);
     const emit = (type: string, detail: unknown): void => {
       host.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
       emitted?.(type);
     };
-    const events: ControllerHost = {
+    const events: SessionHost = {
       ready: (stats) => emit('kgdiff-ready', { stats }),
       select: (hunk, node) => emit('kgdiff-select', { hunk, node }),
       mode: (mode, scope) => emit('kgdiff-mode', { mode, scope }),
@@ -86,7 +107,7 @@ export class ViewerRoot implements ViewerContext {
       announce: (text) => this.announce(text),
       replayEnd: (loop) => emit('kgdiff-replay-end', { loop }),
     };
-    this.controller = new ViewerController(events, {
+    const deps: SessionDeps = {
       now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
       requestFrame,
       cancelFrame,
@@ -99,7 +120,10 @@ export class ViewerRoot implements ViewerContext {
         const view = host.ownerDocument.defaultView;
         return view ? themeFromStyle(base, view.getComputedStyle(host)) : base;
       },
-    });
+    };
+    this.controller = options.session
+      ? options.session(events, deps)
+      : (new DiffSession(events, deps) as S);
     this.controller.subscribe((topics) => this.render(topics));
   }
 
@@ -139,20 +163,27 @@ export class ViewerRoot implements ViewerContext {
     };
   }
 
-  target(name: FocusTarget, focus: () => void): () => void {
+  target(name: FocusTarget, focus: () => void, available?: () => boolean): () => void {
     const list = this.#targets.get(name) ?? [];
     this.#targets.set(name, list);
-    list.push(focus);
+    const target: Target = { focus, available: available ?? (() => true) };
+    list.push(target);
     return () => {
-      const i = list.indexOf(focus);
+      const i = list.indexOf(target);
       if (i >= 0) list.splice(i, 1);
     };
   }
 
+  /** Focus the `name` target registered last of those available (in an open region). */
   focus(name: FocusTarget): boolean {
-    const focus = this.#targets.get(name)?.at(-1);
-    focus?.();
-    return focus !== undefined;
+    const list = this.#targets.get(name) ?? [];
+    for (let i = list.length - 1; i >= 0; i--) {
+      const target = list[i] as Target;
+      if (!target.available()) continue;
+      target.focus();
+      return true;
+    }
+    return false;
   }
 
   announce(text: string): void {
@@ -183,19 +214,42 @@ export class ViewerRoot implements ViewerContext {
 
   /** Apply the token set of `base` (a built-in theme) on the host, in the host's document. */
   #tokens(base: Theme): void {
+    this.#base = base;
     const doc = this.host.ownerDocument;
     const tokens = tokenSheet(base, doc);
-    if (this.#shadow.adoptedStyleSheets[1] !== tokens) {
-      this.#shadow.adoptedStyleSheets = [stylesheet(doc), tokens];
+    if (this.#shadow.adoptedStyleSheets.at(-1) !== tokens) {
+      const sheets = this.#options.sheets?.(doc) ?? [stylesheet(doc)];
+      this.#shadow.adoptedStyleSheets = [...sheets, tokens];
     }
+  }
+
+  tokens(doc: Document): CSSStyleSheet {
+    // Resolving the theme applies the token set (and remembers its base).
+    if (!this.#base) void this.controller.theme;
+    return tokenSheet(this.#base ?? this.controller.theme, doc);
+  }
+
+  forwardKey(e: KeyboardEvent): void {
+    if (this.#options.key) this.#options.key(e);
+    else this.handleKey(e);
+  }
+
+  hover(over: boolean): void {
+    this.#options.hover?.(over);
   }
 
   handleKey(e: KeyboardEvent): void {
     const target = e.composedPath()[0] ?? null;
     if (isTypingTarget(target)) return;
     const c = this.controller;
-    const action = keyAction(e, c.mode, c.scope);
+    const action = keyAction(e, c.mode, c.scope, this.keymap);
     if (!action) return;
+    if (
+      this.shortcutsOff &&
+      !(LIST_KEYS.has(action.type) && (target as Element | null)?.closest?.('[role="listbox"]'))
+    ) {
+      return;
+    }
     // Enter / Space on a focused control activate that control.
     const el = target as Element | null;
     if (
@@ -278,31 +332,4 @@ export class ViewerRoot implements ViewerContext {
         action satisfies never;
     }
   }
-}
-
-/** The UI context of a region placed in `root` (its shadow tree), bound to `ctx`. */
-export function uiContext(ctx: ViewerContext, root: ShadowRoot): UiContext {
-  return {
-    ...ctx.actions,
-    controller: ctx.controller,
-    root,
-    target: (name, focus) => ctx.target(name, focus),
-    focus: (name) => ctx.focus(name),
-  };
-}
-
-/**
- * Bind a region to the root nearest `anchor` (an element where the region is placed): `make`
- * builds it once the root answers, and the root renders it from then on.
- */
-export function bindRegion<R extends Region>(anchor: Element, make: (ui: UiContext) => R): R {
-  const bound: { region?: R } = {};
-  requestContext(anchor, viewerContext, (ctx) => {
-    if (bound.region) return;
-    bound.region = make(uiContext(ctx, anchor.getRootNode() as ShadowRoot));
-    ctx.attach(bound.region);
-  });
-  // Phase 1: regions are bound by the layout that owns the root, which answers at once.
-  if (!bound.region) throw new Error('[kgdiff] a region found no root to bind to.');
-  return bound.region;
 }

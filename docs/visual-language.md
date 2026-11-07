@@ -89,6 +89,24 @@ Okabe–Ito based; same tokens, family colors replaced (dark / light):
 | structure | `#009E73` / `#3CC79E` | `#00805C` / `#006248` |
 | identity  | `#CC79A7` / `#E0A6C6` | `#A3477F` / `#83335F` |
 
+### CSS tokens
+
+The viewer's colors and fonts are CSS custom properties set on its root (`<kgdiff-viewer>`,
+`<kgdiff-root>`): the canvas and the panels both draw with them, so a page that overrides one
+(`kgdiff-viewer { --kgdiff-accent: #e8590c }`) restyles both
+([Theming](interaction.md#theming)). The listed tokens are public API from 0.6; others the
+stylesheet uses (motion, hover and press tints) are not.
+
+Each token and the theme token it sets are listed in
+[Viewer elements: reference](viewer-elements.md#tokens), generated from the sources.
+
+Each family (`added`, `removed`, `content`, `structure`, `identity`) has four, for example
+`--kgdiff-removed`, `--kgdiff-removed-strong`, `--kgdiff-removed-soft` and `--kgdiff-removed-text`. Names are whole words, like the theme's (`--kgdiff-text-muted` for
+`text.muted`). Colors may be written in any sRGB syntax the browser knows (names,
+`hsl()`, `color-mix()`); the canvas normalizes them, and ignores, with a console warning, a
+value it cannot draw (such as `oklch()`). The contrast guarantees above hold for the built-in
+values only.
+
 ## Geometry
 
 - Node radius (world): `nodeRadius(maxDegree) = clamp(4 + 2.2·√degree, 4, 14)` from `@kgdiff/layout`.

@@ -1,10 +1,10 @@
-import type { KgdiffViewerElement, KgdiffViewerEventMap } from '@kgdiff/viewer';
+import type { KgdiffEventMap, KgdiffViewerElement } from '@kgdiff/viewer';
 
 /** Typed `addEventListener` for the viewer's `kgdiff-*` events. */
-export function onViewer<K extends keyof KgdiffViewerEventMap>(
+export function onViewer<K extends keyof KgdiffEventMap>(
   viewer: KgdiffViewerElement,
   type: K,
-  listener: (event: KgdiffViewerEventMap[K]) => void,
+  listener: (event: KgdiffEventMap[K]) => void,
 ): void {
-  viewer.addEventListener(type, (event) => listener(event as KgdiffViewerEventMap[K]));
+  viewer.addEventListener(type, (event) => listener(event as KgdiffEventMap[K]));
 }

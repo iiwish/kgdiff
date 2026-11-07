@@ -94,8 +94,7 @@ export async function renderReportHtml(options: ReportHtmlOptions): Promise<stri
   const encoded = await encodePayload(payload);
   const attrs = [
     `id="${VIEWER_ID}"`,
-    `theme="${escapeHtml(theme)}"`,
-    `locale="${escapeHtml(locale)}"`,
+    // Theme and language travel in the payload's view: a reader's earlier choice wins.
     ...(view.mode ? [`mode="${escapeHtml(view.mode)}"`] : []),
     ...(view.scope ? [`scope="${escapeHtml(view.scope)}"`] : []),
   ].join(' ');

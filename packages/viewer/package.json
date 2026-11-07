@@ -1,12 +1,13 @@
 {
   "name": "@kgdiff/viewer",
   "version": "0.5.0",
-  "description": "Drop-in <kgdiff-viewer> web component: overlay, swipe, replay and changes-only views with review workflow.",
+  "description": "Drop-in <kgdiff-viewer> web component and the elements it is made of: overlay, swipe, replay and changes-only views with review workflow.",
   "keywords": [
     "kgdiff",
     "web-component",
     "viewer",
-    "diff-viewer"
+    "diff-viewer",
+    "custom-elements"
   ],
   "homepage": "https://github.com/iiwish/kgdiff/tree/main/packages/viewer#readme",
   "bugs": {
@@ -20,23 +21,96 @@
   "license": "MIT",
   "author": "iiwish",
   "type": "module",
-  "sideEffects": true,
+  "sideEffects": [
+    "./dist/index.js",
+    "./dist/elements/*.js",
+    "./dist/standalone.js",
+    "./dist/standalone-compute.js",
+    "./dist/standalone/*.js",
+    "./src/index.ts",
+    "./src/elements/*.ts",
+    "./src/standalone.ts",
+    "./src/standalone-compute.ts"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./elements/root": {
+      "types": "./dist/elements/root.d.ts",
+      "default": "./dist/elements/root.js"
+    },
+    "./elements/stage": {
+      "types": "./dist/elements/stage.d.ts",
+      "default": "./dist/elements/stage.js"
+    },
+    "./elements/change-list": {
+      "types": "./dist/elements/change-list.d.ts",
+      "default": "./dist/elements/change-list.js"
+    },
+    "./elements/change-detail": {
+      "types": "./dist/elements/change-detail.d.ts",
+      "default": "./dist/elements/change-detail.js"
+    },
+    "./elements/search": {
+      "types": "./dist/elements/search.d.ts",
+      "default": "./dist/elements/search.js"
+    },
+    "./elements/filters": {
+      "types": "./dist/elements/filters.d.ts",
+      "default": "./dist/elements/filters.js"
+    },
+    "./elements/view-dock": {
+      "types": "./dist/elements/view-dock.d.ts",
+      "default": "./dist/elements/view-dock.js"
+    },
+    "./elements/transport": {
+      "types": "./dist/elements/transport.d.ts",
+      "default": "./dist/elements/transport.js"
+    },
+    "./elements/legend": {
+      "types": "./dist/elements/legend.d.ts",
+      "default": "./dist/elements/legend.js"
+    },
+    "./elements/zoom": {
+      "types": "./dist/elements/zoom.d.ts",
+      "default": "./dist/elements/zoom.js"
+    },
+    "./elements/minimap": {
+      "types": "./dist/elements/minimap.d.ts",
+      "default": "./dist/elements/minimap.js"
+    },
+    "./elements/title": {
+      "types": "./dist/elements/title.d.ts",
+      "default": "./dist/elements/title.js"
+    },
+    "./elements/actions": {
+      "types": "./dist/elements/actions.d.ts",
+      "default": "./dist/elements/actions.js"
+    },
+    "./panels": {
+      "types": "./dist/panels.d.ts",
+      "default": "./dist/panels.js"
     },
     "./compute": {
       "types": "./dist/compute.d.ts",
       "default": "./dist/compute.js"
     },
     "./standalone": "./dist/standalone/kgdiff-viewer.js",
-    "./standalone/compute": "./dist/standalone/kgdiff-viewer-compute.js"
+    "./standalone/compute": "./dist/standalone/kgdiff-viewer-compute.js",
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    }
   },
+  "customElements": "custom-elements.json",
   "files": [
     "dist",
     "src",
-    "!src/**/*.test.ts"
+    "!src/**/*.test.ts",
+    "custom-elements.json",
+    "vscode.html-custom-data.json"
   ],
   "engines": {
     "node": ">=22"
@@ -49,7 +123,8 @@
     "build": "tsc -p tsconfig.build.json && vite build -c vite.config.ts && vite build -c vite.config.ts --mode compute",
     "dev": "vite -c dev/vite.config.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "manifest": "tsx scripts/manifest.ts"
   },
   "dependencies": {
     "@kgdiff/core": "workspace:*",
@@ -57,5 +132,13 @@
     "@kgdiff/layout": "workspace:*",
     "@kgdiff/scene": "workspace:*",
     "@kgdiff/renderer": "workspace:*"
+  },
+  "peerDependencies": {
+    "@types/react": ">=19"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
   }
 }

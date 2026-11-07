@@ -50,42 +50,12 @@ import { LEGACY_CHANGES_MODE, toLocale, toMode, toPalette, toScope, toTheme } fr
 import { ReplayClock } from './replay.js';
 import { ReviewStore, reviewKey, type StorageLike } from './review-store.js';
 import { type SearchHit, SearchIndex } from './search.js';
+import { ALL_TOPICS, type Topic } from './topics.js';
 
 export type Status = 'idle' | 'loading' | 'ready' | 'error';
 
-export type Topic =
-  | 'status'
-  | 'data'
-  | 'mode'
-  | 'selection'
-  | 'filters'
-  | 'search'
-  | 'review'
-  | 'replay'
-  | 'hover'
-  | 'theme'
-  | 'locale'
-  | 'focus'
-  | 'swipe'
-  | 'overview';
-
-/** Every topic: a full render. */
-export const ALL_TOPICS: ReadonlySet<Topic> = new Set<Topic>([
-  'status',
-  'data',
-  'mode',
-  'selection',
-  'filters',
-  'search',
-  'review',
-  'replay',
-  'hover',
-  'theme',
-  'locale',
-  'focus',
-  'swipe',
-  'overview',
-]);
+export type { Topic } from './topics.js';
+export { ALL_TOPICS } from './topics.js';
 
 /** What the session reports (`<kgdiff-viewer>` turns these into events and announcements). */
 export interface SessionHost {
@@ -136,6 +106,10 @@ export interface SessionView {
   looped(): void;
   /** The world region in view, or null before layout. */
   viewport(): Rect | null;
+  /** Fit everything visible into view (labels included); views without a camera need none. */
+  fit?(options?: { readonly animate?: boolean; readonly padding?: number }): Promise<void>;
+  /** Zoom in (1) or out (-1) one step. */
+  zoom?(direction: 1 | -1): void;
 }
 
 export type Preference = 'mode' | 'scope' | 'theme' | 'palette' | 'locale';
@@ -258,6 +232,21 @@ export class DiffSession {
   addView(view: SessionView): () => void {
     this.#views.add(view);
     return () => this.#views.delete(view);
+  }
+
+  /** @internal The session's clock (`SessionDeps.now`), for its views. */
+  now(): number {
+    return this.#deps.now();
+  }
+
+  /** Fit what is drawn into every view (each frames it on its own canvas). */
+  fit(options?: { readonly animate?: boolean; readonly padding?: number }): Promise<void> {
+    return Promise.all([...this.#views].map((v) => v.fit?.(options))).then(() => undefined);
+  }
+
+  /** Zoom every view one step in (1) or out (-1): the keyboard's `+` / `−`. */
+  zoom(direction: 1 | -1): void {
+    for (const v of this.#views) v.zoom?.(direction);
   }
 
   // ─── Derived state ────────────────────────────────────────────────────────

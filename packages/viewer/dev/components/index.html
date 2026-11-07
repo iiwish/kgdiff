@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>kgdiff viewer · composed elements</title>
+    <style>
+      :root { color-scheme: dark; font: 12.5px/1.4 system-ui, sans-serif; color: #c9d1dd; }
+      html, body { margin: 0; background: #07090d; }
+      body { display: grid; gap: 16px; padding: 16px; }
+      h2 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #e7ebf3; }
+      p { margin: 0 0 8px; color: #7d8697; }
+      section { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px; }
+      /* A: list, search and filters on the left; the stage with a host card; the detail on the right. */
+      #a { display: grid; grid-template-columns: 300px 1fr 340px; gap: 12px; height: 560px; }
+      #a .side { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+      #a kgdiff-change-list { flex: 1; min-height: 0; border-radius: 10px; overflow: hidden; }
+      #a kgdiff-change-detail { border-radius: 10px; overflow: auto; }
+      .card {
+        width: 220px; padding: 10px 12px; border-radius: 10px; background: rgba(20, 26, 36, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.12); color: #e7ebf3; font: 12px/1.4 system-ui, sans-serif;
+      }
+      .card.large { width: 450px; height: 320px; box-sizing: border-box; }
+      /* B: replay only, with its list elsewhere on the page (C). */
+      #b { display: block; height: 320px; }
+      #c { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      #c kgdiff-change-list { height: 260px; border-radius: 10px; overflow: hidden; }
+      /* D: two stages of one root side by side, the chrome as elements around them. */
+      #d { display: grid; grid-template-rows: auto 420px auto 220px; gap: 10px; }
+      #d .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      #d .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-height: 0; }
+      #d kgdiff-stage { border-radius: 10px; overflow: hidden; }
+      #d kgdiff-transport { justify-self: center; }
+      #d kgdiff-change-list { border-radius: 10px; overflow: hidden; }
+      /* E: a replay of only a stage and a transport. */
+      #e { display: grid; grid-template-rows: 300px auto; gap: 10px; justify-items: center; }
+      #e kgdiff-stage { width: 100%; border-radius: 10px; overflow: hidden; }
+      button { font: inherit; }
+    </style>
+  </head>
+  <body>
+    <section>
+      <h2>A · composed layout</h2>
+      <p>
+        List, search and filters in a host column; the stage with a host card in its
+        <code>top-end</code> slot; the detail in its own column.
+        <button id="large" type="button">Larger card</button>
+      </p>
+      <kgdiff-root id="a" locale="en">
+        <div class="side">
+          <kgdiff-search></kgdiff-search>
+          <kgdiff-filters></kgdiff-filters>
+          <kgdiff-change-list></kgdiff-change-list>
+        </div>
+        <kgdiff-stage>
+          <div class="card" slot="top-end" id="card">A host card in the <b>top-end</b> slot.</div>
+        </kgdiff-stage>
+        <kgdiff-change-detail></kgdiff-change-detail>
+      </kgdiff-root>
+    </section>
+    <section>
+      <h2>B · replay only</h2>
+      <kgdiff-root id="b" mode="replay" loop><kgdiff-stage></kgdiff-stage></kgdiff-root>
+    </section>
+    <section id="c">
+      <div>
+        <h2>C · B's change list, elsewhere on the page (for="b")</h2>
+        <kgdiff-change-list for="b"></kgdiff-change-list>
+      </div>
+      <div>
+        <h2>B's search (for="b")</h2>
+        <kgdiff-search for="b"></kgdiff-search>
+      </div>
+    </section>
+    <section>
+      <h2>D · side by side</h2>
+      <p>
+        Two stages of one root, pinned to <code>before</code> and <code>after</code>: one
+        selection, filters and search, each its own camera, zoom buttons and minimap. The
+        title, view dock, actions, transport and legend are elements of the page.
+      </p>
+      <kgdiff-root id="d" locale="en">
+        <div class="bar">
+          <kgdiff-title></kgdiff-title>
+          <kgdiff-view-dock></kgdiff-view-dock>
+          <kgdiff-actions></kgdiff-actions>
+        </div>
+        <div class="pair">
+          <kgdiff-stage id="d-before" version="before" panels="dock:hidden transport:hidden">
+            <kgdiff-legend slot="bottom-start" variant="mini"></kgdiff-legend>
+          </kgdiff-stage>
+          <kgdiff-stage id="d-after" version="after" panels="dock:hidden transport:hidden legend:hidden">
+          </kgdiff-stage>
+        </div>
+        <kgdiff-transport></kgdiff-transport>
+        <kgdiff-change-list></kgdiff-change-list>
+      </kgdiff-root>
+    </section>
+    <section>
+      <h2>E · a replay of a stage and a transport</h2>
+      <kgdiff-root id="e" mode="replay" locale="en">
+        <kgdiff-stage panels="dock:hidden transport:hidden legend:hidden"></kgdiff-stage>
+        <kgdiff-transport></kgdiff-transport>
+      </kgdiff-root>
+    </section>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

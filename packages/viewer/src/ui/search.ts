@@ -6,7 +6,7 @@
  * session, so the change list steps aside without either knowing the other. Registers itself
  * as the root's `search` focus target (`/`).
  */
-import { attr, h, icon, replace } from '../dom.js';
+import { attr, h, icon, isOpen, replace } from '../dom.js';
 import type { Topic } from '../session.js';
 import type { UiContext } from './context.js';
 
@@ -53,10 +53,14 @@ export class Search {
       hidden: true,
     });
     this.box = h('div', { class: 'search' }, icon('search'), this.input, this.#kbd, this.#clear);
-    ctx.target('search', () => {
-      this.input.focus();
-      this.input.select();
-    });
+    ctx.target(
+      'search',
+      () => {
+        this.input.focus();
+        this.input.select();
+      },
+      () => isOpen(this.input),
+    );
   }
 
   update(topics: ReadonlySet<Topic>): void {
@@ -66,6 +70,7 @@ export class Search {
       this.input.placeholder = tr.t('sidebar.searchPlaceholder');
       attr(this.input, 'aria-label', tr.t('sidebar.search'));
       attr(this.#clear, 'aria-label', tr.t('sidebar.searchClear'));
+      attr(this.results, 'aria-label', tr.t('sidebar.searchResults'));
       this.input.disabled = this.#ctx.controller.status !== 'ready';
     }
     if (all || topics.has('search')) this.#render();

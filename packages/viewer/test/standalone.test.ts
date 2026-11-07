@@ -1,7 +1,8 @@
 // @vitest-environment node
 /**
  * The standalone IIFE builds, stays self-contained (no parsers, no compute module inside) and
- * within its size budget. Prints the minified and gzip sizes.
+ * within its size budget. Prints the minified and gzip sizes, and those of each ESM subpath
+ * bundled on its own (what a host that imports only it ships).
  */
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,6 +13,7 @@ import { build } from 'vite';
 import { afterAll, describe, expect, it } from 'vitest';
 
 const configFile = fileURLToPath(new URL('../vite.config.ts', import.meta.url));
+const src = (file: string): string => fileURLToPath(new URL(`../src/${file}`, import.meta.url));
 const outDir = mkdtempSync(join(tmpdir(), 'kgdiff-viewer-standalone-'));
 
 /** Target for the standalone viewer, min + gzip, without formats: not met yet. */
@@ -57,4 +59,87 @@ describe('standalone bundle', () => {
     expect(viewer.gzip / 1024).toBeLessThan(GUARD_KB);
     expect(compute.text).toContain('KgdiffCompute');
   }, 60_000);
+});
+
+/** The package's entry points (`exports`), by subpath. */
+const SUBPATHS: Readonly<Record<string, string>> = {
+  '.': 'index.ts',
+  'elements/root': 'elements/root.ts',
+  'elements/stage': 'elements/stage.ts',
+  'elements/change-list': 'elements/change-list.ts',
+  'elements/change-detail': 'elements/change-detail.ts',
+  'elements/search': 'elements/search.ts',
+  'elements/filters': 'elements/filters.ts',
+  'elements/view-dock': 'elements/view-dock.ts',
+  'elements/transport': 'elements/transport.ts',
+  'elements/legend': 'elements/legend.ts',
+  'elements/zoom': 'elements/zoom.ts',
+  'elements/minimap': 'elements/minimap.ts',
+  'elements/title': 'elements/title.ts',
+  'elements/actions': 'elements/actions.ts',
+  panels: 'panels.ts',
+};
+
+describe('ESM subpaths', () => {
+  it('bundle on their own: the session comes with the root, the renderer with a stage', async () => {
+    // `.` defines everything: the standalone build, less starting the hydration.
+    // One build after another: concurrent builds of one config are not worth a rare race, and
+    // a failure names its subpath.
+    const sizes: { name: string; text: string; min: number; gzip: number }[] = [];
+    for (const [name, entry] of Object.entries(SUBPATHS)) {
+      const dir = join(outDir, 'esm', name.replace('/', '-'));
+      try {
+        await build({
+          configFile,
+          logLevel: 'silent',
+          build: {
+            outDir: dir,
+            emptyOutDir: true,
+            // One minified file each (as a host's bundler would ship it), not ESM chunks.
+            lib: {
+              entry: src(entry),
+              formats: ['iife'],
+              name: 'Entry',
+              fileName: () => 'entry.js',
+            },
+          },
+        });
+      } catch (error) {
+        throw new Error(`building the ${name} subpath failed`, { cause: error });
+      }
+      const text = readFileSync(join(dir, 'entry.js'), 'utf8');
+      sizes.push({
+        name,
+        text,
+        min: Buffer.byteLength(text),
+        gzip: gzipSync(text, { level: 9 }).length,
+      });
+    }
+    const kb = (n: number) => `${(n / 1024).toFixed(1)} kB`;
+    console.info(
+      `[subpaths] ${sizes.map((s) => `${s.name} ${kb(s.min)} min, ${kb(s.gzip)} gzip`).join(' · ')}`,
+    );
+    const of = (name: string) => sizes.find((s) => s.name === name) as (typeof sizes)[number];
+    // Every element but the root and the stage: the regions and the chrome.
+    const parts = Object.keys(SUBPATHS).filter(
+      (name) =>
+        name.startsWith('elements/') && name !== 'elements/root' && name !== 'elements/stage',
+    );
+    // The session's load pipeline and review store come with the root, not with an element.
+    for (const name of parts) {
+      expect(of(name).text, name).not.toContain('kgdiff:review:');
+      expect(of(name).gzip, name).toBeLessThan(of('elements/root').gzip);
+    }
+    expect(of('elements/root').text).toContain('kgdiff:review:');
+    // The renderer comes with a stage (each draws its own view), not with the root, nor with
+    // the zoom buttons and the minimap, which act on a stage's view.
+    const RENDERER = 'device-pixel-content-box';
+    expect(of('elements/stage').text).toContain(RENDERER);
+    expect(of('elements/root').text).not.toContain(RENDERER);
+    for (const name of parts) expect(of(name).text, name).not.toContain(RENDERER);
+    // The panels syntax is for the CLI too: no DOM, nothing else.
+    expect(of('panels').text).not.toMatch(/customElements|document\.|HTMLElement/);
+    expect(of('panels').gzip).toBeLessThan(1024);
+    for (const s of sizes) expect(s.gzip, s.name).toBeLessThanOrEqual(of('.').gzip);
+  }, 120_000);
 });

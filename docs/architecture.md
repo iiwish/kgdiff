@@ -46,7 +46,7 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 @kgdiff/layout     stable union layout, label-aware, deterministic                (d3-force)
 @kgdiff/scene      diff semantics → visual primitives: tokens, encodings, replay, focus
 @kgdiff/renderer   Canvas 2D engine: camera, LOD, labels, picking, swipe, minimap (DOM)
-@kgdiff/viewer     <kgdiff-viewer> web component: modes, change list, details, review (DOM)
+@kgdiff/viewer     <kgdiff-viewer> web component and its elements: modes, change list, details, review (DOM)
 @kgdiff/g6         AntV G6 v5 adapter: render a kgdiff scene inside a G6 graph   (peer: @antv/g6)
 kgdiff             CLI: terminal diff, JSON / delta / Markdown, single-file HTML report
 apps/site          landing page + playground (drag two files in, get a diff)
@@ -92,7 +92,7 @@ as one with parallel edges, is normalized again.
 | layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                         |
 | scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                                                         |
 | renderer | `createRenderer`, `createMinimap`                                                                                                                                                                         |
-| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`                                                                                                            |
+| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; experimental elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                    |
 | g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                             |
 | cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                       |
 

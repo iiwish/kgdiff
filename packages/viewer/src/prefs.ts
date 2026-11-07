@@ -14,6 +14,7 @@ import type {
   ViewerMode,
   ViewerScope,
 } from './index.js';
+import { toPanels } from './panels.js';
 
 const MODES: readonly ViewerMode[] = ['overlay', 'swipe', 'replay'];
 const SCOPES: readonly ViewerScope[] = ['all', 'changes'];
@@ -69,8 +70,11 @@ export function toDelay(value: unknown): number | null {
 
 type View = NonNullable<ReportPayload['view']>;
 
-/** Keep only the valid fields of a report's `view` (warning about the rest). */
-export function sanitizeView(view: unknown): View | undefined {
+/**
+ * Keep only the valid fields of a report's `view`, warning about the rest (once per payload:
+ * `quiet` for a second read of the same view).
+ */
+export function sanitizeView(view: unknown, quiet = false): View | undefined {
   if (typeof view !== 'object' || view === null) return undefined;
   const v = view as Record<string, unknown>;
   const legacy = v.mode === LEGACY_CHANGES_MODE;
@@ -79,10 +83,13 @@ export function sanitizeView(view: unknown): View | undefined {
   const theme = toTheme(v.theme);
   const palette = toPalette(v.palette);
   const locale = toLocale(v.locale);
-  const dropped = (['mode', 'scope', 'theme', 'palette', 'locale'] as const).filter(
+  const read = v.panels === undefined ? null : toPanels(v.panels);
+  const panels = read && Object.keys(read.panels).length > 0 ? read.panels : null;
+  const dropped: string[] = (['mode', 'scope', 'theme', 'palette', 'locale'] as const).filter(
     (k) => v[k] !== undefined && { mode, scope, theme, palette, locale }[k] === null,
   );
-  if (dropped.length > 0 && typeof console !== 'undefined') {
+  if (read && read.invalid.length > 0) dropped.push(`panels (${read.invalid.join(' ')})`);
+  if (dropped.length > 0 && !quiet && typeof console !== 'undefined') {
     console.warn(`[kgdiff] ignoring invalid report view preferences: ${dropped.join(', ')}`);
   }
   return {
@@ -91,5 +98,6 @@ export function sanitizeView(view: unknown): View | undefined {
     ...(theme ? { theme } : {}),
     ...(palette ? { palette } : {}),
     ...(locale ? { locale } : {}),
+    ...(panels ? { panels } : {}),
   };
 }

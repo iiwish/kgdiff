@@ -81,8 +81,22 @@ writes into a fresh private temporary directory (`mkdtemp`).
 | `--locale <en\|zh-CN>`            | UI and hunk-title language (default from `LANG`, else `en`)                |
 | `--mode <overlay\|swipe\|replay>` | Initial viewer mode (`changes`: overlay + `--scope changes`)               |
 | `--scope <all\|changes>`          | Whole graph or only the changes, in any mode (default `changes` if large)  |
+| `--panels <spec>`                 | Initial panel states, e.g. `"detail:collapsed minimap:hidden"` (see below) |
 | `--reproducible`                  | Omit the generation timestamp (byte-identical reports for identical input) |
 | `--no-compute`                    | Never inline the viewer's compute add-on (see §HTML report)                |
+
+`--panels` takes the syntax of the viewer's
+[`panels` attribute](interaction.md#panels): `region:state` pairs separated by spaces or
+commas, and it can be repeated (a region named twice takes the last state). Regions are
+`list`, `detail`, `search`, `filters`, `dock`, `transport`, `legend`, `zoom`, `minimap`,
+`title` and `actions`; states are `open`, `collapsed` and `hidden`. Regions not named keep the
+default layout. A pair that names no region or state is a usage error (exit 2) with a
+suggestion: `Unknown panel region "detials" in --panels. Did you mean "detail"?`.
+
+`--theme`, `--locale`, `--mode`, `--scope` and `--panels` are the report's initial view. The
+viewer remembers what a reader chooses (theme, palette, language, panels, sizes; per origin,
+in `localStorage`), and those choices win over the report's theme, language and panels in the
+next report they open.
 
 ### Behaviour
 
@@ -227,4 +241,14 @@ Document structure: `<!doctype html>`, `lang` from the locale, charset, viewport
 inline style that paints the theme background (per `prefers-color-scheme` unless `--theme` forces
 one) to avoid a white flash, a visually hidden `<h1>` and a `<kgdiff-viewer global-shortcuts>` (the page is the viewer, so its
 keyboard shortcuts apply page-wide) filling the viewport inside `<main>`, a `<noscript>` summary, the payload script, then the bundle(s).
+The viewer element carries `mode` and `scope` when they were given; theme, language and panel
+states travel only in the payload's `view` (an attribute would outrank what the reader chose
+before), and the viewer applies them as soon as the payload is read.
+
+The payload (`ReportPayload`, `format: "kgdiff.report"`, `version: 1`) holds the packed diff, the
+layout, `meta` (title, generator, timestamp, the two sides' names and formats) and `view`: `mode`,
+`scope`, `theme`, `locale` and, from kgdiff 0.6, `panels` (an object of region → state, e.g.
+`{ "detail": "collapsed" }`). Every `view` field is optional; a viewer ignores the ones it does
+not know or that are invalid (with a console warning), so older reports without `panels` open
+with the default layout.
 `</script` and `<!--` never appear inside inline JSON or JavaScript.

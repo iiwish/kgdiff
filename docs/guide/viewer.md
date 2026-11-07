@@ -52,33 +52,83 @@ viewer.mode = 'replay';
 viewer.play();
 ```
 
-| Attribute          | Values                                                        | Default                    |
-| ------------------ | ------------------------------------------------------------- | -------------------------- |
-| `mode`             | `overlay`, `swipe`, `replay` (legacy `changes`, see below)    | `overlay`                  |
-| `scope`            | `all`, `changes`: only the changes, in any mode               | `all` (`changes` if large) |
-| `theme`            | `auto`, `light`, `dark`                                       | `auto`                     |
-| `palette`          | `default`, `colorblind`                                       | `default`                  |
-| `locale`           | `en`, `zh-CN`                                                 | from `navigator.language`  |
-| `sidebar`          | `open`, `closed`                                              |                            |
-| `sync-hash`        | boolean: deep links `#kgdiff=hunk:<id>;mode:<m>;scope:<s>`    |                            |
-| `global-shortcuts` | boolean: shortcuts work when nothing on the page has focus    |                            |
-| `header`           | `compact`: no brand or graph names, when your page shows them |                            |
-| `chrome`           | `none`: the graph alone, for small embeds                     | `full`                     |
-| `legend`           | `auto`, `full`, `mini` (one line), `none`                     | `auto`                     |
-| `loop`             | boolean: the replay plays by itself, over and over            |                            |
-| `loop-delay`       | ms between the end of a looping replay and its restart        | `1200`                     |
-| `pause-on-hover`   | `false`: a looping replay keeps playing under the mouse       | pauses                     |
+Every attribute, property, method and event, with its values and default, is in
+[Viewer elements: reference](../viewer-elements.md#kgdiff-viewer), generated from the sources.
+The ones most pages set: `mode` (`overlay`, `swipe`, `replay`), `scope` (`changes`: only the
+changes, in any mode), `theme`, `locale`, `panels` ([below](#arrange-the-layout)) and `chrome`
+(`none` for [small embeds](#embed-a-small-looping-replay)). Events bubble out of the viewer and
+are typed on every element, the document and the window (`KgdiffEventMap`).
 
 `mode="changes"`, from before scopes existed, still works: it means `overlay` with
 `scope="changes"`, and the attributes are rewritten to say so.
 
-`mode`, `scope`, `theme`, `palette`, `locale`, `chrome`, `legend`, `loop`, `loopDelay` and
-`pauseOnHover` are also properties. Methods: `load()`, `selectHunk(id)`, `next()`, `prev()`,
-`play()`, `pause()`, `fit({ animate, padding })`, `exportDelta()`, `reviewState()` and
-`setReviewed(id, reviewed)`. Events, all bubbling and composed: `kgdiff-ready` `{ stats }`,
-`kgdiff-select` `{ hunk, node }`, `kgdiff-mode` `{ mode, scope }`, `kgdiff-review`
-`{ hunk, reviewed, progress }`, `kgdiff-error` `{ error }` and `kgdiff-replay-end` `{ loop }`.
-[Viewer: interaction and API](../interaction.md#embedding-api) has the details.
+## Arrange the layout
+
+Every region of the viewer can be open, collapsed (folded to the control that opens it again)
+or hidden, with one attribute: the change list (`list`), the detail panel (`detail`), the
+search (`search`), the filters (`filters`), the view dock (`dock`), the replay transport
+(`transport`), the legend (`legend`), the zoom buttons (`zoom`), the minimap (`minimap`), the
+title (`title`) and the actions (`actions`). The viewer remembers what the reader changes
+(panels, the sidebar's width and the split between the list and the details, theme, palette,
+language) for the next visit; what your page sets wins over that. `persist="none"` turns it
+off, and `persist-key="my-app:viewer"` keeps your app's choices apart from other apps on the same
+origin. [Panels](../interaction.md#panels) has the rules.
+
+### The detail panel collapsed by default
+
+```html
+<kgdiff-viewer panels="detail:collapsed" style="height: 640px"></kgdiff-viewer>
+```
+
+The change list gets the sidebar's height; the reader opens the details from their bar. Set it
+as a property just as well: `viewer.panels = { detail: 'collapsed' }`. Reading `panels` gives back
+what your page declared; `viewer.layout.panels` has every region's state now, including what the
+reader changed. Setting the same `panels` again (a React or Vue re-render) keeps the reader's
+changes.
+
+### Watch the replay only
+
+```html
+<kgdiff-viewer
+  mode="replay"
+  panels="list:hidden detail:hidden search:hidden filters:hidden"
+  style="height: 480px"
+></kgdiff-viewer>
+```
+
+The canvas takes the whole width, with the dock and the replay transport. Add
+`dock:hidden zoom:hidden minimap:hidden` for the transport alone, or use `chrome="none" loop`
+for an embed without any control ([below](#embed-a-small-looping-replay)). Composed from the
+elements, the same is a root and a stage alone:
+`<kgdiff-root mode="replay"><kgdiff-stage panels="zoom:hidden minimap:hidden"></kgdiff-stage></kgdiff-root>`.
+
+### React to layout changes
+
+```js
+viewer.addEventListener('kgdiff-layout', (event) => {
+  const { panels, sidebarWidth, source } = event.detail;
+  if (source === 'user') saveLayout({ panels, sidebarWidth }); // e.g. per user, on your server
+});
+```
+
+### Your content over the canvas
+
+The canvas has five slots for your page's content: `top-start` and `top-end` (under the title
+and the actions), `bottom-start`, `bottom-center` and `bottom-end`. The graph is framed clear of
+what you put there, at every fit and flight.
+
+```html
+<kgdiff-viewer style="height: 640px">
+  <my-status-card slot="top-end"></my-status-card>
+</kgdiff-viewer>
+```
+
+A chrome element slotted there replaces the built-in region: `<kgdiff-legend slot="bottom-start"
+variant="mini">` instead of the legend card, say, or `<kgdiff-title slot="top-start">` and
+`<kgdiff-actions slot="top-end">` instead of the title and the actions, which then sit where
+those did ([below](#compose-your-own-layout)); `panels` keeps applying to every other region. In the compact layout of a narrow viewer the top-end
+content moves under the zoom buttons and the bottom content above the dock: keep it small there.
+
 
 ## Embed a small looping replay
 
@@ -95,6 +145,134 @@ and the view stays fitted, labels included: no name is cut at the edge. `loop` r
 `loop-delay` ms (1.2 s) between rounds and while the mouse is over the graph.
 `kgdiff-replay-end` fires at the end of every round.
 
+## Compose your own layout
+
+The viewer is made of elements you can also place yourself (experimental in 0.6, stable from
+0.7: until then they may
+change in a minor release before they are stable). `<kgdiff-root>` holds the diff session and
+shows nothing; the other elements show its parts wherever they are: inside it, or anywhere on
+the page with `for="<root id>"`.
+
+| Element                  | Shows                                                                             |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `<kgdiff-root>`          | nothing: it has the viewer's attributes, methods and events                       |
+| `<kgdiff-stage>`         | the graph, with its own view dock, transport, legend, zoom buttons and minimap    |
+| `<kgdiff-change-list>`   | the list of changes, with review progress                                         |
+| `<kgdiff-change-detail>` | the selected change                                                               |
+| `<kgdiff-search>`        | node search, its results in a popup                                               |
+| `<kgdiff-filters>`       | the filter chips                                                                  |
+| `<kgdiff-view-dock>`     | the view dock: the mode, changes only and the context hops                        |
+| `<kgdiff-transport>`     | the replay transport, in replay mode                                              |
+| `<kgdiff-legend>`        | the legend: a card (`open` reflects whether it is) or one line (`variant="mini"`) |
+| `<kgdiff-zoom>`          | zoom in, zoom out and fit, for one stage                                          |
+| `<kgdiff-minimap>`       | one stage's minimap (`:state(overview)` while the whole graph is in view)         |
+| `<kgdiff-title>`         | the brand and the names of the versions compared                                  |
+| `<kgdiff-actions>`       | the appearance menu (theme, colors, language) and the shortcuts dialog            |
+
+### The change list in your own sidebar
+
+```html
+<div class="app">
+  <aside class="my-sidebar">
+    <kgdiff-search for="diff"></kgdiff-search>
+    <kgdiff-change-list for="diff"></kgdiff-change-list>
+  </aside>
+  <kgdiff-root id="diff">
+    <kgdiff-stage>
+      <my-legend-card slot="top-end"></my-legend-card>
+    </kgdiff-stage>
+  </kgdiff-root>
+  <kgdiff-change-detail for="diff" class="my-drawer"></kgdiff-change-detail>
+</div>
+
+<script type="module">
+  import '@kgdiff/viewer'; // or only what you use: '@kgdiff/viewer/elements/root', …/stage, …
+  await document.getElementById('diff').load({ before, after });
+</script>
+```
+
+- Lay the elements out with your own CSS; give the stage and the list a height.
+  `<kgdiff-root>` renders as `display: contents`, so its children take part in your layout.
+- The stage's slots (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`)
+  place your content over the canvas, and the graph is framed clear of it. A chrome element
+  slotted there (the view dock, transport, legend, zoom buttons or minimap) replaces the
+  stage's own, and the stage's `panels` keeps applying to the rest.
+- Anywhere else, over the canvas or not, an element is not kept clear of fits and flights
+  unless you register it: `stage.registerObstacle(element)`.
+- `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one stage: the nearest one around them, or the
+  one `stage="<id>"` names anywhere on the page (`zoom.stage`, and `zoom.stageElement` for
+  the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements
+  show the root's session, like the change list.
+- A minimap you place yourself stays shown while the whole graph is in view, so your layout
+  does not move; hide it in place with `kgdiff-minimap:state(overview) { visibility: hidden }`.
+  Slotted into a stage, it hides then, as the stage's own does.
+- The keyboard map belongs to the root: `j` / `k`, `x`, `/` and the rest work in every element
+  bound to it, `/` focuses the search and `?` opens the shortcuts dialog of a
+  `<kgdiff-actions>`, which lists the keys bound after `keymap`. `shortcuts` and `keymap` go on
+  the root. The `+`, `−` and `f` keys zoom and fit every stage of the root.
+- Composed elements remember nothing: your page owns the layout.
+- Each element has a subpath that defines only it: `@kgdiff/viewer/elements/root`, `/stage`,
+  `/change-list`, `/change-detail`, `/search`, `/filters`, `/view-dock`, `/transport`,
+  `/legend`, `/zoom`, `/minimap`, `/title`, `/actions`.
+
+### Before and after, side by side
+
+```html
+<kgdiff-root id="diff">
+  <div class="pair">
+    <kgdiff-stage version="before" panels="dock:hidden transport:hidden"></kgdiff-stage>
+    <kgdiff-stage version="after" panels="dock:hidden transport:hidden legend:hidden"></kgdiff-stage>
+  </div>
+  <kgdiff-change-list></kgdiff-change-list>
+</kgdiff-root>
+
+<style>
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; height: 480px; }
+  kgdiff-change-list { display: block; height: 240px; }
+</style>
+```
+
+One root, two stages: each draws one version whatever the mode (`version="before"`,
+`version="after"`, with a chip that names it) and has its own camera, zoom buttons and minimap.
+The selection, the hover, the filters and the search are the root's: pick a change in the list
+(or press `j`) and both stages bring it into view, each framing it in its own version; a node
+hovered in one is highlighted in both. Add `<kgdiff-view-dock>` for the changes-only scope, or
+`<kgdiff-title>` and `<kgdiff-actions>` above the pair.
+
+### A replay of a stage and a transport
+
+```html
+<kgdiff-root mode="replay" loop>
+  <kgdiff-stage panels="dock:hidden transport:hidden legend:hidden" style="height: 360px">
+  </kgdiff-stage>
+  <kgdiff-transport></kgdiff-transport>
+</kgdiff-root>
+```
+
+The transport plays, steps and scrubs the root's replay from under the canvas instead of over
+it; it shows in replay mode only. Slotted into the stage instead,
+`<kgdiff-transport slot="bottom-center">` replaces the stage's own and floats over the canvas,
+kept clear of the graph (keep `dock:hidden`).
+
+## Theme it with CSS
+
+Colors and fonts are CSS custom properties, set on `<kgdiff-viewer>` (or `<kgdiff-root>`) and
+inherited by the canvas and every panel. Override them with ordinary CSS:
+
+```css
+kgdiff-viewer {
+  --kgdiff-accent: #e8590c;
+  --kgdiff-accent-soft: rgb(232 89 12 / 0.16);
+  --kgdiff-font: "IBM Plex Sans", system-ui, sans-serif;
+}
+```
+
+The [token list](../visual-language.md#css-tokens) is public API from 0.6. Light, dark and the
+color-blind palette stay available underneath (`theme`, `palette`); your values win over them,
+and keeping them readable is up to you. When tokens change in a way the viewer cannot see (a
+class on an ancestor, a stylesheet loaded later), call `viewer.refreshTheme()` so the canvas
+follows.
+
 ## Keep review progress
 
 The viewer remembers in the browser which changes were marked reviewed. To keep that progress
@@ -108,34 +286,75 @@ viewer.addEventListener('kgdiff-ready', async () => {
 });
 ```
 
+## Editor support
+
+`@kgdiff/viewer` ships a
+[Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest)
+(`custom-elements.json`, named by the package's `customElements` field) that tools read, and two
+files generated from it, like the [reference](../viewer-elements.md):
+
+- **VS Code** completes and describes the elements and their attributes in HTML with the
+  package's custom data. In your project's `.vscode/settings.json`:
+
+  ```json
+  { "html.customData": ["./node_modules/@kgdiff/viewer/vscode.html-custom-data.json"] }
+  ```
+
+- **React 19 with TypeScript** types the elements in JSX, their properties and their events
+  (experimental, with the elements): import the types once, anywhere in the project.
+
+  ```ts
+  import type {} from '@kgdiff/viewer/react';
+  ```
+
 ## React
 
-Use a ref to call `load()` and to listen to events:
+React 19 renders custom elements with their properties: a prop the element has as a property
+(`panels`, `keymap`, `mode`, …) is set as that property, objects included, and any other as an
+attribute. Import `@kgdiff/viewer` before rendering, so the elements are defined by the time React
+sets their props. With TypeScript, `@kgdiff/viewer/react` types them ([Editor
+support](#editor-support)).
 
-```jsx
+```tsx
 import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement } from '@kgdiff/viewer';
+import type {} from '@kgdiff/viewer/react';
 import { useEffect, useRef } from 'react';
 
-export function GraphDiff({ before, after, onSelect }) {
-  const viewer = useRef(null);
+interface Props {
+  readonly before: GraphSource;
+  readonly after: GraphSource;
+  readonly onSelect: (hunk: string | null) => void;
+}
+
+export function GraphDiff({ before, after, onSelect }: Props) {
+  const viewer = useRef<KgdiffViewerElement>(null);
 
   useEffect(() => {
-    viewer.current.load({ before, after });
+    void viewer.current?.load({ before, after });
   }, [before, after]);
 
-  useEffect(() => {
-    const element = viewer.current;
-    const listener = (event) => onSelect(event.detail.hunk);
-    element.addEventListener('kgdiff-select', listener);
-    return () => element.removeEventListener('kgdiff-select', listener);
-  }, [onSelect]);
-
-  return <kgdiff-viewer ref={viewer} theme="auto" style={{ height: 640 }} />;
+  return (
+    <kgdiff-viewer
+      ref={viewer}
+      theme="auto"
+      panels={{ detail: 'collapsed' }}
+      keymap={{ x: null, r: 'review' }}
+      onkgdiff-select={(event) => onSelect(event.detail.hunk)}
+      style={{ height: 640 }}
+    />
+  );
 }
 ```
 
-In TypeScript, declare `kgdiff-viewer` in `JSX.IntrinsicElements`; the package exports the
-element's type as `KgdiffViewerElement`.
+- `onkgdiff-select` listens to `kgdiff-select`: React 19 adds a listener for an `on…` prop the
+  element has no property for. Its `event.detail` is typed.
+- Methods go through the ref: `viewer.current?.next()`.
+- The `panels` object literal is a new object on every render, and that is fine: the
+  viewer compares what the page declares, so a re-render declaring the same panels keeps what the
+  reader opened or closed; only a region whose declaration changed gives way.
+- React 18 sets every prop as an attribute: use the text forms (`panels="detail:collapsed"`,
+  `keymap="x:none r:review"`) and `addEventListener` on the ref for events.
 
 ## Vue
 
@@ -151,24 +370,75 @@ export default {
 };
 ```
 
-then use it like any element:
+then use them like any element:
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement, ViewerPanels } from '@kgdiff/viewer';
 import { onMounted, ref } from 'vue';
 
-const props = defineProps(['before', 'after']);
-const emit = defineEmits(['select']);
-const viewer = ref(null);
+const props = defineProps<{ before: GraphSource; after: GraphSource }>();
+const emit = defineEmits<{ select: [hunk: string | null] }>();
+const viewer = ref<KgdiffViewerElement | null>(null);
+const panels: ViewerPanels = { detail: 'collapsed' };
 
-onMounted(() => viewer.value.load({ before: props.before, after: props.after }));
-const onSelect = (event) => emit('select', event.detail.hunk);
+onMounted(() => viewer.value?.load({ before: props.before, after: props.after }));
+const onSelect = (event: CustomEvent<{ hunk: string | null }>) => emit('select', event.detail.hunk);
 </script>
 
 <template>
-  <kgdiff-viewer ref="viewer" theme="auto" style="height: 640px" @kgdiff-select="onSelect" />
+  <kgdiff-viewer
+    ref="viewer"
+    theme="auto"
+    :panels.prop="panels"
+    :keymap.prop="{ x: null, r: 'review' }"
+    style="height: 640px"
+    @kgdiff-select="onSelect"
+  />
 </template>
+```
+
+- `.prop` binds `panels` and `keymap` as properties, objects; Vue binds to the property anyway
+  when the element has it, and `.prop` makes sure even before the element is defined.
+- `@kgdiff-select` listens to the event. Vue does not know the element's events, so the handler
+  types `event` itself.
+- The template ref gives the element, for its methods.
+
+## Svelte
+
+Svelte 5 sets an attribute of a custom element as its property when the element has one,
+objects included, and as an attribute otherwise; `onkgdiff-select` listens to the event, and
+`bind:this` gives the element.
+
+```svelte
+<script lang="ts">
+import '@kgdiff/viewer';
+import type { GraphSource, KgdiffViewerElement, ViewerPanels } from '@kgdiff/viewer';
+
+interface Props {
+  before: GraphSource;
+  after: GraphSource;
+  onselect: (hunk: string | null) => void;
+}
+
+let { before, after, onselect }: Props = $props();
+let viewer = $state<KgdiffViewerElement>();
+const panels: ViewerPanels = { detail: 'collapsed' };
+
+$effect(() => {
+  void viewer?.load({ before, after });
+});
+</script>
+
+<kgdiff-viewer
+  bind:this={viewer}
+  theme="auto"
+  {panels}
+  keymap={{ x: null, r: 'review' }}
+  style="height: 640px"
+  onkgdiff-select={(event: CustomEvent<{ hunk: string | null }>) => onselect(event.detail.hunk)}
+></kgdiff-viewer>
 ```
 
 ## Without a bundler

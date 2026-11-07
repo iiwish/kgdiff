@@ -126,6 +126,36 @@ describe('diff command line', () => {
     });
   });
 
+  it('--panels reads region:state pairs, as the viewer’s panels attribute does', () => {
+    expect(diffOptions(['a', 'b']).panels).toBeUndefined();
+    expect(
+      diffOptions(['a', 'b', '--panels', 'detail:collapsed  minimap:hidden,legend:open']).panels,
+    ).toEqual({ detail: 'collapsed', minimap: 'hidden', legend: 'open' });
+    // Repeatable; a region named again takes the last state.
+    expect(
+      diffOptions(['a', 'b', '--panels=list:hidden detail:open', '--panels', 'detail:hidden'])
+        .panels,
+    ).toEqual({ list: 'hidden', detail: 'hidden' });
+    expect(diffOptions(['a', 'b', '--panels', ' ']).panels).toBeUndefined();
+  });
+
+  it('--panels explains what is wrong, with a suggestion', () => {
+    const pair = usageError(['a', 'b', '--panels', 'detail']);
+    expect(pair.message).toBe('Invalid value "detail" for --panels.');
+    expect(pair.hint).toMatch(/^Expected region:state pairs, e\.g\. --panels "detail:collapsed/);
+    expect(pair.hint).toContain('Regions: list, detail, search, filters, dock, transport');
+    const region = usageError(['a', 'b', '--panels', 'detials:hidden']);
+    expect(region.message).toBe('Unknown panel region "detials" in --panels.');
+    expect(region.hint).toMatch(/^Did you mean "detail"\? Regions: /);
+    const state = usageError(['a', 'b', '--panels', 'minimap:collapse']);
+    expect(state.message).toBe('Invalid state "collapse" for the minimap panel in --panels.');
+    expect(state.hint).toBe('Did you mean "collapsed"? Expected one of: open, collapsed, hidden.');
+    expect(usageError(['a', 'b', '--panels', 'zoom:open:x']).message).toMatch(/--panels/);
+    expect(usageError(['a', 'b', '--panels', 'sidebar:hidden']).message).toBe(
+      'Unknown panel region "sidebar" in --panels.',
+    );
+  });
+
   it('--watch-attr collects attribute keys, and is absent when not given', () => {
     expect(diffOptions(['a.obo', 'b.obo']).watchAttrs).toBeUndefined();
     expect(

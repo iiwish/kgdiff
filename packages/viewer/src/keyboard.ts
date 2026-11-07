@@ -33,52 +33,108 @@ export interface KeyLike {
   readonly altKey?: boolean;
 }
 
-const MODE_KEYS: Readonly<Record<string, ViewerMode>> = {
-  '1': 'overlay',
-  '2': 'swipe',
-  '3': 'replay',
-};
-
 /** Divider steps for swipe, as a fraction of the width. */
 export const DIVIDER_STEP = 0.02;
 export const DIVIDER_STEP_LARGE = 0.1;
 
 /**
- * Map a key press to an action in `mode` and `scope`, or null when the key means nothing here.
- * Chords with Ctrl / Meta / Alt are never handled (they belong to the browser and the host page).
+ * The shortcuts a key can be bound to (`keymap`). `left` / `right` step the replay, or move the
+ * swipe divider (further with Shift); `play-pause` acts in replay, `expand` with the `changes`
+ * scope.
+ *
+ * @experimental New in 0.6: the list may grow as the canvas chrome becomes elements.
  */
-export function keyAction(
+export type ShortcutName =
+  | 'overlay'
+  | 'swipe'
+  | 'replay'
+  | 'scope'
+  | 'expand'
+  | 'next'
+  | 'prev'
+  | 'first'
+  | 'last'
+  | 'fly'
+  | 'escape'
+  | 'play-pause'
+  | 'left'
+  | 'right'
+  | 'fit'
+  | 'zoom-in'
+  | 'zoom-out'
+  | 'search'
+  | 'review'
+  | 'sidebar'
+  | 'theme'
+  | 'help';
+
+/**
+ * Keys (as `KeyboardEvent.key`) bound to a shortcut, or to `null` to leave the key unbound. A
+ * letter stands for both its cases (`x` also binds Shift+x, `X`) unless the other case is named
+ * too.
+ *
+ * @experimental New in 0.6, with `ShortcutName`.
+ */
+export type Keymap = Readonly<Record<string, ShortcutName | null>>;
+
+/** The default keyboard map (docs/interaction.md §Keyboard map); each letter once. */
+export const DEFAULT_KEYMAP: Keymap = {
+  '1': 'overlay',
+  '2': 'swipe',
+  '3': 'replay',
+  '4': 'scope',
+  j: 'next',
+  ArrowDown: 'next',
+  k: 'prev',
+  ArrowUp: 'prev',
+  Home: 'first',
+  End: 'last',
+  Enter: 'fly',
+  Escape: 'escape',
+  ' ': 'play-pause',
+  Spacebar: 'play-pause',
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  f: 'fit',
+  '+': 'zoom-in',
+  '=': 'zoom-in',
+  '-': 'zoom-out',
+  _: 'zoom-out',
+  '−': 'zoom-out',
+  '/': 'search',
+  x: 'review',
+  '\\': 'sidebar',
+  t: 'theme',
+  e: 'expand',
+  '?': 'help',
+};
+
+/** Every shortcut (each is bound to a key by default). */
+export const SHORTCUT_NAMES: ReadonlySet<string> = new Set(
+  Object.values(DEFAULT_KEYMAP).filter((name) => name !== null),
+);
+
+/** What `name` does in `mode` and `scope`, or null when it does nothing there. */
+function resolve(
+  name: ShortcutName,
   e: KeyLike,
   mode: ViewerMode,
-  scope: ViewerScope = 'all',
+  scope: ViewerScope,
 ): KeyAction | null {
-  if (e.ctrlKey || e.metaKey || e.altKey) return null;
-  const key = e.key;
-  const mapped = MODE_KEYS[key];
-  if (mapped !== undefined) return { type: 'mode', mode: mapped };
-  switch (key) {
-    case '4':
+  switch (name) {
+    case 'overlay':
+    case 'swipe':
+    case 'replay':
+      return { type: 'mode', mode: name };
+    case 'scope':
       return { type: 'scope' };
-    case 'j':
-    case 'ArrowDown':
-      return { type: 'next' };
-    case 'k':
-    case 'ArrowUp':
-      return { type: 'prev' };
-    case 'Home':
-      return { type: 'first' };
-    case 'End':
-      return { type: 'last' };
-    case 'Enter':
-      return { type: 'fly' };
-    case 'Escape':
-      return { type: 'escape' };
-    case ' ':
-    case 'Spacebar':
+    case 'expand':
+      return scope === 'changes' ? { type: 'expand' } : null;
+    case 'play-pause':
       return mode === 'replay' ? { type: 'play-pause' } : null;
-    case 'ArrowLeft':
-    case 'ArrowRight': {
-      const direction = key === 'ArrowRight' ? 1 : -1;
+    case 'left':
+    case 'right': {
+      const direction = name === 'right' ? 1 : -1;
       if (mode === 'replay') return { type: 'step', direction };
       if (mode === 'swipe') {
         return {
@@ -88,34 +144,105 @@ export function keyAction(
       }
       return null;
     }
-    case 'f':
-    case 'F':
-      return { type: 'fit' };
-    case '+':
-    case '=':
-      return { type: 'zoom', direction: 1 };
-    case '-':
-    case '_':
-    case '−':
-      return { type: 'zoom', direction: -1 };
-    case '/':
-      return { type: 'search' };
-    case 'x':
-    case 'X':
-      return { type: 'review' };
-    case '\\':
-      return { type: 'sidebar' };
-    case 't':
-    case 'T':
-      return { type: 'theme' };
-    case 'e':
-    case 'E':
-      return scope === 'changes' ? { type: 'expand' } : null;
-    case '?':
-      return { type: 'help' };
+    case 'zoom-in':
+    case 'zoom-out':
+      return { type: 'zoom', direction: name === 'zoom-in' ? 1 : -1 };
     default:
-      return null;
+      return { type: name };
   }
+}
+
+/**
+ * What `map` binds `key` to: the key itself, else the other case of a letter; undefined when
+ * `map` names neither.
+ */
+function lookup(map: Keymap, key: string): ShortcutName | null | undefined {
+  if (Object.hasOwn(map, key)) return map[key];
+  const lower = key.toLowerCase();
+  const other = key === lower ? key.toUpperCase() : lower;
+  return key.length === 1 && other !== key && Object.hasOwn(map, other) ? map[other] : undefined;
+}
+
+/**
+ * Map a key press to an action in `mode` and `scope`, or null when the key means nothing here.
+ * `keymap` overrides single keys of the default map (null unbinds one); a letter in either map
+ * stands for both its cases unless the other case is named too. Chords with Ctrl / Meta / Alt
+ * are never handled (they belong to the browser and the host page).
+ */
+export function keyAction(
+  e: KeyLike,
+  mode: ViewerMode,
+  scope: ViewerScope = 'all',
+  keymap: Keymap | null = null,
+): KeyAction | null {
+  if (e.ctrlKey || e.metaKey || e.altKey) return null;
+  const custom = keymap === null ? undefined : lookup(keymap, e.key);
+  const name = custom === undefined ? lookup(DEFAULT_KEYMAP, e.key) : custom;
+  return name ? resolve(name, e, mode, scope) : null;
+}
+
+/**
+ * Keys the default map binds for another key's sake: listed only when they do something else
+ * (the `+` key unshifted, `-` with Shift, the minus sign, the legacy name of the space bar).
+ */
+const ALIASES: Readonly<Record<string, string>> = { '=': '+', _: '-', '−': '-', Spacebar: ' ' };
+
+/**
+ * The keys bound to each shortcut with `keymap` over the default map, in the default map's
+ * order then `keymap`'s (what the shortcuts dialog lists). A letter is listed once for both its
+ * cases; a shortcut no key is bound to is absent.
+ */
+export function shortcutKeys(keymap: Keymap | null): ReadonlyMap<ShortcutName, readonly string[]> {
+  const candidates = new Set([...Object.keys(DEFAULT_KEYMAP), ...Object.keys(keymap ?? {})]);
+  const bound = (key: string): ShortcutName | null | undefined => {
+    const custom = keymap === null ? undefined : lookup(keymap, key);
+    return custom === undefined ? lookup(DEFAULT_KEYMAP, key) : custom;
+  };
+  const out = new Map<ShortcutName, string[]>();
+  for (const key of candidates) {
+    const name = bound(key);
+    if (!name) continue;
+    const lower = key.toLowerCase();
+    if (key.length === 1 && key !== lower && candidates.has(lower) && bound(lower) === name) {
+      continue;
+    }
+    const alias = ALIASES[key];
+    if (alias !== undefined && bound(alias) === name) continue;
+    const keys = out.get(name) ?? [];
+    keys.push(key);
+    out.set(name, keys);
+  }
+  return out;
+}
+
+/** `Space` names the space bar in a `keymap` attribute. */
+const KEY_NAMES: Readonly<Record<string, string>> = { Space: ' ' };
+
+/**
+ * A keymap from an attribute (`"x:none r:review"`: `key:shortcut` pairs separated by spaces,
+ * `none` unbinds a key, `Space` is the space bar) or a property (an object of the same pairs).
+ * Pairs that name no shortcut are left out and returned in `invalid`.
+ */
+export function toKeymap(value: unknown): { keymap: Keymap | null; invalid: string[] } {
+  const invalid: string[] = [];
+  const out: Record<string, ShortcutName | null> = {};
+  const add = (key: string, name: unknown, raw: string): void => {
+    const k = KEY_NAMES[key] ?? key;
+    if (k === '' || !(name === null || name === 'none' || SHORTCUT_NAMES.has(name as string))) {
+      invalid.push(raw);
+    } else out[k] = name === null || name === 'none' ? null : (name as ShortcutName);
+  };
+  if (typeof value === 'string') {
+    for (const token of value.split(/\s+/)) {
+      if (token === '') continue;
+      const at = token.lastIndexOf(':');
+      if (at <= 0) invalid.push(token);
+      else add(token.slice(0, at), token.slice(at + 1), token);
+    }
+  } else if (typeof value === 'object' && value !== null) {
+    for (const [key, name] of Object.entries(value)) add(key, name, `${key}:${String(name)}`);
+  } else return { keymap: null, invalid };
+  return { keymap: Object.keys(out).length > 0 ? out : null, invalid };
 }
 
 /** Whether a key event comes from a place where the user types (shortcuts must not fire). */

@@ -12,7 +12,9 @@
 import { parseArgs } from 'node:util';
 import type { DiffOptions, EdgeIdentity, Locale, MatchOptions } from '@kgdiff/core';
 import type { FormatId } from '@kgdiff/formats';
-import type { ThemePreference, ViewerMode, ViewerScope } from '@kgdiff/viewer';
+import type { ThemePreference, ViewerMode, ViewerPanels, ViewerScope } from '@kgdiff/viewer';
+// The viewer's own panels syntax (no DOM): `--panels` reads exactly what `panels` does.
+import { PANEL_REGIONS, PANEL_STATES, parsePanels } from '@kgdiff/viewer/panels';
 import { CliError } from './errors.js';
 import { matchLocale } from './locale.js';
 import type { ColorMode } from './style.js';
@@ -38,7 +40,6 @@ const THEMES: readonly ThemePreference[] = ['auto', 'light', 'dark'];
 const MODES: readonly (ViewerMode | 'changes')[] = ['overlay', 'swipe', 'replay', 'changes'];
 const SCOPES: readonly ViewerScope[] = ['all', 'changes'];
 const COLOR_MODES: readonly ColorMode[] = ['auto', 'always', 'never'];
-
 /** Default `--limit`. */
 export const DEFAULT_LIMIT = 50;
 
@@ -70,6 +71,8 @@ export interface DiffCommandOptions extends CommonOptions {
   readonly theme?: ThemePreference;
   readonly mode?: ViewerMode;
   readonly scope?: ViewerScope;
+  /** `--panels`: the report's initial panel states (`view.panels`). */
+  readonly panels?: ViewerPanels;
   readonly reproducible: boolean;
   /** `--allow-empty`: an empty input is an empty graph instead of an error. */
   readonly allowEmpty: boolean;
@@ -148,6 +151,7 @@ export const DIFF_OPTIONS: Readonly<Record<string, OptionSpec>> = {
   theme: { type: 'string' },
   mode: { type: 'string' },
   scope: { type: 'string' },
+  panels: { type: 'string', multiple: true },
   reproducible: { type: 'boolean' },
   'no-compute': { type: 'boolean' },
   'allow-empty': { type: 'boolean' },
@@ -221,6 +225,42 @@ function looksLikePath(name: string): boolean {
 
 function usageError(message: string, hint = HELP_HINT): CliError {
   return new CliError('usage', message, hint);
+}
+
+/**
+ * `--panels "detail:collapsed minimap:hidden"` (pairs separated by spaces or commas, the option
+ * repeatable), read by the viewer's own parser; a region named twice takes the last state. The
+ * first pair it rejects becomes a usage error that says what is wrong with it.
+ */
+function panelsOption(values: readonly string[]): ViewerPanels | undefined {
+  const { panels, invalid } = parsePanels(values.join(' '));
+  const [token] = invalid;
+  if (token !== undefined) throw panelsError(token);
+  return Object.keys(panels).length > 0 ? panels : undefined;
+}
+
+/** Why `parsePanels` rejected `token`: not a pair, an unknown region, or an unknown state. */
+function panelsError(token: string): CliError {
+  const regions = `Regions: ${PANEL_REGIONS.join(', ')}; states: ${PANEL_STATES.join(', ')}.`;
+  const [region = '', state, ...rest] = token.split(':');
+  if (state === undefined || rest.length > 0) {
+    return usageError(
+      `Invalid value "${token}" for --panels.`,
+      `Expected region:state pairs, e.g. --panels "detail:collapsed minimap:hidden". ${regions}`,
+    );
+  }
+  if (!(PANEL_REGIONS as readonly string[]).includes(region)) {
+    const close = suggest(region, PANEL_REGIONS);
+    return usageError(
+      `Unknown panel region "${region}" in --panels.`,
+      `${close ? `Did you mean "${close}"? ` : ''}${regions}`,
+    );
+  }
+  const close = suggest(state, PANEL_STATES);
+  return usageError(
+    `Invalid state "${state}" for the ${region} panel in --panels.`,
+    `${close ? `Did you mean "${close}"? ` : ''}Expected one of: ${PANEL_STATES.join(', ')}.`,
+  );
 }
 
 function choice<T extends string>(name: string, value: string, choices: readonly T[]): T {
@@ -498,6 +538,7 @@ function parseDiff(argv: readonly string[]): Command {
       : mode === 'changes'
         ? 'changes'
         : undefined;
+  const panels = panelsOption(v.strings('panels'));
   const limit = v.string('limit');
   const languages = parseLanguages(v);
   const title = v.string('title');
@@ -532,6 +573,7 @@ function parseDiff(argv: readonly string[]): Command {
     ...(theme !== undefined ? { theme: choice('theme', theme, THEMES) } : {}),
     ...(mode !== undefined ? { mode: mode === 'changes' ? 'overlay' : mode } : {}),
     ...(scope !== undefined ? { scope } : {}),
+    ...(panels !== undefined ? { panels } : {}),
     reproducible: v.flag('reproducible'),
     compute: !v.flag('no-compute'),
     allowEmpty: v.flag('allow-empty'),

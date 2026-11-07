@@ -1,43 +1,41 @@
 /**
- * `<kgdiff-viewer>`, the default layout (RFC 0001 §4): a root (the session, keyboard map, live
- * region, events and theme tokens; `root.ts`) and the regions bound to it, the stage with its
- * chrome, the change list, the search, the family filters and the detail panel, placed as they
- * always were (a 360 px sidebar; a bottom sheet below 760 px). Around them: attribute /
- * property reflection, lifecycle, the public methods and deep links.
+ * `<kgdiff-viewer>`, the default layout (RFC 0001 §4): a root (`root-element.ts`: the session,
+ * keyboard map, live region, events, theme tokens, preferences and methods) and the regions
+ * bound to it, the stage with its chrome, the change list, the search, the family filters and
+ * the detail panel, placed as they always were (a 360 px sidebar; a bottom sheet below 760 px).
+ *
+ * Every region has a panel state (`panels.ts`): the host's `panels` attribute or property and
+ * the presets `sidebar`, `header` and `chrome` set them, the user changes them (folding the
+ * sidebar, the list or the detail panel, opening the legend, dragging the sidebar's width or
+ * the list / detail split), and the layout remembers the user's choices, theme, palette and
+ * language per origin (`layout-store.ts`; `persist="none"` turns that off). `kgdiff-layout`
+ * reports every change.
  */
-import { type Delta, KgdiffError, type Locale } from '@kgdiff/core';
-import type { PaletteName } from '@kgdiff/scene';
-import type { ViewerController } from './controller.js';
-import { h } from './dom.js';
-import { formatHash, parseHash } from './hash-sync.js';
-import { detectLocale, translate, translator } from './i18n.js';
+
+import { provideContext } from './context.js';
+import { ViewerController } from './controller.js';
+import { h, isOpen } from './dom.js';
+import { type StageViewContext, stageContext } from './elements/stage-context.js';
 import type {
-  FitOptions,
   KgdiffViewerElement,
   LoadOptions,
+  PanelRegion,
+  PanelStates,
   ReportPayload,
-  ReviewState,
-  ThemePreference,
   ViewerChrome,
+  ViewerLayout,
   ViewerLegend,
-  ViewerMode,
-  ViewerScope,
+  ViewerPanels,
 } from './index.js';
-import { assertPayload } from './payload.js';
-import {
-  DEFAULT_LOOP_DELAY,
-  LEGACY_CHANGES_MODE,
-  toChrome,
-  toDelay,
-  toLegend,
-  toLocale,
-  toMode,
-  toPalette,
-  toScope,
-  toTheme,
-} from './prefs.js';
-import { bindRegion, uiContext, ViewerRoot } from './root.js';
-import { ALL_TOPICS, type Topic } from './session.js';
+import { LAYOUT_KEY, type Remembered, readRemembered, writeRemembered } from './layout-store.js';
+import { presetPanels, resolvePanels, SIDEBAR_REGIONS, samePanels } from './panel-levels.js';
+import { DEFAULT_PANELS, formatPanels, PANEL_REGIONS, parsePanels, toPanels } from './panels.js';
+import { sanitizeView, toChrome, toLegend } from './prefs.js';
+import { defaultStorage } from './review-store.js';
+import { bindRegion, uiContext } from './root.js';
+import { ROOT_ATTRIBUTES, RootElement } from './root-element.js';
+import type { SessionDeps, SessionHost, Topic } from './session.js';
+import { stylesheet } from './styles.js';
 import { ChangeList } from './ui/change-list.js';
 import type { UiActions } from './ui/context.js';
 import { Detail } from './ui/detail.js';
@@ -45,7 +43,7 @@ import { Filters } from './ui/filters.js';
 import { Header } from './ui/header.js';
 import { HelpDialog, Menu } from './ui/popovers.js';
 import { Search } from './ui/search.js';
-import { Sidebar } from './ui/sidebar.js';
+import { SIDEBAR_WIDTH, Sidebar } from './ui/sidebar.js';
 import { Stage } from './ui/stage.js';
 
 /** Below this width the sidebar becomes a bottom sheet. */
@@ -54,67 +52,41 @@ export const COMPACT_WIDTH = 760;
 const NARROW_WIDTH = 1100;
 
 const OBSERVED = [
-  'mode',
-  'scope',
-  'theme',
-  'palette',
-  'locale',
+  ...ROOT_ATTRIBUTES,
   'sidebar',
-  'sync-hash',
+  'header',
   'chrome',
   'legend',
-  'loop',
-  'loop-delay',
-  'pause-on-hover',
-] as const;
-const UPGRADED = [
-  'mode',
-  'scope',
-  'theme',
-  'palette',
-  'locale',
-  'chrome',
-  'legend',
-  'loop',
-  'loopDelay',
-  'pauseOnHover',
-  'payload',
+  'panels',
+  'persist',
+  'persist-key',
 ] as const;
 
-/** Keys the page itself scrolls with: never taken at document level. */
-const PAGE_KEYS: ReadonlySet<string> = new Set([
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'Home',
-  'End',
-  'PageUp',
-  'PageDown',
-  ' ',
-  'Spacebar',
-]);
+type Preset = 'sidebar' | 'header' | 'chrome';
+type MutablePanels = { -readonly [R in PanelRegion]?: PanelStates[R] };
 
-/** Connected viewers, in connection order (`global-shortcuts` goes to the first opted-in one). */
-const connected: KgdiffViewer[] = [];
-
-function deepFreeze<T>(value: T): T {
-  if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
-    for (const v of Object.values(value)) deepFreeze(v);
-    Object.freeze(value);
-  }
-  return value;
+function warnPanels(invalid: readonly string[]): void {
+  if (invalid.length > 0) console.warn(`[kgdiff] ignoring invalid panels: ${invalid.join(' ')}`);
 }
 
-export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
+/**
+ * @tagname kgdiff-viewer
+ * @attr {'open' | 'closed'} sidebar - A preset: `closed` starts with the sidebar folded (`\` and the
+ *   sidebar button open it), `open` with its four regions open. Reflects the sidebar's state
+ *   once the user toggles it.
+ * @attr {'compact'} header - A preset: `compact` leaves the brand and the compared names out of
+ *   the canvas, for hosts that show their own (`panels="title:hidden"`).
+ * @slot top-start - The page's content over the canvas, top left (under the title while it shows).
+ * @slot top-end - The page's content over the canvas, top right (under the actions while they show).
+ * @slot bottom-start - The page's content over the canvas, bottom left, above the legend.
+ * @slot bottom-center - The page's content above the view dock and the transport.
+ * @slot bottom-end - The page's content over the canvas, bottom right, above the zoom buttons and the minimap.
+ */
+export class KgdiffViewer extends RootElement<ViewerController> implements KgdiffViewerElement {
   static get observedAttributes(): readonly string[] {
     return OBSERVED;
   }
 
-  /** @internal */
-  readonly controller: ViewerController;
-  readonly #shadow: ShadowRoot;
-  readonly #root: ViewerRoot;
   #ui: {
     root: HTMLElement;
     header: Header;
@@ -124,50 +96,52 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     menu: Menu;
     help: HelpDialog;
   } | null = null;
-  #currentPayload: ReportPayload | null = null;
-  #reflecting = false;
   #compact = false;
   readonly #cleanup: (() => void)[] = [];
-  #lastHash = '';
-  #upgraded = false;
-  /** A mouse or pen rests on the graph (holds a looping replay with `pause-on-hover`). */
-  #pointerOver = false;
+
+  // Panel states, from the first level that names a region (see `panels.ts`).
+  /** What the user changed in this page. */
+  readonly #runtime: MutablePanels = {};
+  /** The host's `panels`. */
+  #hostPanels: ViewerPanels = {};
+  /** The presets, from the attributes as the host set them (not as the layout reflects them). */
+  readonly #presetAttrs: Record<Preset, string | null> = {
+    sidebar: null,
+    header: null,
+    chrome: null,
+  };
+  #presets: ViewerPanels = {};
+  /** What the user chose before (`persist`), read at the first connection. */
+  #remembered: Remembered = { panels: {} };
+  /** The report's `view.panels`. */
+  #report: ViewerPanels = {};
+  #states: PanelStates = DEFAULT_PANELS;
+  /** The sidebar's regions that were open when the user folded it. */
+  #folded: readonly PanelRegion[] | null = null;
+  /** `kgdiff-layout` reports changes from the first connection on. */
+  #layoutReady = false;
+  readonly #storage = defaultStorage();
 
   constructor() {
     super();
-    this.#shadow = this.attachShadow({ mode: 'open' });
-    this.#root = new ViewerRoot(this, this.#shadow, this.#actions(), (type) => {
-      if (type === 'kgdiff-select' || type === 'kgdiff-mode') this.#writeHash();
-    });
-    this.controller = this.#root.controller;
-    this.controller.locale = toLocale(this.getAttribute('locale')) ?? detectLocale();
     // The layout renders first, then the regions in the order they bound to the root.
-    this.#root.attach({ update: (topics) => this.#update(topics) });
+    this.root.attach({ update: (topics) => this.#update(topics) });
   }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
-  connectedCallback(): void {
-    if (!this.#upgraded) {
-      this.#upgraded = true;
-      // Properties set before the element was defined shadow the accessors: re-apply them.
-      for (const prop of UPGRADED) {
-        if (Object.hasOwn(this, prop)) {
-          const value = (this as unknown as Record<string, unknown>)[prop];
-          delete (this as unknown as Record<string, unknown>)[prop];
-          (this as unknown as Record<string, unknown>)[prop] = value;
-        }
-      }
-    }
-    // Provide the session (the regions bind to it) and follow the system's preferences.
-    this.#cleanup.push(this.#root.connect());
+  protected connected(): void {
     if (!this.#ui) this.#build();
-    connected.push(this);
     const ui = this.#ui;
     if (!ui) return;
-    this.controller.attach(ui.stage.canvasHost, ui.stage.minimapHost);
+    if (!this.#layoutReady) {
+      this.#loadRemembered();
+      this.#layoutReady = true;
+    }
+    // The stage adds its own minimap to the view (unless a slotted one replaces it).
+    this.controller.attach(ui.stage.canvasHost, null);
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
-    const canvas = ui.stage.canvasHost.querySelector('canvas');
+    const canvas = this.#canvas();
     if (canvas) {
       canvas.tabIndex = this.chrome === 'none' ? -1 : 0;
       const focusCanvas = (): void => {
@@ -177,171 +151,104 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       this.#cleanup.push(() => canvas.removeEventListener('pointerdown', focusCanvas));
     }
     this.#watchSize();
-    const onKey = (e: KeyboardEvent): void => this.#onKeyDown(e);
-    document.addEventListener('keydown', onKey);
-    this.#cleanup.push(() => document.removeEventListener('keydown', onKey));
-    const onHash = (): void => this.#readHash();
-    window.addEventListener('hashchange', onHash);
-    this.#cleanup.push(() => window.removeEventListener('hashchange', onHash));
     this.controller.setChrome(() => ui.stage.chromeLayout());
     document.fonts?.ready?.then(() => this.#ui?.stage.layout()).catch(() => undefined);
-    this.#readHash();
-    this.#root.render(ALL_TOPICS);
   }
 
-  disconnectedCallback(): void {
-    const i = connected.indexOf(this);
-    if (i >= 0) connected.splice(i, 1);
+  protected disconnected(): void {
     for (const fn of this.#cleanup.splice(0)) fn();
     this.controller.detach();
-    // Moved while hovered: no pointerleave follows.
-    this.#pointerOver = false;
-    this.#applyHold();
   }
 
-  attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-    if (this.#reflecting) return;
+  protected override attributeChanged(
+    name: string,
+    value: string | null,
+    old: string | null,
+  ): void {
     switch (name) {
-      case 'mode':
-      case 'scope':
-      case 'theme':
-      case 'palette':
-      case 'locale':
-        this.#applyPreference(name, value, false);
-        break;
       case 'sidebar':
-        this.#applySidebar();
+        // The layout reflects the sidebar's state here (after `\`): the page changing the
+        // attribute from what it says now is a command, even back to what the page said
+        // before; setting what it already says is not.
+        this.#preset(name, value, value !== old);
         break;
-      case 'sync-hash':
-        if (value !== null) this.#readHash();
+      case 'header':
+        this.#preset(name, value);
         break;
       case 'chrome':
+        this.#preset(name, value);
+        this.#applyChrome();
+        break;
       case 'legend':
         this.#applyChrome();
         break;
-      case 'loop':
-      case 'loop-delay':
-        this.controller.setLoop(this.loop ? this.loopDelay : null);
-        this.#applyHold();
+      case 'panels': {
+        const { panels, invalid } = parsePanels(value ?? '');
+        warnPanels(invalid);
+        this.#setHostPanels(panels);
         break;
-      case 'pause-on-hover':
-        this.#applyHold();
+      }
+      case 'persist':
+      case 'persist-key':
+        // Turned on, or another store, in the page: what the user chose before there applies
+        // now, as a host change.
+        if (this.#layoutReady && this.persist === 'local') this.#remembered = this.#recall();
+        this.#resolve('host');
         break;
       default:
         break;
     }
   }
 
-  /**
-   * Apply a preference from an attribute or a property. Valid values are explicit (a report's
-   * `view` does not override them); invalid ones fall back to the default (`overlay`, `all`,
-   * `auto`, `default`, the browser's language). Properties reflect the normalized value; the
-   * legacy mode `changes` reflects as `overlay` + scope `changes`.
-   */
-  #applyPreference(
-    name: 'mode' | 'scope' | 'theme' | 'palette' | 'locale',
-    raw: unknown,
-    reflect: boolean,
-  ): void {
-    const c = this.controller;
-    // `mode="changes"` is rewritten to the attribute pair it stands for.
-    const legacy = name === 'mode' && raw === LEGACY_CHANGES_MODE;
-    let value: string | null;
-    switch (name) {
-      case 'mode': {
-        if (legacy) {
-          c.explicit.add('scope');
-          c.setView('overlay', 'changes');
-          value = 'overlay';
-          break;
-        }
-        const v = toMode(raw);
-        c.setMode(v ?? 'overlay');
-        value = v;
-        break;
-      }
-      case 'scope': {
-        const v = toScope(raw);
-        c.setScope(v ?? 'all');
-        // A locked scope stays `changes`: the attribute says what is shown.
-        value = v === null ? null : c.scope;
-        break;
-      }
-      case 'theme': {
-        const v = toTheme(raw);
-        c.setThemePreference(v ?? 'auto');
-        value = v;
-        break;
-      }
-      case 'palette': {
-        const v = toPalette(raw);
-        c.setPalette(v ?? 'default');
-        value = v;
-        break;
-      }
-      case 'locale': {
-        const v = toLocale(raw);
-        c.setLocale(v ?? detectLocale());
-        value = v;
-        break;
-      }
-      default:
-        return;
+  protected override upgradedProperties(): readonly string[] {
+    return ['chrome', 'legend', 'panels', 'persist', 'persistKey'];
+  }
+
+  protected sheets(doc: Document): readonly CSSStyleSheet[] {
+    return [stylesheet(doc)];
+  }
+
+  protected createSession(host: SessionHost, deps: SessionDeps): ViewerController {
+    return new ViewerController(host, deps);
+  }
+
+  protected override keysEnabled(): boolean {
+    return this.#ui !== null && this.chrome !== 'none';
+  }
+
+  protected override interceptKey(e: KeyboardEvent): boolean {
+    const ui = this.#ui;
+    if (!ui || !(ui.help.open || ui.menu.open)) return false;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      ui.help.hide();
+      this.#toggleMenu(false);
     }
-    if (value === null) c.explicit.delete(name);
-    else c.explicit.add(name);
-    if (reflect || legacy) this.#reflect(name, value);
-    if (legacy) this.#reflect('scope', c.scope);
+    return true;
+  }
+
+  protected override payloadSet(payload: ReportPayload): void {
+    // Validated (and warned about) once more when it loads.
+    this.#report = sanitizeView(payload.view, true)?.panels ?? {};
+    this.#resolve('host');
+  }
+
+  override load(options: LoadOptions): Promise<void> {
+    this.#report = {};
+    this.#resolve('host');
+    return super.load(options);
   }
 
   // ─── Properties ───────────────────────────────────────────────────────────
-
-  get mode(): ViewerMode {
-    return this.controller.mode;
-  }
-
-  set mode(value: ViewerMode | typeof LEGACY_CHANGES_MODE) {
-    this.#applyPreference('mode', value, true);
-  }
-
-  get scope(): ViewerScope {
-    return this.controller.scope;
-  }
-
-  set scope(value: ViewerScope) {
-    this.#applyPreference('scope', value, true);
-  }
-
-  get theme(): ThemePreference {
-    return this.controller.themePreference;
-  }
-
-  set theme(value: ThemePreference) {
-    this.#applyPreference('theme', value, true);
-  }
-
-  get palette(): PaletteName {
-    return this.controller.palette;
-  }
-
-  set palette(value: PaletteName) {
-    this.#applyPreference('palette', value, true);
-  }
-
-  get locale(): Locale {
-    return this.controller.locale;
-  }
-
-  set locale(value: Locale) {
-    this.#applyPreference('locale', value, true);
-  }
 
   get chrome(): ViewerChrome {
     return toChrome(this.getAttribute('chrome')) ?? 'full';
   }
 
   set chrome(value: ViewerChrome) {
-    this.#reflect('chrome', toChrome(value) === 'none' ? 'none' : null);
+    const v = toChrome(value) === 'none' ? 'none' : null;
+    this.reflect('chrome', v);
+    this.#preset('chrome', v);
     this.#applyChrome();
   }
 
@@ -351,134 +258,199 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
 
   set legend(value: ViewerLegend) {
     const v = toLegend(value);
-    this.#reflect('legend', v === 'auto' ? null : v);
+    this.reflect('legend', v === 'auto' ? null : v);
     this.#applyChrome();
   }
 
-  get loop(): boolean {
-    return this.hasAttribute('loop');
+  /** The host's declaration (the `panels` attribute as an object); `layout` has the states. */
+  get panels(): ViewerPanels {
+    return { ...this.#hostPanels };
   }
 
-  set loop(value: boolean) {
-    this.toggleAttribute('loop', Boolean(value));
+  set panels(value: ViewerPanels | string | null) {
+    const { panels, invalid } = toPanels(value);
+    warnPanels(invalid);
+    this.reflect('panels', formatPanels(panels) || null);
+    this.#setHostPanels(panels);
   }
 
-  get loopDelay(): number {
-    return toDelay(this.getAttribute('loop-delay')) ?? DEFAULT_LOOP_DELAY;
+  get persist(): 'local' | 'none' {
+    return this.getAttribute('persist') === 'none' ? 'none' : 'local';
   }
 
-  set loopDelay(value: number) {
-    const v = toDelay(value);
-    if (v === null) this.removeAttribute('loop-delay');
-    else this.setAttribute('loop-delay', String(v));
+  set persist(value: 'local' | 'none') {
+    if (value === 'none') this.setAttribute('persist', 'none');
+    else this.removeAttribute('persist');
   }
 
-  get pauseOnHover(): boolean {
-    return this.getAttribute('pause-on-hover') !== 'false';
+  /** Where the layout remembers (`persist-key`): a `localStorage` key, `kgdiff:viewer` by default. */
+  get persistKey(): string {
+    return this.getAttribute('persist-key') || LAYOUT_KEY;
   }
 
-  set pauseOnHover(value: boolean) {
-    if (value) this.removeAttribute('pause-on-hover');
-    else this.setAttribute('pause-on-hover', 'false');
+  set persistKey(value: string) {
+    if (!value || value === LAYOUT_KEY) this.removeAttribute('persist-key');
+    else this.setAttribute('persist-key', String(value));
   }
 
-  get payload(): ReportPayload | null {
-    return this.#currentPayload;
+  /** Every region's state and the sizes now, as `kgdiff-layout` reports them. */
+  get layout(): ViewerLayout {
+    const sidebar = this.#ui?.sidebar;
+    return {
+      panels: { ...this.#states },
+      sidebarWidth: sidebar?.width ?? SIDEBAR_WIDTH,
+      detailShare: sidebar?.detailShare ?? null,
+    };
   }
 
-  set payload(value: ReportPayload | null) {
-    this.#currentPayload = value;
-    if (value === null || value === undefined) return;
-    let payload: ReportPayload;
-    try {
-      payload = assertPayload(value);
-    } catch (error) {
-      this.controller.fail(error as Error);
-      return;
+  // ─── Panels ───────────────────────────────────────────────────────────────
+
+  /** Some region's state may have changed: apply the new states, and report them. */
+  #resolve(source: 'user' | 'host'): void {
+    const remembered = this.persist === 'local' ? this.#remembered.panels : {};
+    const next = resolvePanels([
+      this.#runtime,
+      this.#hostPanels,
+      this.#presets,
+      remembered,
+      this.#report,
+    ]);
+    if (samePanels(next, this.#states)) return;
+    this.#states = next;
+    this.#applyPanels();
+    if (this.#layoutReady) this.#emitLayout(source);
+  }
+
+  #emitLayout(source: 'user' | 'host'): void {
+    this.dispatchEvent(
+      new CustomEvent('kgdiff-layout', {
+        detail: { ...this.layout, source },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  /**
+   * The host declared `panels`. Where its value changed, what the user changed there in this
+   * page gives way; declaring the same again (a framework re-rendering, an attribute set to
+   * the value it has) leaves the user's change alone.
+   */
+  #setHostPanels(panels: ViewerPanels): void {
+    this.#yield(this.#hostPanels, panels);
+    this.#hostPanels = panels;
+    this.#resolve('host');
+  }
+
+  /**
+   * A preset attribute changed. `commanded` (`sidebar`, which the layout reflects): the
+   * sidebar's regions yield even when the preset the page set last is the same.
+   */
+  #preset(name: Preset, value: string | null, commanded = false): void {
+    this.#presetAttrs[name] = value;
+    const { sidebar, header, chrome } = this.#presetAttrs;
+    const next = presetPanels(sidebar, header, chrome);
+    const yielded = this.#yield(this.#presets, next);
+    if (commanded) {
+      for (const r of SIDEBAR_REGIONS) delete this.#runtime[r];
     }
-    this.controller.loadPayload(payload).catch(() => {
-      // Already surfaced: error state + `kgdiff-error`.
-    });
+    if (commanded || yielded.some((r) => SIDEBAR_REGIONS.includes(r))) this.#folded = null;
+    this.#presets = next;
+    this.#resolve('host');
   }
 
-  // ─── Methods ──────────────────────────────────────────────────────────────
-
-  load(options: LoadOptions): Promise<void> {
-    this.#currentPayload = null;
-    return this.controller.load(options);
+  /** Drop the user's in-page change of every region `before` and `after` disagree on. */
+  #yield(before: ViewerPanels, after: ViewerPanels): PanelRegion[] {
+    const changed = PANEL_REGIONS.filter((r) => before[r] !== after[r]);
+    for (const r of changed) delete this.#runtime[r];
+    return changed;
   }
 
-  selectHunk(id: string | null): void {
-    this.controller.selectHunkById(id, { fly: true });
+  /** The user changed some regions: they hold in this page, and are remembered. */
+  #userPanels(changes: ViewerPanels): void {
+    Object.assign(this.#runtime, changes);
+    this.#remember({ panels: { ...this.#remembered.panels, ...changes } });
+    this.#resolve('user');
   }
 
-  next(): void {
-    this.controller.next();
+  /** What the user chose before; theme, palette and language apply unless the host set them. */
+  #recall(): Remembered {
+    const r = readRemembered(this.#storage, this.persistKey);
+    // A preference the host set wins; one the user chose before wins over a report's view.
+    const c = this.controller;
+    if (r.theme && !this.hasAttribute('theme') && !c.explicit.has('theme')) {
+      c.setThemePreference(r.theme);
+      c.explicit.add('theme');
+    }
+    if (r.palette && !this.hasAttribute('palette') && !c.explicit.has('palette')) {
+      c.setPalette(r.palette);
+      c.explicit.add('palette');
+    }
+    if (r.locale && !this.hasAttribute('locale') && !c.explicit.has('locale')) {
+      c.setLocale(r.locale);
+      c.explicit.add('locale');
+    }
+    this.#ui?.sidebar.setSizes(r.sidebarWidth ?? SIDEBAR_WIDTH, r.detailShare ?? null, true);
+    return r;
   }
 
-  prev(): void {
-    this.controller.prev();
+  /** The first connection: the remembered states are the first ones (not a change, no event). */
+  #loadRemembered(): void {
+    if (this.persist !== 'local') return;
+    this.#remembered = this.#recall();
+    this.#resolve('host');
   }
 
-  play(): void {
-    this.controller.play();
+  /** Remember the user's choice (merged into what other viewers of this origin wrote). */
+  #remember(patch: Partial<Remembered>): void {
+    if (this.persist !== 'local') return;
+    const stored = readRemembered(this.#storage, this.persistKey);
+    const next: Remembered = {
+      ...stored,
+      ...patch,
+      panels: { ...stored.panels, ...(patch.panels ?? {}) },
+    };
+    this.#remembered = { ...this.#remembered, ...patch, panels: next.panels };
+    writeRemembered(this.#storage, next, this.persistKey);
   }
 
-  pause(): void {
-    this.controller.pause();
+  /** The user resized the sidebar or moved the split (once the drag or key press ended). */
+  #resized(width: number, detailShare: number | null): void {
+    this.#remember({ sidebarWidth: width, detailShare });
+    this.#emitLayout('user');
   }
 
-  fit(options?: FitOptions): Promise<void> {
-    return this.controller.fit(options);
+  #applyPanels(): void {
+    const ui = this.#ui;
+    if (!ui) return;
+    const s = this.#states;
+    ui.sidebar.setPanels(s);
+    ui.stage.setPanels(s);
+    const sidebar = SIDEBAR_REGIONS.some((r) => s[r] !== 'hidden');
+    // A `<kgdiff-title>` or `<kgdiff-actions>` slotted into the viewer replaces the HUD's.
+    const title = ui.stage.replaces('title') ? 'hidden' : s.title;
+    const actions = ui.stage.replaces('actions') ? 'hidden' : s.actions;
+    ui.header.setPanels(title, actions, sidebar, () => this.#canvas());
+    ui.header.setSidebarState(this.#sidebarOpen);
+    // The top corners sit under what the HUD shows there.
+    const hud = [title === 'open' ? 'title' : '', actions === 'open' ? 'actions' : ''];
+    ui.stage.el.dataset.hud = hud.filter(Boolean).join(' ');
   }
 
-  exportDelta(): Delta {
-    const diff = this.controller.diff;
-    if (!diff) throw new KgdiffError('invalid-input', translate('en', 'error.notLoaded'));
-    // A copy: callers can never mutate the diff the viewer shows.
-    return deepFreeze(structuredClone(diff.delta));
-  }
-
-  reviewState(): ReviewState {
-    return this.controller.reviewState();
-  }
-
-  setReviewed(hunkId: string, reviewed: boolean): void {
-    this.controller.setReviewed(hunkId, reviewed);
-  }
-
-  /** Show an error state (used for undecodable embedded payloads). */
-  showError(error: Error): void {
-    this.controller.fail(error);
+  #canvas(): HTMLElement | null {
+    return this.#ui?.stage.canvasHost.querySelector('canvas') ?? null;
   }
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
-  #reflect(name: string, value: string | null): void {
-    if (this.getAttribute(name) === value) return;
-    this.#reflecting = true;
-    try {
-      if (value === null) this.removeAttribute(name);
-      else this.setAttribute(name, value);
-    } finally {
-      this.#reflecting = false;
-    }
-  }
-
+  /** The sidebar is open while one of its regions is. */
   get #sidebarOpen(): boolean {
-    return this.getAttribute('sidebar') !== 'closed';
-  }
-
-  #applySidebar(): void {
-    const ui = this.#ui;
-    if (!ui) return;
-    ui.sidebar.setOpen(this.#sidebarOpen);
-    ui.header.setSidebarState(this.#sidebarOpen);
+    return SIDEBAR_REGIONS.some((r) => this.#states[r] === 'open');
   }
 
   /**
    * `chrome` and `legend`: what the stage shows, whether clicks select, whether the view stays
-   * fitted. The CSS hides the rest (`.root[data-chrome="none"]`).
+   * fitted. Which regions show is the `chrome="none"` preset's (see `panels.ts`).
    */
   #applyChrome(): void {
     const bare = this.chrome === 'none';
@@ -491,7 +463,7 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     ui.root.dataset.chrome = this.chrome;
     const legend = this.legend;
     ui.stage.setChrome(legend === 'auto' ? (bare ? 'mini' : 'full') : legend, !bare);
-    const canvas = ui.stage.canvasHost.querySelector('canvas');
+    const canvas = this.#canvas();
     if (canvas) canvas.tabIndex = bare ? -1 : 0;
     if (bare) {
       ui.help.hide();
@@ -499,52 +471,67 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     }
   }
 
-  /** Hold a looping replay while the pointer is over the graph (`pause-on-hover`). */
-  #applyHold(): void {
-    this.controller.hold(this.#pointerOver && this.loop && this.pauseOnHover);
-  }
-
   /** What the layout does for the regions: preferences reflect as attributes, panels open. */
-  #actions(): UiActions {
+  protected actions(): UiActions {
     return {
-      tr: () => translator(this.controller.locale),
-      setMode: (mode) => this.controller.setMode(mode),
-      toggleScope: () => this.controller.toggleScope(),
+      ...this.baseActions(),
       setThemePreference: (pref) => {
         this.theme = pref;
+        this.#remember({ theme: this.theme });
       },
       setPalette: (p) => {
         this.palette = p;
+        this.#remember({ palette: this.palette });
       },
       setLocale: (l) => {
         this.locale = l;
+        this.#remember({ locale: this.locale });
       },
       toggleSidebar: (open) => this.#toggleSidebar(open),
       sidebarOpen: () => this.#sidebarOpen,
+      hasSidebar: () => SIDEBAR_REGIONS.some((r) => this.#states[r] !== 'hidden'),
       toggleMenu: (open) => this.#toggleMenu(open),
       openHelp: () => this.#ui?.help.show(),
       focusSearch: () => this.#focusSearch(),
+      setPanel: (region, state) => this.#userPanels({ [region]: state }),
     };
   }
 
   #build(): void {
     const root = h('div', { class: 'root' });
-    this.#shadow.append(root);
+    this.shadow.append(root);
     // Each region binds to the root on its own (context protocol); the layout only places them.
     const header = bindRegion(root, (ui) => new Header(ui));
     const list = bindRegion(root, (ui) => new ChangeList(ui));
     const search = bindRegion(root, (ui) => new Search(ui));
     const filters = bindRegion(root, (ui) => new Filters(ui));
     const detail = bindRegion(root, (ui) => new Detail(ui));
-    const stage = bindRegion(root, (ui) => new Stage(ui));
-    const ui = uiContext(this.#root, this.#shadow);
+    // The stage's slots are the viewer's: the page's content goes over the canvas.
+    const stage = bindRegion(root, (ui) => new Stage(ui, true));
+    stage.view = this.controller.view;
+    stage.onReplaced = () => this.#applyPanels();
+    this.#provideStage(stage);
+    const ui = uiContext(this.root, this.shadow);
     const menu = new Menu(ui);
     const help = new HelpDialog(ui);
-    const sidebar = new Sidebar(ui.tr, list, search, filters, detail);
+    const sidebar = new Sidebar(
+      ui,
+      {
+        setPanel: (region, state) => this.#userPanels({ [region]: state }),
+        resized: (width, share) => this.#resized(width, share),
+        focusOutside: () => (isOpen(header.sidebarButton) ? header.sidebarButton : this.#canvas()),
+      },
+      list,
+      search,
+      filters,
+      detail,
+    );
     // The title and the actions float over the canvas; the menu drops from the actions.
     header.attachMenu(menu.el);
     stage.el.appendChild(header.el);
-    root.append(h('div', { class: 'body' }, stage.el, sidebar.el), help.el, this.#root.live);
+    root.append(h('div', { class: 'body' }, stage.el, sidebar.el), help.el, this.root.live);
+    // Content slotted before the layout was built.
+    stage.slotted();
     this.#ui = { root, header, stage, list, sidebar, menu, help };
     // Close the menu on outside clicks.
     root.addEventListener('pointerdown', (e) => {
@@ -554,29 +541,39 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     });
     const hover = (over: boolean) => (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
-      this.#pointerOver = over;
-      this.#applyHold();
+      this.pointerOver(over);
     };
     stage.el.addEventListener('pointerenter', hover(true));
     stage.el.addEventListener('pointerleave', hover(false));
-    this.#applySidebar();
+    sidebar.setSizes(SIDEBAR_WIDTH, null, true);
+    this.#applyPanels();
     this.#applyChrome();
+  }
+
+  /**
+   * The viewer is the stage of the chrome that acts on a view (`<kgdiff-zoom>`,
+   * `<kgdiff-minimap>`) inside it or naming it with `stage`: its built-in stage's view.
+   */
+  #provideStage(stage: Stage): void {
+    const view = this.controller.view;
+    const ctx: StageViewContext = {
+      stage: this,
+      root: this.root,
+      view,
+      registerObstacle: (el) => stage.registerObstacle(el),
+      watchView: (listener) => {
+        listener(view);
+        return () => undefined;
+      },
+    };
+    provideContext(this, stageContext, () => ctx);
   }
 
   /** The layout's part of a render (the root renders the regions after it). */
   #update(topics: ReadonlySet<Topic>): void {
     const ui = this.#ui;
     const c = this.controller;
-    if (topics.has('mode')) {
-      this.#reflect('mode', c.mode);
-      this.#reflect('scope', c.scope);
-    }
-    if (topics.has('theme')) {
-      this.#reflect(
-        'theme',
-        c.themePreference === 'auto' && !this.hasAttribute('theme') ? null : c.themePreference,
-      );
-    }
+    this.reflectSession(topics);
     if (!ui) return;
     if (topics.has('theme') || topics.has('status')) ui.root.dataset.theme = c.themeName;
     if (topics.has('locale') || topics.has('status')) {
@@ -592,10 +589,27 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     }
   }
 
+  /**
+   * Fold the sidebar (its open regions collapse) or open it again (the regions that were open,
+   * or all four). Reflected to the `sidebar` attribute.
+   */
   #toggleSidebar(open?: boolean): void {
+    const s = this.#states;
+    const shown = SIDEBAR_REGIONS.filter((r) => s[r] !== 'hidden');
+    if (shown.length === 0) return;
     const next = open ?? !this.#sidebarOpen;
-    this.#reflect('sidebar', next ? 'open' : 'closed');
-    this.#applySidebar();
+    this.reflect('sidebar', next ? 'open' : 'closed');
+    if (next === this.#sidebarOpen) return;
+    const changes: MutablePanels = {};
+    if (next) {
+      const restore = this.#folded?.filter((r) => shown.includes(r)) ?? [];
+      for (const r of restore.length > 0 ? restore : shown) changes[r] = 'open';
+      this.#folded = null;
+    } else {
+      this.#folded = shown.filter((r) => s[r] === 'open');
+      for (const r of shown) changes[r] = 'collapsed';
+    }
+    this.#userPanels(changes);
   }
 
   #toggleMenu(open?: boolean): void {
@@ -607,9 +621,13 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
     ui.header.setMenuState(next);
   }
 
+  /** `/`: an open search takes focus; else this layout's search opens, unless it is hidden. */
   #focusSearch(): void {
+    if (this.root.focus('search')) return;
+    if (this.#states.search === 'hidden') return;
     if (!this.#sidebarOpen) this.#toggleSidebar(true);
-    this.#root.focus('search');
+    if (this.#states.search === 'collapsed') this.#userPanels({ search: 'open' });
+    this.root.focus('search');
   }
 
   #watchSize(): void {
@@ -626,72 +644,12 @@ export class KgdiffViewer extends HTMLElement implements KgdiffViewerElement {
       }
       ui.stage.layout();
       ui.list.renderWindow();
-      if (compact) ui.sidebar.syncSheet();
+      ui.sidebar.layout(compact);
       this.controller.layoutChanged();
     });
     ro.observe(this);
     // The canvas also changes size without the element (chrome shown or hidden).
     if (this.#ui) ro.observe(this.#ui.stage.el);
     this.#cleanup.push(() => ro.disconnect());
-  }
-
-  #onKeyDown(e: KeyboardEvent): void {
-    if (e.defaultPrevented || e.isComposing) return;
-    const ui = this.#ui;
-    if (!ui || this.chrome === 'none') return;
-    const path = e.composedPath();
-    if (!path.includes(this)) {
-      // Outside the component only with `global-shortcuts`, when nothing else has focus, for
-      // the first such viewer, and never the keys pages scroll with.
-      if (!this.hasAttribute('global-shortcuts') || PAGE_KEYS.has(e.key)) return;
-      const active = document.activeElement;
-      if (active && active !== document.body && active !== document.documentElement) return;
-      if (connected.find((v) => v.hasAttribute('global-shortcuts')) !== this) return;
-    }
-    if (ui.help.open || ui.menu.open) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        ui.help.hide();
-        this.#toggleMenu(false);
-      }
-      return;
-    }
-    this.#root.handleKey(e);
-  }
-
-  // ─── Deep links ───────────────────────────────────────────────────────────
-
-  #readHash(): void {
-    if (!this.hasAttribute('sync-hash') || typeof location === 'undefined') return;
-    if (location.hash === this.#lastHash) return;
-    const state = parseHash(location.hash);
-    this.#lastHash = location.hash;
-    if (!state) return;
-    if (state.mode || state.scope) {
-      // A deep link outranks the large-graph default and a report's preferred view.
-      const c = this.controller;
-      if (state.mode) c.explicit.add('mode');
-      if (state.scope) c.explicit.add('scope');
-      c.setView(state.mode ?? c.mode, state.scope ?? c.scope);
-    }
-    if (state.hunk) this.controller.selectHunkById(state.hunk, { fly: true });
-  }
-
-  #writeHash(): void {
-    if (!this.hasAttribute('sync-hash') || typeof location === 'undefined') return;
-    const c = this.controller;
-    const hunk = c.selectedHunk >= 0 ? c.scene?.hunks[c.selectedHunk]?.id : undefined;
-    const hash = formatHash({
-      ...(hunk !== undefined ? { hunk } : {}),
-      mode: c.mode,
-      scope: c.scope,
-    });
-    if (hash === location.hash) return;
-    this.#lastHash = hash;
-    try {
-      history.replaceState(history.state, '', hash);
-    } catch {
-      location.hash = hash;
-    }
   }
 }

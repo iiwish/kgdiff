@@ -15,7 +15,11 @@
       "!conformance/cases",
       "!conformance/primitives",
       "!conformance/manifest.json",
-      "!.changeset/*.md"
+      "!.changeset/*.md",
+      "!packages/viewer/custom-elements.json",
+      "!docs/viewer-elements.md",
+      "!docs/zh/viewer-elements.md",
+      "!packages/viewer/vscode.html-custom-data.json"
     ]
   },
   "formatter": {
@@ -46,5 +50,18 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.svelte", "**/*.vue"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

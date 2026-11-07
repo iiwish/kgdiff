@@ -11,9 +11,12 @@
 import { contrastRatio, type Theme } from '@kgdiff/scene';
 import { FAMILIES, sheetFor } from './styles.js';
 
-/** Token (after `--kgdiff-`) → where its value lives in a `Theme`. */
-const TOKENS: readonly (readonly [token: string, path: string])[] = [
-  ['bg', 'canvas.background'],
+/**
+ * The public tokens (after `--kgdiff-`), each with where its value lives in a `Theme`: the
+ * manifest's CSS custom properties are generated from this list.
+ */
+export const TOKENS: readonly (readonly [token: string, path: string])[] = [
+  ['background', 'canvas.background'],
   ['grid', 'canvas.grid'],
   ['panel', 'surface.panel'],
   ['raised', 'surface.raised'],
@@ -23,8 +26,8 @@ const TOKENS: readonly (readonly [token: string, path: string])[] = [
   ['control-border', 'surface.controlBorder'],
   ['shadow', 'surface.shadow'],
   ['text', 'text.primary'],
-  ['text-2', 'text.secondary'],
-  ['text-3', 'text.muted'],
+  ['text-secondary', 'text.secondary'],
+  ['text-muted', 'text.muted'],
   ['accent', 'accent.base'],
   ['accent-strong', 'accent.strong'],
   ['accent-soft', 'accent.soft'],
@@ -34,7 +37,7 @@ const TOKENS: readonly (readonly [token: string, path: string])[] = [
   ['neutral-edge', 'neutral.edge'],
   ['neutral-label', 'neutral.label'],
   ['font', 'font.family'],
-  ['mono', 'font.mono'],
+  ['font-mono', 'font.mono'],
   ...FAMILIES.flatMap((f) => [
     [f, `family.${f}.base`] as const,
     [`${f}-strong`, `family.${f}.strong`] as const,
@@ -44,7 +47,7 @@ const TOKENS: readonly (readonly [token: string, path: string])[] = [
 ];
 
 /** Tokens that are not colors (taken as they are). */
-const VERBATIM: ReadonlySet<string> = new Set(['shadow', 'font', 'mono']);
+export const VERBATIM: ReadonlySet<string> = new Set(['shadow', 'font', 'font-mono']);
 
 type Tree = { readonly [key: string]: unknown };
 

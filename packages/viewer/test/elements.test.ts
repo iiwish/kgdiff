@@ -1,0 +1,530 @@
+/**
+ * The public elements (RFC 0001 §3, phase 2): binding in every topology, the stage's slots as
+ * obstacles, the root's keyboard map (forwarding, `shortcuts`, `keymap`), the `search` focus
+ * target and the change list stepping aside, tokens for elements outside the root.
+ */
+import { getTheme } from '@kgdiff/scene';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { requestContext } from '../src/context.js';
+import { stageContext } from '../src/elements/stage.js';
+import type { ChromeLayout } from '../src/framing.js';
+import { DiffSession } from '../src/session.js';
+import { StageView } from '../src/view.js';
+import '../src/index.js';
+import type { KgdiffRootElement, KgdiffStageElement } from '../src/index.js';
+import { LAYOUT_KEY } from '../src/layout-store.js';
+import { setRenderBackend } from '../src/renderer-port.js';
+import { tokenSheet } from '../src/theme.js';
+import { mockBackend, tick, until, zoo } from './support.js';
+
+let backend: ReturnType<typeof mockBackend>;
+
+beforeEach(() => {
+  backend = mockBackend();
+  setRenderBackend(backend);
+  localStorage.clear();
+});
+
+afterEach(() => {
+  document.body.textContent = '';
+  setRenderBackend(null);
+  vi.restoreAllMocks();
+});
+
+type Root = KgdiffRootElement & { controller: DiffSession };
+
+/** Build `html` in the body; returns the element of `selector`. */
+function place<T extends Element = HTMLElement>(html: string, selector = 'kgdiff-root'): T {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  document.body.append(tpl.content);
+  return document.querySelector(selector) as T;
+}
+
+async function loaded(root: Root): Promise<void> {
+  await root.load(zoo());
+  await tick();
+}
+
+const rows = (el: Element): number => el.shadowRoot?.querySelectorAll('.row').length ?? 0;
+
+function press(target: EventTarget, key: string): KeyboardEvent {
+  const e = new KeyboardEvent('keydown', { key, bubbles: true, composed: true, cancelable: true });
+  target.dispatchEvent(e);
+  return e;
+}
+
+/** The element focused, through shadow roots. */
+function focused(): Element | null {
+  let at = document.activeElement;
+  while (at?.shadowRoot?.activeElement) at = at.shadowRoot.activeElement;
+  return at;
+}
+
+describe('binding', () => {
+  it('binds a child, and one inside another component’s shadow root', async () => {
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-change-list></kgdiff-change-list><section id="host"></section></kgdiff-root>',
+    );
+    const host = document.getElementById('host') as HTMLElement;
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = '<div><kgdiff-change-detail></kgdiff-change-detail></div>';
+    await loaded(root);
+    expect(rows(document.querySelector('kgdiff-change-list') as Element)).toBeGreaterThan(0);
+    root.next();
+    root.controller.flush();
+    const detail = shadow.querySelector('kgdiff-change-detail') as Element;
+    expect(detail.shadowRoot?.querySelector('.d-title')?.textContent).not.toBe('');
+  });
+
+  it('binds through for= to a root elsewhere on the page, and to a root that comes later', async () => {
+    place('<aside><kgdiff-change-list for="later"></kgdiff-change-list></aside>', 'aside');
+    const list = document.querySelector('kgdiff-change-list') as Element;
+    expect(list.shadowRoot?.childElementCount).toBe(0);
+    const root = place<Root>('<main><kgdiff-root id="later"></kgdiff-root></main>');
+    await loaded(root);
+    expect(rows(list)).toBeGreaterThan(0);
+  });
+
+  it('binds children of a root that joins the document later', async () => {
+    const root = document.createElement('kgdiff-root') as Root;
+    const list = document.createElement('kgdiff-change-list');
+    root.append(list);
+    const wrapper = document.createElement('div');
+    wrapper.append(root);
+    // Connected inside a wrapper that joins the document later.
+    document.body.append(wrapper);
+    await loaded(root);
+    expect(rows(list)).toBeGreaterThan(0);
+  });
+
+  it('keeps two roots on one page apart: lists, keys and announcements', async () => {
+    place(`
+      <kgdiff-root id="a"><kgdiff-change-list></kgdiff-change-list></kgdiff-root>
+      <kgdiff-root id="b"><kgdiff-change-list></kgdiff-change-list></kgdiff-root>`);
+    const [a, b] = [...document.querySelectorAll('kgdiff-root')] as Root[];
+    if (!a || !b) throw new Error('two roots');
+    await Promise.all([loaded(a), loaded(b)]);
+    const listA = a.querySelector('kgdiff-change-list') as Element;
+    const listB = b.querySelector('kgdiff-change-list') as Element;
+    const listbox = listA.shadowRoot?.querySelector('.list') as HTMLElement;
+    press(listbox, 'j');
+    press(listbox, 'j');
+    expect(a.controller.selectedHunk).toBeGreaterThanOrEqual(0);
+    expect(b.controller.selectedHunk).toBe(-1);
+    await tick(60);
+    const announced = (r: Element): string =>
+      r.shadowRoot?.querySelector('[aria-live]')?.textContent ?? '';
+    expect(announced(a)).toMatch(/^Change 2 of \d+: /);
+    expect(announced(b)).toBe('');
+    expect(rows(listB)).toBeGreaterThan(0);
+  });
+
+  it('binds again when for changes, and to <kgdiff-viewer> too', async () => {
+    place('<kgdiff-viewer id="v"></kgdiff-viewer><kgdiff-root id="r"></kgdiff-root>', 'body');
+    const viewer = document.getElementById('v') as Root;
+    const root = document.getElementById('r') as Root;
+    await Promise.all([loaded(viewer), loaded(root)]);
+    const detail = document.createElement('kgdiff-change-detail');
+    detail.setAttribute('for', 'v');
+    document.body.append(detail);
+    viewer.next();
+    viewer.controller.flush();
+    const title = (): string | null | undefined =>
+      detail.shadowRoot?.querySelector('.d-title')?.textContent;
+    expect(title()).toBeTruthy();
+    detail.setAttribute('for', 'r');
+    // The other root has nothing selected.
+    expect(detail.shadowRoot?.querySelector('.d-title')).toBeNull();
+    root.next();
+    root.controller.flush();
+    expect(title()).toBeTruthy();
+  });
+
+  it('reflects for as htmlFor, and names the root it is bound to (null while waiting)', async () => {
+    place('<kgdiff-change-list></kgdiff-change-list>', 'kgdiff-change-list');
+    const list = document.querySelector(
+      'kgdiff-change-list',
+    ) as HTMLElementTagNameMap['kgdiff-change-list'];
+    expect(list.htmlFor).toBe('');
+    list.htmlFor = 'two';
+    expect(list.getAttribute('for')).toBe('two');
+    expect(list.rootElement).toBeNull();
+    const two = place<Root>('<kgdiff-root id="two"></kgdiff-root>', '#two');
+    expect(list.rootElement).toBe(two);
+    const one = place<Root>('<kgdiff-root id="one"></kgdiff-root>', '#one');
+    list.setAttribute('for', 'one');
+    expect(list.htmlFor).toBe('one');
+    expect(list.rootElement).toBe(one);
+    // '' is the nearest root: no attribute.
+    list.htmlFor = '';
+    expect(list.hasAttribute('for')).toBe(false);
+    list.remove();
+    expect(list.rootElement).toBeNull();
+  });
+
+  it('gives elements outside the root its token set; inside they inherit it', async () => {
+    place(`<kgdiff-root id="t" theme="light"><kgdiff-filters></kgdiff-filters></kgdiff-root>
+      <kgdiff-filters for="t" id="out"></kgdiff-filters>`);
+    const root = document.getElementById('t') as Root;
+    await loaded(root);
+    const light = tokenSheet(getTheme('light'), document);
+    const sheets = (id: string | null): readonly CSSStyleSheet[] =>
+      (id ? document.getElementById(id) : root.querySelector('kgdiff-filters'))?.shadowRoot
+        ?.adoptedStyleSheets ?? [];
+    expect(sheets('out')).toContain(light);
+    expect(sheets(null)).not.toContain(light);
+    root.theme = 'dark';
+    await tick();
+    expect(sheets('out')).toContain(tokenSheet(getTheme('dark'), document));
+  });
+});
+
+describe('<kgdiff-stage>', () => {
+  /** The chrome layout the stage gives the controller (framing reads it at every fit). */
+  function chromeOf(): () => ChromeLayout {
+    let provider: (() => ChromeLayout) | null = null;
+    vi.spyOn(StageView.prototype, 'setChrome').mockImplementation((p) => {
+      if (p) provider = p;
+    });
+    return () => {
+      if (!provider) throw new Error('no chrome layout');
+      return provider();
+    };
+  }
+
+  const rect = (el: Element, x: number, y: number, w: number, h: number): void => {
+    el.getBoundingClientRect = () => new DOMRect(x, y, w, h);
+  };
+
+  it('draws the root’s canvas and keeps slotted content clear of fits and flights', async () => {
+    const chrome = chromeOf();
+    const root = place<Root>(`<kgdiff-root><kgdiff-stage>
+      <div slot="top-end" id="card">card</div><span slot="bogus">no slot</span>
+    </kgdiff-stage></kgdiff-root>`);
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    expect(stage.shadowRoot?.querySelector('canvas')).not.toBeNull();
+    const names = [...(stage.shadowRoot?.querySelectorAll('slot') ?? [])].map((s) => s.name);
+    expect(names.sort()).toEqual([
+      'bottom-center',
+      'bottom-end',
+      'bottom-start',
+      'top-end',
+      'top-start',
+    ]);
+    rect(stage.shadowRoot?.querySelector('.stage-wrap') as Element, 100, 50, 800, 600);
+    rect(document.getElementById('card') as Element, 640, 62, 248, 120);
+    expect(chrome().obstacles).toContainEqual({ x: 540, y: 12, width: 248, height: 120 });
+  });
+
+  it('takes obstacles registered on the element and through the stage context', async () => {
+    const chrome = chromeOf();
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-stage><p id="deep"></p></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    const floating = document.createElement('div');
+    document.body.append(floating);
+    // Registered before the stage is bound: kept.
+    const off = stage.registerObstacle(floating);
+    await loaded(root);
+    rect(stage.shadowRoot?.querySelector('.stage-wrap') as Element, 0, 0, 800, 600);
+    rect(floating, 10, 20, 30, 40);
+    const deep = document.getElementById('deep') as HTMLElement;
+    rect(deep, 400, 300, 50, 50);
+    let viaContext: (() => void) | undefined;
+    requestContext(deep, stageContext, (ctx) => {
+      viaContext = ctx.registerObstacle(deep);
+    });
+    expect(viaContext).toBeTypeOf('function');
+    expect(chrome().obstacles).toEqual(
+      expect.arrayContaining([
+        { x: 10, y: 20, width: 30, height: 40 },
+        { x: 400, y: 300, width: 50, height: 50 },
+      ]),
+    );
+    off();
+    viaContext?.();
+    expect(chrome().obstacles).toEqual([]);
+  });
+
+  it('releases what it added to the canvas when it unbinds', async () => {
+    const added = vi.spyOn(HTMLCanvasElement.prototype, 'addEventListener');
+    const removed = vi.spyOn(HTMLCanvasElement.prototype, 'removeEventListener');
+    const root = place<Root>('<kgdiff-root><kgdiff-stage></kgdiff-stage></kgdiff-root>');
+    const stage = root.querySelector('kgdiff-stage') as Element;
+    const downs = (spy: typeof added): unknown[] =>
+      spy.mock.calls.filter(([type]) => type === 'pointerdown').map(([, fn]) => fn);
+    expect(downs(added)).toHaveLength(1);
+    stage.remove();
+    expect(downs(removed)).toEqual(downs(added));
+  });
+
+  it('turns its chrome regions open, collapsed or hidden with panels', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-stage panels="minimap:hidden zoom:hidden list:hidden"></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    const $s = (sel: string): HTMLElement => stage.shadowRoot?.querySelector(sel) as HTMLElement;
+    expect(warn).toHaveBeenCalledOnce();
+    expect(String(warn.mock.calls[0]?.[0])).toContain('list:hidden');
+    expect(stage.panels).toEqual({ minimap: 'hidden', zoom: 'hidden' });
+    expect($s('.minimap-host').dataset.panel).toBe('hidden');
+    expect($s('.zoom-bar').dataset.panel).toBe('hidden');
+    expect($s('.dock-bar').dataset.panel).toBe('open');
+    expect($s('.legend').dataset.open).toBe('false');
+    stage.panels = { dock: 'hidden', transport: 'hidden' };
+    expect(stage.getAttribute('panels')).toBe('dock:hidden transport:hidden');
+    expect($s('.dock-bar').dataset.panel).toBe('hidden');
+    expect($s('.minimap-host').dataset.panel).toBe('open');
+  });
+
+  it('keeps the user’s legend while the page declares the same panels again', async () => {
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-stage panels="legend:collapsed"></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    const legend = stage.shadowRoot?.querySelector('.legend') as HTMLElement;
+    const head = stage.shadowRoot?.querySelector('.legend-head') as HTMLButtonElement;
+    head.click();
+    expect(legend.dataset.open).toBe('true');
+    stage.setAttribute('panels', 'legend:collapsed');
+    stage.panels = { legend: 'collapsed' };
+    expect(legend.dataset.open).toBe('true');
+    stage.panels = { legend: 'hidden' };
+    expect(legend.dataset.panel).toBe('hidden');
+  });
+
+  it('draws several stages of one root, each with its own view of the shared session', async () => {
+    const root = place<Root>(
+      '<kgdiff-root><kgdiff-stage id="s1"></kgdiff-stage><kgdiff-stage id="s2"></kgdiff-stage></kgdiff-root>',
+    );
+    await loaded(root);
+    // The root itself has no canvas: each stage brings its own.
+    expect(root.controller).toBeInstanceOf(DiffSession);
+    expect(backend.renderers).toHaveLength(2);
+    const [a, b] = backend.renderers;
+    if (!a || !b) throw new Error('two renderers');
+    expect(a.canvas.isConnected && b.canvas.isConnected).toBe(true);
+    // A selection is shared: both canvases bring it into view.
+    root.next();
+    expect(a.camera.flights.length).toBeGreaterThan(0);
+    expect(b.camera.flights.length).toBe(a.camera.flights.length);
+    // fit() reaches every view; a stage that leaves takes its view along.
+    const [fitsA, fitsB] = [a.camera.fits, b.camera.fits];
+    await root.fit({ animate: false });
+    expect([a.camera.fits, b.camera.fits]).toEqual([fitsA + 1, fitsB + 1]);
+    document.getElementById('s2')?.remove();
+    expect(b.destroyed).toBe(true);
+    root.next();
+    expect(b.camera.flights.length).toBeLessThan(a.camera.flights.length);
+  });
+
+  it('pins a stage to one version with version, both ways, whatever the mode', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const layers = vi.spyOn(DiffSession.prototype, 'viewState');
+    const root = place<Root>(
+      '<kgdiff-root mode="swipe"><kgdiff-stage version="before"></kgdiff-stage></kgdiff-root>',
+    );
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    await tick(20);
+    expect(stage.version).toBe('before');
+    expect(layers.mock.calls.map(([layer]) => layer)).toContain('before');
+    expect(layers.mock.calls.map(([layer]) => layer)).not.toContain('after');
+    const $s = (sel: string): HTMLElement => stage.shadowRoot?.querySelector(sel) as HTMLElement;
+    // No divider on a pinned stage; a chip names the version.
+    expect($s('.swipe').hidden).toBe(true);
+    expect($s('.version-chip').hidden).toBe(false);
+    expect($s('.version-chip').textContent).toBe('Before');
+    stage.version = 'after';
+    expect(stage.getAttribute('version')).toBe('after');
+    expect($s('.version-chip').textContent).toBe('After');
+    stage.setAttribute('version', 'middle');
+    expect(warn).toHaveBeenCalledOnce();
+    expect(stage.version).toBeNull();
+    expect($s('.version-chip').hidden).toBe(true);
+    expect($s('.swipe').hidden).toBe(false);
+    stage.version = null;
+    expect(stage.hasAttribute('version')).toBe(false);
+  });
+});
+
+describe('keyboard', () => {
+  it('forwards keys from elements bound with for to their root', async () => {
+    place(`<kgdiff-root id="k"><kgdiff-stage></kgdiff-stage></kgdiff-root>
+      <nav><kgdiff-change-list for="k"></kgdiff-change-list></nav>`);
+    const root = document.getElementById('k') as Root;
+    await loaded(root);
+    const list = document.querySelector('kgdiff-change-list') as Element;
+    const listbox = list.shadowRoot?.querySelector('.list') as HTMLElement;
+    press(listbox, 'j');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[0]);
+    press(listbox, 'j');
+    press(listbox, 'k');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[0]);
+    press(listbox, '2');
+    expect(root.mode).toBe('swipe');
+  });
+
+  it('focuses the search registered last that is shown, on /', async () => {
+    place(`<kgdiff-root id="s"><kgdiff-stage></kgdiff-stage></kgdiff-root>
+      <header><kgdiff-search for="s" id="one"></kgdiff-search></header>`);
+    const root = document.getElementById('s') as Root;
+    await loaded(root);
+    const canvas = root
+      .querySelector('kgdiff-stage')
+      ?.shadowRoot?.querySelector('canvas') as HTMLElement;
+    const input = (id: string): HTMLInputElement =>
+      document.getElementById(id)?.shadowRoot?.querySelector('input') as HTMLInputElement;
+    press(canvas, '/');
+    expect(focused()).toBe(input('one'));
+    const two = document.createElement('kgdiff-search');
+    two.id = 'two';
+    two.setAttribute('for', 's');
+    document.body.append(two);
+    press(canvas, '/');
+    expect(focused()).toBe(input('two'));
+    two.hidden = true;
+    press(canvas, '/');
+    expect(focused()).toBe(input('one'));
+    two.remove();
+    document.getElementById('one')?.remove();
+    // No search on the page: nothing happens.
+    canvas.focus();
+    expect(() => press(canvas, '/')).not.toThrow();
+  });
+
+  it('lets the change list step aside while the session has a search', async () => {
+    const root = place<Root>(`<kgdiff-root><kgdiff-search></kgdiff-search>
+      <kgdiff-change-list></kgdiff-change-list></kgdiff-root>`);
+    await loaded(root);
+    const search = root.querySelector('kgdiff-search') as Element;
+    const list = root.querySelector('kgdiff-change-list') as Element;
+    const input = search.shadowRoot?.querySelector('input') as HTMLInputElement;
+    const listbox = list.shadowRoot?.querySelector('.list') as HTMLElement;
+    input.value = 'gecko';
+    input.dispatchEvent(new Event('input'));
+    expect(listbox.hidden).toBe(true);
+    const results = search.shadowRoot?.querySelector('#kg-results') as HTMLElement;
+    expect(results.hidden).toBe(false);
+    expect(input.getAttribute('aria-controls')).toBe('kg-results');
+    expect(input.getAttribute('aria-activedescendant')).toBe('kg-hit-0');
+    // Choosing a hit selects it and moves focus to the list, through the root.
+    press(input, 'Enter');
+    await until(() => root.controller.selectedNode >= 0 || root.controller.selectedHunk >= 0);
+    expect(listbox.hidden).toBe(false);
+    expect(focused()).toBe(listbox);
+  });
+
+  it('applies shortcuts="global" (and the global-shortcuts alias) and shortcuts="none"', async () => {
+    const root = place<Root>(
+      '<kgdiff-root shortcuts="global"><kgdiff-change-list></kgdiff-change-list></kgdiff-root>',
+    );
+    await loaded(root);
+    expect(root.shortcuts).toBe('global');
+    press(document.body, '2');
+    expect(root.mode).toBe('swipe');
+    root.removeAttribute('shortcuts');
+    root.setAttribute('global-shortcuts', '');
+    expect(root.shortcuts).toBe('global');
+    press(document.body, '3');
+    expect(root.mode).toBe('replay');
+    root.shortcuts = 'none';
+    press(document.body, '1');
+    const listbox = root
+      .querySelector('kgdiff-change-list')
+      ?.shadowRoot?.querySelector('.list') as HTMLElement;
+    press(listbox, '1');
+    expect(root.mode).toBe('replay');
+    // A focused list keeps its own keys.
+    press(listbox, 'ArrowDown');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[0]);
+    root.shortcuts = 'scoped';
+    press(document.body, '1');
+    expect(root.mode).toBe('replay');
+    press(listbox, '1');
+    expect(root.mode).toBe('overlay');
+  });
+
+  it('rebinds and unbinds single keys with keymap, as data', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const root = place<Root>(
+      '<kgdiff-root keymap="j:none n:next Space:fit q:bogus"><kgdiff-change-list></kgdiff-change-list></kgdiff-root>',
+    );
+    await loaded(root);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(root.keymap).toEqual({ j: null, n: 'next', ' ': 'fit' });
+    const listbox = root
+      .querySelector('kgdiff-change-list')
+      ?.shadowRoot?.querySelector('.list') as HTMLElement;
+    press(listbox, 'j');
+    expect(root.controller.selectedHunk).toBe(-1);
+    press(listbox, 'n');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[0]);
+    root.keymap = { k: null };
+    expect(root.keymap).toEqual({ k: null });
+    press(listbox, 'j');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[1]);
+    press(listbox, 'k');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[1]);
+    root.keymap = null;
+    press(listbox, 'k');
+    expect(root.controller.selectedHunk).toBe(root.controller.list.order[0]);
+  });
+
+  it('keeps a key forwarded to the bound root from the root the element sits in', async () => {
+    place(`<kgdiff-root id="a"><kgdiff-change-list for="b"></kgdiff-change-list></kgdiff-root>
+      <kgdiff-root id="b"></kgdiff-root>`);
+    const a = document.getElementById('a') as Root;
+    const b = document.getElementById('b') as Root;
+    await loaded(a);
+    // B is still loading: it takes no navigation key, and A must not take it either.
+    const loading = b.load(zoo());
+    expect(b.controller.status).toBe('loading');
+    const list = a.querySelector('kgdiff-change-list') as Element;
+    const e = press(list.shadowRoot?.querySelector('.list') as HTMLElement, 'j');
+    expect(e.defaultPrevented).toBe(false);
+    expect(a.controller.selectedHunk).toBe(-1);
+    await loading;
+    await tick();
+    press(list.shadowRoot?.querySelector('.list') as HTMLElement, 'j');
+    expect(b.controller.selectedHunk).toBe(b.controller.list.order[0]);
+    expect(a.controller.selectedHunk).toBe(-1);
+  });
+
+  it('takes keys inside a nested root for the nearest root only', async () => {
+    const outer = place<Root>(`<kgdiff-root id="outer"><kgdiff-root id="inner">
+      <kgdiff-change-list></kgdiff-change-list></kgdiff-root></kgdiff-root>`);
+    const inner = document.getElementById('inner') as Root;
+    await Promise.all([loaded(outer), loaded(inner)]);
+    const listbox = inner
+      .querySelector('kgdiff-change-list')
+      ?.shadowRoot?.querySelector('.list') as HTMLElement;
+    press(listbox, '2');
+    expect([inner.mode, outer.mode]).toEqual(['swipe', 'overlay']);
+  });
+});
+
+describe('<kgdiff-root>', () => {
+  it('has the methods and events of a root, refreshTheme, and remembers nothing', async () => {
+    const root = place<Root>('<kgdiff-root><kgdiff-stage></kgdiff-stage></kgdiff-root>');
+    const ready = vi.fn();
+    root.addEventListener('kgdiff-ready', ready);
+    await loaded(root);
+    expect(ready).toHaveBeenCalledOnce();
+    expect(root.reviewState().total).toBeGreaterThan(0);
+    root.style.setProperty('--kgdiff-accent', '#ff00ff');
+    root.refreshTheme();
+    await tick();
+    expect(backend.last().theme.accent.base).toBe('#ff00ff');
+    const stage = root.querySelector('kgdiff-stage') as Element;
+    press(stage.shadowRoot?.querySelector('canvas') as HTMLElement, 't');
+    expect(root.theme).toBe('light');
+    expect(localStorage.getItem(LAYOUT_KEY)).toBeNull();
+  });
+});
