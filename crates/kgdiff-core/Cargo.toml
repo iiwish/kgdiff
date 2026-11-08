@@ -13,9 +13,13 @@ keywords = ["kgdiff", "diff", "knowledge-graph", "ontology", "graph"]
 categories = ["algorithms", "data-structures"]
 
 [dependencies]
+indexmap = "2.14"
+ryu-js = "1.0.3"
 
 [dev-dependencies]
+proptest = "1.12"
 serde_json = { workspace = true, features = ["float_roundtrip"] }
+sha2 = "0.11"
 
 # The conformance corpus (conformance/README.md), with its own report of what passes.
 [[test]]

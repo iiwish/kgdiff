@@ -11,6 +11,7 @@
 
 mod checks;
 mod corpus;
+mod vectors;
 
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
