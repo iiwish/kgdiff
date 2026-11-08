@@ -7,6 +7,7 @@
  * (k candidates per node, d average degree) thanks to blocking. No step compares all pairs.
  */
 import { attrKeys, attrValueEquals, isEmptyAttrs, ownAttr } from './canonical.js';
+import { log2 } from './math.js';
 import { resolveMatchOptions } from './options.js';
 import { blockKeys, ProfileCache, profileSimilarity } from './text.js';
 import type {
@@ -136,11 +137,12 @@ const EMPTY_SIGNATURE: Signature = { keys: [], weights: [] };
 
 /**
  * Hubs say little about identity, so each neighbour is weighted by 1 / log₂(2 + degree) of
- * its after-version counterpart (an IDF-like discount).
+ * its after-version counterpart (an IDF-like discount). `log2` is the exact one (math.ts), so the
+ * weights, and the order of candidates they decide, are the same in every engine.
  */
 function counterpartWeight(after: KGraph, id: Id): number {
   const degree = (after.outgoing.get(id)?.length ?? 0) + (after.incoming.get(id)?.length ?? 0);
-  return 1 / Math.log2(2 + degree);
+  return 1 / log2(2 + degree);
 }
 
 function buildSignature(
@@ -268,7 +270,7 @@ function blockedCandidates(
     if (same !== undefined) overlap.set(same, 0);
     for (const { postings } of lists) {
       if (postings.length > maxPostings && overlap.size >= preselect) continue;
-      const weight = 1 / Math.log2(1 + postings.length);
+      const weight = 1 / log2(1 + postings.length);
       const limit = Math.min(postings.length, maxPostings);
       for (let j = 0; j < limit; j++) {
         const t = postings[j] as number;

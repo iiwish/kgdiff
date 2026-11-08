@@ -19,6 +19,7 @@
  *   consistency.ts   checks of diffs read from JSON
  *   packed.ts        PackedDiffJSON, the packed transport of reports
  *   i18n.ts          formatHunk, facetLabel
+ *   math.ts          log2 from exactly rounded operations (identical in every engine)
  *   diff.ts          the pipeline
  */
 
@@ -28,6 +29,7 @@ import { hashGraph as hash, graphToJSON as toGraphJSON } from './graph-json.js';
 import { formatHunk as format, facetLabel as labelOfFacet } from './i18n.js';
 import { diffFromJSON as fromJSON, diffToJSON as toJSON } from './json.js';
 import { matchNodes as match } from './match.js';
+import { log2 as exactLog2 } from './math.js';
 import { isKGraph as isGraph, normalize as normalizeGraph } from './normalize.js';
 import { resolveOptions as resolve } from './options.js';
 import { packDiffJSON as pack, unpackDiffJSON as unpack } from './packed.js';
@@ -188,6 +190,15 @@ export function textSimilarity(a: string, b: string): number {
 /** Human-readable form of a predicate: `rdfs:subClassOf` → `subClassOf`, `…/part_of` → `part of`. */
 export function predicateLabel(predicate: string): string {
   return labelOfPredicate(predicate);
+}
+
+/**
+ * log₂(x), computed from `+ − × ÷` alone (accurate to ~1e-15), so that it gives the same bits in
+ * every JavaScript engine, unlike `Math.log2`, which engines approximate differently. Matching's
+ * weights and the layout use it. `-Infinity` for x ≤ 0 and NaN, `Infinity` for `Infinity`.
+ */
+export function log2(x: number): number {
+  return exactLog2(x);
 }
 
 /** Localized one-line title and subtitle for a hunk, e.g. “Merged “A” into “B”” / “+3 relations”. */

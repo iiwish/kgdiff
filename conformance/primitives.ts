@@ -7,7 +7,7 @@
  * JSON number formatting is involved in checking JSON number formatting.
  */
 import { createHash } from 'node:crypto';
-import { facetLabel, predicateLabel, textSimilarity } from '@kgdiff/core';
+import { facetLabel, log2, predicateLabel, textSimilarity } from '@kgdiff/core';
 import { estimateLabelWidth, nodeRadius } from '@kgdiff/layout';
 import { FACET_ORDER } from '../packages/core/src/model.js';
 
@@ -131,7 +131,8 @@ function numberFromString(): string {
 
 /**
  * The first 64 of the 439 integers in 1…2·10⁶ whose log₂ Apple's libm rounds differently from V8
- * (found by comparing the two; every C library has such inputs).
+ * (found by comparing the two; every C library has such inputs). Kept as hard inputs for a port
+ * that calls a C library's log₂ instead of repeating `log2`'s operations.
  */
 // biome-ignore format: compact list
 const HARD_LOG2: readonly number[] = [
@@ -142,19 +143,33 @@ const HARD_LOG2: readonly number[] = [
   89516, 90727, 90768, 92078, 96143, 103485, 104703,
 ];
 
+/**
+ * Inputs beyond the integers matching and the layout pass: the edges of the domain, subnormals and
+ * the largest double (the scaling loops' longest runs), mantissas next to 1 and 2 (the series'
+ * shortest and slowest cases) and a few fractions.
+ */
+// biome-ignore format: compact list
+const SPECIAL_LOG2: readonly number[] = [
+  0, -0, -1, Number.NEGATIVE_INFINITY, Number.NaN, Number.POSITIVE_INFINITY,
+  Number.MIN_VALUE, 2 ** -1022, 2 ** -1022 * (2 - 2 ** -52), Number.MAX_VALUE,
+  1 + 2 ** -52, 2 - 2 ** -52, 0.5, 0.75, 1.5, 1e-3, 0.1, 7.5, 123456.789, 2 ** 53 + 2, 1e300,
+];
+
 const LOG2_DIGEST_TO = 2 ** 22;
 
-function log2(): string {
+function log2Vector(): string {
   const explicit: [number, string][] = [];
-  for (let n = 1; n <= 1024; n++) explicit.push([n, bitsOf(Math.log2(n))]);
-  for (const n of HARD_LOG2) explicit.push([n, bitsOf(Math.log2(n))]);
+  for (let n = 1; n <= 1024; n++) explicit.push([n, bitsOf(log2(n))]);
+  for (const n of HARD_LOG2) explicit.push([n, bitsOf(log2(n))]);
+  const special = SPECIAL_LOG2.map((x) => [bitsOf(x), bitsOf(log2(x))]);
   const buffer = new Uint8Array(8 * LOG2_DIGEST_TO);
   const data = new DataView(buffer.buffer);
-  for (let n = 1; n <= LOG2_DIGEST_TO; n++) data.setFloat64(8 * (n - 1), Math.log2(n), true);
+  for (let n = 1; n <= LOG2_DIGEST_TO; n++) data.setFloat64(8 * (n - 1), log2(n), true);
   return lines({
     description:
-      "Math.log2 (V8: a port of FreeBSD's e_log2.c), which core's matching uses on integers ≥ 1 (1 / log2(2 + degree), 1 / log2(1 + postings)). `explicit`: [n, bits]. `digest`: SHA-256 of the little-endian float64 values of log2(n) for n = from…to, concatenated.",
+      "log2 of @kgdiff/core, which core's matching uses on integers ≥ 1 (1 / log2(2 + degree), 1 / log2(1 + postings)) and the layout on integers ≥ 1 (iterations, link distances). It is built from exactly rounded operations, so it gives the same bits everywhere, but it is not correctly rounded: it differs from V8's Math.log2 by one ulp on 102,219 of the integers up to 2^22 (the first is 3), so only the same operations in the same order reproduce it. For x > 0 and finite: m = x, e = 0; while m >= 2 { m /= 2; e += 1 }; while m < 1 { m *= 2; e -= 1 }; s = (m - 1) / (m + 1); s2 = s * s; term = s; sum = 0; for k = 1, 3, 5, …, 39 { sum += term / k; term *= s2 }; result e + (2 * sum) / LN2, with LN2 the double 3fe62e42fefa39ef. Not x > 0 (0, -0, negative, NaN) → -Infinity; +Infinity → +Infinity. `explicit`: [n, bits]. `special`: [bits of x, bits of log2(x)]. `digest`: SHA-256 of the little-endian float64 values of log2(n) for n = from…to, concatenated.",
     explicit,
+    special,
     digest: {
       from: 1,
       to: LOG2_DIGEST_TO,
@@ -464,7 +479,7 @@ export function generatePrimitives(): Map<string, string> {
     ['number-to-string.json', numberToString()],
     ['number-from-string.json', numberFromString()],
     ['js-math.json', jsMath()],
-    ['log2.json', log2()],
+    ['log2.json', log2Vector()],
     ['string-order.json', stringOrder()],
     ['json-roundtrip.json', jsonRoundtrip()],
     ['text-similarity.json', textSimilarityVector()],

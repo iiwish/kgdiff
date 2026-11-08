@@ -191,7 +191,7 @@ belongs to the layout (RFC 0002 phase 4); the others to the core (phase 2).
 | `number-to-string.json`   | `{ bits, string, json, exponential, fixed }`: `String(x)`, `JSON.stringify(x)`, `x.toExponential()` and `x.toFixed(0 / 1 / 2)` for curated and pseudo-random doubles |
 | `number-from-string.json` | `{ text, number, json }`: bits of `Number(text)` (or `"NaN"`) and of `JSON.parse(text)` (or `null` for a syntax error)                                               |
 | `js-math.json`            | `Math.round` (half up, keeping `-0`), `ToUint32` (`x >>> 0`), `ToInt32` (`x \| 0`)                                                                                   |
-| `log2.json`               | `Math.log2(n)` for n = 1…1024 and inputs where C libraries round differently; a SHA-256 over all n up to 2²² (little-endian doubles, concatenated)                   |
+| `log2.json`               | core's exact `log2` (its operations are in the file) for n = 1…1024, inputs C libraries round differently and special values; a SHA-256 over all n up to 2²²         |
 | `string-order.json`       | strings in JavaScript's default sort order (UTF-16 code units)                                                                                                       |
 | `json-roundtrip.json`     | `JSON.stringify(JSON.parse(text))`, compact and with `null, 2`; `null` when the text is not JSON. No lone surrogates (an open decision, RFC 0002 D-2)                |
 | `text-similarity.json`    | `[a, b, textSimilarity(a, b)]`                                                                                                                                       |
