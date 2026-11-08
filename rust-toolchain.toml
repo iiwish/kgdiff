@@ -1,0 +1,7 @@
+# The toolchain CI and contributors build with: a pinned stable release (RFC 0002, §8 and D-8).
+# Raising it is a change of its own, with the lints it brings fixed in the same pull request.
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

@@ -56,16 +56,68 @@ jobs:
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: pnpm build:site
 
-  # The one check the main branch ruleset requires: it passes only when every job of the matrix
-  # passed, so the matrix can change without touching the ruleset.
+  # The Rust workspace (RFC 0002): the crates' tests, the conformance corpus against kgdiff-core
+  # (`cargo test` runs it, and prints which parts pass) on every OS; formatting, lints, docs and a
+  # WebAssembly build once. The toolchain is the one rust-toolchain.toml pins.
+  rust:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the toolchain of rust-toolchain.toml
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Formatting
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --all --check
+      - name: Lints (clippy.toml forbids what differs from JavaScript)
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - name: Docs
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --no-deps --locked
+      - name: Build kgdiff-core for WebAssembly
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo build -p kgdiff-core --target wasm32-unknown-unknown --locked
+
+  # Licenses, advisories, duplicate crates and sources of every Rust dependency (deny.toml).
+  cargo-deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
+        with:
+          command: check
+
+  # The one check the main branch ruleset requires: it passes only when every job of every
+  # matrix passed, so the jobs can change without touching the ruleset.
   passed:
     name: CI passed
     if: always()
-    needs: [check]
+    needs: [check, rust, cargo-deny]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Every job of the matrix passed
+      - name: Every job of every matrix passed
         env:
-          RESULT: ${{ needs.check.result }}
-        run: test "$RESULT" = success
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            test "$result" = success
+          done

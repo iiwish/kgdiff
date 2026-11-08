@@ -20,6 +20,19 @@ updates:
         dependency-type: production
         update-types: [patch]
 
+  - package-ecosystem: cargo # the Rust workspace: Cargo.toml files + Cargo.lock
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: build
+      include: scope
+    groups:
+      cargo:
+        update-types: [minor, patch]
+
   - package-ecosystem: github-actions # keeps the SHA pins and their version comments current
     directory: /
     schedule:

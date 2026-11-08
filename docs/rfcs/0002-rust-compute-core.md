@@ -2,8 +2,10 @@
 
 - **Status:** Draft, proposed. Phase 1 (the conformance corpus,
   [`conformance/`](../../conformance/README.md)) is implemented
-  ([PR #41](https://github.com/iiwish/kgdiff/pull/41), merged as a0c52d5); nothing else has
-  started.
+  ([PR #41](https://github.com/iiwish/kgdiff/pull/41), merged as a0c52d5). Items 1 and 2 of
+  [Before phase 2](#before-phase-2-a-typescript-0x-release) are merged
+  ([#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0;
+  [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808); phase 2 has started.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)).
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
@@ -752,8 +754,9 @@ copy. One TypeScript 0.x release, each change with its corpus update in the same
    released from then on reads what phases 3 and 4 write.
 5. The `ignoreAttrs` / `kgdiff apply` decision of §11, if it is made by then.
 
-Phase 2 does not start before items 1 and 2 are released. The others may come in a later 0.x
-release: item 4 at the latest with phase 2, items 3 and 5 before phase 3.
+Phase 2 may start once items 1 and 2 are merged on `main` (they are: d01c4e0 and 7586808); they
+are released together with phase 2, as kgdiff 0.7.0. The others may come in a later 0.x release:
+item 4 at the latest with phase 2, items 3 and 5 before phase 3.
 
 #### Phase 2 — `kgdiff-core`
 

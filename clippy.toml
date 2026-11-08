@@ -1,0 +1,58 @@
+# Methods and types whose Rust defaults differ from what JavaScript does, so that a result
+# computed with them would differ from the TypeScript reference (RFC 0002, §3, Enforcement, and
+# §4). Engine code uses kgdiff_core::js instead; `cargo clippy -- -D warnings` in CI turns each
+# use into an error. The js module itself allows them where it implements the JavaScript rule.
+
+disallowed-types = [
+  { path = "std::collections::HashMap", reason = "iteration order is unspecified (RFC 0002 §3 rule 1): use IndexMap, or js::Lookup for lookups" },
+  { path = "std::collections::HashSet", reason = "iteration order is unspecified (RFC 0002 §3 rule 1): use IndexSet, or js::Lookup for lookups" },
+]
+
+disallowed-methods = [
+  # Rule 2: JavaScript's Array.prototype.sort is stable (J-52).
+  { path = "slice::sort_unstable", reason = "JavaScript sorts are stable (J-52): use sort / sort_by" },
+  { path = "slice::sort_unstable_by", reason = "JavaScript sorts are stable (J-52): use sort_by" },
+  { path = "slice::sort_unstable_by_key", reason = "JavaScript sorts are stable (J-52): use sort_by_key" },
+  { path = "slice::select_nth_unstable", reason = "JavaScript sorts are stable (J-52)" },
+  { path = "slice::select_nth_unstable_by", reason = "JavaScript sorts are stable (J-52)" },
+  { path = "slice::select_nth_unstable_by_key", reason = "JavaScript sorts are stable (J-52)" },
+
+  # J-17, J-18: JavaScript's whitespace is WhiteSpace + LineTerminator (U+FEFF yes, U+0085 no);
+  # case mapping goes through ICU4X so that it shares one Unicode version with normalization.
+  { path = "str::trim", reason = "JavaScript whitespace differs from Unicode White_Space (J-17): use js::trim" },
+  { path = "str::trim_start", reason = "JavaScript whitespace differs from Unicode White_Space (J-17): use js::trim_start" },
+  { path = "str::trim_end", reason = "JavaScript whitespace differs from Unicode White_Space (J-17): use js::trim_end" },
+  { path = "str::split_whitespace", reason = "JavaScript whitespace differs from Unicode White_Space (J-17): split on js::is_whitespace" },
+  { path = "str::to_lowercase", reason = "case mapping follows the pinned ICU4X Unicode version (J-18): use js::to_lowercase" },
+  { path = "str::to_uppercase", reason = "case mapping follows the pinned ICU4X Unicode version (J-18)" },
+  { path = "char::is_whitespace", reason = "JavaScript whitespace differs from Unicode White_Space (J-17): use js::is_whitespace" },
+  { path = "char::to_lowercase", reason = "case mapping follows the pinned ICU4X Unicode version (J-18): use js::to_lowercase" },
+  { path = "char::to_uppercase", reason = "case mapping follows the pinned ICU4X Unicode version (J-18)" },
+
+  # J-34, J-36: Math.round rounds half up and keeps -0; Math.min / Math.max propagate NaN.
+  { path = "f64::round", reason = "Math.round rounds half up and keeps -0 (J-34): use js::math::round" },
+  { path = "f64::min", reason = "Math.min propagates NaN and orders -0 below 0 (J-36): use js::math::min" },
+  { path = "f64::max", reason = "Math.max propagates NaN and orders 0 above -0 (J-36): use js::math::max" },
+  { path = "f64::clamp", reason = "use js::math::min / max (J-36)" },
+
+  # Rule 3: no result depends on a transcendental function or on fused multiply-add. std's
+  # versions call the platform's C library natively and another implementation in WebAssembly.
+  { path = "f64::sin", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::cos", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::tan", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::exp", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::exp2", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::ln", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::log", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::log2", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3): use js::math::log2" },
+  { path = "f64::log10", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::powf", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::powi", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::cbrt", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::hypot", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::atan2", reason = "transcendental functions differ between platforms (RFC 0002 §3 rule 3)" },
+  { path = "f64::mul_add", reason = "JavaScript never fuses a multiply and an add (RFC 0002 §3 rule 3)" },
+
+  # J-41 … J-48: every pattern lives in its crate's `re` module, written against RFC 0002 §4.5.
+  { path = "regex::Regex::new", reason = "regular expressions live in the crate's `re` module (RFC 0002 §4.5)", allow-invalid = true },
+]

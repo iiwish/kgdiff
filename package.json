@@ -27,7 +27,7 @@
     "build:docs": "pnpm --filter @kgdiff/docs build",
     "build:site": "pnpm vite build --config apps/site/vite.config.ts && pnpm build:docs",
     "changeset": "changeset",
-    "version-packages": "changeset version && biome format --write packages && tsx scripts/sync-citation.ts",
+    "version-packages": "changeset version && biome format --write packages && tsx scripts/sync-citation.ts && tsx scripts/sync-versions.ts",
     "release": "pnpm check && pnpm build && pnpm check:packages && changeset publish"
   },
   "devDependencies": {
