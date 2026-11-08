@@ -2,7 +2,7 @@
  * Compact JSON forms of nodes, edges and graphs, and the graph content hash.
  */
 import { attrsEqual, Cyrb53, canonicalAttrs, isEmptyAttrs } from './canonical.js';
-import { predicateLabel } from './text.js';
+import { rawPredicateLabel } from './text.js';
 import type { EdgeJSON, GraphJSON, Id, KGEdge, KGNode, KGraph, NodeJSON } from './types.js';
 import { compareStrings, stringArraysEqual } from './util.js';
 
@@ -20,7 +20,11 @@ export function nodeToJSON(node: KGNode, id: Id = node.id): NodeJSON {
   return out;
 }
 
-/** Compact, canonical JSON of an edge, optionally with endpoints mapped to other ids. */
+/**
+ * Compact, canonical JSON of an edge, optionally with endpoints mapped to other ids. The label is
+ * left out when it is `rawPredicateLabel(predicate)`, which a reader restores without normalizing
+ * (a predicate whose readable part is not in NFC keeps its label).
+ */
 export function edgeToJSON(
   edge: KGEdge,
   source: Id = edge.source,
@@ -29,7 +33,7 @@ export function edgeToJSON(
   const out: { -readonly [K in keyof EdgeJSON]: EdgeJSON[K] } =
     edge.id === undefined ? { source, target } : { id: edge.id, source, target };
   if (edge.predicate !== '') out.predicate = edge.predicate;
-  if (edge.label !== predicateLabel(edge.predicate)) out.label = edge.label;
+  if (edge.label !== rawPredicateLabel(edge.predicate)) out.label = edge.label;
   if (!isEmptyAttrs(edge.attrs)) out.attrs = canonicalAttrs(edge.attrs);
   return out;
 }

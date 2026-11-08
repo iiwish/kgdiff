@@ -19,9 +19,9 @@ import { createDiffIndex } from './diff-index.js';
 import { KgdiffError } from './errors.js';
 import { edgeToJSON, nodeContentEquals, nodeToJSON } from './graph-json.js';
 import type { EdgeRecord, NodeRecord } from './model.js';
-import { adjacencyOf, edgeOf, indexGraph, nodeOf, normalize } from './normalize.js';
+import { adjacencyOf, edgeOf, indexGraph, nodeOf, normalize, SNAPSHOT_TEXT } from './normalize.js';
 import { resolveOptions } from './options.js';
-import { predicateLabel } from './text.js';
+import { rawPredicateLabel } from './text.js';
 import type {
   DiffJSON,
   DiffResult,
@@ -183,7 +183,7 @@ function fromNodeJSON(json: NodeJSON): NodeInput {
 function fingerprint(edge: EdgeJSON | KGEdge, mode: EdgeIdentity): string {
   if (mode === 'id' && edge.id !== undefined) return `i${edge.id}`;
   const predicate = edge.predicate ?? '';
-  const label = edge.label ?? predicateLabel(predicate);
+  const label = edge.label ?? rawPredicateLabel(predicate);
   return `t${tripleKey(edge.source, predicate, edge.target)}\u0000${canonicalJSON([label, edge.attrs ?? {}])}`;
 }
 
@@ -195,7 +195,7 @@ function sameFingerprint(edge: KGEdge, json: EdgeJSON, mode: EdgeIdentity): bool
     edge.source === json.source &&
     edge.target === json.target &&
     edge.predicate === predicate &&
-    edge.label === (json.label ?? predicateLabel(predicate)) &&
+    edge.label === (json.label ?? rawPredicateLabel(predicate)) &&
     (json.attrs === undefined || json.attrs === null
       ? isEmptyAttrs(edge.attrs)
       : attrsEqual(edge.attrs, json.attrs))
@@ -239,8 +239,8 @@ export interface RebuiltGraphs {
 }
 
 /**
- * The graphs as `normalize` rebuilds them from the snapshots (any document): the reference that
- * `canonicalGraphs` must match.
+ * The graphs as `normalize` rebuilds them from the snapshots (any document), their text taken as
+ * written (`SNAPSHOT_TEXT`): the reference that `canonicalGraphs` must match.
  */
 export function normalizedGraphs(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs {
   const afterNodes: NodeInput[] = [];
@@ -258,6 +258,7 @@ export function normalizedGraphs(json: DiffJSON, mode: EdgeIdentity): RebuiltGra
   const after = normalize(
     { meta: json.meta.after, nodes: afterNodes, edges: afterEdges },
     { edgeIdentity: mode },
+    SNAPSHOT_TEXT,
   );
 
   const beforeNodes: NodeInput[] = [];
@@ -281,6 +282,7 @@ export function normalizedGraphs(json: DiffJSON, mode: EdgeIdentity): RebuiltGra
   const before = normalize(
     { meta: json.meta.before, nodes: beforeNodes, edges: beforeEdges },
     { edgeIdentity: mode },
+    SNAPSHOT_TEXT,
   );
 
   const findBefore = edgeFinder(before);
@@ -386,6 +388,11 @@ function readCanonical(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs | unde
 /**
  * Inverse of `diffToJSON`: rebuilds both graphs from the union snapshots, the union
  * elements and the index. `diffToJSON(diffFromJSON(j))` equals `j`.
+ *
+ * Snapshot text (labels, aliases, types) is read as written, never normalized again: the writer
+ * normalized it, and the result must not depend on the runtime's Unicode version. A snapshot
+ * whose text is not the text the delta's content hashes were computed from (edited, or not in
+ * NFC) fails the check of those hashes.
  *
  * @throws KgdiffError `unsupported-version` for an unknown format or version,
  *   `invalid-input` for a malformed document.
