@@ -290,3 +290,65 @@ pub fn predicate_label(corpus: &Corpus, file: &str) -> Outcome {
         )
     })
 }
+
+pub fn text_similarity(corpus: &Corpus, file: &str) -> Outcome {
+    let vector = load(corpus, file)?;
+    each(entries(&vector, "pairs")?, |pair| {
+        let (a, b) = (
+            pair[0].as_str().unwrap_or_default(),
+            pair[1].as_str().unwrap_or_default(),
+        );
+        let expected = pair[2].as_f64().ok_or("a pair without a similarity")?;
+        let actual = kgdiff_core::text::text_similarity(a, b);
+        if actual.to_bits() == expected.to_bits() {
+            Ok(())
+        } else {
+            Err(format!(
+                "textSimilarity({a:?}, {b:?}) = {actual}, expected {expected}"
+            ))
+        }
+    })
+}
+
+pub fn facet_labels(corpus: &Corpus, file: &str) -> Outcome {
+    use kgdiff_core::model::FacetKind;
+    // Read with kgdiff's own reader, which keeps the order of the keys (serde_json sorts them).
+    let text = std::fs::read_to_string(corpus.root.join(file)).map_err(|e| vec![e.to_string()])?;
+    let vector = json::parse(&text).map_err(|e| vec![e.to_string()])?;
+    let mut count = 0;
+    let mut failures = Vec::new();
+    for locale in [kgdiff_core::Locale::En, kgdiff_core::Locale::ZhCn] {
+        let labels = vector
+            .get("labels")
+            .and_then(|l| l.get(locale.as_str()))
+            .and_then(js::Value::as_object)
+            .ok_or_else(|| vec![format!("no labels for {}", locale.as_str())])?;
+        let kinds: Vec<&str> = labels.keys().map(JsStr::as_str).collect();
+        let expected_order: Vec<&str> = FacetKind::ALL.iter().map(|k| k.as_str()).collect();
+        if kinds != expected_order {
+            failures.push(format!(
+                "{}: facet kinds {kinds:?}, expected the canonical order {expected_order:?}",
+                locale.as_str()
+            ));
+        }
+        for (kind, label) in labels {
+            count += 1;
+            let Some(k) = FacetKind::from_name(kind) else {
+                failures.push(format!("unknown facet kind {kind}"));
+                continue;
+            };
+            let actual = kgdiff_core::facet_label(k, locale);
+            if Some(actual) != label.as_str() {
+                failures.push(format!(
+                    "facetLabel({kind}, {}) = {actual:?}, expected {label:?}",
+                    locale.as_str()
+                ));
+            }
+        }
+    }
+    if failures.is_empty() {
+        Ok(count)
+    } else {
+        Err(failures)
+    }
+}

@@ -81,3 +81,16 @@ impl<K: Hash + Eq, V> Lookup<K, V> {
         self.map.entry(key).or_insert_with(create)
     }
 }
+
+impl<K: Hash + Eq + Borrow<Q>, Q: Hash + Eq + ?Sized, V> std::ops::Index<&Q> for Lookup<K, V> {
+    type Output = V;
+
+    /// The value under `key`.
+    ///
+    /// # Panics
+    ///
+    /// When there is none, as `HashMap` indexing does.
+    fn index(&self, key: &Q) -> &V {
+        self.map.get(key).expect("no entry for the key")
+    }
+}
