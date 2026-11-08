@@ -11,6 +11,7 @@
 
 mod checks;
 mod corpus;
+mod library;
 mod vectors;
 
 use std::collections::BTreeSet;

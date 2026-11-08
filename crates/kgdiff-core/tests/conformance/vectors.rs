@@ -276,3 +276,17 @@ pub fn json_roundtrip(corpus: &Corpus, file: &str) -> Outcome {
         Ok(())
     })
 }
+
+pub fn predicate_label(corpus: &Corpus, file: &str) -> Outcome {
+    let vector = load(corpus, file)?;
+    each(entries(&vector, "pairs")?, |pair| {
+        let predicate = pair[0].as_str().ok_or("a pair without a predicate")?;
+        let expected = pair[1].as_str().ok_or("a pair without a label")?;
+        expect_eq(
+            "predicateLabel",
+            predicate,
+            &kgdiff_core::text::predicate_label(predicate),
+            expected,
+        )
+    })
+}

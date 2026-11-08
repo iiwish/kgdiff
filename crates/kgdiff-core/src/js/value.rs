@@ -69,6 +69,29 @@ impl Value {
         self.as_object()?.get(key)
     }
 
+    /// `String(value)` (ECMAScript ToString): `null`, `true`, numbers as `Number::toString`,
+    /// arrays joined with `,` (null items as empty text), objects as `[object Object]`.
+    pub fn to_js_string(&self) -> String {
+        match self {
+            Value::Null => "null".to_owned(),
+            Value::Bool(b) => b.to_string(),
+            Value::Number(x) => super::number_to_string(*x),
+            Value::String(s) => s.as_str().to_owned(),
+            Value::Array(items) => items
+                .iter()
+                .map(|item| {
+                    if item.is_null() {
+                        String::new()
+                    } else {
+                        item.to_js_string()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(","),
+            Value::Object(_) => "[object Object]".to_owned(),
+        }
+    }
+
     /// `typeof`-like name, for messages.
     pub fn kind(&self) -> &'static str {
         match self {
