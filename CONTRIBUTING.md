@@ -22,6 +22,18 @@ pnpm build && pnpm check:packages     # what `pnpm publish` would ship: publint,
 pnpm changeset                        # describe a change to a published package (see below)
 ```
 
+The Rust workspace (`crates/`, [RFC 0002](docs/rfcs/0002-rust-compute-core.md)) needs
+[rustup](https://rustup.rs); the first `cargo` command installs the toolchain that
+`rust-toolchain.toml` pins. Contributors who only touch TypeScript need none of it.
+
+```sh
+cargo test --workspace                          # the crates' tests and the conformance corpus
+cargo test -p kgdiff-core --test conformance    # which parts of the corpus kgdiff-core passes
+cargo clippy --workspace --all-targets -- -D warnings
+cargo fmt --all
+cargo deny check                                # licenses, advisories, duplicates (deny.toml)
+```
+
 ## Where things live
 
 - `packages/core`: the diff engine. Start with `src/types.ts` and `docs/algorithms.md`.
@@ -37,6 +49,9 @@ pnpm changeset                        # describe a change to a published package
   diffs, deltas, hashes and CLI outputs of every case ([README](conformance/README.md)). It runs
   in `pnpm test`; after an intended behaviour change, `pnpm conformance:update` regenerates it
   and its diff is part of the review.
+- `crates/`: the Rust port of the compute packages ([RFC 0002](docs/rfcs/0002-rust-compute-core.md)),
+  checked against `conformance/`. `clippy.toml` forbids the methods and types whose Rust
+  defaults differ from JavaScript; everything JavaScript-specific lives in `kgdiff_core::js`.
 - `docs/`: architecture, algorithms, visual language, interaction, delta format, CLI.
 
 ## Ground rules

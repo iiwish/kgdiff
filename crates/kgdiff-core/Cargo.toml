@@ -1,0 +1,27 @@
+[package]
+name = "kgdiff-core"
+description = "Semantic diff engine for knowledge graphs: matching, change classification, hunks and invertible deltas, byte-compatible with @kgdiff/core."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["kgdiff", "diff", "knowledge-graph", "ontology", "graph"]
+categories = ["algorithms", "data-structures"]
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+
+# The conformance corpus (conformance/README.md), with its own report of what passes.
+[[test]]
+name = "conformance"
+path = "tests/conformance/main.rs"
+harness = false
+
+[lints]
+workspace = true

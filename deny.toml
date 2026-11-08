@@ -1,0 +1,30 @@
+# cargo-deny (RFC 0002, §10: more dependencies to trust): licenses, advisories, duplicate crates
+# and sources of every crate in the workspace, development dependencies included.
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+allow = [
+  "Apache-2.0",
+  "MIT",
+]
+confidence-threshold = 0.9
+
+[licenses.private]
+# The bindings crates (RFC 0002, §1) are not published to crates.io.
+ignore = true
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+# Path dependencies between the workspace's own crates.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

@@ -1,6 +1,7 @@
 /**
- * Release housekeeping: the merged GitHub release notes (scripts/release-notes.ts) and the
- * version in CITATION.cff (scripts/sync-citation.ts).
+ * Release housekeeping: the merged GitHub release notes (scripts/release-notes.ts), the version
+ * in CITATION.cff (scripts/sync-citation.ts) and the version of the Rust workspace
+ * (scripts/sync-versions.ts).
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -18,6 +19,14 @@ import {
   packagesVersion,
   withCitationVersion,
 } from '../scripts/sync-citation.ts';
+import {
+  CARGO_LOCK,
+  CARGO_TOML,
+  lockedWorkspaceCrates,
+  withLockedVersion,
+  withWorkspaceVersion,
+  workspaceVersion,
+} from '../scripts/sync-versions.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 
@@ -41,6 +50,57 @@ describe('CITATION.cff', () => {
 
   it('refuses a file without a version', () => {
     expect(() => withCitationVersion('cff-version: 1.2.0\n', '0.5.0')).toThrow(/version/);
+  });
+});
+
+describe('the Rust workspace', () => {
+  it('carries the version of the packages, in Cargo.toml and Cargo.lock', () => {
+    expect(workspaceVersion(readFileSync(CARGO_TOML, 'utf8'))).toBe(packagesVersion());
+    const crates = lockedWorkspaceCrates(readFileSync(CARGO_LOCK, 'utf8'));
+    expect(crates.map((c) => c.name)).toContain('kgdiff-core');
+    for (const crate of crates) expect(crate).toEqual({ ...crate, version: packagesVersion() });
+  });
+
+  it('sets the version of [workspace.package] only', () => {
+    const toml = [
+      '[workspace]',
+      'members = ["crates/*"]',
+      '',
+      '[workspace.package]',
+      '# One version.',
+      'version = "0.1.0"',
+      'edition = "2024"',
+      '',
+      '[workspace.dependencies]',
+      'version = "9.9.9"',
+      '',
+    ].join('\n');
+    const next = withWorkspaceVersion(toml, '0.5.0');
+    expect(next).toBe(toml.replace('0.1.0', '0.5.0'));
+    expect(workspaceVersion(next)).toBe('0.5.0');
+    expect(() => withWorkspaceVersion('[workspace]\n', '0.5.0')).toThrow(/workspace\.package/);
+  });
+
+  it('sets the locked version of the workspace crates, not of registry crates', () => {
+    const lock = [
+      'version = 4',
+      '',
+      '[[package]]',
+      'name = "indexmap"',
+      'version = "0.1.0"',
+      'source = "registry+https://github.com/rust-lang/crates.io-index"',
+      '',
+      '[[package]]',
+      'name = "kgdiff-core"',
+      'version = "0.1.0"',
+      'dependencies = [',
+      ' "indexmap",',
+      ']',
+      '',
+    ].join('\n');
+    const next = withLockedVersion(lock, '0.5.0');
+    expect(lockedWorkspaceCrates(next)).toEqual([{ name: 'kgdiff-core', version: '0.5.0' }]);
+    expect(next.replace('"0.5.0"', '"0.1.0"')).toBe(lock);
   });
 });
 

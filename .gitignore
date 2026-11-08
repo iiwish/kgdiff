@@ -12,3 +12,6 @@ examples/generated/
 docs/.vitepress/cache/
 # The framework recipes, compiled by their test.
 packages/viewer/test/recipes/.out/
+
+# Cargo
+/target/
