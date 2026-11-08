@@ -13,7 +13,10 @@ keywords = ["kgdiff", "diff", "knowledge-graph", "ontology", "graph"]
 categories = ["algorithms", "data-structures"]
 
 [dependencies]
+icu_casemap = "2.4"
+icu_locale_core = "2.4"
 icu_normalizer = "2.4"
+icu_properties = "2.4"
 indexmap = "2.14"
 ryu-js = "1.0.3"
 

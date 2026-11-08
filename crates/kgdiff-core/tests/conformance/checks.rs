@@ -59,10 +59,10 @@ pub fn parts() -> Vec<Part> {
         ),
         ported("issues", "expected/issues.json", Value, library::issues),
         ported("hashes", "expected/hashes.json", Value, library::hashes),
-        part("diff", "expected/diff.json", Bytes),
-        part("titles", "expected/titles.json", Value),
+        ported("diff", "expected/diff.json", Bytes, library::diff),
+        ported("titles", "expected/titles.json", Value, library::titles),
         part("packed", "expected/diff.packed.json", Bytes),
-        part("delta", "expected/delta.json", Bytes),
+        ported("delta", "expected/delta.json", Bytes, library::delta),
         part("inverse", "expected/delta.inverse.json", Bytes),
         part("apply", "expected/apply.json", Bytes),
     ]
@@ -79,7 +79,6 @@ pub const ELSEWHERE: &[(&str, &str)] = &[
 
 /// The primitive vectors kgdiff-core passes (every one but the layout's).
 pub fn vectors() -> Vec<Vector> {
-    let vector = |file| Vector { file, verify: None };
     let ported = |file, verify: Verify| Vector {
         file,
         verify: Some(verify),
@@ -97,9 +96,9 @@ pub fn vectors() -> Vec<Vector> {
         ported("primitives/log2.json", vectors::log2),
         ported("primitives/string-order.json", vectors::string_order),
         ported("primitives/json-roundtrip.json", vectors::json_roundtrip),
-        vector("primitives/text-similarity.json"),
+        ported("primitives/text-similarity.json", vectors::text_similarity),
         ported("primitives/predicate-label.json", vectors::predicate_label),
-        vector("primitives/facet-labels.json"),
+        ported("primitives/facet-labels.json", vectors::facet_labels),
     ]
 }
 

@@ -54,3 +54,24 @@ pub fn sorted_set_diff(a: &[JsStr], b: &[JsStr]) -> (Vec<JsStr>, Vec<JsStr>) {
     }
     (added, removed)
 }
+
+/// A count as a double: exact, counts stay far below 2⁵³.
+#[allow(clippy::cast_precision_loss, reason = "counts stay far below 2^53")]
+pub fn count_to_f64(n: usize) -> f64 {
+    n as f64
+}
+
+/// A non-negative integer-valued double (an option such as `maxCandidates`) as a count,
+/// saturating at `usize::MAX`; NaN and negative values are 0.
+#[allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    reason = "saturating conversion of an integer-valued, non-negative double"
+)]
+pub fn f64_to_count(x: f64) -> usize {
+    if x.is_nan() || x <= 0.0 {
+        0
+    } else {
+        x as usize
+    }
+}
