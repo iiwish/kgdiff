@@ -12,6 +12,8 @@ version = 2
 allow = [
   "Apache-2.0",
   "MIT",
+  # ICU4X (icu_normalizer and its data and support crates).
+  "Unicode-3.0",
 ]
 confidence-threshold = 0.9
 

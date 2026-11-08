@@ -3,7 +3,7 @@
 //! it a function; from then on it must pass for every case.
 
 use crate::corpus::{Case, Corpus, Mode};
-use crate::vectors;
+use crate::{library, vectors};
 
 /// The output of a part for one case, compared with its expected file.
 pub type Produce = fn(&Case) -> Result<Vec<u8>, String>;
@@ -38,11 +38,27 @@ pub fn parts() -> Vec<Part> {
         mode,
         produce: None,
     };
+    let ported = |name, file, mode, produce: Produce| Part {
+        name,
+        file,
+        mode,
+        produce: Some(produce),
+    };
     vec![
-        part("graph.before", "expected/graph.before.json", Bytes),
-        part("graph.after", "expected/graph.after.json", Bytes),
-        part("issues", "expected/issues.json", Value),
-        part("hashes", "expected/hashes.json", Value),
+        ported(
+            "graph.before",
+            "expected/graph.before.json",
+            Bytes,
+            library::graph_before,
+        ),
+        ported(
+            "graph.after",
+            "expected/graph.after.json",
+            Bytes,
+            library::graph_after,
+        ),
+        ported("issues", "expected/issues.json", Value, library::issues),
+        ported("hashes", "expected/hashes.json", Value, library::hashes),
         part("diff", "expected/diff.json", Bytes),
         part("titles", "expected/titles.json", Value),
         part("packed", "expected/diff.packed.json", Bytes),
@@ -82,7 +98,7 @@ pub fn vectors() -> Vec<Vector> {
         ported("primitives/string-order.json", vectors::string_order),
         ported("primitives/json-roundtrip.json", vectors::json_roundtrip),
         vector("primitives/text-similarity.json"),
-        vector("primitives/predicate-label.json"),
+        ported("primitives/predicate-label.json", vectors::predicate_label),
         vector("primitives/facet-labels.json"),
     ]
 }
