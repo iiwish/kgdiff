@@ -7,7 +7,7 @@
 import { canonicalJSON, emptyAttrMap, ownAttr, setAttr, tripleKey } from './canonical.js';
 import { KgdiffError } from './errors.js';
 import { resolveEdgeIdentity } from './options.js';
-import { nfc, predicateLabel } from './text.js';
+import { nfc, predicateLabel, rawPredicateLabel } from './text.js';
 import type {
   Attrs,
   AttrValue,
@@ -72,6 +72,25 @@ interface EdgeDraft {
 
 const EMPTY_ATTRS: Attrs = Object.freeze({});
 const DANGLING_POLICIES: ReadonlySet<string> = new Set(['create', 'drop', 'error']);
+
+/**
+ * How display text is read: labels, aliases and types, and the label of an edge that has none of
+ * its own. API input is composed to NFC (`normalize`). A kgdiff JSON snapshot holds text its writer
+ * normalized already, so it is taken as written: `diffFromJSON` must open a report the same way
+ * whatever Unicode version the runtime's ICU has, and checks the text by content hash instead.
+ */
+export interface TextForm {
+  /** A label, alias or type. */
+  readonly text: (text: string) => string;
+  /** The label of an edge without one of its own. */
+  readonly edgeLabel: (predicate: string) => string;
+}
+
+/** API input: NFC, and `predicateLabel`. */
+export const INPUT_TEXT: TextForm = { text: nfc, edgeLabel: predicateLabel };
+
+/** kgdiff JSON snapshots: as written, and `rawPredicateLabel` (no Unicode tables involved). */
+export const SNAPSHOT_TEXT: TextForm = { text: (text) => text, edgeLabel: rawPredicateLabel };
 
 function fail(message: string, details?: Record<string, unknown>): never {
   throw new KgdiffError('invalid-input', message, details);
@@ -243,21 +262,21 @@ type NodeFields = {
     | 'position']?: unknown;
 };
 
-function draftNode(raw: NodeFields, id: Id, issues: GraphIssue[]): NodeDraft {
+function draftNode(raw: NodeFields, id: Id, issues: GraphIssue[], form: TextForm): NodeDraft {
   const types = stringArray(raw.type, id, 'type');
   const extraTypes = stringArray(raw.types, id, 'types');
   const aliases = stringArray(raw.aliases, id, 'aliases');
   const allTypes = extraTypes.length ? [...types, ...extraTypes] : types;
   const draft: NodeDraft = {
     id,
-    types: allTypes.length ? allTypes.map(nfc) : EMPTY,
-    aliases: aliases.length ? aliases.map(nfc) : EMPTY,
+    types: allTypes.length ? allTypes.map(form.text) : EMPTY,
+    aliases: aliases.length ? aliases.map(form.text) : EMPTY,
     replaces: stringArray(raw.replaces, id, 'replaces'),
     replacedBy: stringArray(raw.replacedBy, id, 'replacedBy'),
     implicit: raw.implicit === true,
   };
   const label = optionalString(raw.label, id, undefined, 'label');
-  if (label) draft.label = nfc(label);
+  if (label) draft.label = form.text(label);
   const attrs = attrsOf(raw.attrs, id, undefined, issues);
   if (attrs) draft.attrs = attrs;
   if (raw.deprecated !== undefined && raw.deprecated !== null) {
@@ -384,7 +403,11 @@ export function isKGraph(value: unknown): value is KGraph {
  * @throws KgdiffError `invalid-input` for malformed input, `dangling-edge` (policy `error`),
  *   `unsupported-version` for another kgdiff format or graph version.
  */
-export function normalize(input: GraphInput, options: NormalizeOptions = {}): KGraph {
+export function normalize(
+  input: GraphInput,
+  options: NormalizeOptions = {},
+  form: TextForm = INPUT_TEXT,
+): KGraph {
   if (isRecord(input)) checkFormat(input);
   if (!isRecord(input) || !Array.isArray(input.nodes)) {
     fail('normalize expects a graph of the form { nodes: [...], edges: [...] }');
@@ -408,7 +431,7 @@ export function normalize(input: GraphInput, options: NormalizeOptions = {}): KG
       issues.push({ code: 'empty-id', message: 'Dropped a node without an id' });
       continue;
     }
-    const draft = draftNode(raw, id, issues);
+    const draft = draftNode(raw, id, issues, form);
     const existing = drafts.get(id);
     if (existing) {
       mergeDraft(existing, draft);
@@ -436,11 +459,11 @@ export function normalize(input: GraphInput, options: NormalizeOptions = {}): KG
     }
     const predicate = optionalString(edge.predicate, source, target, 'predicate') ?? '';
     const explicitLabel = optionalString(edge.label, source, target, 'label');
-    let label = explicitLabel === undefined ? undefined : nfc(explicitLabel);
+    let label = explicitLabel === undefined ? undefined : form.text(explicitLabel);
     if (label === undefined) {
       label = labelCache.get(predicate);
       if (label === undefined) {
-        label = predicateLabel(predicate);
+        label = form.edgeLabel(predicate);
         labelCache.set(predicate, label);
       }
     }
@@ -585,22 +608,22 @@ export function indexGraph(
 
 // ─── Single declarations ─────────────────────────────────────────────────────
 // `diffFromJSON` reads graphs in which every node and edge is declared once (`canonicalGraphs`
-// in json.ts). These make one the way `normalize` does, reporting into `issues`; merging
-// repeats and dangling ends are the caller's to rule out.
+// in json.ts). These make one of a snapshot the way `normalize` does with `SNAPSHOT_TEXT`,
+// reporting into `issues`; merging repeats and dangling ends are the caller's to rule out.
 
-/** The node `normalize` makes of `raw` declared once, under `rawId` (`raw.id` by default). */
+/** The node `normalize` makes of the snapshot `raw` declared once, under `rawId` (`raw.id`). */
 export function nodeOf(
   raw: NodeFields,
   issues: GraphIssue[],
   rawId: unknown = raw.id,
 ): KGNode | undefined {
   const id = coerceId(rawId);
-  return id === undefined ? undefined : finishNode(draftNode(raw, id, issues));
+  return id === undefined ? undefined : finishNode(draftNode(raw, id, issues, SNAPSHOT_TEXT));
 }
 
 /**
- * The edge `normalize` makes of `raw` when no other edge has its identity and both ends are
- * nodes; undefined for an empty end. `key`: known already (it saves building it again).
+ * The edge `normalize` makes of the snapshot `raw` when no other edge has its identity and both
+ * ends are nodes; undefined for an empty end. `key`: known already (it saves building it again).
  */
 export function edgeOf(
   raw: RawRecord,
@@ -613,7 +636,10 @@ export function edgeOf(
   if (source === undefined || target === undefined) return undefined;
   const predicate = optionalString(raw.predicate, source, target, 'predicate') ?? '';
   const explicitLabel = optionalString(raw.label, source, target, 'label');
-  const label = explicitLabel === undefined ? predicateLabel(predicate) : nfc(explicitLabel);
+  const label =
+    explicitLabel === undefined
+      ? SNAPSHOT_TEXT.edgeLabel(predicate)
+      : SNAPSHOT_TEXT.text(explicitLabel);
   const id = coerceId(raw.id);
   const attrs = attrsOf(raw.attrs, source, target, issues) ?? EMPTY_ATTRS;
   const k =

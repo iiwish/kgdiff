@@ -81,7 +81,9 @@ are not packed, so diffs of such graphs shrink less). The viewer unpacks it and 
 which checks that the document is consistent before anything is drawn. Rebuilding the two graphs
 is most of that read: the snapshots are already canonical, so they are read straight into graphs
 (each checked to be what `normalize` would keep as it is), and only a document that is not, such
-as one with parallel edges, is normalized again.
+as one with parallel edges, is normalized again. Either way their text (labels, aliases, types)
+is taken as written, never composed to NFC again with the browser's Unicode tables: the content
+hashes in the delta check it, so a report opens the same way in every browser.
 
 ## Package contracts (summary)
 

@@ -40,7 +40,9 @@ normalize ─▶ match nodes ─▶ detect merges / splits ─▶ classify nodes
 space, keep camelCase as written. Opaque ids (local part made only of digits) stay whole, and an
 opaque OBO PURL reads like its CURIE. Examples: `rdfs:subClassOf` → `subClassOf`,
 `http://purl.obolibrary.org/obo/part_of` → `part of`, `…/obo/RO_0002131` → `RO:0002131`,
-`BFO:0000050` → `BFO:0000050`, `投资` → `投资`.
+`BFO:0000050` → `BFO:0000050`, `投资` → `投资`. kgdiff JSON leaves an edge label out only when it
+equals `predicateLabel` without its NFC step, so `diffFromJSON` restores it without Unicode tables,
+and takes all other snapshot text as written (the delta's content hashes check it).
 
 ## 2. Node matching (`matchNodes`)
 

@@ -154,7 +154,9 @@ export function diffToJSON(result: DiffResult): DiffJSON {
  * Inverse of `diffToJSON`. Rebuilds both graphs and the index, and checks that the document is
  * consistent: every element has the versions its status implies and lies in the hunk it names,
  * edges join union nodes, hunks own disjoint delta ops, the delta goes from the before to the
- * after graph (by content hash) and the counts match. Linear in the size of the diff.
+ * after graph (by content hash) and the counts match. Linear in the size of the diff. Labels,
+ * aliases and types are read as written, not normalized again, so a document opens the same way
+ * whatever Unicode version the runtime has.
  *
  * @throws KgdiffError `unsupported-version` for another format or version, `invalid-input` for a
  *   malformed or inconsistent document (the message names the first contradiction).
