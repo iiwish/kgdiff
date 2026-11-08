@@ -3,6 +3,7 @@
 //! it a function; from then on it must pass for every case.
 
 use crate::corpus::{Case, Corpus, Mode};
+use crate::vectors;
 
 /// The output of a part for one case, compared with its expected file.
 pub type Produce = fn(&Case) -> Result<Vec<u8>, String>;
@@ -63,13 +64,23 @@ pub const ELSEWHERE: &[(&str, &str)] = &[
 /// The primitive vectors kgdiff-core passes (every one but the layout's).
 pub fn vectors() -> Vec<Vector> {
     let vector = |file| Vector { file, verify: None };
+    let ported = |file, verify: Verify| Vector {
+        file,
+        verify: Some(verify),
+    };
     vec![
-        vector("primitives/number-to-string.json"),
-        vector("primitives/number-from-string.json"),
-        vector("primitives/js-math.json"),
-        vector("primitives/log2.json"),
-        vector("primitives/string-order.json"),
-        vector("primitives/json-roundtrip.json"),
+        ported(
+            "primitives/number-to-string.json",
+            vectors::number_to_string,
+        ),
+        ported(
+            "primitives/number-from-string.json",
+            vectors::number_from_string,
+        ),
+        ported("primitives/js-math.json", vectors::js_math),
+        ported("primitives/log2.json", vectors::log2),
+        ported("primitives/string-order.json", vectors::string_order),
+        ported("primitives/json-roundtrip.json", vectors::json_roundtrip),
         vector("primitives/text-similarity.json"),
         vector("primitives/predicate-label.json"),
         vector("primitives/facet-labels.json"),

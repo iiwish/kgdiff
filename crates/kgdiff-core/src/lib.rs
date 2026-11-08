@@ -4,3 +4,5 @@
 //! What the crate computes is specified by the conformance corpus in the repository's
 //! `conformance/` directory; `cargo test -p kgdiff-core --test conformance` reports which of its
 //! parts pass.
+
+pub mod js;
