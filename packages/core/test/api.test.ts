@@ -26,6 +26,7 @@ describe('public API', () => {
       'hashGraph',
       'invertDelta',
       'isKGraph',
+      'log2',
       'matchNodes',
       'normalize',
       'packDiffJSON',

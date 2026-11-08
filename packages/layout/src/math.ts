@@ -17,32 +17,11 @@ export function round2(value: number): number {
   return rounded === 0 ? 0 : rounded;
 }
 
-/** log₂(x) for x > 0, using only exactly rounded operations. Accurate to ~1e-15. */
-export function log2(x: number): number {
-  if (!(x > 0)) return Number.NEGATIVE_INFINITY;
-  if (x === Number.POSITIVE_INFINITY) return x;
-  // x = m·2^e with m ∈ [1, 2); scaling by 2 is exact.
-  let m = x;
-  let e = 0;
-  while (m >= 2) {
-    m /= 2;
-    e++;
-  }
-  while (m < 1) {
-    m *= 2;
-    e--;
-  }
-  // ln(m) = 2·atanh(s), s = (m − 1)/(m + 1) ∈ [0, 1/3): the series converges by 1/9 per term.
-  const s = (m - 1) / (m + 1);
-  const s2 = s * s;
-  let term = s;
-  let sum = 0;
-  for (let k = 1; k < 40; k += 2) {
-    sum += term / k;
-    term *= s2;
-  }
-  return e + (2 * sum) / Math.LN2;
-}
+/**
+ * log₂ from exactly rounded operations: `@kgdiff/core`'s, so that the layout and matching share
+ * one function (and a port reproduces both by porting it once).
+ */
+export { log2 } from '@kgdiff/core';
 
 /** bⁿ for integer n ≥ 0 by repeated squaring (exact operation sequence). */
 export function powInt(base: number, exponent: number): number {

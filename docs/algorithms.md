@@ -60,12 +60,13 @@ Goal: a 1:1 partial mapping before → after with a confidence for each pair.
    (`w:`); the first 4 characters of tokens of length ≥ 4 (`p:`, catches abbreviations and
    late typos); for CJK text, character bigrams (`b:`); for text made only of punctuation, the
    text itself (`r:`); and shared types only as a tiebreaker (never alone). For each `r ∈ R`
-   collect the `A` nodes sharing ≥ 1 key, rank them by IDF-weighted key overlap (keys with very
-   long posting lists are truncated, and skipped once enough candidates are known; the node with
-   the same id, possible only with `similarity`, is always kept), score the best
-   `3 · maxCandidates` cheaply (label similarity only) and keep the top `maxCandidates`. Do the
-   same for each `a ∈ A` over an index of `R`; the candidate pairs are the union of both sides,
-   so neither version is favoured. Total work ~O((|R| + |A|) · k).
+   collect the `A` nodes sharing ≥ 1 key, rank them by IDF-weighted key overlap (a key weighs
+   1 / log₂(1 + its posting-list length); keys with very long posting lists are truncated, and
+   skipped once enough candidates are known; the node with the same id, possible only with
+   `similarity`, is always kept), score the best `3 · maxCandidates` cheaply (label similarity
+   only) and keep the top `maxCandidates`. Do the same for each `a ∈ A` over an index of `R`;
+   the candidate pairs are the union of both sides, so neither version is favoured. Total work
+   ~O((|R| + |A|) · k).
 5. **Scoring.** For a candidate pair `(r, a)`:
    - `label` = max `textSimilarity` over {label} × {label ∪ aliases} in both directions.
    - `neighbors` = weighted Jaccard of neighbour signatures. A signature is
@@ -404,7 +405,7 @@ with a skyline / shelf packer sorted by height into a roughly 16:10 overall aspe
 - anchored mode simulates only a window around new nodes (quadtree range query) and keeps known
   positions bit-exact (no rounding, no centering).
 
-Only `+ − × ÷ √` are used inside the simulation (hand-written `log₂`, exact rotation constants),
+Only `+ − × ÷ √` are used inside the simulation (core's `log2`, exact rotation constants),
 so results are byte-identical across JavaScript engines.
 
 **Post-processing.** Center the result at the origin (union strategy); round to 0.01; compute
@@ -421,4 +422,8 @@ bounds including label boxes (labels capped at 32 em).
   affects output_.
 - Seeded PRNG only. Fixed iteration counts. No time-based termination.
 - Floating-point results rounded at the API boundary (layout 0.01, scores 1e-6).
+- Only exactly rounded arithmetic (`+ − × ÷`, `Math.sqrt`) in what core, formats and the layout
+  compute: `log₂` is core's `log2`, built from those (matching's weights, the layout), never
+  `Math.log2`; no `Math.pow`, `Math.exp` or trigonometric functions, which engines approximate
+  differently. (The renderer's camera and animations may use them: they compute no result.)
 - Snapshot tests assert identical `diffToJSON` / `layoutToJSON` for shuffled inputs.

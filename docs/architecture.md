@@ -85,16 +85,16 @@ as one with parallel edges, is normalized again.
 
 ## Package contracts (summary)
 
-| Package  | Main API                                                                                                                                                                                                  |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `packDiffJSON`/`unpackDiffJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel` |
-| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                                                                |
-| layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                         |
-| scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                                                         |
-| renderer | `createRenderer`, `createMinimap`                                                                                                                                                                         |
-| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; experimental elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                    |
-| g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                             |
-| cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                       |
+| Package  | Main API                                                                                                                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `packDiffJSON`/`unpackDiffJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel`, `log2` |
+| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                                                                        |
+| layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                                 |
+| scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                                                                 |
+| renderer | `createRenderer`, `createMinimap`                                                                                                                                                                                 |
+| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; experimental elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                            |
+| g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                                     |
+| cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                               |
 
 The full, documented signatures live in each package's `src/index.ts` (and `src/types.ts`).
 
