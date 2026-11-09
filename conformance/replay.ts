@@ -3,8 +3,8 @@
  * implementation would run them (README, "CLI runs"): `node packages/cli/dist/bin.js` with the
  * run's arguments, the case directory as working directory, the run's environment and only what
  * starting a process needs besides it, stdin piped from the recorded file or empty, stdout and
- * stderr through pipes. The corpus itself is generated with `main()` in-process; this checks that
- * a real process prints the same bytes and exits with the same code.
+ * stderr through pipes. The corpus records the runs with the Rust `kgdiff` (corpus.ts); this checks
+ * that an implementation prints the same bytes and exits with the same code.
  *
  *   pnpm build && pnpm conformance:replay
  *
@@ -15,11 +15,11 @@
  *
  * It reads only the corpus files and the CLI it runs, not the TypeScript sources.
  */
-import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execute, TIMEOUT_MS } from './process.js';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const REPO = join(ROOT, '..');
@@ -39,9 +39,6 @@ const OTHER_BIN = binArgument(process.argv.slice(2));
 const COMMAND: readonly [string, readonly string[]] = OTHER_BIN
   ? [OTHER_BIN, []]
   : [process.execPath, [BIN]];
-/** A run that takes longer than this is reported as hanging. */
-const TIMEOUT_MS = 60_000;
-
 interface Run {
   readonly name: string;
   readonly args: readonly string[];
@@ -53,55 +50,7 @@ interface Run {
   readonly exit: number;
 }
 
-interface Outcome {
-  readonly code: number | null;
-  readonly stdout: Buffer;
-  readonly stderr: Buffer;
-  readonly timedOut: boolean;
-}
-
 const readJson = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8'));
-
-/** What a process needs to start, beside the recorded environment. */
-function processEnv(): Record<string, string> {
-  const env: Record<string, string> = {};
-  if (process.env.PATH !== undefined) env.PATH = process.env.PATH;
-  if (process.platform === 'win32' && process.env.SystemRoot !== undefined) {
-    env.SystemRoot = process.env.SystemRoot;
-  }
-  return env;
-}
-
-function execute(run: Run, cwd: string, input: Buffer): Promise<Outcome> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(COMMAND[0], [...COMMAND[1], ...run.args], {
-      cwd,
-      env: { ...processEnv(), ...run.env },
-      stdio: ['pipe', 'pipe', 'pipe'],
-      windowsHide: true,
-    });
-    const stdout: Buffer[] = [];
-    const stderr: Buffer[] = [];
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill();
-    }, TIMEOUT_MS);
-    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
-    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
-    // A run that does not read stdin may exit before it is written: not an error.
-    child.stdin.on('error', () => undefined);
-    child.stdin.end(input);
-    child.once('error', (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-    child.once('close', (code) => {
-      clearTimeout(timer);
-      resolve({ code, stdout: Buffer.concat(stdout), stderr: Buffer.concat(stderr), timedOut });
-    });
-  });
-}
 
 /** Where two byte strings first differ, by line. */
 function firstDifference(actual: Buffer, expected: Buffer): string {
@@ -151,7 +100,11 @@ async function main(): Promise<number> {
     for (let job = jobs[next++]; job !== undefined; job = jobs[next++]) {
       const { id, dir, run } = job;
       const input = run.stdin ? readFileSync(join(dir, run.stdin.file)) : Buffer.alloc(0);
-      const outcome = await execute(run, dir, input);
+      const outcome = await execute(COMMAND[0], [...COMMAND[1], ...run.args], {
+        cwd: dir,
+        env: run.env,
+        stdin: input,
+      });
       let stdout =
         'file' in run.stdout
           ? readFileSync(join(dir, run.stdout.file))

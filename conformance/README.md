@@ -1,11 +1,12 @@
 # kgdiff conformance corpus
 
 A language-neutral specification by example of what kgdiff computes and prints. Every case holds
-input graphs, the options to diff them with, and the outputs of the reference implementation (the
-TypeScript packages in this repository): the diff, the packed diff, the delta and its inverse, the
-content hashes, the normalized graphs, the parse results, the hunk titles, the report payload's
-metadata, the layout's combinatorial part, and the CLI's text outputs, warnings, error messages
-and exit codes. Primitive vectors pin the JavaScript built-ins those outputs depend on.
+input graphs, the options to diff them with, and the outputs of the reference implementations
+(the TypeScript packages of this repository for the library outputs, the Rust `kgdiff` for what
+the CLI produces; "Changing the corpus" below): the diff, the packed diff, the delta and its
+inverse, the content hashes, the normalized graphs, the parse results, the hunk titles, the report
+payload's metadata, the layout's combinatorial part, and the CLI's text outputs, warnings, error
+messages and exit codes. Primitive vectors pin the JavaScript built-ins those outputs depend on.
 
 An implementation conforms when it reproduces every expected file of every case and passes every
 primitive vector. The Rust port described in
@@ -165,9 +166,10 @@ text — the reference writes UTF-8, so a lone surrogate in a message reached th
 and that is what is recorded (`cli-errors`, `obo-clipped-line`). With `versionPlaceholder`,
 replace `kgdiff <version>` by the implementation's `kgdiff X.Y.Z` before comparing.
 
-The reference does exactly this on every CI run: the generator records the runs with the CLI's
-`main()` in-process, and `pnpm conformance:replay` replays every one of them with the built CLI
-(`node packages/cli/dist/bin.js`) as a real process, after `pnpm build`.
+The generator records the runs exactly this way, with the Rust `kgdiff` as a real process
+(`pnpm conformance:update`), and CI replays every one of them with the Rust `kgdiff` on Linux,
+macOS and Windows (`pnpm conformance:replay --bin target/release/kgdiff`) and with the TypeScript
+CLI (`pnpm conformance:replay`, which runs `node packages/cli/dist/bin.js` after `pnpm build`).
 
 Another implementation is replayed with `pnpm conformance:replay --bin <executable>`. Its HTML
 reports, which no run records, are compared with the reference's by `pnpm
@@ -271,14 +273,25 @@ An implementation that is not complete yet runs the parts it has: a core library
 The corpus is generated; never edit an expected file by hand.
 
 ```sh
-pnpm conformance:update                  # regenerate everything from the TypeScript packages
-pnpm vitest run --project conformance    # check (also part of pnpm test)
-pnpm build && pnpm conformance:replay    # replay the CLI runs with the real process (CI does too)
+pnpm build:viewer-assets                 # once: the viewer bundles kgdiff's reports embed
+pnpm conformance:update                  # regenerate everything (builds the Rust kgdiff first)
+pnpm vitest run --project conformance    # check the TypeScript packages (also part of pnpm test)
+cargo test --workspace                   # check the Rust crates against it
+cargo build --release -p kgdiff && pnpm conformance:replay --bin target/release/kgdiff
 ```
 
-- A behaviour change in the TypeScript packages shows up as a failing `pnpm test`; regenerate,
-  review the diff of `conformance/` (it is the change every implementation must follow) and
-  commit it with the code.
+- The library outputs (everything below `expected/` but `cli/`, `apply.json` and `report.json`)
+  come from the TypeScript packages; the CLI runs (`case.json`'s `cli`, their stdout files, which
+  include `diff.json` and `delta.json`) and `report.json` from the Rust `kgdiff`, which `pnpm
+  conformance:update` builds with `cargo build --release -p kgdiff` and runs as a real process
+  (`--bin <path>` records with another executable). Where both write a file, or the report embeds
+  one, the generator checks that they agree.
+- `pnpm test` regenerates the library outputs and `case.json`'s definitions, and reads the CLI's
+  outputs as given, so it needs no Rust toolchain; CI regenerates the whole corpus with the Rust
+  `kgdiff` and fails on any difference, and replays every run on each OS.
+- A behaviour change shows up as a failing `pnpm test` (TypeScript packages) or `cargo test` and
+  replay (Rust); regenerate, review the diff of `conformance/` (it is the change every
+  implementation must follow) and commit it with the code.
 - A new case: add its inputs under `cases/<id>/` (or point `copiedFrom` at a dataset), add a
   definition to `cases.ts`, regenerate. Keep inputs small and their characters Unicode-stable.
 - `pnpm conformance:update` rewrites `case.json`, `expected/`, copied inputs, `primitives/` and the
@@ -290,10 +303,10 @@ pnpm build && pnpm conformance:replay    # replay the CLI runs with the real pro
   footer's version is replaced by `kgdiff <version>`), so the corpus only changes when behaviour
   does.
 
-**Who generates the corpus.** Today the TypeScript packages are the reference and the generator runs
-them. As the Rust port replaces them, the reference moves with it, one part at a time, and only
-after the Rust part reproduces the corpus as it stands: the CLI runs, `report.json` and the layout
-contract from phase 4, when the TypeScript CLI is deleted, everything else from phase 5. From then
+**Who generates the corpus.** The reference moves to the Rust port one part at a time, and only
+after the Rust part reproduces the corpus as it stands. Since phase 4 the Rust `kgdiff` records
+what the CLI produces (the CLI runs and `report.json`); the TypeScript packages still generate the
+library outputs, the layout contract among them, until phase 5 moves everything else. From then
 on the TypeScript check covers only what TypeScript keeps (the read path). RFC 0002, §9, "Corpus
 ownership", has the details.
 

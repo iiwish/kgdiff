@@ -59,7 +59,8 @@ KGDIFF_DIFFERENTIAL=$PWD/target/differential.jsonl cargo test --release -p kgdif
 - `conformance/`: the language-neutral conformance corpus — inputs, options and the expected
   diffs, deltas, hashes and CLI outputs of every case ([README](conformance/README.md)). It runs
   in `pnpm test`; after an intended behaviour change, `pnpm conformance:update` regenerates it
-  and its diff is part of the review.
+  (the CLI's outputs with the Rust `kgdiff`, which it builds), and its diff is part of the
+  review.
 - `crates/`: the Rust port of the compute packages ([RFC 0002](docs/rfcs/0002-rust-compute-core.md)),
   checked against `conformance/`. `clippy.toml` forbids the methods and types whose Rust
   defaults differ from JavaScript; everything JavaScript-specific lives in `kgdiff_core::js`.
