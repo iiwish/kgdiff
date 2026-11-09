@@ -1,0 +1,3 @@
+@prefix ex: <http://e/> .
+[] ex:p "x" .
+[ ex:q "y" ] .

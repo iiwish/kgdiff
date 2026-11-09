@@ -1,0 +1,13 @@
+[package]
+name = "oxprobe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+oxttl = { version = "0.2.5", features = ["rdf-12"] }
+oxrdfxml = { version = "0.2.5", features = ["rdf-12"] }
+oxjsonld = { version = "0.2.7", features = ["rdf-12"] }
+oxrdf = { version = "*", features = ["rdf-12"] }
+
+[workspace]

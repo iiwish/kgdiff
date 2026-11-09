@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!DOCTYPE rdf:RDF [
+  <!ENTITY ex "http://e/">
+  <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#">
+]>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:ex="http://e/" xml:base="http://e/base/">
+  <rdf:Description rdf:about="&ex;a">
+    <ex:p rdf:datatype="&xsd;integer">4</ex:p>
+    <ex:q rdf:resource="rel"/>
+    <ex:r rdf:parseType="Literal"><b xmlns="http://www.w3.org/1999/xhtml" class="x">bold <i>it</i></b> tail</ex:r>
+    <ex:s xml:lang="EN-gb">Hello</ex:s>
+    <ex:t rdf:parseType="Resource"><ex:u>v</ex:u></ex:t>
+    <ex:w rdf:parseType="Collection"><rdf:Description rdf:about="&ex;x"/><rdf:Description rdf:about="&ex;y"/></ex:w>
+    <ex:id rdf:ID="stmt">reified</ex:id>
+  </rdf:Description>
+  <rdf:Bag rdf:about="&ex;bag"><rdf:li>one</rdf:li><rdf:li>two</rdf:li></rdf:Bag>
+  <ex:Thing rdf:nodeID="n1" ex:attr="attr value"/>
+  <rdf:Description rdf:about="#frag"><ex:p>  spaced
+ text </ex:p></rdf:Description>
+</rdf:RDF>

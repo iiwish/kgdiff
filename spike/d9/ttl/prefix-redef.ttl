@@ -1,0 +1,4 @@
+@prefix a: <http://e/> .
+@prefix b: <http://e/> .
+@prefix a: <http://f/> .
+a:x b:y a:z .

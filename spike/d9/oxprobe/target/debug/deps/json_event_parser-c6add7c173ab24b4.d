@@ -1,0 +1,10 @@
+/Users/iiwish/self/kgdiff/.claude/worktrees/rust-phase3-2407aa/spike/d9/oxprobe/target/debug/deps/json_event_parser-c6add7c173ab24b4.d: /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/lib.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/read.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/write.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/../README.md
+
+/Users/iiwish/self/kgdiff/.claude/worktrees/rust-phase3-2407aa/spike/d9/oxprobe/target/debug/deps/libjson_event_parser-c6add7c173ab24b4.rlib: /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/lib.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/read.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/write.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/../README.md
+
+/Users/iiwish/self/kgdiff/.claude/worktrees/rust-phase3-2407aa/spike/d9/oxprobe/target/debug/deps/libjson_event_parser-c6add7c173ab24b4.rmeta: /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/lib.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/read.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/write.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/../README.md
+
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/lib.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/read.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/write.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/json-event-parser-0.2.3/src/../README.md:

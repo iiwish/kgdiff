@@ -1,0 +1,3 @@
+@prefix ex: <http://e/> .
+ex:a a ex:C ; ex:p ex:a, ex:a .
+ex:a ex:p ex:a .

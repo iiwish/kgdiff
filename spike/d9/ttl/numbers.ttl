@@ -1,0 +1,2 @@
+@prefix : <http://e/> .
+:a :p 4.50, 1.5E1, +1, -0, .5, 007, true, false, 1e0, "1.0"^^<http://www.w3.org/2001/XMLSchema#decimal> .

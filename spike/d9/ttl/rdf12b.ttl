@@ -1,0 +1,5 @@
+PREFIX : <http://e/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+:a :p :b {| :since 2020 |} .
+:a :q <<( :x :y :z )>> .
+<< :s :p :o >> :said :me .

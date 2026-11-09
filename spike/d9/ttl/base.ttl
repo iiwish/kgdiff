@@ -1,0 +1,6 @@
+@base <http://ex.org/x/y> .
+<a> <b> <../c> .
+<#x> <b> <//other/p> .
+<a> <b> <?q> .
+@base <z/> .
+<a> <b> <./c/./d/../e> .

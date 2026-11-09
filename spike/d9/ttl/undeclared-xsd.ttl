@@ -1,0 +1,2 @@
+@prefix ex: <http://e/> .
+ex:a ex:p "a"^^xsd:string .

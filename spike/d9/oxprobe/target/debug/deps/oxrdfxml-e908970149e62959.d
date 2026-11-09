@@ -1,0 +1,11 @@
+/Users/iiwish/self/kgdiff/.claude/worktrees/rust-phase3-2407aa/spike/d9/oxprobe/target/debug/deps/oxrdfxml-e908970149e62959.d: /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/lib.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/error.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/parser.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/serializer.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/utils.rs
+
+/Users/iiwish/self/kgdiff/.claude/worktrees/rust-phase3-2407aa/spike/d9/oxprobe/target/debug/deps/liboxrdfxml-e908970149e62959.rlib: /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/lib.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/error.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/parser.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/serializer.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/utils.rs
+
+/Users/iiwish/self/kgdiff/.claude/worktrees/rust-phase3-2407aa/spike/d9/oxprobe/target/debug/deps/liboxrdfxml-e908970149e62959.rmeta: /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/lib.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/error.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/parser.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/serializer.rs /Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/utils.rs
+
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/lib.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/error.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/parser.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/serializer.rs:
+/Users/iiwish/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/oxrdfxml-0.2.5/src/utils.rs:

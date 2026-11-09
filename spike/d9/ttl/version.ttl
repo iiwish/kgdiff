@@ -1,0 +1,2 @@
+VERSION "1.2"
+<http://e/a> <http://e/b> <http://e/c> .

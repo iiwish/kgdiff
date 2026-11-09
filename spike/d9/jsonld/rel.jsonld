@@ -1,0 +1,1 @@
+{"@context": {"ex": "http://e/"}, "@id": "a/../b", "ex:p": {"@id": "#c"}, "ex:q": [1, 1.5, 1e21, true, {"@value": "x", "@language": "EN-gb"}, {"@value": "y", "@direction": "rtl", "@language": "ar"}, {"@value": {"b": 1, "a": [2, 1.0]}, "@type": "@json"}], "name": "unmapped"}

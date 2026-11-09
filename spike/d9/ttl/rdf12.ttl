@@ -1,0 +1,5 @@
+PREFIX : <http://e/>
+:a :p :b ~ :r {| :since 2020 |} .
+:a :q <<( :x :y :z )>> .
+<< :s :p :o >> :said :me .
+:r2 rdf:reifies <<( :a :p :c )>> .
