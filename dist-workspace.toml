@@ -1,0 +1,33 @@
+# The native binaries of kgdiff (RFC 0002, §8, "One version, four registries"): `dist` (cargo-dist)
+# builds `kgdiff` for every target below, with SHA-256 checksums, shell and PowerShell installers
+# and a Homebrew formula for the tap iiwish/homebrew-tap (`brew install iiwish/tap/kgdiff`).
+# .github/workflows/release.yml runs it; nothing is published until that is turned on
+# (docs/releasing.md, "Native binaries").
+[workspace]
+members = ["cargo:."]
+
+[dist]
+cargo-dist-version = "0.31.0"
+ci = "github"
+# release.yml is the changesets workflow, with dist's jobs added by hand: dist does not generate it.
+allow-dirty = ["ci"]
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-apple-darwin",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-musl",
+  "x86_64-unknown-linux-musl",
+  "x86_64-pc-windows-msvc",
+]
+installers = ["shell", "powershell", "homebrew"]
+tap = "iiwish/homebrew-tap"
+formula = "kgdiff"
+# The formula is built and kept with the release's artifacts; pushing it to the tap is a step of
+# release.yml that stays off until the tap's token is configured.
+publish-jobs = []
+hosting = "github"
+install-path = "CARGO_HOME"
+install-updater = false
+checksum = "sha256"
+github-attestations = true

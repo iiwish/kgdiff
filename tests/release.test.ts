@@ -22,7 +22,9 @@ import {
 import {
   CARGO_LOCK,
   CARGO_TOML,
+  internalRequirements,
   lockedWorkspaceCrates,
+  withInternalRequirements,
   withLockedVersion,
   withWorkspaceVersion,
   workspaceVersion,
@@ -59,6 +61,36 @@ describe('the Rust workspace', () => {
     const crates = lockedWorkspaceCrates(readFileSync(CARGO_LOCK, 'utf8'));
     expect(crates.map((c) => c.name)).toContain('kgdiff-core');
     for (const crate of crates) expect(crate).toEqual({ ...crate, version: packagesVersion() });
+    // The published crates require each other at exactly that version.
+    const requirements = internalRequirements(readFileSync(CARGO_TOML, 'utf8'));
+    expect(requirements.map((r) => r.name)).toEqual(
+      expect.arrayContaining(['kgdiff-core', 'kgdiff-formats', 'kgdiff-report']),
+    );
+    for (const r of requirements) expect(r).toEqual({ ...r, version: packagesVersion() });
+  });
+
+  it('sets the exact requirements on the workspace crates, not on registry crates', () => {
+    const toml = [
+      '[workspace.package]',
+      'version = "0.1.0"',
+      '',
+      '[workspace.dependencies]',
+      'serde_json = "1.0.149"',
+      'regex = { version = "=1.0.0" }',
+      'kgdiff-core = { version = "=0.1.0", path = "crates/kgdiff-core" }',
+      'kgdiff-formats = { version = "=0.1.0", path = "crates/kgdiff-formats" }',
+      '',
+      '[workspace.lints.rust]',
+      'kgdiff-x = { version = "=0.1.0", path = "crates/kgdiff-x" }',
+      '',
+    ].join('\n');
+    const next = withInternalRequirements(toml, '0.5.0');
+    expect(internalRequirements(next)).toEqual([
+      { name: 'kgdiff-core', version: '0.5.0' },
+      { name: 'kgdiff-formats', version: '0.5.0' },
+    ]);
+    expect(next.replaceAll('"=0.5.0"', '"=0.1.0"')).toBe(toml);
+    expect(withInternalRequirements('[workspace]\n', '0.5.0')).toBe('[workspace]\n');
   });
 
   it('sets the version of [workspace.package] only', () => {

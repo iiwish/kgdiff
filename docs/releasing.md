@@ -112,6 +112,55 @@ num2048@163.com.
 6. **Lock it down.** Once a release from CI has gone through, set each package to require 2FA and
    disallow tokens, and revoke publish tokens that are no longer needed.
 
+## Native binaries and crates
+
+The Rust `kgdiff` ([RFC 0002](rfcs/0002-rust-compute-core.md), phase 3) ships on its own channels:
+binaries for macOS, Linux (gnu and musl) and Windows on the GitHub release, with SHA-256
+checksums, build provenance and shell / PowerShell installers; a Homebrew formula in
+[`iiwish/homebrew-tap`](https://github.com/iiwish/homebrew-tap) (`brew install iiwish/tap/kgdiff`);
+and the crates `kgdiff-core`, `kgdiff-formats`, `kgdiff-report` and `kgdiff` on crates.io
+(`cargo install kgdiff`). npm's `@kgdiff/cli` and the GitHub Action stay on the TypeScript CLI
+until phase 4.
+
+[`dist`](https://opensource.axo.dev/cargo-dist/) builds the binaries (`dist-workspace.toml`, the
+`dist` profile of `Cargo.toml`). Its jobs are part of [`release.yml`](../.github/workflows/release.yml),
+which stays the Changesets workflow (dist does not regenerate it): after a release that published
+a version, `native-build` builds and smoke-tests every target, `native-global` makes the checksums,
+installers and formula, and `crates-dry-run` packages and verifies every crate
+(`cargo publish --workspace --dry-run`). A pull request that changes the workflow or
+`dist-workspace.toml` runs the same jobs, and so does Actions → Release → Run workflow; they never
+publish. Every build runs `pnpm build:viewer-assets` first: the binary embeds the viewer.
+
+Publishing stays off until these are done:
+
+1. **crates.io, first publish by hand.** Trusted publishing can only be configured for a crate that
+   exists, so publish the first version from a maintainer's machine, logged in to crates.io:
+
+   ```sh
+   pnpm install && pnpm build:viewer-assets
+   git status --porcelain   # nothing: the viewer bundles are git-ignored
+   cargo publish --workspace --locked --allow-dirty
+   ```
+
+   `--allow-dirty` because cargo counts the git-ignored viewer bundles, which `kgdiff-report`
+   packages, as uncommitted changes.
+
+2. **crates.io trusted publishers.** For each of the four crates, open Settings → Trusted
+   Publishing on crates.io and add GitHub with the owner `iiwish`, repository `kgdiff`, workflow
+   `release.yml` and environment `crates-io`. Under Settings → Environments here, create
+   `crates-io` with deployment branches limited to `main`. Then set the repository variable
+   `CRATES_RELEASE_ENABLED` to `true`: the `crates-publish` job publishes with a short-lived
+   token from the job's OIDC token, and no crates.io token is stored.
+3. **Homebrew tap and binaries.** Create a fine-grained personal access token with read and write
+   access to the contents of `iiwish/homebrew-tap` only. Under Settings → Environments, create
+   `native` with deployment branches limited to `main` and store the token there as the secret
+   `HOMEBREW_TAP_TOKEN`. Then set the repository variable `NATIVE_RELEASE_ENABLED` to `true`: the
+   `native-publish` job attests the archives, uploads them with the installers and checksums to
+   the `v<version>` GitHub release, and commits `Formula/kgdiff.rb` to the tap.
+
+Releases before these steps still build and check everything; the artifacts stay with the
+workflow run.
+
 ## Repository settings
 
 - **Ruleset `main`** (Settings → Rules → Rulesets) on the default branch: no deletion, no force

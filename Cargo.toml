@@ -21,6 +21,11 @@ homepage = "https://github.com/iiwish/kgdiff"
 # until kgdiff-core's own JSON reader exists. No document kgdiff reads or writes goes through
 # serde_json (RFC 0002, D-12).
 serde_json = "1.0.149"
+# The workspace's own crates, required at exactly the one version (scripts/sync-versions.ts keeps
+# these equal to it): kgdiff X.Y.Z names one consistent set of crates on crates.io.
+kgdiff-core = { version = "=0.6.0", path = "crates/kgdiff-core" }
+kgdiff-formats = { version = "=0.6.0", path = "crates/kgdiff-formats" }
+kgdiff-report = { version = "=0.6.0", path = "crates/kgdiff-report" }
 
 # The lints every engine crate opts into with `[lints] workspace = true` (RFC 0002, §3,
 # Enforcement). The bindings crates set their own.
@@ -33,3 +38,9 @@ unsafe_code = "forbid"
 cast_possible_truncation = "deny"
 cast_sign_loss = "deny"
 cast_possible_wrap = "deny"
+
+# The native binaries `dist` builds (dist-workspace.toml): release, thin LTO, without symbols.
+[profile.dist]
+inherits = "release"
+lto = "thin"
+strip = "symbols"
