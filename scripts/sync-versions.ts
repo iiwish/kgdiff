@@ -1,7 +1,8 @@
 /**
  * Keeps the version of the Rust workspace at the version the npm packages share (one fixed
  * Changesets group; RFC 0002, §8, "One version, four registries"): the `[workspace.package]`
- * version of Cargo.toml, and the entries of the workspace's own crates in Cargo.lock.
+ * version of Cargo.toml, the exact requirements (`=X.Y.Z`) on the workspace's own crates in its
+ * `[workspace.dependencies]`, and the entries of those crates in Cargo.lock.
  * `pnpm version-packages` runs it after `changeset version`:
  *
  *   pnpm tsx scripts/sync-versions.ts
@@ -36,6 +37,31 @@ export function withWorkspaceVersion(cargoToml: string, version: string): string
   return cargoToml.replace(table, table.replace(VERSION_LINE, `version = "${version}"`));
 }
 
+/** The `[workspace.dependencies]` table of a Cargo.toml: from its header to the next table. */
+const WORKSPACE_DEPENDENCIES = /^\[workspace\.dependencies\][^\n]*\n(?:(?!\[)[^\n]*\n?)*/m;
+/** An entry on a workspace crate: `name = { version = "=X", path = "crates/…" }`. */
+const INTERNAL_REQUIREMENT =
+  /^([A-Za-z0-9_-]+)[ \t]*=[ \t]*\{[ \t]*version[ \t]*=[ \t]*"=([^"]*)"[ \t]*,[ \t]*path[ \t]*=[ \t]*"crates\/[^"]*"[ \t]*\}/gm;
+
+/** The exact requirements on the workspace's own crates in `[workspace.dependencies]`. */
+export function internalRequirements(cargoToml: string): { name: string; version: string }[] {
+  const table = WORKSPACE_DEPENDENCIES.exec(cargoToml)?.[0] ?? '';
+  return [...table.matchAll(INTERNAL_REQUIREMENT)].map((m) => ({
+    name: m[1] ?? '',
+    version: m[2] ?? '',
+  }));
+}
+
+/** `cargoToml` with the requirements on the workspace's own crates at exactly `version`. */
+export function withInternalRequirements(cargoToml: string, version: string): string {
+  const table = WORKSPACE_DEPENDENCIES.exec(cargoToml)?.[0];
+  if (table === undefined) return cargoToml;
+  const next = table.replace(INTERNAL_REQUIREMENT, (line, _name, old: string) =>
+    line.replace(`"=${old}"`, `"=${version}"`),
+  );
+  return cargoToml.replace(table, next);
+}
+
 /**
  * The packages of a Cargo.lock that belong to the workspace: those without a `source` (crates
  * from a registry or git have one), with their versions.
@@ -65,7 +91,7 @@ export function withLockedVersion(cargoLock: string, version: string): string {
 if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const version = packagesVersion();
   for (const [file, update] of [
-    [CARGO_TOML, withWorkspaceVersion],
+    [CARGO_TOML, (t: string, v: string) => withInternalRequirements(withWorkspaceVersion(t, v), v)],
     [CARGO_LOCK, withLockedVersion],
   ] as const) {
     const text = readFileSync(file, 'utf8');

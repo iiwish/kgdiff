@@ -1,6 +1,6 @@
 [package]
 name = "kgdiff"
-description = "git diff for knowledge graphs: the kgdiff command line, byte-compatible with @kgdiff/cli."
+description = "Semantic diff and review for knowledge graphs, byte-compatible with @kgdiff/cli"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,10 +11,6 @@ homepage.workspace = true
 readme = "README.md"
 keywords = ["kgdiff", "diff", "knowledge-graph", "rdf", "cli"]
 categories = ["command-line-utilities"]
-# Not on crates.io yet: a published crate needs a version requirement on its path dependencies
-# (cargo-deny bans the wildcard otherwise), and scripts/sync-versions.ts does not keep such
-# requirements at the shared version yet. Both come with the release of the crates (RFC 0002, §8).
-publish = false
 
 [[bin]]
 name = "kgdiff"
@@ -29,9 +25,9 @@ embed-viewer = ["kgdiff-report/embed-viewer"]
 
 [dependencies]
 flate2 = "1.1"
-kgdiff-core = { path = "../kgdiff-core" }
-kgdiff-formats = { path = "../kgdiff-formats" }
-kgdiff-report = { path = "../kgdiff-report" }
+kgdiff-core.workspace = true
+kgdiff-formats.workspace = true
+kgdiff-report.workspace = true
 terminal_size = "0.4"
 
 [target.'cfg(windows)'.dependencies]

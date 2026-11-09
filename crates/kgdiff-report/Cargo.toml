@@ -11,13 +11,9 @@ homepage.workspace = true
 readme = "README.md"
 keywords = ["kgdiff", "diff", "knowledge-graph", "report", "markdown"]
 categories = ["command-line-interface", "text-processing"]
-# Not on crates.io yet: a published crate needs a version requirement on its path dependency
-# (cargo-deny bans the wildcard otherwise), and scripts/sync-versions.ts does not keep such
-# requirements at the shared version yet. Both come with the release of the crates (RFC 0002, §8).
-publish = false
 # `assets/` is git-ignored (the viewer build writes it) but packaged: listing the files here
 # makes `cargo package` take them regardless of `.gitignore` (RFC 0002, §8, "Build order").
-include = ["/Cargo.toml", "/README.md", "/build.rs", "/src/**", "/assets/*.js"]
+include = ["/Cargo.toml", "/README.md", "/build.rs", "/src/**", "/tests/**", "/assets/*.js"]
 
 [features]
 # Embeds the viewer bundles (`assets/`, copied there by `pnpm build:viewer-assets`) for HTML
@@ -30,7 +26,7 @@ base64 = "0.22"
 flate2 = "1.1"
 icu_properties = "2.4"
 icu_segmenter = "2.4"
-kgdiff-core = { path = "../kgdiff-core" }
+kgdiff-core.workspace = true
 
 [dev-dependencies]
 kgdiff-formats = { path = "../kgdiff-formats" }
