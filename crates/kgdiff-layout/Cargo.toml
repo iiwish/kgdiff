@@ -11,9 +11,6 @@ homepage.workspace = true
 readme = "README.md"
 keywords = ["kgdiff", "layout", "force-directed", "graph", "knowledge-graph"]
 categories = ["algorithms", "visualization"]
-# Not on crates.io yet: it ships with phase 4's CLI (RFC 0002, §9), and stays out of the
-# `crates-publish` job of release.yml until then.
-publish = false
 
 [dependencies]
 icu_properties = "2.4"
