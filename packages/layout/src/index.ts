@@ -82,10 +82,22 @@ export interface LayoutResult {
     /** Wall-clock time. The only non-deterministic field; never serialized. */
     readonly ms: number;
   };
+  /**
+   * The layout engine generation that computed the positions, as a version 2 document names it
+   * (`layoutFromJSON`), e.g. `"kgdiff-layout/1"`. Absent for layouts read from version 1 and for
+   * the ones this package computes (`layoutDiff`, and `extendLayout` once it places a node).
+   */
+  readonly generator?: string;
 }
 
-/** Deterministic JSON transport (no timing information). */
-export interface LayoutJSON {
+/**
+ * A layout document, as `layoutFromJSON` reads it: version 1, what `layoutToJSON` writes, or
+ * version 2, written by kgdiff's Rust layout engine.
+ */
+export type LayoutJSON = LayoutJSONV1 | LayoutJSONV2;
+
+/** Deterministic JSON transport (no timing information), version 1: what `layoutToJSON` writes. */
+export interface LayoutJSONV1 {
   readonly format: 'kgdiff.layout';
   readonly version: 1;
   readonly strategy: LayoutStrategy;
@@ -97,6 +109,21 @@ export interface LayoutJSON {
   readonly hidden: Readonly<Record<UnionId, number>>;
   readonly bounds: Rect;
   readonly components: readonly LayoutComponent[];
+}
+
+/**
+ * Version 2 of the layout document: version 1's members plus `generator`. kgdiff's Rust layout
+ * engine (RFC 0002, phase 4) writes it; its positions differ from this package's for the same
+ * input. Positions from either version are valid pins (`pinned`, `extendLayout`).
+ */
+export interface LayoutJSONV2 extends Omit<LayoutJSONV1, 'version'> {
+  readonly version: 2;
+  /**
+   * The layout engine generation that computed the positions, e.g. `"kgdiff-layout/1"`: it
+   * changes whenever an algorithm change moves positions for the same input, so that caches can
+   * tell layouts apart. A non-empty string.
+   */
+  readonly generator: string;
 }
 
 /**
@@ -176,17 +203,20 @@ export function estimateLabelWidth(text: string, fontSize: number): number {
 
 /**
  * Deterministic JSON form: keys sorted by id, coordinates and radii rounded to 0.01, no timing.
- * `layoutToJSON(layoutFromJSON(json))` reproduces `json`.
+ * Always version 1, the document of this package's layout engine: a layout read from version 2
+ * is written as version 1, without its `generator`. `layoutToJSON(layoutFromJSON(json))`
+ * reproduces a version 1 `json`.
  */
-export function layoutToJSON(layout: LayoutResult): LayoutJSON {
+export function layoutToJSON(layout: LayoutResult): LayoutJSONV1 {
   return toJSON(layout);
 }
 
 /**
- * Rebuild a `LayoutResult` from `layoutToJSON` output (`stats.ms` is 0).
+ * Rebuild a `LayoutResult` from a layout document (`stats.ms` is 0): version 1 (`layoutToJSON`
+ * output) or version 2, whose `generator` becomes the result's.
  *
- * @throws KgdiffError `invalid-input` for malformed input, `unsupported-version` for an unknown
- *   version.
+ * @throws KgdiffError `invalid-input` for malformed input, `unsupported-version` for a version
+ *   other than 1 and 2.
  */
 export function layoutFromJSON(json: LayoutJSON): LayoutResult {
   return fromJSON(json);

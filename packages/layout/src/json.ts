@@ -5,6 +5,7 @@ import { KgdiffError, type Point, type Rect, type UnionId } from '@kgdiff/core';
 import type {
   LayoutComponent,
   LayoutJSON,
+  LayoutJSONV1,
   LayoutResult,
   LayoutScope,
   LayoutStrategy,
@@ -25,7 +26,8 @@ const rect = (r: Rect): Rect => ({
   height: round2(r.height),
 });
 
-export function toJSON(layout: LayoutResult): LayoutJSON {
+/** Always version 1: a `generator` read from version 2 is not written. */
+export function toJSON(layout: LayoutResult): LayoutJSONV1 {
   return {
     format: 'kgdiff.layout',
     version: 1,
@@ -76,7 +78,7 @@ function readNumbers(value: unknown, where: string): Map<UnionId, number> {
 export function fromJSON(json: LayoutJSON): LayoutResult {
   const raw: unknown = json;
   if (!isObject(raw) || raw.format !== 'kgdiff.layout') fail('not a kgdiff.layout document');
-  if (raw.version !== 1) {
+  if (raw.version !== 1 && raw.version !== 2) {
     throw new KgdiffError(
       'unsupported-version',
       `Unsupported kgdiff.layout version ${String(raw.version)}`,
@@ -84,6 +86,14 @@ export function fromJSON(json: LayoutJSON): LayoutResult {
         version: raw.version,
       },
     );
+  }
+  // Version 2 is version 1 plus `generator`; a `generator` in a version 1 document means nothing.
+  let generator: string | undefined;
+  if (raw.version === 2) {
+    if (typeof raw.generator !== 'string' || raw.generator === '') {
+      fail('generator must be a non-empty string in version 2');
+    }
+    generator = raw.generator;
   }
   const strategy = raw.strategy;
   if (strategy !== 'union' && strategy !== 'anchored') fail('strategy must be union or anchored');
@@ -127,5 +137,6 @@ export function fromJSON(json: LayoutJSON): LayoutResult {
       nodes: positions.size,
       ms: 0,
     }),
+    ...(generator !== undefined ? { generator } : {}),
   });
 }

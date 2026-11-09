@@ -107,6 +107,11 @@ carry their `format` and `version`, and each has a JSON Schema in `packages/core
 `@kgdiff/core`). Tests validate everything kgdiff writes against them, so a
 change to these formats changes its schema in the same commit; an incompatible change bumps the
 version.
+Layouts (`kgdiff.layout`) carry them too. `layoutToJSON` writes version 1. `layoutFromJSON` also
+reads version 2, which kgdiff's Rust layout engine will write: version 1's members plus
+`generator`, a non-empty string such as `"kgdiff-layout/1"` that names the engine generation that
+computed the positions. Positions from either version are valid pins. Their schemas come with
+the Rust layout (RFC 0002).
 
 ## Formats: mapping conventions
 

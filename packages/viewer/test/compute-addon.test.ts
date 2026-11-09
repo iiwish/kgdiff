@@ -4,7 +4,7 @@
  * later (`globalThis.KgdiffCompute`) is used without a reload.
  */
 import { type DiffJSON, diff, diffToJSON, KgdiffError, packDiffJSON } from '@kgdiff/core';
-import { extendLayout, layoutDiff, layoutToJSON } from '@kgdiff/layout';
+import { extendLayout, layoutDiff, layoutFromJSON, layoutToJSON } from '@kgdiff/layout';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { computeStatus } from '../src/compute-loader.js';
 import { ViewerController } from '../src/controller.js';
@@ -47,6 +47,18 @@ describe('compute add-on', () => {
       return { diff: diffToJSON(c.data!.diff), scene: c.scene!.nodes.map((n) => n.id) };
     };
     expect(await shown(packed)).toEqual(await shown(plain));
+  });
+
+  it('reads report payloads whose layout is version 2 (the Rust layout) without it', async () => {
+    setRenderBackend(mockBackend());
+    const v1 = report();
+    const { version: _, ...members } = layoutToJSON(layoutFromJSON(v1.layout!));
+    const v2 = { ...v1, layout: { ...members, version: 2, generator: 'kgdiff-layout/1' } as const };
+    const c = new ViewerController(recordingHost(), manualDeps());
+    await c.loadPayload(v2);
+    expect(c.status).toBe('ready');
+    expect(c.layout?.generator).toBe('kgdiff-layout/1');
+    expect(layoutToJSON(c.layout!)).toEqual(v1.layout);
   });
 
   it('reports work without it; load() rejects with an actionable KgdiffError', async () => {
