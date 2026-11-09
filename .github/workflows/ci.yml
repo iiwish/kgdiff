@@ -108,12 +108,105 @@ jobs:
           tool: cargo-deny@0.20.2
       - run: cargo deny --locked check
 
+  # RFC 0002 §3 rule 6: one layout everywhere. Every corpus case's layout (and its changes-only
+  # and extended variants, and a few larger graphs) is hashed on x86-64 Linux, AArch64 macOS,
+  # x86-64 Windows and in WebAssembly (wasm32-wasip1 under Node's WASI); `targets-equal` requires
+  # the hashes to be the same. The native runs also run kgdiff-layout's tests in release mode,
+  # which include the properties over synthetic graphs up to 10k nodes.
+  targets:
+    name: Layout hashes (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: x86-64 Linux
+            os: ubuntu-latest
+            artifact: x86_64-linux
+          - name: AArch64 macOS
+            os: macos-latest
+            artifact: aarch64-macos
+          - name: x86-64 Windows
+            os: windows-latest
+            artifact: x86_64-windows
+          - name: wasm32, Node
+            os: ubuntu-latest
+            artifact: wasm32-node
+            wasm: true
+    env:
+      CARGO_TERM_COLOR: always
+    defaults:
+      run:
+        # Bash everywhere: the hash files are compared byte for byte.
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the toolchain of rust-toolchain.toml
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: targets-${{ matrix.artifact }}
+      - name: Tests in release mode (large graphs included)
+        if: ${{ !matrix.wasm }}
+        run: cargo test -p kgdiff-layout --release --locked
+      - name: Hash the layouts
+        if: ${{ !matrix.wasm }}
+        run: cargo run -p kgdiff-layout --release --locked --example corpus_hashes -- conformance > layout-hashes.txt
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: ${{ matrix.wasm }}
+        with:
+          node-version: 24
+      - name: Hash the layouts in WebAssembly under Node
+        if: ${{ matrix.wasm }}
+        run: |
+          rustup target add wasm32-wasip1
+          cargo build -p kgdiff-layout --release --locked --example corpus_hashes --target wasm32-wasip1
+          node crates/kgdiff-layout/scripts/run-wasi.mjs \
+            target/wasm32-wasip1/release/examples/corpus_hashes.wasm conformance > layout-hashes.txt
+      - run: wc -l layout-hashes.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: layout-hashes-${{ matrix.artifact }}
+          path: layout-hashes.txt
+          if-no-files-found: error
+          retention-days: 7
+
+  targets-equal:
+    name: Layout hashes equal on every target
+    needs: targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: layout-hashes-*
+      - name: Every target wrote the same hashes
+        run: |
+          set -u
+          reference=layout-hashes-x86_64-linux/layout-hashes.txt
+          test -s "$reference"
+          status=0
+          for file in layout-hashes-*/layout-hashes.txt; do
+            if cmp -s "$reference" "$file"; then
+              echo "same as x86-64 Linux: $file ($(wc -l < "$file") layouts)"
+            else
+              echo "::error::$file differs from x86-64 Linux"
+              diff "$reference" "$file" || true
+              status=1
+            fi
+          done
+          test "$(ls -d layout-hashes-*/ | wc -l)" -eq 4
+          exit $status
+
   # The one check the main branch ruleset requires: it passes only when every job of every
   # matrix passed, so the jobs can change without touching the ruleset.
   passed:
     name: CI passed
     if: always()
-    needs: [check, rust, cargo-deny]
+    needs: [check, rust, cargo-deny, targets, targets-equal]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
