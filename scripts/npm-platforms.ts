@@ -9,7 +9,8 @@
  *   pnpm tsx scripts/npm-platforms.ts publish [<out dir>]
  *
  * `assemble` finds `kgdiff-<target>.tar.xz` / `.zip` below <dist dir> (at any depth, as
- * actions/download-artifact leaves them), checks each against its `.sha256`, writes
+ * actions/download-artifact leaves them), checks that dist's manifests name the version of
+ * `@kgdiff/cli` and each archive against its `.sha256`, writes
  * `<out>/<package>/` (package.json, README.md, LICENSE, bin/kgdiff or bin/kgdiff.exe) and packs
  * it into `<out>/kgdiff-cli-<platform>-<version>.tgz`; it also packs `@kgdiff/cli` with its
  * optional dependencies into `<out>/kgdiff-cli-<version>.tgz`, for scripts/npm-smoke.mjs. The
@@ -179,9 +180,40 @@ function pack(dir: string, out: string): string {
   return join(out, result.filename);
 }
 
+/**
+ * The kgdiff version dist built the archives below `dist` for, from their dist manifests
+ * (`releases[].app_version`); every manifest must name the same one.
+ */
+export function distVersion(files: ReadonlyMap<string, string>): string {
+  const versions = new Set<string>();
+  for (const [name, path] of files) {
+    if (!name.endsWith('-dist-manifest.json')) continue;
+    const manifest = JSON.parse(readFileSync(path, 'utf8')) as {
+      releases?: readonly { app_name?: string; app_version?: string }[];
+    };
+    for (const release of manifest.releases ?? []) {
+      if (release.app_name === 'kgdiff' && release.app_version) versions.add(release.app_version);
+    }
+  }
+  const [version, ...others] = versions;
+  if (version === undefined || others.length > 0) {
+    throw new Error(
+      `npm-platforms: the dist manifests name ${versions.size === 0 ? 'no kgdiff version' : `the versions ${[...versions].join(', ')}`}.`,
+    );
+  }
+  return version;
+}
+
 export function assemble(dist: string, out: string): string[] {
   const { version } = cliManifest();
   const files = filesBelow(dist);
+  // A platform package says which kgdiff it holds by its version: never another one's binary.
+  const built = distVersion(files);
+  if (built !== version) {
+    throw new Error(
+      `npm-platforms: the archives hold kgdiff ${built}, but @kgdiff/cli is at ${version}; assemble from the release run of ${version}.`,
+    );
+  }
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   const tarballs: string[] = [];
