@@ -147,6 +147,7 @@
       "covers": [
         "kgdiff-json",
         "numbers",
+        "non-finite",
         "key-order",
         "duplicate-keys",
         "__proto__",
@@ -344,6 +345,7 @@
         "exit-codes",
         "usage",
         "utf16-units",
+        "lone-surrogate",
         "toFixed",
         "apply:mismatch",
         "apply:lenient"

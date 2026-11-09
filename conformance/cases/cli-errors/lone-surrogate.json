@@ -1,0 +1,9 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "nodes": [
+    { "id": "n01", "label": "A pair 😀 is one character" },
+    { "id": "n02", "label": "Half \ud83d of a pair is not" }
+  ],
+  "edges": []
+}

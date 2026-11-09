@@ -127,6 +127,10 @@ graphology, vis-network) and reads these fields:
 Other node fields become attributes. Fields that only matter for drawing (rendering state, styles,
 shape types) are dropped with a warning.
 
+In every JSON shape, a number too large for a double (`1e400`) is kept as the string `"Infinity"`
+or `"-Infinity"`, with a warning, rather than lost. A string with half of a surrogate pair escaped
+on its own (`"\ud800"`) is an error: kgdiff only reads well-formed Unicode.
+
 ## RDF and OBO
 
 - Subjects become nodes. OBO PURLs are shortened to CURIEs such as `GO:0008150`.

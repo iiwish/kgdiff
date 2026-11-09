@@ -9,8 +9,9 @@
 //! - **Strings** are escaped as `JSON.stringify` escapes them (J-05).
 //! - **Errors** carry the position in UTF-16 code units and what was expected there, in the words
 //!   of the JSON reader of `@kgdiff/formats` (J-54), so that the messages built from them match.
-//! - **Lone surrogates** (`"\ud800"`), which `JSON.parse` accepts, are rejected: whether kgdiff
-//!   accepts them is open (RFC 0002, D-2) and the corpus leaves them out.
+//! - **Lone surrogates** (`"\ud800"`: half of a surrogate pair, escaped without its other half),
+//!   which `JSON.parse` accepts, are rejected, as kgdiff's TypeScript readers reject them
+//!   (RFC 0002, D-2; `json-roundtrip.json` and the `cli-errors` case pin it).
 //! - **Repeated text** is shared: a property name or a short string read again shortly after is
 //!   the same [`JsStr`], as JavaScript engines share property names, so that the records of a
 //!   large graph do not each hold their own copy of `"source"` or `"knows"`.
@@ -34,8 +35,9 @@ pub enum ErrorKind {
     Expected(&'static str),
     /// Arrays and objects nested deeper than the limit.
     TooDeep(usize),
-    /// A `\uD800`–`\uDFFF` escape that is not half of a surrogate pair (RFC 0002, D-2).
-    LoneSurrogate,
+    /// A `\uD800`–`\uDFFF` escape that is not half of an escaped surrogate pair (RFC 0002,
+    /// D-2), as written in the text (`\ud83d`); the error's position is its backslash.
+    LoneSurrogate(String),
 }
 
 /// A JSON syntax error and where it is.
@@ -63,9 +65,10 @@ impl fmt::Display for Error {
                 f,
                 "Invalid JSON on line {line}, column {column}: nested deeper than {max} levels"
             ),
-            ErrorKind::LoneSurrogate => write!(
+            ErrorKind::LoneSurrogate(escape) => write!(
                 f,
-                "Invalid JSON on line {line}, column {column}: a lone surrogate escape"
+                "Invalid JSON on line {line}, column {column}: the escape {escape} is a lone \
+                 surrogate (half of a UTF-16 pair), which kgdiff does not accept"
             ),
         }
     }
@@ -323,7 +326,8 @@ impl<'a> Parser<'a> {
                     .flatten()
                     .filter(|low| (0xDC00..=0xDFFF).contains(low));
                 let Some(low) = low else {
-                    return Err((escape, ErrorKind::LoneSurrogate));
+                    let written = self.text[escape..escape + 6].to_owned();
+                    return Err((escape, ErrorKind::LoneSurrogate(written)));
                 };
                 self.at += 6;
                 let code = 0x1_0000 + ((high - 0xD800) << 10) + (low - 0xDC00);
@@ -558,10 +562,18 @@ mod tests {
             Err(ErrorKind::Expected("a closing quote"))
         );
         assert_eq!(roundtrip("1 2"), Err(ErrorKind::Expected("end of input")));
-        assert_eq!(roundtrip(r#""\ud800""#), Err(ErrorKind::LoneSurrogate));
+        let lone = |escape: &str| Err(ErrorKind::LoneSurrogate(escape.to_owned()));
+        assert_eq!(roundtrip(r#""\ud800""#), lone(r"\ud800"));
+        assert_eq!(roundtrip(r#""\udc00\ud800""#), lone(r"\udc00"));
+        assert_eq!(roundtrip(r#""\uD83D\uDE00\uD83D""#), lone(r"\uD83D"));
+        assert_eq!(roundtrip(r#""\ud83d\\ude00""#), lone(r"\ud83d"));
+        assert_eq!(roundtrip(r#""\ud83d\u0041""#), lone(r"\ud83d"));
+        let e = parse("{\n  \"a\": \"😀 \\ud83d\"}").unwrap_err();
+        assert_eq!((e.offset, e.line, e.column), (13, 2, 12));
         assert_eq!(
-            roundtrip(r#""\udc00\ud800""#),
-            Err(ErrorKind::LoneSurrogate)
+            e.to_string(),
+            "Invalid JSON on line 2, column 12: the escape \\ud83d is a lone surrogate (half of \
+             a UTF-16 pair), which kgdiff does not accept"
         );
         assert_eq!(
             Parser::new("[[[]]]").max_depth(2).parse().unwrap_err().kind,

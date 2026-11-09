@@ -1,9 +1,10 @@
 {
   "id": "json-numbers-and-keys",
-  "description": "Attribute values that JavaScript and Rust print differently (1e21, 1e-7, 0.000001, -0, 1.0, 2^53 + 1, values beyond the double range, the shortest round-trip digits), integer-like object keys that JavaScript lists first, duplicate keys, `__proto__`, nested objects and arrays, numbers and integer-like keys in `meta`.",
+  "description": "Attribute values that JavaScript and Rust print differently (1e21, 1e-7, 0.000001, -0, 1.0, 2^53 + 1, the shortest round-trip digits), values beyond the double range (1e400, kept as \"Infinity\" / \"-Infinity\" with a json-non-finite warning, in attributes, arrays and `meta`), integer-like object keys that JavaScript lists first, duplicate keys, `__proto__`, nested objects and arrays, numbers and integer-like keys in `meta`.",
   "covers": [
     "kgdiff-json",
     "numbers",
+    "non-finite",
     "key-order",
     "duplicate-keys",
     "__proto__",
@@ -78,7 +79,7 @@
         "file": "expected/cli/summary.txt"
       },
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },
@@ -102,7 +103,7 @@
         "file": "expected/cli/stat.txt"
       },
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },
@@ -126,7 +127,7 @@
         "file": "expected/cli/name-status.tsv"
       },
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },
@@ -151,7 +152,7 @@
       },
       "versionPlaceholder": true,
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },
@@ -175,7 +176,7 @@
         "file": "expected/diff.json"
       },
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },
@@ -199,7 +200,7 @@
         "file": "expected/delta.json"
       },
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },
@@ -249,7 +250,7 @@
         "file": "expected/cli/diff.pretty.json"
       },
       "stderr": {
-        "text": ""
+        "text": "warning: before.json: Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\nwarning: after.json: Kept 4 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\".\n"
       },
       "exit": 0
     },

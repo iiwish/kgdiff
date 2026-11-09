@@ -49,10 +49,22 @@ export const MAX_NESTING = 1000;
 /**
  * Converts a parsed JSON value into an `AttrValue`, sorting object keys recursively. Throws
  * `KgdiffError('invalid-input')` for values nested deeper than `MAX_NESTING`.
+ *
+ * A number JSON can write but a double cannot hold (`1e400`, which `JSON.parse` reads as
+ * `Infinity`) is kept as the string `"Infinity"` or `"-Infinity"`, as `normalize` keeps
+ * non-finite numbers, and reported through `onNonFinite` (RFC 0002, D-11).
  */
-export function toAttrValue(value: unknown, depth = 0): AttrValue | undefined {
+export function toAttrValue(
+  value: unknown,
+  depth = 0,
+  onNonFinite?: () => void,
+): AttrValue | undefined {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  if (typeof value === 'number') {
+    if (Number.isFinite(value)) return value;
+    onNonFinite?.();
+    return String(value);
+  }
   if (typeof value !== 'object') return undefined;
   if (depth >= MAX_NESTING) {
     throw invalidInput(`Values nested deeper than ${MAX_NESTING} levels are not supported.`);
@@ -60,7 +72,7 @@ export function toAttrValue(value: unknown, depth = 0): AttrValue | undefined {
   if (Array.isArray(value)) {
     const out: AttrValue[] = [];
     for (const item of value) {
-      const converted = toAttrValue(item, depth + 1);
+      const converted = toAttrValue(item, depth + 1, onNonFinite);
       out.push(converted === undefined ? null : converted);
     }
     return out;
@@ -68,7 +80,7 @@ export function toAttrValue(value: unknown, depth = 0): AttrValue | undefined {
   const record = value as Record<string, unknown>;
   const out: Record<string, AttrValue> = {};
   for (const key of Object.keys(record).sort(compareStrings)) {
-    const converted = toAttrValue(record[key], depth + 1);
+    const converted = toAttrValue(record[key], depth + 1, onNonFinite);
     if (converted !== undefined) setOwn(out, key, converted);
   }
   return out;

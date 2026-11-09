@@ -1,11 +1,12 @@
 {
   "id": "cli-errors",
-  "description": "kgdiff's own error paths, with their messages and exit codes: invalid JSON at a character outside the BMP (the message quotes one UTF-16 unit), an OBO line clipped in the middle of a surrogate pair, an unreadable format, an empty input, a missing file, the input size limit (a size printed with toFixed), usage errors, a diff given where a graph is expected, and apply on the wrong base, strict and lenient.",
+  "description": "kgdiff's own error paths, with their messages and exit codes: invalid JSON at a character outside the BMP (the message quotes one UTF-16 unit), a lone surrogate escape in a graph and in a delta (RFC 0002, D-2), an OBO line clipped in the middle of a surrogate pair, an unreadable format, an empty input, a missing file, the input size limit (a size printed with toFixed), usage errors, a diff given where a graph is expected, and apply on the wrong base, strict and lenient.",
   "covers": [
     "errors",
     "exit-codes",
     "usage",
     "utf16-units",
+    "lone-surrogate",
     "toFixed",
     "apply:mismatch",
     "apply:lenient"
@@ -16,6 +17,8 @@
   },
   "extraInputs": [
     "bad-astral.json",
+    "lone-surrogate.json",
+    "lone-surrogate-delta.json",
     "bad-line.obo",
     "garbage.txt",
     "empty.json"
@@ -251,6 +254,25 @@
       },
       "stderr": {
         "text": "error: \"bad-astral.json\": Invalid JSON on line 2, column 13: expected a value, found \"\\ud83d\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
+      },
+      "exit": 2
+    },
+    {
+      "name": "lone-surrogate",
+      "args": [
+        "lone-surrogate.json",
+        "after.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: \"lone-surrogate.json\": Invalid JSON on line 6, column 35: the escape \\ud83d is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
       },
       "exit": 2
     },
@@ -493,6 +515,26 @@
         "text": "warning: Skipped 3 of 3 operations that do not fit this graph:\n  #0 node.set: node \"n03\" label differs from \"from\"\n  #1 node.add: node \"n17\" already exists\n  #2 edge.add: edge already exists\n"
       },
       "exit": 0
+    },
+    {
+      "name": "apply-lone-surrogate",
+      "args": [
+        "apply",
+        "before.json",
+        "lone-surrogate-delta.json",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "error: \"lone-surrogate-delta.json\" is not valid JSON: on line 4, column 86, the escape \\udc00 is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.\nhint: Create a delta with `kgdiff <before> <after> --delta <file>`.\n"
+      },
+      "exit": 2
     }
   ]
 }

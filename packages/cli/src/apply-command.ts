@@ -26,6 +26,38 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** The four hex digits at `at` as a UTF-16 unit, or -1. */
+function hexUnit(text: string, at: number): number {
+  const digits = text.slice(at, at + 4);
+  return /^[0-9a-fA-F]{4}$/.test(digits) ? Number.parseInt(digits, 16) : -1;
+}
+
+/**
+ * Offset of the first `\uD800`–`\uDFFF` escape in valid JSON text that is not half of an
+ * escaped surrogate pair, or -1. `JSON.parse` accepts such a lone surrogate; kgdiff does not, in
+ * any input (RFC 0002, D-2; `@kgdiff/formats` reads graphs the same way).
+ */
+function loneSurrogateEscape(text: string): number {
+  if (!/\\u[dD][89a-fA-F]/.test(text)) return -1;
+  for (let i = text.indexOf('\\'); i !== -1; i = text.indexOf('\\', i)) {
+    if (text[i + 1] !== 'u') {
+      i += 2;
+      continue;
+    }
+    const unit = hexUnit(text, i + 2);
+    if (unit >= 0xd800 && unit <= 0xdbff && text.startsWith('\\u', i + 6)) {
+      const low = hexUnit(text, i + 8);
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        i += 12;
+        continue;
+      }
+    }
+    if (unit >= 0xd800 && unit <= 0xdfff) return i;
+    i += 6;
+  }
+  return -1;
+}
+
 /**
  * Read a delta from JSON text. Accepts a `kgdiff.delta` document, or a `kgdiff.diff` document
  * (`--json` output), whose delta is used. Version checks are left to `applyDelta`.
@@ -41,6 +73,17 @@ export function readDelta(input: RawInput): Delta {
       `${where} is not valid JSON: ${error instanceof Error ? error.message : String(error)}.`,
       'Create a delta with `kgdiff <before> <after> --delta <file>`.',
       { cause: error },
+    );
+  }
+  const lone = loneSurrogateEscape(input.text);
+  if (lone !== -1) {
+    const before = input.text.slice(0, lone);
+    const line = before.split('\n').length;
+    const column = lone - before.lastIndexOf('\n');
+    throw new CliError(
+      'input',
+      `${where} is not valid JSON: on line ${line}, column ${column}, the escape ${input.text.slice(lone, lone + 6)} is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.`,
+      'Create a delta with `kgdiff <before> <after> --delta <file>`.',
     );
   }
   if (isRecord(value) && value.format === 'kgdiff.diff' && isRecord(value.delta)) {

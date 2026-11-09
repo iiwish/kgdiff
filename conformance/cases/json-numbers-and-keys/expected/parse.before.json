@@ -5,6 +5,7 @@
         "id": "n1",
         "label": "Numbers",
         "attrs": {
+          "beyond": "Infinity",
           "big": 12345678901234567000,
           "denormal": 5e-324,
           "e20": 100000000000000000000,
@@ -13,6 +14,7 @@
           "hundred": 100,
           "int_like_string": "007",
           "max": 1.7976931348623157e+308,
+          "minus_beyond": "-Infinity",
           "neg_zero": 0,
           "neg_zero_float": 0,
           "one": 1,
@@ -88,8 +90,8 @@
           "obj": {},
           "with_beyond": [
             1,
-            null,
-            null
+            "Infinity",
+            "-Infinity"
           ]
         }
       }
@@ -125,6 +127,7 @@
       "10": "ten",
       "build": 1e+21,
       "name": "numbers",
+      "overflow": "Infinity",
       "release": 1,
       "source": "before.json",
       "version": "1"
@@ -147,5 +150,10 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "predicateLabels": {},
-  "warnings": []
+  "warnings": [
+    {
+      "code": "json-non-finite",
+      "message": "Kept 5 numbers beyond the range of a double (such as 1e400) as the string \"Infinity\" or \"-Infinity\"."
+    }
+  ]
 }

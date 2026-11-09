@@ -15,6 +15,7 @@
 import { BlankNode, DataFactory, type Literal, NamedNode, type Quad } from 'n3';
 import type { JsonLdOptions } from './index.js';
 import { isAbsoluteIri, resolveIri } from './iri.js';
+import { loneSurrogateEscape, loneSurrogateReason } from './json.js';
 import { RDF_NS, XSD_NS } from './prefixes.js';
 import type { RdfDocument } from './rdf.js';
 import { compareStrings, invalidInput, plural, setOwn, type Warnings } from './shared.js';
@@ -461,10 +462,16 @@ class JsonLdReader {
       );
     }
     if (typeof document === 'string') {
+      const text = document;
       try {
-        document = JSON.parse(document);
+        document = JSON.parse(text);
       } catch {
         throw fail('loading remote context failed', `"${url}" is not JSON`);
+      }
+      // RFC 0002, D-2: as for the document itself (`parseJsonText`).
+      const lone = loneSurrogateEscape(text);
+      if (lone !== -1) {
+        throw fail('loading remote context failed', `"${url}": ${loneSurrogateReason(text, lone)}`);
       }
     }
     if (document === undefined || document === null) {

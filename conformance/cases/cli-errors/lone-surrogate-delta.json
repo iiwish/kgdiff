@@ -1,0 +1,5 @@
+{
+  "format": "kgdiff.delta",
+  "version": 1,
+  "ops": [{ "op": "node.set", "id": "n03", "field": "label", "from": "Table", "to": "\udc00 table" }]
+}

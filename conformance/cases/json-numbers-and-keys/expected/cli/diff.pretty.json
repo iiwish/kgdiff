@@ -7,6 +7,7 @@
       "10": "ten",
       "build": 1e+21,
       "name": "numbers",
+      "overflow": "Infinity",
       "release": 1,
       "source": "before.json",
       "version": "1"
@@ -16,6 +17,7 @@
       "10": "ten",
       "build": 1e+21,
       "name": "numbers",
+      "overflow": "-Infinity",
       "release": 2.5,
       "source": "after.json",
       "version": "2"
@@ -53,6 +55,7 @@
         "id": "n1",
         "label": "Numbers",
         "attrs": {
+          "beyond": "Infinity",
           "big": 12345678901234567000,
           "denormal": 5e-324,
           "e20": 100000000000000000000,
@@ -61,6 +64,7 @@
           "hundred": 100,
           "int_like_string": "007",
           "max": 1.7976931348623157e+308,
+          "minus_beyond": "-Infinity",
           "neg_zero": 0,
           "neg_zero_float": 0,
           "one": 1,
@@ -78,6 +82,7 @@
         "id": "n1",
         "label": "Numbers",
         "attrs": {
+          "beyond": "Infinity",
           "big": 12345678901234567000,
           "denormal": 1e-323,
           "e20": 100000000000000000000,
@@ -86,6 +91,7 @@
           "hundred": 100,
           "int_like_string": "7",
           "max": 1.7976931348623157e+308,
+          "minus_beyond": "-Infinity",
           "neg_zero": 0,
           "neg_zero_float": 0,
           "one": 1,
@@ -332,8 +338,8 @@
           "obj": {},
           "with_beyond": [
             1,
-            null,
-            null
+            "Infinity",
+            "-Infinity"
           ]
         }
       },
@@ -363,7 +369,7 @@
           },
           "with_beyond": [
             1,
-            null,
+            "Infinity",
             2
           ]
         }
@@ -384,12 +390,12 @@
               "key": "with_beyond",
               "before": [
                 1,
-                null,
-                null
+                "Infinity",
+                "-Infinity"
               ],
               "after": [
                 1,
-                null,
+                "Infinity",
                 2
               ]
             }
@@ -644,14 +650,14 @@
     "base": {
       "name": "numbers",
       "version": "1",
-      "hash": "c53:1db59e647abff9",
+      "hash": "c53:0f836b8027004e",
       "nodes": 4,
       "edges": 3
     },
     "target": {
       "name": "numbers",
       "version": "2",
-      "hash": "c53:044de0456af833",
+      "hash": "c53:0720a60506cd10",
       "nodes": 4,
       "edges": 3
     },
@@ -787,12 +793,12 @@
         "key": "with_beyond",
         "from": [
           1,
-          null,
-          null
+          "Infinity",
+          "-Infinity"
         ],
         "to": [
           1,
-          null,
+          "Infinity",
           2
         ]
       },
