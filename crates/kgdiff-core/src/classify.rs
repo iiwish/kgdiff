@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use indexmap::{IndexMap, IndexSet};
+use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::{attr_keys, attr_value_equals, attrs_equal, canonicalize};
-use crate::js::{JsStr, Lookup};
+use crate::js::{self, JsStr, Lookup};
 use crate::matching::StringSet;
 use crate::merge_split::{MergeGroup, Restructuring};
 use crate::model::{
@@ -24,7 +24,7 @@ pub(crate) fn assign_union_ids(
     after: &KGraph,
     before_to_after: &IndexMap<Id, Id>,
 ) -> IndexMap<Id, UnionId> {
-    let mut renamed: IndexMap<Id, UnionId> = IndexMap::new();
+    let mut renamed: IndexMap<Id, UnionId> = IndexMap::default();
     let mut colliding: Vec<&Id> = Vec::new();
     let mut taken: Lookup<JsStr, ()> = Lookup::new();
     for id in before.nodes.keys() {
@@ -120,16 +120,17 @@ fn restructure_index(r: &Restructuring, ctx: &Ctx<'_>) -> RestructureIndex {
     index
 }
 
-/// Parents per hierarchy predicate (`predicate → union ids`).
-type Parents = IndexMap<JsStr, IndexSet<UnionId>>;
+/// Parents per hierarchy predicate (`predicate → union ids`), each list in insertion order
+/// without repeats (a `Map` of `Set`s in TypeScript; nearly always one or two entries).
+type Parents = Vec<(JsStr, Vec<UnionId>)>;
 
 /// Parents per child and hierarchy predicate, in one pass (`hierarchyParents`).
 fn hierarchy_parents(
     graph: &KGraph,
     hierarchy: &StringSet,
     to_union: &dyn Fn(&Id) -> UnionId,
-) -> Lookup<Id, Parents> {
-    let mut parents: Lookup<Id, Parents> = Lookup::new();
+) -> IndexMap<Id, Parents> {
+    let mut parents: IndexMap<Id, Parents> = IndexMap::default();
     if hierarchy.is_empty() {
         return parents;
     }
@@ -137,13 +138,55 @@ fn hierarchy_parents(
         if !hierarchy.contains_key(&edge.predicate) {
             continue;
         }
-        parents
-            .get_or_insert_with(edge.source.clone(), IndexMap::new)
-            .entry(edge.predicate.clone())
-            .or_default()
-            .insert(to_union(&edge.target));
+        let of_child = match parents.get_mut(&edge.source) {
+            Some(of_child) => of_child,
+            None => {
+                parents.insert(edge.source.clone(), Vec::new());
+                parents
+                    .get_mut(&edge.source)
+                    .unwrap_or_else(|| unreachable!())
+            }
+        };
+        let at = match of_child.iter().position(|(p, _)| *p == edge.predicate) {
+            Some(at) => at,
+            None => {
+                of_child.push((edge.predicate.clone(), Vec::new()));
+                of_child.len() - 1
+            }
+        };
+        of_child[at].1.push(to_union(&edge.target));
+    }
+    // Each list as a set in insertion order: repeats removed once, after the pass.
+    for of_child in parents.values_mut() {
+        for (_, list) in of_child.iter_mut() {
+            dedup(list);
+        }
     }
     parents
+}
+
+/// Removes repeated ids, keeping the first occurrence of each.
+fn dedup(list: &mut Vec<UnionId>) {
+    if list.len() < 2 {
+        return;
+    }
+    let mut seen: Lookup<UnionId, ()> = Lookup::with_capacity(list.len());
+    list.retain(|id| seen.insert(id.clone(), ()).is_none());
+}
+
+fn parents_of<'a>(parents: Option<&'a Parents>, predicate: &JsStr) -> &'a [UnionId] {
+    parents
+        .and_then(|p| p.iter().find(|(q, _)| q == predicate))
+        .map_or(&[], |(_, list)| list.as_slice())
+}
+
+/// A set of union ids for the comparisons of `move_facets`.
+fn id_set(ids: impl Iterator<Item = UnionId>) -> Lookup<UnionId, ()> {
+    let mut set = Lookup::new();
+    for id in ids {
+        set.insert(id, ());
+    }
+    set
 }
 
 /// `move` facets, one per hierarchy predicate whose parent set changed; parents that merged into
@@ -156,16 +199,17 @@ fn move_facets(
     if before.is_none() && after.is_none() {
         return Vec::new();
     }
-    let mut predicates: IndexSet<&JsStr> = IndexSet::new();
-    predicates.extend(before.into_iter().flat_map(IndexMap::keys));
-    predicates.extend(after.into_iter().flat_map(IndexMap::keys));
-    let mut predicates: Vec<&JsStr> = predicates.into_iter().collect();
+    let mut predicates: Vec<&JsStr> = Vec::new();
+    for (p, _) in before.into_iter().chain(after).flatten() {
+        if !predicates.contains(&p) {
+            predicates.push(p);
+        }
+    }
     predicates.sort();
-    let empty = IndexSet::new();
     let mut facets = Vec::new();
     for predicate in predicates {
-        let from = before.and_then(|p| p.get(predicate)).unwrap_or(&empty);
-        let to = after.and_then(|p| p.get(predicate)).unwrap_or(&empty);
+        let from = parents_of(before, predicate);
+        let to = parents_of(after, predicate);
         let merged = |u: &UnionId| {
             index
                 .merge_target_of
@@ -180,20 +224,8 @@ fn move_facets(
                 .cloned()
                 .unwrap_or_else(|| u.clone())
         };
-        let canonical_from: Lookup<UnionId, ()> =
-            from.iter()
-                .map(|u| (merged(u), ()))
-                .fold(Lookup::new(), |mut set, (k, v)| {
-                    set.insert(k, v);
-                    set
-                });
-        let canonical_to: Lookup<UnionId, ()> =
-            to.iter()
-                .map(|u| (split(u), ()))
-                .fold(Lookup::new(), |mut set, (k, v)| {
-                    set.insert(k, v);
-                    set
-                });
+        let canonical_from = id_set(from.iter().map(merged));
+        let canonical_to = id_set(to.iter().map(split));
         let mut removed: Vec<UnionId> = from
             .iter()
             .filter(|u| !canonical_to.contains_key(&merged(u)))
@@ -245,8 +277,8 @@ fn merge_target_facet(ctx: &Ctx<'_>, group: &MergeGroup) -> NodeFacet {
 }
 
 struct ParentMaps {
-    before: Lookup<Id, Parents>,
-    after: Lookup<Id, Parents>,
+    before: IndexMap<Id, Parents>,
+    after: IndexMap<Id, Parents>,
 }
 
 /// Facets of a matched pair in canonical order (`matchedFacets`, docs/algorithms.md §4).
@@ -430,6 +462,7 @@ pub(crate) fn classify_nodes(ctx: &Ctx<'_>) -> (Vec<UnionNode>, RestructureIndex
             facets,
         ));
     }
-    nodes.sort_by(|x, y| x.id.cmp(&y.id));
+    // A stable sort by id that moves keys, not the large records.
+    js::sort_by_js_key(&mut nodes, |n| &n.id);
     (nodes, index)
 }

@@ -2,7 +2,7 @@
 //! review units. Seeding order, first claim wins: merge → split → add → remove → modify →
 //! relations.
 
-use indexmap::{IndexMap, IndexSet};
+use crate::js::{IndexMap, IndexSet};
 
 use crate::js::{JsStr, Lookup};
 use crate::model::{
@@ -124,7 +124,7 @@ pub(crate) fn build_hunks(
                 m.insert(n.id.clone(), i);
                 m
             });
-    let mut edge_at: IndexMap<UnionId, usize> = IndexMap::new();
+    let mut edge_at: IndexMap<UnionId, usize> = IndexMap::default();
     let mut changed_edges_of: Lookup<UnionId, Vec<usize>> = Lookup::new();
     for (i, e) in edges.iter().enumerate() {
         if e.status == ChangeStatus::Unchanged {
@@ -236,7 +236,7 @@ pub(crate) fn build_hunks(
                 uf.union(&e.source, &e.target);
             }
         }
-        let mut components: IndexMap<UnionId, Vec<usize>> = IndexMap::new();
+        let mut components: IndexMap<UnionId, Vec<usize>> = IndexMap::default();
         for &i in &free {
             let root = uf.find(&nodes[i].id);
             components.entry(root).or_default().push(i);
@@ -292,7 +292,7 @@ pub(crate) fn build_hunks(
         claim_incident(&mut drafts, &mut edge_owner, d, &id, &|e| e.source == id);
     }
     // 6. Remaining edge changes, grouped by source node.
-    let mut by_source: IndexMap<UnionId, Vec<usize>> = IndexMap::new();
+    let mut by_source: IndexMap<UnionId, Vec<usize>> = IndexMap::default();
     for &i in edge_at.values() {
         if !edge_owner.contains_key(&edges[i].id) {
             by_source
@@ -414,7 +414,7 @@ fn context_of(
     node_at: &Lookup<UnionId, usize>,
     all: &[UnionNode],
 ) -> Vec<UnionId> {
-    let mut context: IndexSet<UnionId> = IndexSet::new();
+    let mut context: IndexSet<UnionId> = IndexSet::default();
     for e in edges {
         context.extend(endpoints(e));
     }

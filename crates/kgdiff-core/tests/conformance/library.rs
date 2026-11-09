@@ -140,3 +140,43 @@ pub fn titles(case: &Case) -> Result<Vec<u8>, String> {
     }
     Ok(line(&Value::Object(out)))
 }
+
+pub fn packed(case: &Case) -> Result<Vec<u8>, String> {
+    Ok(line(&kgdiff_core::pack_diff_json(
+        &kgdiff_core::diff_to_json(&*diffed(case)?),
+    )))
+}
+
+pub fn inverse(case: &Case) -> Result<Vec<u8>, String> {
+    Ok(line(
+        &kgdiff_core::invert_delta(&diffed(case)?.delta).to_value(),
+    ))
+}
+
+/// `kgdiff apply <before> expected/delta.json`: the before graph normalized with the delta's
+/// edge identity, the delta (read from the file) applied strictly, written as kgdiff JSON without
+/// `meta.source` (the CLI's `graphOutputJSON` for stdout).
+pub fn apply(case: &Case) -> Result<Vec<u8>, String> {
+    let delta = kgdiff_core::Delta::from_value(&read(case, "expected/delta.json")?)
+        .map_err(|e| e.message)?;
+    let parsed = read(case, "expected/parse.before.json")?;
+    let graph = parsed.get("graph").ok_or("parse result without a graph")?;
+    let options = NormalizeOptions {
+        edge_identity: delta.edge_identity,
+        ..NormalizeOptions::default()
+    };
+    let before = normalize(graph, options).map_err(|e| e.message)?;
+    let (applied, _) =
+        kgdiff_core::apply_delta(&before, &delta, kgdiff_core::ApplyOptions::default())
+            .map_err(|e| format!("{} {}", e.code, e.message))?;
+    let Value::Object(mut out) = graph_to_json(&applied) else {
+        return Err("graph_to_json is not an object".to_owned());
+    };
+    if let Some(Value::Object(meta)) = out.get_mut("meta") {
+        meta.remove("source");
+        if meta.is_empty() {
+            out.remove("meta");
+        }
+    }
+    Ok(line(&Value::Object(out)))
+}

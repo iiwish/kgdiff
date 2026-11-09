@@ -6,7 +6,8 @@ mod support;
 use kgdiff_core::js::{Lookup, json};
 use kgdiff_core::model::ChangeStatus;
 use kgdiff_core::{
-    DeltaOp, DiffOptions, DiffResult, EdgeIdentity, MatchStrategy, diff, diff_to_json,
+    ApplyOptions, DeltaOp, DiffOptions, DiffResult, EdgeIdentity, MatchStrategy, apply_delta, diff,
+    diff_from_json, diff_to_json, hash_graph, invert_delta, pack_diff_json, unpack_diff_json,
 };
 use proptest::prelude::*;
 
@@ -169,5 +170,88 @@ proptest! {
         prop_assert_eq!(backward.stats.nodes.added, forward.stats.nodes.removed);
         prop_assert_eq!(backward.stats.nodes.removed, forward.stats.nodes.added);
         prop_assert_eq!(backward.stats.nodes.modified, forward.stats.nodes.modified);
+    }
+}
+
+/// Applies the ops of no hunk, then every hunk's ops in `order`, each step strictly against the
+/// graph reached so far, checking that `requires` is respected (`applyHunkByHunk`).
+fn apply_hunk_by_hunk(d: &DiffResult) -> Result<kgdiff_core::KGraph, TestCaseError> {
+    let mut graph = d.before.clone();
+    let step = |graph: &mut kgdiff_core::KGraph, indices: &[usize]| -> Result<(), TestCaseError> {
+        if indices.is_empty() {
+            return Ok(());
+        }
+        let mut delta = d.delta.clone();
+        delta.base.insert("hash", hash_graph(graph));
+        delta.ops = indices.iter().map(|&i| d.delta.ops[i].clone()).collect();
+        let (next, _) = apply_delta(graph, &delta, ApplyOptions::default())
+            .map_err(|e| TestCaseError::fail(e.message))?;
+        *graph = next;
+        Ok(())
+    };
+    let owned: Lookup<usize, ()> =
+        d.hunks
+            .iter()
+            .flat_map(|h| h.ops.iter())
+            .fold(Lookup::new(), |mut set, &i| {
+                set.insert(i, ());
+                set
+            });
+    let free: Vec<usize> = (0..d.delta.ops.len())
+        .filter(|i| !owned.contains_key(i))
+        .collect();
+    step(&mut graph, &free)?;
+    let mut applied: Lookup<String, ()> = Lookup::new();
+    for h in &d.hunks {
+        for r in &h.requires {
+            prop_assert!(applied.contains_key(r.as_str()), "{} requires {}", h.id, r);
+        }
+        step(&mut graph, &h.ops)?;
+        applied.insert(h.id.to_string(), ());
+    }
+    Ok(graph)
+}
+
+proptest! {
+    #![proptest_config(config())]
+
+    #[test]
+    fn applies_hunk_by_hunk_in_order_strictly_to_the_after_graph((a, b) in support::version_pair(10, 16), options in variant()) {
+        let d = diff(&a.to_value(), &b.to_value(), &options).unwrap();
+        let reached = apply_hunk_by_hunk(&d)?;
+        prop_assert_eq!(hash_graph(&reached), hash_graph(&d.after));
+    }
+
+    #[test]
+    fn applying_the_delta_and_its_inverse_moves_between_the_versions((a, b) in support::version_pair(10, 16), options in variant()) {
+        let d = diff(&a.to_value(), &b.to_value(), &options).unwrap();
+        let (there, _) = apply_delta(&d.before, &d.delta, ApplyOptions::default()).unwrap();
+        prop_assert_eq!(hash_graph(&there), hash_graph(&d.after));
+        let inverse = invert_delta(&d.delta);
+        let (back, _) = apply_delta(&d.after, &inverse, ApplyOptions::default()).unwrap();
+        prop_assert_eq!(hash_graph(&back), hash_graph(&d.before));
+        let (again, _) = apply_delta(&there, &inverse, ApplyOptions::default()).unwrap();
+        prop_assert_eq!(hash_graph(&again), hash_graph(&d.before));
+        prop_assert_eq!(&invert_delta(&inverse), &d.delta);
+    }
+
+    #[test]
+    fn round_trips_through_diff_to_json_and_diff_from_json((a, b) in support::version_pair(10, 16), options in variant()) {
+        let d = diff(&a.to_value(), &b.to_value(), &options).unwrap();
+        let text = bytes(&d);
+        let back = diff_from_json(&json::parse(&text).unwrap()).unwrap();
+        prop_assert_eq!(bytes(&back), text.clone());
+        prop_assert_eq!(hash_graph(&back.before), hash_graph(&d.before));
+        prop_assert_eq!(hash_graph(&back.after), hash_graph(&d.after));
+        for n in &d.nodes {
+            let read = back.node(&n.id).unwrap();
+            prop_assert_eq!((&read.status, &read.facets, &read.hunk, &read.label, &read.degree), (&n.status, &n.facets, &n.hunk, &n.label, &n.degree));
+        }
+        for e in &d.edges {
+            let read = back.edge(&e.id).unwrap();
+            prop_assert_eq!((&read.status, &read.facets, &read.hunk, &read.predicate, &read.before_key, &read.after_key), (&e.status, &e.facets, &e.hunk, &e.predicate, &e.before_key, &e.after_key));
+        }
+        let packed = pack_diff_json(&diff_to_json(&d));
+        prop_assert_eq!(json::to_string(&unpack_diff_json(&packed).unwrap()), text);
     }
 }

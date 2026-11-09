@@ -2,7 +2,7 @@
 //! happened in one line, naming the nodes involved; subtitles summarize the rest. English quotes
 //! names “like this”, Chinese 「像这样」.
 
-use indexmap::{IndexMap, IndexSet};
+use crate::js::{IndexMap, IndexSet};
 
 use crate::error::{KgdiffError, Result};
 use crate::js::{self, JsStr, Object};
@@ -279,7 +279,7 @@ pub fn facet_label(kind: FacetKind, locale: Locale) -> &'static str {
 /// Display names of several nodes; a name shared by different nodes gets each one's id
 /// appended (`distinct`).
 fn distinct(entries: &[(UnionId, String)]) -> Vec<String> {
-    let mut ids: IndexMap<&str, IndexSet<&UnionId>> = IndexMap::new();
+    let mut ids: IndexMap<&str, IndexSet<&UnionId>> = IndexMap::default();
     for (id, name) in entries {
         ids.entry(name.as_str()).or_default().insert(id);
     }

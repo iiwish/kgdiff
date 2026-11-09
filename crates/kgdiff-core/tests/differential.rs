@@ -12,10 +12,12 @@ use std::io::{BufRead, BufReader};
 
 use kgdiff_core::js::{Object, Value, json};
 use kgdiff_core::{
-    DiffResult, Locale, diff, diff_to_json, format_hunk, graph_to_json, hash_graph, resolve_options,
+    ApplyOptions, DiffResult, Locale, apply_delta, diff, diff_from_json, diff_to_json, format_hunk,
+    graph_to_json, hash_graph, invert_delta, pack_diff_json, resolve_options,
 };
 
-/// The outputs the port computes so far, by the names `scripts/differential.ts` gives them.
+/// The outputs of the port, by the names `scripts/differential.ts` gives them (`diff` twice: as
+/// computed, and read back with `diff_from_json`).
 fn outputs(result: &DiffResult) -> Result<Vec<(&'static str, String)>, String> {
     let sides = |f: &dyn Fn(&kgdiff_core::KGraph) -> Value| {
         let mut out = Object::new();
@@ -53,6 +55,26 @@ fn outputs(result: &DiffResult) -> Result<Vec<(&'static str, String)>, String> {
         ("diff", json::to_string(&diff_to_json(result))),
         ("titles", json::to_string(&Value::Object(titles))),
         ("delta", json::to_string(&result.delta.to_value())),
+        (
+            "packed",
+            json::to_string(&pack_diff_json(&diff_to_json(result))),
+        ),
+        (
+            "inverse",
+            json::to_string(&invert_delta(&result.delta).to_value()),
+        ),
+        ("applied", {
+            let (applied, _) = apply_delta(&result.before, &result.delta, ApplyOptions::default())
+                .map_err(|e| format!("apply_delta: {} {}", e.code, e.message))?;
+            json::to_string(&graph_to_json(&applied))
+        }),
+        ("diff", {
+            // diff_from_json(diff_to_json(d)) round-trips: compared with TypeScript's diff again.
+            let text = json::to_string(&diff_to_json(result));
+            let back = diff_from_json(&json::parse(&text).map_err(|e| e.to_string())?)
+                .map_err(|e| format!("diff_from_json: {} {}", e.code, e.message))?;
+            json::to_string(&diff_to_json(&back))
+        }),
     ])
 }
 

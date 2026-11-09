@@ -1,6 +1,6 @@
 //! Diff statistics (`stats.ts`, docs/algorithms.md §9).
 
-use indexmap::IndexMap;
+use crate::js::IndexMap;
 
 use crate::js::JsStr;
 use crate::model::{
@@ -25,13 +25,30 @@ pub(crate) fn compute_stats(
     edges: &[(ChangeStatus, Vec<FacetKind>)],
     hunks: &[Hunk],
 ) -> DiffStats {
+    let node_kinds: Vec<Vec<FacetKind>> = nodes
+        .iter()
+        .map(|n| n.facets.iter().map(|f| f.kind()).collect())
+        .collect();
+    compute_stats_with(before, after, nodes, &node_kinds, edges, hunks)
+}
+
+/// [`compute_stats`] with the facet kinds of the nodes given apart (`node_kinds[i]` for
+/// `nodes[i]`), for diffs read from JSON before their facets are typed.
+pub(crate) fn compute_stats_with(
+    before: &KGraph,
+    after: &KGraph,
+    nodes: &[UnionNode],
+    node_kinds: &[Vec<FacetKind>],
+    edges: &[(ChangeStatus, Vec<FacetKind>)],
+    hunks: &[Hunk],
+) -> DiffStats {
     let mut node_counts = CountDelta::default();
     let mut edge_counts = CountDelta::default();
     let mut facets = [0usize; 16];
-    let mut by_type: IndexMap<JsStr, CountDelta> = IndexMap::new();
-    for n in nodes {
+    let mut by_type: IndexMap<JsStr, CountDelta> = IndexMap::default();
+    for (n, kinds) in nodes.iter().zip(node_kinds) {
         node_counts.add(n.status);
-        count_facets(&mut n.facets.iter().map(|f| f.kind()), &mut facets);
+        count_facets(&mut kinds.iter().copied(), &mut facets);
         let ty = n
             .after
             .as_ref()

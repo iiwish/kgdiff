@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, OnceLock};
 
-use indexmap::IndexMap;
+use crate::js::IndexMap;
 
 use crate::js::{JsStr, Object, Value};
 

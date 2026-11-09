@@ -5,7 +5,7 @@
 
 use std::cmp::Ordering;
 
-use indexmap::{IndexMap, IndexSet};
+use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::triple_key;
 use crate::delta::DeltaOp;
@@ -71,7 +71,7 @@ type Requires = IndexMap<JsStr, IndexSet<JsStr>>;
 
 /// `hunk → hunks it requires`, from the op-level dependencies (`dependencies`).
 fn dependencies(ops: &[DeltaOp], op_hunks: &[Option<JsStr>], mode: EdgeIdentity) -> Requires {
-    let mut requires: Requires = IndexMap::new();
+    let mut requires: Requires = IndexMap::default();
     let mut last_writer: Lookup<String, Option<JsStr>> = Lookup::new();
     let mut readers: Lookup<String, IndexSet<JsStr>> = Lookup::new();
     // Edge removals at a node commute; only removing the node waits for them.
@@ -100,7 +100,7 @@ fn dependencies(ops: &[DeltaOp], op_hunks: &[Option<JsStr>], mode: EdgeIdentity)
             );
             if let Some(h) = hunk {
                 readers
-                    .get_or_insert_with(r, IndexSet::new)
+                    .get_or_insert_with(r, IndexSet::default)
                     .insert(h.clone());
             }
         }
@@ -108,7 +108,7 @@ fn dependencies(ops: &[DeltaOp], op_hunks: &[Option<JsStr>], mode: EdgeIdentity)
             if w.starts_with('i') {
                 if let Some(h) = hunk {
                     removals
-                        .get_or_insert_with(w, IndexSet::new)
+                        .get_or_insert_with(w, IndexSet::default)
                         .insert(h.clone());
                 }
                 continue;
@@ -303,7 +303,7 @@ pub(crate) fn order_hunks(
                 *h = kept.clone();
             }
         }
-        let mut merged: Requires = IndexMap::new();
+        let mut merged: Requires = IndexMap::default();
         for (h, deps) in &requires {
             let from = into.get(h).unwrap_or(h).clone();
             for d in deps {
@@ -390,7 +390,7 @@ fn merge_hunks(
     nodes: &mut [UnionNode],
     edges: &mut [UnionEdge],
 ) -> Vec<HunkDraft> {
-    let mut groups: IndexMap<JsStr, Vec<&HunkDraft>> = IndexMap::new();
+    let mut groups: IndexMap<JsStr, Vec<&HunkDraft>> = IndexMap::default();
     for h in drafts {
         groups
             .entry(into.get(&h.id).unwrap_or(&h.id).clone())

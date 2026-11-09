@@ -16,31 +16,84 @@ use std::sync::Arc;
 /// a character in U+E000–U+FFFF: in UTF-16 the supplementary one sorts first.
 pub fn cmp_utf16(a: &str, b: &str) -> Ordering {
     let (x, y) = (a.as_bytes(), b.as_bytes());
-    let Some(at) = x.iter().zip(y).position(|(p, q)| p != q) else {
+    let Some(at) = mismatch(x, y) else {
         return x.len().cmp(&y.len());
     };
-    // `at` is inside the first differing character of both strings, which starts at the same
-    // offset in both (they agree on everything before `at`).
-    let start = (0..=at).rev().find(|&i| a.is_char_boundary(i)).unwrap_or(0);
-    let (p, q) = (first_char(&a[start..]), first_char(&b[start..]));
-    let supplementary = |c: u32| c >= 0x1_0000;
-    let upper_bmp = |c: u32| (0xE000..=0xFFFF).contains(&c);
-    if supplementary(p) && upper_bmp(q) {
-        Ordering::Less
-    } else if upper_bmp(p) && supplementary(q) {
-        Ordering::Greater
-    } else {
-        p.cmp(&q)
+    // Both strings agree before `at`, so `at` is a character boundary in both or lies inside
+    // characters with the same lead byte. Only lead bytes of the two kinds of character that
+    // UTF-16 orders differently can reverse the byte order: F0–F4 (U+10000 and up) and EE / EF
+    // (U+E000–U+FFFF). Continuation bytes are below EE.
+    match (x[at], y[at]) {
+        (0xF0..=0xF4, 0xEE | 0xEF) => Ordering::Less,
+        (0xEE | 0xEF, 0xF0..=0xF4) => Ordering::Greater,
+        (p, q) => p.cmp(&q),
     }
 }
 
-fn first_char(s: &str) -> u32 {
-    s.chars().next().map_or(0, u32::from)
+/// The first index where two byte strings differ, eight bytes at a time.
+fn mismatch(x: &[u8], y: &[u8]) -> Option<usize> {
+    let n = x.len().min(y.len());
+    let mut at = 0;
+    while at + 8 <= n {
+        let (p, q) = (word(&x[at..at + 8]), word(&y[at..at + 8]));
+        if p != q {
+            let differing = (p ^ q).trailing_zeros() / 8;
+            return Some(at + usize::try_from(differing).unwrap_or(0));
+        }
+        at += 8;
+    }
+    (at..n).find(|&i| x[i] != y[i])
+}
+
+fn word(bytes: &[u8]) -> u64 {
+    let mut word = [0u8; 8];
+    word.copy_from_slice(bytes);
+    u64::from_le_bytes(word)
+}
+
+/// A sort key's first 16 bytes, remapped so that comparing them as an integer is UTF-16 order:
+/// the lead bytes F0–F4 (U+10000 and up) move below EE / EF (U+E000–U+FFFF), everything else
+/// keeps its place. Strings with equal prefixes need their full comparison.
+fn order_prefix(s: &str) -> u128 {
+    let mut bytes = [0u8; 16];
+    for (slot, &b) in bytes.iter_mut().zip(s.as_bytes()) {
+        *slot = match b {
+            0xF0..=0xF4 => b - 2,
+            0xEE | 0xEF => b + 5,
+            _ => b,
+        };
+    }
+    u128::from_be_bytes(bytes)
+}
+
+/// Sorts `items` stably by a text key in UTF-16 order (as `sort_by(|a, b| key(a).cmp(key(b)))`),
+/// comparing inline prefixes first so that most comparisons touch no string, and moving each
+/// item once.
+pub fn sort_by_js_key<T>(items: &mut Vec<T>, key: impl Fn(&T) -> &JsStr) {
+    if items.len() < 2 {
+        return;
+    }
+    let mut order: Vec<(u128, usize)> = items
+        .iter()
+        .enumerate()
+        .map(|(i, item)| (order_prefix(key(item)), i))
+        .collect();
+    order.sort_by(|&(p, i), &(q, j)| {
+        p.cmp(&q)
+            .then_with(|| key(&items[i]).cmp(key(&items[j])))
+            .then(i.cmp(&j))
+    });
+    let mut slots: Vec<Option<T>> = items.drain(..).map(Some).collect();
+    items.extend(order.into_iter().filter_map(|(_, i)| slots[i].take()));
 }
 
 /// The length of a string in UTF-16 code units (JavaScript's `.length`).
 pub fn utf16_len(s: &str) -> usize {
-    s.chars().map(char::len_utf16).sum()
+    if s.is_ascii() {
+        s.len()
+    } else {
+        s.chars().map(char::len_utf16).sum()
+    }
 }
 
 /// JavaScript's WhiteSpace and LineTerminator (what `String.prototype.trim` removes and `\s`
@@ -83,8 +136,15 @@ pub fn trim_end(s: &str) -> &str {
 /// the text.
 ///
 /// [RFC 0002, §3, Enforcement]: https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#enforcement
-#[derive(Clone, PartialEq, Eq, Default)]
+#[derive(Clone, Eq, Default)]
 pub struct JsStr(Arc<str>);
+
+impl PartialEq for JsStr {
+    /// Text equality; clones of one string are equal without looking at the text.
+    fn eq(&self, other: &JsStr) -> bool {
+        Arc::ptr_eq(&self.0, &other.0) || *self.0 == *other.0
+    }
+}
 
 impl JsStr {
     pub fn new(s: &str) -> JsStr {
@@ -129,6 +189,9 @@ impl Hash for JsStr {
 
 impl Ord for JsStr {
     fn cmp(&self, other: &JsStr) -> Ordering {
+        if Arc::ptr_eq(&self.0, &other.0) {
+            return Ordering::Equal;
+        }
         cmp_utf16(&self.0, &other.0)
     }
 }
@@ -197,6 +260,30 @@ mod tests {
         assert_eq!(cmp_utf16("\u{D7FF}", "\u{10000}"), Ordering::Less);
         assert_eq!(cmp_utf16("x\u{10FFFF}", "x\u{FFFF}"), Ordering::Less);
         assert_eq!(cmp_utf16("é", "e\u{301}"), Ordering::Greater);
+    }
+
+    #[test]
+    fn sorts_by_key_as_a_plain_sort() {
+        let texts = [
+            "\u{FF5E}",
+            "a",
+            "\u{1F600}x",
+            "\u{E000}",
+            "a",
+            "abcdefghijklmnopq2",
+            "abcdefghijklmnopq1",
+            "\u{1F600}",
+            "",
+        ];
+        let mut items: Vec<(JsStr, usize)> = texts
+            .iter()
+            .enumerate()
+            .map(|(i, t)| (JsStr::from(*t), i))
+            .collect();
+        let mut expected = items.clone();
+        expected.sort_by(|a, b| a.0.cmp(&b.0));
+        sort_by_js_key(&mut items, |item| &item.0);
+        assert_eq!(items, expected);
     }
 
     #[test]

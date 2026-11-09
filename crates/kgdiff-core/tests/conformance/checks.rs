@@ -32,7 +32,7 @@ pub struct Vector {
 /// `expected/parse.<side>.json`'s graph.
 pub fn parts() -> Vec<Part> {
     use Mode::{Bytes, Value};
-    let part = |name, file, mode| Part {
+    let _part = |name, file, mode| Part {
         name,
         file,
         mode,
@@ -61,10 +61,20 @@ pub fn parts() -> Vec<Part> {
         ported("hashes", "expected/hashes.json", Value, library::hashes),
         ported("diff", "expected/diff.json", Bytes, library::diff),
         ported("titles", "expected/titles.json", Value, library::titles),
-        part("packed", "expected/diff.packed.json", Bytes),
+        ported(
+            "packed",
+            "expected/diff.packed.json",
+            Bytes,
+            library::packed,
+        ),
         ported("delta", "expected/delta.json", Bytes, library::delta),
-        part("inverse", "expected/delta.inverse.json", Bytes),
-        part("apply", "expected/apply.json", Bytes),
+        ported(
+            "inverse",
+            "expected/delta.inverse.json",
+            Bytes,
+            library::inverse,
+        ),
+        ported("apply", "expected/apply.json", Bytes, library::apply),
     ]
 }
 

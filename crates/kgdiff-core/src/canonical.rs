@@ -19,6 +19,24 @@ pub fn triple_key(source: &str, predicate: &str, target: &str) -> JsStr {
     JsStr::from(out)
 }
 
+/// [`triple_key`] built in a reusable buffer, so that only the key itself is allocated.
+pub(crate) fn triple_key_in(
+    buffer: &mut String,
+    source: &str,
+    predicate: &str,
+    target: &str,
+) -> JsStr {
+    buffer.clear();
+    buffer.push('[');
+    json::push_string(buffer, source);
+    buffer.push(',');
+    json::push_string(buffer, predicate);
+    buffer.push(',');
+    json::push_string(buffer, target);
+    buffer.push(']');
+    JsStr::new(buffer)
+}
+
 /// True when a structural key carries a parallel-edge suffix (`#2`, `#3`…).
 pub fn has_parallel_suffix(key: &str) -> bool {
     !key.ends_with(']')
@@ -151,10 +169,19 @@ impl Cyrb53 {
     /// Feeds the UTF-16 code units of `text`.
     pub fn update(&mut self, text: &str) -> &mut Cyrb53 {
         let (mut h1, mut h2) = (self.h1, self.h2);
-        for unit in text.encode_utf16() {
-            let unit = u32::from(unit);
-            h1 = (h1 ^ unit).wrapping_mul(2_654_435_761);
-            h2 = (h2 ^ unit).wrapping_mul(1_597_334_677);
+        if text.is_ascii() {
+            // ASCII bytes are their own UTF-16 code units.
+            for &byte in text.as_bytes() {
+                let unit = u32::from(byte);
+                h1 = (h1 ^ unit).wrapping_mul(2_654_435_761);
+                h2 = (h2 ^ unit).wrapping_mul(1_597_334_677);
+            }
+        } else {
+            for unit in text.encode_utf16() {
+                let unit = u32::from(unit);
+                h1 = (h1 ^ unit).wrapping_mul(2_654_435_761);
+                h2 = (h2 ^ unit).wrapping_mul(1_597_334_677);
+            }
         }
         self.h1 = h1;
         self.h2 = h2;
@@ -163,7 +190,11 @@ impl Cyrb53 {
 
     /// Length-prefixed string: makes a sequence of strings injective.
     pub fn string(&mut self, text: &str) -> &mut Cyrb53 {
-        let len = length32(js::utf16_len(text));
+        let len = length32(if text.is_ascii() {
+            text.len()
+        } else {
+            js::utf16_len(text)
+        });
         self.code(len & 0xffff).code(len >> 16).update(text)
     }
 

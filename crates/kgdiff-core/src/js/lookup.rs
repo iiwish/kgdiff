@@ -14,13 +14,13 @@ use std::hash::Hash;
 /// JavaScript's `Map` and `Set`) or sorted vectors.
 #[derive(Clone, Debug)]
 pub struct Lookup<K, V> {
-    map: HashMap<K, V>,
+    map: HashMap<K, V, super::BuildHasher>,
 }
 
 impl<K, V> Default for Lookup<K, V> {
     fn default() -> Self {
         Lookup {
-            map: HashMap::new(),
+            map: HashMap::default(),
         }
     }
 }
@@ -32,7 +32,7 @@ impl<K: Hash + Eq, V> Lookup<K, V> {
 
     pub fn with_capacity(capacity: usize) -> Self {
         Lookup {
-            map: HashMap::with_capacity(capacity),
+            map: HashMap::with_capacity_and_hasher(capacity, super::BuildHasher::default()),
         }
     }
 
