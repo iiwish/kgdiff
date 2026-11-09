@@ -9,10 +9,11 @@
  *                           be compared or, with fail-on-changes, when a graph changed
  *
  * Inputs arrive as INPUT_* environment variables that action.yml sets from `${{ inputs.* }}`,
- * never expanded into a script; branch names are read from the event payload. kgdiff runs
- * through npx, without the token in its environment.
+ * never expanded into a script; branch names are read from the event payload. kgdiff runs as
+ * the native binary of its npm platform package for the runner, or through npx for versions
+ * before 0.8.0 (kgdiff.mjs), without the token in its environment.
  */
-import { spawn, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import {
   appendFileSync,
@@ -34,6 +35,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { GitHubError, upsertComment } from './github.mjs';
+import { nativeKgdiff } from './kgdiff.mjs';
 import {
   ActionError,
   commentMarker,
@@ -82,14 +84,7 @@ import {
  * @property {boolean} failOnChanges
  */
 
-/**
- * How kgdiff runs: `version` resolves the requested version (and installs it), `run` runs one
- * comparison. Tests replace it.
- *
- * @typedef {object} Kgdiff
- * @property {() => Promise<string>} version The exact version, e.g. `0.1.0`.
- * @property {(args: readonly string[], cwd: string) => Promise<{ code: number, stderr: string }>} run
- */
+/** @typedef {import('./kgdiff.mjs').Kgdiff} Kgdiff */
 
 const ACTION_DIR = dirname(fileURLToPath(import.meta.url));
 
@@ -392,86 +387,6 @@ function stage(entry, baseSha, work) {
 // ─── kgdiff ──────────────────────────────────────────────────────────────────────────────────
 
 /**
- * npx with `args`. On Windows npx is a `.cmd` script, which Node only starts through a shell;
- * run npm's npx-cli.js with this Node instead.
- *
- * @param {readonly string[]} args
- */
-function npx(args) {
-  if (process.platform !== 'win32') return { command: 'npx', args: [...args] };
-  const cli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npx-cli.js');
-  return { command: process.execPath, args: [cli, ...args] };
-}
-
-/**
- * Run a command. Its stdout and stderr go to the log through this process's stdout, so they
- * stay in order with the lines around them (`::stop-commands::` in particular); stdout is
- * returned instead with `capture`, stderr is returned too.
- *
- * @param {{ command: string, args: string[] }} invocation
- * @param {string} cwd
- * @param {boolean} capture
- * @returns {Promise<{ code: number, stdout: string, stderr: string }>}
- */
-function run({ command, args }, cwd, capture) {
-  return new Promise((resolve) => {
-    const child = spawn(command, args, {
-      cwd,
-      env: {
-        ...process.env,
-        npm_config_update_notifier: 'false',
-        npm_config_fund: 'false',
-        npm_config_audit: 'false',
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    let stdout = '';
-    let stderr = '';
-    child.stdout.on('data', (/** @type {Buffer} */ chunk) => {
-      if (capture) stdout += chunk.toString('utf8');
-      else process.stdout.write(chunk);
-    });
-    child.stderr.on('data', (/** @type {Buffer} */ chunk) => {
-      process.stdout.write(chunk);
-      if (stderr.length < 65_536) stderr += chunk.toString('utf8');
-    });
-    child.on('error', (error) => resolve({ code: -1, stdout, stderr: error.message }));
-    child.on('close', (code) => resolve({ code: code ?? -1, stdout, stderr }));
-  });
-}
-
-/**
- * kgdiff from npm, through `npx --yes @kgdiff/cli@<version>`. Once the version is resolved and
- * installed, comparisons run that exact version from npm's cache (`--prefer-offline`).
- *
- * @param {string} spec An npm version, range or tag.
- * @param {string} cwd
- * @returns {Kgdiff}
- */
-function npxKgdiff(spec, cwd) {
-  let exact = spec;
-  return {
-    async version() {
-      const result = await run(npx(['--yes', '--', `@kgdiff/cli@${spec}`, '--version']), cwd, true);
-      const version = /^kgdiff (\S+)/.exec(result.stdout.trim())?.[1];
-      if (result.code !== 0 || !version) {
-        throw new ActionError(
-          `Could not run @kgdiff/cli@${spec} with npx (exit code ${result.code}).`,
-          'Check the version input and that the runner can reach the npm registry.',
-        );
-      }
-      exact = version;
-      return version;
-    },
-    async run(args, dir) {
-      const invocation = npx(['--yes', '--prefer-offline', '--', `@kgdiff/cli@${exact}`, ...args]);
-      const { code, stderr } = await run(invocation, dir, false);
-      return { code, stderr };
-    },
-  };
-}
-
-/**
  * Compare one staged file. kgdiff runs with `--exit-code`: 0 the graphs are identical, 1 they
  * differ, anything else (or a missing summary) is an error. Its output is fenced with
  * `::stop-commands::` so that nothing in a graph can pass for a workflow command.
@@ -602,7 +517,7 @@ export async function diffStep(env, deps = {}) {
     if (entries.length === 0) {
       throw new ActionError('No file to compare.', 'Check the files input.');
     }
-    const kgdiff = (deps.kgdiff ?? npxKgdiff)(spec, work);
+    const kgdiff = (deps.kgdiff ?? nativeKgdiff)(spec, work);
     let installed = false;
     const short = shortSha(base.sha);
     log(
@@ -620,7 +535,7 @@ export async function diffStep(env, deps = {}) {
         result = { path: entry.path, status: 'unchanged' };
         log('Unchanged: the same bytes as in the base.');
       } else {
-        // npx only when a file needs kgdiff.
+        // Fetch kgdiff only when a file needs it.
         if (!installed) log(`kgdiff ${await kgdiff.version()}`);
         installed = true;
         const title = titleFor(entry.path, base.label, headLabel);

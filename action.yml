@@ -24,8 +24,9 @@ inputs:
     default: ""
   version:
     description: >-
-      @kgdiff/cli version to run with npx: a version, range or tag. Default: the version this
-      action was released with.
+      @kgdiff/cli version to run: a version, range or tag, resolved on npm. From 0.8.0 on, the
+      native kgdiff of that version for the runner; earlier versions run with npx. Default: the
+      version this action was released with.
     required: false
     default: ""
   args:

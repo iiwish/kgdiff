@@ -5,13 +5,15 @@ name: Action
 # versions, plus a new file, a deleted file and an unchanged one. On a pull request from this
 # repository the Ubuntu job comments, and updates that comment on every later push. The
 # read-only job gets the token that pull requests from forks get: it must pass without a
-# comment.
+# comment. The native job runs the action with the kgdiff built from this commit
+# (KGDIFF_BINARY), as it runs a released version's binary from npm.
 
 on:
   pull_request:
     paths:
       - action.yml
       - action/**
+      - packages/cli/lib/**
       - examples/datasets/**
       - .github/workflows/action.yml
   push:
@@ -19,6 +21,7 @@ on:
     paths:
       - action.yml
       - action/**
+      - packages/cli/lib/**
       - examples/datasets/**
       - .github/workflows/action.yml
   workflow_dispatch:
@@ -178,3 +181,79 @@ jobs:
           CHANGED: ${{ steps.kgdiff.outputs.changed }}
           COMMENT_URL: ${{ steps.kgdiff.outputs.comment-url }}
         run: test "$CHANGED" = true && test -z "$COMMENT_URL"
+
+  native:
+    name: Run the action with the kgdiff of this commit (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the toolchain of rust-toolchain.toml
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: build
+        name: Build kgdiff with the viewer bundles its reports embed
+        shell: bash
+        run: |
+          pnpm build:viewer-assets
+          cargo build --release -p kgdiff --locked
+          echo "binary=$GITHUB_WORKSPACE/target/release/kgdiff${{ runner.os == 'Windows' && '.exe' || '' }}" >> "$GITHUB_OUTPUT"
+      - id: fixture
+        name: Commit two versions of two example graphs
+        shell: bash
+        run: |
+          set -euo pipefail
+          datasets="$GITHUB_WORKSPACE/examples/datasets"
+          repo="$RUNNER_TEMP/graphs"
+          mkdir -p "$repo"
+          cd "$repo"
+          git init -q -b main
+          git config user.name kgdiff
+          git config user.email kgdiff@users.noreply.github.com
+          git config core.autocrlf false
+          cp "$datasets/ontology-release/before.obo" disease.obo
+          cp "$datasets/schema-vocab/before.ttl" schema.ttl
+          git add -A
+          git commit -q -m before
+          echo "base=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          cp "$datasets/ontology-release/after.obo" disease.obo
+          cp "$datasets/schema-vocab/after.ttl" schema.ttl
+          git commit -q -am after
+      - id: kgdiff
+        uses: ./
+        env:
+          KGDIFF_BINARY: ${{ steps.build.outputs.binary }}
+        with:
+          working-directory: ${{ runner.temp }}/graphs
+          base: ${{ steps.fixture.outputs.base }}
+          files: |
+            disease.obo
+            schema.ttl
+          name: kgdiff-native-${{ matrix.os }}
+          comment: false
+      - name: Check the outputs
+        shell: bash
+        env:
+          CHANGED: ${{ steps.kgdiff.outputs.changed }}
+          SUMMARY: ${{ steps.kgdiff.outputs.summary-file }}
+          ARTIFACT_URL: ${{ steps.kgdiff.outputs.artifact-url }}
+        run: |
+          set -euo pipefail
+          test "$CHANGED" = true
+          test -n "$ARTIFACT_URL"
+          grep -F -q '## kgdiff · disease.obo: ' "$SUMMARY"
+          grep -F -q '## kgdiff · schema.ttl: ' "$SUMMARY"

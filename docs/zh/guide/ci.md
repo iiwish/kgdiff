@@ -43,7 +43,7 @@ jobs:
 | ------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `files`             | （必填）                               | 图谱文件，每行一个。可以写 glob 模式（`ontology/*.ttl`；`**` 可以跨目录，如 `data/**/*.json`），同时匹配 PR 里和基准分支上的文件，所以被删除的文件也会参与比较。    |
 | `base`              | 基准分支                               | 要比较的分支、标签或提交。在 `pull_request` 中，默认是 PR 的合并提交所基于的那个提交；在 `push` 中，是推送之前的提交。其他事件需要显式设置。                        |
-| `version`           | 与 action 对应的版本                   | action 通过 `npx --yes @kgdiff/cli@<版本>` 运行的 `@kgdiff/cli` 版本：`0.2.0`、`0.2` 或 `latest`。                                                                  |
+| `version`           | 与 action 对应的版本                   | action 运行的 `@kgdiff/cli` 版本：`0.2.0`、`0.2` 或 `latest`，在 npm 上解析。0.8.0 起，action 会下载该版本适合运行器的原生 kgdiff；更早的版本用 `npx` 运行。        |
 | `args`              |                                        | 额外的 kgdiff 选项，例如 `--match similarity --hierarchy rdfs:subClassOf --lang zh,en --ignore-attr modified`。按空白拆分，引号把多个词合成一个参数，不做任何展开。 |
 | `comment`           | `true`                                 | 在 PR 上评论。需要 `pull-requests: write` 权限。                                                                                                                    |
 | `fail-on-changes`   | `false`                                | 图谱有变化时让检查失败（`--exit-code`），在摘要、报告和评论都写完之后。                                                                                             |
@@ -111,8 +111,8 @@ kgdiff 读不了的文件（语法错误、文件不存在）总是会让检查�
 ### 版本与安全
 
 - `iiwish/kgdiff@v0` 跟随 0.x 的各个版本。每次发版都会移动 `v0` 标签，而 action 运行的是和它一起发布的 kgdiff 版本，所以只有标签移动时，CI 的输出才会变化。要固定版本，可以用版本标签（`@v0.2.0`），或者更稳妥地用它的提交（`@<sha> # v0.2.0`），Dependabot 会帮你更新。用 `version` 可以让同一个 action 运行别的 kgdiff 版本。
-- action 从不运行 PR 里的代码。它在临时目录里用 `npx` 运行 npm 上的 kgdiff，环境变量里不带令牌。输入通过 `env` 传给脚本，从不在 shell 里展开 <code v-pre>${{ }}</code>；分支名和文件名从事件数据里读取，不经过命令行。kgdiff 的输出用 `::stop-commands::` 隔开，图谱里的任何内容都无法冒充工作流命令。
-- 它需要 Node.js 22 或更高版本，GitHub 托管的运行器都满足。如果运行器上的 Node.js 太旧，它会用 `actions/setup-node` 装上 Node.js 24，这也会把它加到后续步骤的 `PATH` 里。
+- action 从不运行 PR 里的代码。它在临时目录里运行 npm 上的 kgdiff，环境变量里不带令牌：0.8.0 起是运行器对应平台包（`@kgdiff/cli-linux-x64-gnu` 等）里的原生程序，用 `npm pack` 下载，并按 npm 注册表公布的完整性校验值核对；更早的版本用 `npx` 运行 TypeScript 版 CLI。输入通过 `env` 传给脚本，从不在 shell 里展开 <code v-pre>${{ }}</code>；分支名和文件名从事件数据里读取，不经过命令行。kgdiff 的输出用 `::stop-commands::` 隔开，图谱里的任何内容都无法冒充工作流命令。
+- 它的脚本需要 Node.js 22 或更高版本，GitHub 托管的运行器都满足。如果运行器上的 Node.js 太旧，它会用 `actions/setup-node` 装上 Node.js 24，这也会把它加到后续步骤的 `PATH` 里。
 - 检出里没有基准提交时，action 会从 `origin` 取回这一个提交。私有仓库要用到 `actions/checkout` 默认保留的凭据；如果设置了 `persist-credentials: false`，就改用 `fetch-depth: 0` 检出。
 
 ## 其他 CI 系统
