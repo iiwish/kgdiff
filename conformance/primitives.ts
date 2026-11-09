@@ -445,20 +445,45 @@ const JSON_TEXTS: readonly string[] = [
   '[1e]',
   '[NaN]',
   '"\u0001"',
+  // Lone surrogates: JSON.parse accepts them, kgdiff does not (RFC 0002, D-2).
+  '"\\uD83D\\uDE00"',
+  '"\\ud800"',
+  '"\\udc00\\ud800"',
+  '["\\ud83d\\ude00\\ud83d"]',
+  '{"\\udfff":1}',
+  '"\\ud83d\\u0041"',
+  '"\\ud83d\\\\ude00"',
+  '["\\ud83d", 1,]',
 ];
+
+/** A UTF-16 unit that is half of a surrogate pair without its other half. */
+const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
+
+/** Whether every string in a parsed JSON value, object keys included, is well-formed UTF-16. */
+function wellFormed(value: unknown): boolean {
+  if (typeof value === 'string') return !LONE_SURROGATE.test(value);
+  if (Array.isArray(value)) return value.every(wellFormed);
+  if (value !== null && typeof value === 'object') {
+    return Object.entries(value).every(([key, item]) => wellFormed(key) && wellFormed(item));
+  }
+  return true;
+}
 
 function jsonRoundtrip(): string {
   const entries = JSON_TEXTS.map((text) => {
+    let value: unknown;
     try {
-      const value: unknown = JSON.parse(text);
-      return { text, stringify: JSON.stringify(value), pretty: JSON.stringify(value, null, 2) };
+      value = JSON.parse(text);
     } catch {
       return { text, stringify: null, pretty: null };
     }
+    return wellFormed(value)
+      ? { text, stringify: JSON.stringify(value), pretty: JSON.stringify(value, null, 2) }
+      : { text, stringify: null, pretty: null };
   });
   return lines({
     description:
-      'JSON.stringify(JSON.parse(text)) and JSON.stringify(JSON.parse(text), null, 2); null when JSON.parse rejects the text. Covers the order of object keys (array indices first), duplicate keys, number formatting and escapes. Lone surrogates are left out on purpose: whether an implementation accepts them is an open decision (RFC 0002, D-2).',
+      'JSON.stringify(JSON.parse(text)) and JSON.stringify(JSON.parse(text), null, 2) for kgdiff\'s JSON reader; null when the text is not JSON, or when it holds a lone surrogate escape (half of a surrogate pair, such as "\\ud800"), which JSON.parse accepts and kgdiff rejects (RFC 0002, D-2). Covers the order of object keys (array indices first), duplicate keys, number formatting and escapes.',
     entries,
   });
 }

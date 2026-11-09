@@ -109,6 +109,8 @@ kgdiff 会识别 JSON 的结构（d3 / NetworkX node-link、Cytoscape.js、AntV 
 
 节点的其他字段会成为属性。只和绘制有关的字段（渲染状态、样式、形状类型）会被丢弃，并给出警告。
 
+无论哪种 JSON 结构，超出双精度范围的数字（`1e400`）都会保留为字符串 `"Infinity"` 或 `"-Infinity"`，并给出警告，而不是被丢掉。字符串里单独转义的半个代理对（`"\ud800"`）会报错：kgdiff 只读取合法的 Unicode 文本。
+
 ## RDF 与 OBO
 
 - 主语成为节点。OBO 的 PURL 会缩写成 `GO:0008150` 这样的 CURIE。

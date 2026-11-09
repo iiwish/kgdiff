@@ -265,10 +265,11 @@ export const CASES: readonly CaseDefinition[] = [
   {
     id: 'json-numbers-and-keys',
     description:
-      'Attribute values that JavaScript and Rust print differently (1e21, 1e-7, 0.000001, -0, 1.0, 2^53 + 1, values beyond the double range, the shortest round-trip digits), integer-like object keys that JavaScript lists first, duplicate keys, `__proto__`, nested objects and arrays, numbers and integer-like keys in `meta`.',
+      'Attribute values that JavaScript and Rust print differently (1e21, 1e-7, 0.000001, -0, 1.0, 2^53 + 1, the shortest round-trip digits), values beyond the double range (1e400, kept as "Infinity" / "-Infinity" with a json-non-finite warning, in attributes, arrays and `meta`), integer-like object keys that JavaScript lists first, duplicate keys, `__proto__`, nested objects and arrays, numbers and integer-like keys in `meta`.',
     covers: [
       'kgdiff-json',
       'numbers',
+      'non-finite',
       'key-order',
       'duplicate-keys',
       '__proto__',
@@ -496,24 +497,37 @@ export const CASES: readonly CaseDefinition[] = [
   {
     id: 'cli-errors',
     description:
-      "kgdiff's own error paths, with their messages and exit codes: invalid JSON at a character outside the BMP (the message quotes one UTF-16 unit), an OBO line clipped in the middle of a surrogate pair, an unreadable format, an empty input, a missing file, the input size limit (a size printed with toFixed), usage errors, a diff given where a graph is expected, and apply on the wrong base, strict and lenient.",
+      "kgdiff's own error paths, with their messages and exit codes: invalid JSON at a character outside the BMP (the message quotes one UTF-16 unit), a lone surrogate escape in a graph and in a delta (RFC 0002, D-2), an OBO line clipped in the middle of a surrogate pair, an unreadable format, an empty input, a missing file, the input size limit (a size printed with toFixed), usage errors, a diff given where a graph is expected, and apply on the wrong base, strict and lenient.",
     covers: [
       'errors',
       'exit-codes',
       'usage',
       'utf16-units',
+      'lone-surrogate',
       'toFixed',
       'apply:mismatch',
       'apply:lenient',
     ],
     inputs: { before: 'before.json', after: 'after.json' },
-    extraInputs: ['bad-astral.json', 'bad-line.obo', 'garbage.txt', 'empty.json'],
+    extraInputs: [
+      'bad-astral.json',
+      'lone-surrogate.json',
+      'lone-surrogate-delta.json',
+      'bad-line.obo',
+      'garbage.txt',
+      'empty.json',
+    ],
     options: {},
     locale: 'en',
     customRuns: [
       {
         name: 'invalid-json-astral',
         args: ['bad-astral.json', 'after.json', '--color', 'never'],
+        exit: 2,
+      },
+      {
+        name: 'lone-surrogate',
+        args: ['lone-surrogate.json', 'after.json', '--color', 'never'],
         exit: 2,
       },
       {
@@ -577,6 +591,11 @@ export const CASES: readonly CaseDefinition[] = [
         ],
         exit: 0,
         file: 'apply.lenient.json',
+      },
+      {
+        name: 'apply-lone-surrogate',
+        args: ['apply', 'before.json', 'lone-surrogate-delta.json', '--color', 'never'],
+        exit: 2,
       },
     ],
   },

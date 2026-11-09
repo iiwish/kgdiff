@@ -61,7 +61,7 @@ export function parseJson(
   const edges = sortEdges(mapper.edges());
   mapper.reportDropped();
   const graph: GraphInput = { nodes, edges };
-  const meta = graphMeta(shape);
+  const meta = graphMeta(shape, nonFiniteCounter(warnings));
   const labels = meta?.predicateLabels;
   const predicateLabels =
     isRecord(labels) && Object.values(labels).every((label) => typeof label === 'string')
@@ -70,19 +70,82 @@ export function parseJson(
   return { graph: meta ? { ...graph, meta } : graph, dialect: shape.dialect, predicateLabels };
 }
 
-/** `JSON.parse`, with line / column in the `KgdiffError('invalid-input')` on bad input. */
+/**
+ * `JSON.parse`, with line / column in the `KgdiffError('invalid-input')` on bad input. A lone
+ * surrogate escape (`"\ud83d"` without its other half), which `JSON.parse` accepts, is bad
+ * input too: kgdiff's text is well-formed Unicode in every implementation (RFC 0002, D-2).
+ */
 export function parseJsonText(text: string): unknown {
   const source = stripBom(text);
+  let value: unknown;
   try {
-    return JSON.parse(source);
+    value = JSON.parse(source);
   } catch (error) {
     // Engines word (and locate) JSON errors differently; find the position ourselves.
-    const { offset, expected } = locateJsonError(source);
+    const { offset, expected, lone } = locateJsonError(source);
     const at = lineAndColumn(source, offset);
     const found = offset < source.length ? JSON.stringify(source[offset]) : 'end of input';
-    const reason = expected ? `expected ${expected}, found ${found}` : String(error);
+    const reason = lone
+      ? loneSurrogateReason(source, offset)
+      : expected
+        ? `expected ${expected}, found ${found}`
+        : String(error);
     throw invalidInput(`Invalid JSON on line ${at.line}, column ${at.column}: ${reason}.`, at);
   }
+  const lone = loneSurrogateEscape(source);
+  if (lone !== -1) {
+    const at = lineAndColumn(source, lone);
+    throw invalidInput(
+      `Invalid JSON on line ${at.line}, column ${at.column}: ${loneSurrogateReason(source, lone)}.`,
+      at,
+    );
+  }
+  return value;
+}
+
+/** Why the escape at `offset` is refused (without the position or a final period). */
+export function loneSurrogateReason(text: string, offset: number): string {
+  return `the escape ${text.slice(offset, offset + 6)} is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept`;
+}
+
+/** The UTF-16 unit of the four hex digits at `at`, or -1 when they are not four hex digits. */
+function hexUnit(text: string, at: number): number {
+  const digits = text.slice(at, at + 4);
+  return /^[0-9a-fA-F]{4}$/.test(digits) ? Number.parseInt(digits, 16) : -1;
+}
+
+/**
+ * The length of the escape sequence `\u…` at `at` (its backslash) when it is not a lone
+ * surrogate: 6, or 12 for an escaped surrogate pair; 0 when it is one. `\u` must be followed
+ * by four hex digits.
+ */
+function unicodeEscapeLength(text: string, at: number): number {
+  const unit = hexUnit(text, at + 2);
+  if (unit < 0xd800 || unit > 0xdfff) return 6;
+  if (unit <= 0xdbff && text[at + 6] === '\\' && text[at + 7] === 'u') {
+    const low = hexUnit(text, at + 8);
+    if (low >= 0xdc00 && low <= 0xdfff) return 12;
+  }
+  return 0;
+}
+
+/**
+ * Offset of the first lone surrogate escape in valid JSON text, or -1. In valid JSON a
+ * backslash only occurs inside a string, so no tokenizing is needed.
+ */
+export function loneSurrogateEscape(text: string): number {
+  // Fast path: no `\uD800`–`\uDFFF` escape at all.
+  if (!/\\u[dD][89a-fA-F]/.test(text)) return -1;
+  for (let i = text.indexOf('\\'); i !== -1; i = text.indexOf('\\', i)) {
+    if (text[i + 1] !== 'u') {
+      i += 2;
+      continue;
+    }
+    const length = unicodeEscapeLength(text, i);
+    if (length === 0) return i;
+    i += length;
+  }
+  return -1;
 }
 
 /** Internal signal of `locateJsonError`; never escapes this module. */
@@ -90,6 +153,7 @@ class JsonSyntaxError {
   constructor(
     readonly offset: number,
     readonly expected: string,
+    readonly lone = false,
   ) {}
 }
 
@@ -97,10 +161,15 @@ const JSON_NUMBER = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
 const JSON_ESCAPE = /["\\/bfnrt]|u[0-9a-fA-F]{4}/y;
 
 /**
- * Finds the first syntax error in invalid JSON text (RFC 8259) and what was expected there.
- * Only runs after `JSON.parse` failed, so it favours clarity over speed.
+ * Finds the first syntax error in invalid JSON text (RFC 8259) and what was expected there, or
+ * the first lone surrogate escape (`lone`) when it comes first. Only runs after `JSON.parse`
+ * failed, so it favours clarity over speed.
  */
-function locateJsonError(text: string): { offset: number; expected: string | undefined } {
+function locateJsonError(text: string): {
+  offset: number;
+  expected: string | undefined;
+  lone: boolean;
+} {
   let i = 0;
   const fail = (expected: string): never => {
     throw new JsonSyntaxError(i, expected);
@@ -117,10 +186,16 @@ function locateJsonError(text: string): { offset: number; expected: string | und
         i++;
         return;
       } else if (c === '\\') {
+        const start = i;
         i++;
         JSON_ESCAPE.lastIndex = i;
         if (!JSON_ESCAPE.test(text)) fail('an escape sequence');
-        i = JSON_ESCAPE.lastIndex;
+        if (text[i] === 'u') {
+          // An escaped surrogate pair is one escape; half of one is refused (RFC 0002, D-2).
+          const length = unicodeEscapeLength(text, start);
+          if (length === 0) throw new JsonSyntaxError(start, '', true);
+          i = start + length;
+        } else i = JSON_ESCAPE.lastIndex;
       } else if (c < ' ') fail('an escaped control character');
       else i++;
     }
@@ -200,7 +275,7 @@ function locateJsonError(text: string): { offset: number; expected: string | und
     if (error instanceof JsonSyntaxError) return error;
     throw error;
   }
-  return { offset: text.length, expected: undefined };
+  return { offset: text.length, expected: undefined, lone: false };
 }
 
 // ─── Shape detection ────────────────────────────────────────────────────────
@@ -392,13 +467,28 @@ function arrayField(data: JsonRecord, key: string): readonly unknown[] {
   return value;
 }
 
-function graphMeta(shape: Shape): GraphMeta | undefined {
+/**
+ * Counts the numbers beyond the double range that `toAttrValue` keeps as strings, for one
+ * `json-non-finite` warning per parse (RFC 0002, D-11).
+ */
+function nonFiniteCounter(warnings: Warnings): () => void {
+  return () =>
+    warnings.count(
+      'json-non-finite',
+      (n) =>
+        `Kept ${plural(n, 'number')} beyond the range of a double (such as 1e400) as the string "Infinity" or "-Infinity".`,
+    );
+}
+
+function graphMeta(shape: Shape, onNonFinite: () => void): GraphMeta | undefined {
   const root = shape.root;
   if (!root) return undefined;
   if (shape.dialect === 'kgdiff') {
     if (!isRecord(root.meta)) return undefined;
     const meta: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(root.meta)) setOwn(meta, key, toAttrValue(value));
+    for (const [key, value] of Object.entries(root.meta)) {
+      setOwn(meta, key, toAttrValue(value, 0, onNonFinite));
+    }
     return makeMeta(meta);
   }
   const source =
@@ -542,10 +632,10 @@ class ElementReader {
   }
 
   /** Remaining record keys as attributes (JSON values only, object keys sorted). */
-  rest(into: AttrBag): void {
+  rest(into: AttrBag, onNonFinite: () => void): void {
     for (const key of Object.keys(this.record)) {
       if (this.consumed.has(key) || this.ignored.has(key)) continue;
-      const value = toAttrValue(this.record[key]);
+      const value = toAttrValue(this.record[key], 0, onNonFinite);
       if (value !== undefined) into.add(key, value);
     }
   }
@@ -628,6 +718,7 @@ class JsonMapper {
   private readonly idSet = new Set<string>();
   /** Dropped field name → number of elements that had it. */
   private readonly dropped = new Map<string, number>();
+  private readonly nonFinite: () => void;
 
   constructor(
     private readonly shape: Shape,
@@ -635,6 +726,7 @@ class JsonMapper {
     private readonly warnings: Warnings,
   ) {
     this.ignored = IGNORED_KEYS[shape.dialect];
+    this.nonFinite = nonFiniteCounter(warnings);
   }
 
   nodes(): NodeInput[] {
@@ -759,10 +851,10 @@ class JsonMapper {
     const attrs = new AttrBag();
     if (dialect === 'kgdiff') {
       const own = reader.first(['attrs'], asRecord);
-      reader.rest(attrs);
+      reader.rest(attrs, this.nonFinite);
       // Explicit `attrs` win over loose top-level fields with the same key.
-      if (own) mergeAttrs(attrs, own);
-    } else reader.rest(attrs);
+      if (own) mergeAttrs(attrs, own, this.nonFinite);
+    } else reader.rest(attrs, this.nonFinite);
 
     this.noteDropped(reader);
     const node = makeNode({
@@ -868,9 +960,9 @@ class JsonMapper {
     const attrs = new AttrBag();
     if (dialect === 'kgdiff') {
       const own = reader.first(['attrs'], asRecord);
-      reader.rest(attrs);
-      if (own) mergeAttrs(attrs, own);
-    } else reader.rest(attrs);
+      reader.rest(attrs, this.nonFinite);
+      if (own) mergeAttrs(attrs, own, this.nonFinite);
+    } else reader.rest(attrs, this.nonFinite);
     if (dialect === 'graphology' && reader.rawValue('undirected') === true) {
       attrs.add('undirected', true);
     }
@@ -881,9 +973,9 @@ class JsonMapper {
 }
 
 /** Overwrites bag entries with `own` (the explicit `attrs` object). */
-function mergeAttrs(bag: AttrBag, own: JsonRecord): void {
+function mergeAttrs(bag: AttrBag, own: JsonRecord, onNonFinite: () => void): void {
   for (const [key, value] of Object.entries(own)) {
-    const converted = toAttrValue(value);
+    const converted = toAttrValue(value, 0, onNonFinite);
     if (converted !== undefined) bag.set(key, converted);
   }
 }

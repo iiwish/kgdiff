@@ -51,6 +51,8 @@ export type ParseWarningCode =
   | 'json-index-ids'
   /** JSON: element fields that are not part of the graph (rendering state, shape types…) were dropped. */
   | 'json-ignored-fields'
+  /** JSON: numbers beyond the range of a double (`1e400`) were kept as `"Infinity"` / `"-Infinity"`. */
+  | 'json-non-finite'
   /** JSON-LD: keys that expand to no IRI (no `@context` term, no `@vocab`) were dropped. */
   | 'jsonld-unmapped-terms'
   /** OBO: a stanza type other than Term / Typedef / Instance was skipped. */

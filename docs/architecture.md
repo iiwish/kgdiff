@@ -178,7 +178,12 @@ skips shape detection; another `kgdiff.*` format (a diff, a delta) or graph vers
 with `unsupported-version`, while a `format` field outside the `kgdiff.` namespace is ignored.
 Fields a JSON dialect does not map (rendering state, G6 shape types, …) are dropped with a
 `json-ignored-fields` warning. Values nested deeper than 1000 levels are rejected with
-`invalid-input`.
+`invalid-input`. A number beyond the range of a double (`1e400`, which `JSON.parse` reads as
+`Infinity`) is kept as the string `"Infinity"` or `"-Infinity"`, as `normalize` keeps
+non-finite numbers, with a `json-non-finite` warning; a lone surrogate escape (`"\ud800"`, half
+of a UTF-16 pair), which `JSON.parse` accepts, is rejected with `invalid-input`, in JSON-LD and
+deltas too, so that kgdiff's text is well-formed Unicode in every implementation (RFC 0002, D-2
+and D-11).
 
 ## Budgets
 

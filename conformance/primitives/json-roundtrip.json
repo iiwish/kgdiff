@@ -1,5 +1,5 @@
 {
-  "description": "JSON.stringify(JSON.parse(text)) and JSON.stringify(JSON.parse(text), null, 2); null when JSON.parse rejects the text. Covers the order of object keys (array indices first), duplicate keys, number formatting and escapes. Lone surrogates are left out on purpose: whether an implementation accepts them is an open decision (RFC 0002, D-2).",
+  "description": "JSON.stringify(JSON.parse(text)) and JSON.stringify(JSON.parse(text), null, 2) for kgdiff's JSON reader; null when the text is not JSON, or when it holds a lone surrogate escape (half of a surrogate pair, such as \"\\ud800\"), which JSON.parse accepts and kgdiff rejects (RFC 0002, D-2). Covers the order of object keys (array indices first), duplicate keys, number formatting and escapes.",
   "entries": [
     {"text":"{\"b\":1,\"10\":2,\"2\":3,\"a\":4}","stringify":"{\"2\":3,\"10\":2,\"b\":1,\"a\":4}","pretty":"{\n  \"2\": 3,\n  \"10\": 2,\n  \"b\": 1,\n  \"a\": 4\n}"},
     {"text":"{\"b\":1,\"a\":2,\"b\":3}","stringify":"{\"b\":3,\"a\":2}","pretty":"{\n  \"b\": 3,\n  \"a\": 2\n}"},
@@ -24,6 +24,14 @@
     {"text":"{'a':1}","stringify":null,"pretty":null},
     {"text":"[1e]","stringify":null,"pretty":null},
     {"text":"[NaN]","stringify":null,"pretty":null},
-    {"text":"\"\u0001\"","stringify":null,"pretty":null}
+    {"text":"\"\u0001\"","stringify":null,"pretty":null},
+    {"text":"\"\\uD83D\\uDE00\"","stringify":"\"😀\"","pretty":"\"😀\""},
+    {"text":"\"\\ud800\"","stringify":null,"pretty":null},
+    {"text":"\"\\udc00\\ud800\"","stringify":null,"pretty":null},
+    {"text":"[\"\\ud83d\\ude00\\ud83d\"]","stringify":null,"pretty":null},
+    {"text":"{\"\\udfff\":1}","stringify":null,"pretty":null},
+    {"text":"\"\\ud83d\\u0041\"","stringify":null,"pretty":null},
+    {"text":"\"\\ud83d\\\\ude00\"","stringify":null,"pretty":null},
+    {"text":"[\"\\ud83d\", 1,]","stringify":null,"pretty":null}
   ]
 }

@@ -418,6 +418,85 @@ describe('JSON errors', () => {
   });
 });
 
+describe('lone surrogates (RFC 0002, D-2)', () => {
+  const reason = (written: string) =>
+    `the escape ${written} is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.`;
+
+  it.each([
+    ['{"nodes":[{"id":"\\ud800"}]}', 1, 18, '\\ud800'],
+    ['{"nodes":[{"id":"\\udc00\\ud800"}]}', 1, 18, '\\udc00'],
+    ['{"nodes":[{"id":"😀\\uD83D\\uDE00\\uD83D"}]}', 1, 32, '\\uD83D'],
+    ['{"nodes":[{"id":"a","\\udfff":1}]}', 1, 22, '\\udfff'],
+    ['{"nodes":[{"id":"\\ud83d\\u0041"}]}', 1, 18, '\\ud83d'],
+    ['{"nodes":[{"id":"\\ud83d\\\\ude00"}]}', 1, 18, '\\ud83d'],
+    ['{\n  "nodes": [\n    {"id": "x \\ud83d"}\n  ]\n}', 3, 15, '\\ud83d'],
+  ])('rejects %j at %i:%i', (text, line, column, written) => {
+    const error = catchError(() => parseGraph(text, { format: 'json' }));
+    expect(error.code).toBe('invalid-input');
+    expect(error.message).toBe(
+      `Invalid JSON on line ${line}, column ${column}: ${reason(written)}`,
+    );
+    expect(error.details).toEqual({ line, column });
+  });
+
+  it('reports a lone surrogate before a later syntax error, and a syntax error before a later one', () => {
+    expect(catchError(() => parseGraph('["\\ud83d", 1,]', { format: 'json' })).message).toBe(
+      `Invalid JSON on line 1, column 3: ${reason('\\ud83d')}`,
+    );
+    expect(catchError(() => parseGraph('[1,, "\\ud83d"]', { format: 'json' })).message).toBe(
+      'Invalid JSON on line 1, column 4: expected a value, found ",".',
+    );
+  });
+
+  it('reads escaped surrogate pairs, as JSON.parse does', () => {
+    const result = parseGraph('{"nodes":[{"id":"\\ud83d\\ude00","label":"\\uD83D\\uDE00 x"}]}');
+    expect(result.graph.nodes).toEqual([{ id: '😀', label: '😀 x' }]);
+  });
+
+  it('rejects them in JSON-LD too', () => {
+    const error = catchError(() =>
+      parseGraph('{"@id":"https://example.org/a","https://example.org/p":"\\ud800"}'),
+    );
+    expect(error.message).toBe(`Invalid JSON on line 1, column 57: ${reason('\\ud800')}`);
+  });
+});
+
+describe('numbers beyond the double range (RFC 0002, D-11)', () => {
+  const warning = (count: number) => ({
+    code: 'json-non-finite',
+    message: `Kept ${count} ${count === 1 ? 'number' : 'numbers'} beyond the range of a double (such as 1e400) as the string "Infinity" or "-Infinity".`,
+  });
+
+  it('keeps them as "Infinity" / "-Infinity" in attrs, arrays and meta, with one warning', () => {
+    const result = parseGraph(
+      '{"meta":{"name":"g","big":1e400},"nodes":[{"id":"a","attrs":{"x":1e400,"y":[1,-1e400,{"z":2e999}]},"w":-1e309}],"edges":[{"source":"a","target":"a","attrs":{"e":1e400}}]}',
+    );
+    expect(result.graph.meta).toEqual({ big: 'Infinity', name: 'g' });
+    expect(result.graph.nodes).toEqual([
+      { id: 'a', attrs: { w: '-Infinity', x: 'Infinity', y: [1, '-Infinity', { z: 'Infinity' }] } },
+    ]);
+    expect(result.graph.edges).toEqual([{ source: 'a', target: 'a', attrs: { e: 'Infinity' } }]);
+    expect(result.warnings).toEqual([warning(6)]);
+  });
+
+  it('warns about one with the singular, in every dialect', () => {
+    const d3 = parseGraph('{"nodes":[{"id":"a","x":1,"weight":1e400}],"links":[]}');
+    expect(d3.dialect).toBe('d3');
+    expect(d3.graph.nodes).toEqual([{ id: 'a', attrs: { weight: 'Infinity' } }]);
+    expect(d3.warnings).toContainEqual(warning(1));
+  });
+
+  it('leaves numbers that round to a finite double alone', () => {
+    const result = parseGraph(
+      '{"nodes":[{"id":"a","attrs":{"max":1.7976931348623157e308,"tiny":1e-400}}]}',
+    );
+    expect(result.graph.nodes).toEqual([
+      { id: 'a', attrs: { max: 1.7976931348623157e308, tiny: 0 } },
+    ]);
+    expect(result.warnings).toEqual([]);
+  });
+});
+
 describe('JSON input handling', () => {
   it('accepts a byte order mark', () => {
     expect(parseGraph('﻿{"nodes":[{"id":"a"}]}').graph.nodes).toEqual([{ id: 'a' }]);

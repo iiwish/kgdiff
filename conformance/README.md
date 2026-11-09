@@ -91,10 +91,13 @@ With `before` and `after` the two inputs:
 2. **Parse** it. When `allowEmpty` is true and the text is empty or only JavaScript whitespace,
    the result is `parseGraph('{"nodes":[],"edges":[]}', { format: 'json', filename })`. Otherwise
    `parseGraph(text, { format, filename, rdf: { languages } })` (`rdf` only when `languages` is
-   given). `parse.<side>.json` is `JSON.stringify(result)` of that `ParseResult`. Note what the
-   JSON reader does with numbers JSON can write but a double cannot hold (`1e400` parses to
-   `Infinity`): it drops them without a warning — an attribute or `meta` member disappears, an
-   array item becomes `null` (`json-numbers-and-keys`).
+   given). `parse.<side>.json` is `JSON.stringify(result)` of that `ParseResult`. Two rules of
+   the JSON reader matter here (RFC 0002, D-2 and D-11): a number JSON can write but a double
+   cannot hold (`1e400`, which `JSON.parse` reads as `Infinity`) becomes the string `"Infinity"`
+   or `"-Infinity"`, in attributes, arrays and `meta`, with one `json-non-finite` warning
+   (`json-numbers-and-keys`); and a lone surrogate escape (`"\ud800"`, half of a surrogate pair
+   without its other half), which `JSON.parse` accepts, is an `invalid-input` error located at
+   its backslash (`cli-errors`).
 3. **Diff** the two parsed graphs: `result = diff(parse.before.graph, parse.after.graph, options)`.
    Then:
    - `graph.<side>.json` = `JSON.stringify(graphToJSON(result.<side>)) + "\n"`;
@@ -193,7 +196,7 @@ belongs to the layout (RFC 0002 phase 4); the others to the core (phase 2).
 | `js-math.json`            | `Math.round` (half up, keeping `-0`), `ToUint32` (`x >>> 0`), `ToInt32` (`x \| 0`)                                                                                   |
 | `log2.json`               | core's exact `log2` (its operations are in the file) for n = 1…1024, inputs C libraries round differently and special values; a SHA-256 over all n up to 2²²         |
 | `string-order.json`       | strings in JavaScript's default sort order (UTF-16 code units)                                                                                                       |
-| `json-roundtrip.json`     | `JSON.stringify(JSON.parse(text))`, compact and with `null, 2`; `null` when the text is not JSON. No lone surrogates (an open decision, RFC 0002 D-2)                |
+| `json-roundtrip.json`     | `JSON.stringify(JSON.parse(text))`, compact and with `null, 2`; `null` when the text is not JSON or holds a lone surrogate escape (RFC 0002, D-2)                    |
 | `text-similarity.json`    | `[a, b, textSimilarity(a, b)]`                                                                                                                                       |
 | `predicate-label.json`    | `[predicate, predicateLabel(predicate)]`                                                                                                                             |
 | `label-width.json`        | `[text, fontSize, estimateLabelWidth(text, fontSize)]` and `[degree, nodeRadius(degree)]`                                                                            |
@@ -201,32 +204,29 @@ belongs to the layout (RFC 0002 phase 4); the others to the core (phase 2).
 
 ## Cases
 
-| Case                                                          | What it covers                                                                                                                                                                                            |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dataset-*` (6)                                               | the example datasets with the options of their `meta.json` (read from it): kgdiff JSON in Chinese and English, OBO, similarity matching, dbt lineage, Turtle                                              |
-| `match-id-hints`                                              | `--match id` with `replaces` / `replacedBy`: rekeys, a hinted merge and split, a deprecation, a move, a rekeyed self-loop; the before graph read from stdin as well                                       |
-| `match-auto-heuristics`                                       | heuristic merge and split, collapsed edges, move, retarget, predicate change, a below-threshold suggestion                                                                                                |
-| `self-loops`                                                  | self-loops added, removed, retargeted, relabelled, parallel, carried by a merge                                                                                                                           |
-| `unicode-text`                                                | astral, private-use and fullwidth characters, NFC / NFKC, case folding, emoji, CJK, bidi and control characters, narrow terminals                                                                         |
-| `json-numbers-and-keys`                                       | numbers JavaScript and Rust print differently, numbers beyond the double range, integer-like and duplicate keys, `__proto__`, nested values, `--pretty`                                                   |
-| `dangling-and-duplicates`                                     | numeric ids, duplicate nodes, an empty id, dangling endpoints, parallel edges                                                                                                                             |
-| `edge-identity-id`                                            | `--edge-identity id`                                                                                                                                                                                      |
-| `options-ignore-watch`                                        | every CLI diff option, `--watch-attr`                                                                                                                                                                     |
-| `identical`, `empty-before`, `similarity-rekey-preamble`      | no change; `--allow-empty`; an identical diff whose delta renames ids, in a cycle                                                                                                                         |
-| `rdf-turtle-ntriples`, `rdf-nquads-trig`, `rdf-xml`, `jsonld` | the RDF syntaxes, typed literals, languages, blank nodes, named graphs, DTD entities, XML literals, annotations, JSON-LD contexts                                                                         |
-| `obo-variants`                                                | OBO with CRLF line endings, alt_id, obsoletion, typedefs, and every lenient-parse warning                                                                                                                 |
-| `json-dialects-a`, `-b`, `-c`                                 | Cytoscape.js, d3 / NetworkX, AntV G6, graphology, vis-network, kgdiff JSON with positions (an anchored layout)                                                                                            |
-| `encodings`, `encodings-be`                                   | UTF-16LE with a byte order mark and CRLF, gzip; UTF-16BE, UTF-8 with a byte order mark and CRLF                                                                                                           |
-| `cli-errors`                                                  | exit code 2 and kgdiff's messages: invalid JSON, an OBO line clipped inside a surrogate pair, undetectable, empty, missing and oversized inputs, usage errors, `apply` on the wrong base, lenient `apply` |
-| `synthetic-600`                                               | 600 synthetic nodes with CJK labels (`scripts/gen-synthetic.ts --nodes 600 --seed 7 --cjk`); a changes-only layout scope                                                                                  |
+| Case                                                          | What it covers                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dataset-*` (6)                                               | the example datasets with the options of their `meta.json` (read from it): kgdiff JSON in Chinese and English, OBO, similarity matching, dbt lineage, Turtle                                                                                             |
+| `match-id-hints`                                              | `--match id` with `replaces` / `replacedBy`: rekeys, a hinted merge and split, a deprecation, a move, a rekeyed self-loop; the before graph read from stdin as well                                                                                      |
+| `match-auto-heuristics`                                       | heuristic merge and split, collapsed edges, move, retarget, predicate change, a below-threshold suggestion                                                                                                                                               |
+| `self-loops`                                                  | self-loops added, removed, retargeted, relabelled, parallel, carried by a merge                                                                                                                                                                          |
+| `unicode-text`                                                | astral, private-use and fullwidth characters, NFC / NFKC, case folding, emoji, CJK, bidi and control characters, narrow terminals                                                                                                                        |
+| `json-numbers-and-keys`                                       | numbers JavaScript and Rust print differently, numbers beyond the double range (`json-non-finite`), integer-like and duplicate keys, `__proto__`, nested values, `--pretty`                                                                              |
+| `dangling-and-duplicates`                                     | numeric ids, duplicate nodes, an empty id, dangling endpoints, parallel edges                                                                                                                                                                            |
+| `edge-identity-id`                                            | `--edge-identity id`                                                                                                                                                                                                                                     |
+| `options-ignore-watch`                                        | every CLI diff option, `--watch-attr`                                                                                                                                                                                                                    |
+| `identical`, `empty-before`, `similarity-rekey-preamble`      | no change; `--allow-empty`; an identical diff whose delta renames ids, in a cycle                                                                                                                                                                        |
+| `rdf-turtle-ntriples`, `rdf-nquads-trig`, `rdf-xml`, `jsonld` | the RDF syntaxes, typed literals, languages, blank nodes, named graphs, DTD entities, XML literals, annotations, JSON-LD contexts                                                                                                                        |
+| `obo-variants`                                                | OBO with CRLF line endings, alt_id, obsoletion, typedefs, and every lenient-parse warning                                                                                                                                                                |
+| `json-dialects-a`, `-b`, `-c`                                 | Cytoscape.js, d3 / NetworkX, AntV G6, graphology, vis-network, kgdiff JSON with positions (an anchored layout)                                                                                                                                           |
+| `encodings`, `encodings-be`                                   | UTF-16LE with a byte order mark and CRLF, gzip; UTF-16BE, UTF-8 with a byte order mark and CRLF                                                                                                                                                          |
+| `cli-errors`                                                  | exit code 2 and kgdiff's messages: invalid JSON, lone surrogate escapes in a graph and a delta, an OBO line clipped inside a surrogate pair, undetectable, empty, missing and oversized inputs, usage errors, `apply` on the wrong base, lenient `apply` |
+| `synthetic-600`                                               | 600 synthetic nodes with CJK labels (`scripts/gen-synthetic.ts --nodes 600 --seed 7 --cjk`); a changes-only layout scope                                                                                                                                 |
 
-Two recorded behaviours are worth knowing, since a port might "fix" them by accident; they are
-known issues of the reference (RFC 0002, §11):
-
-- With `ignoreAttrs` (`options-ignore-watch`), the delta leaves the changes of ignored attributes
-  out while `hashGraph` covers them, so `kgdiff apply` warns that its result differs from the
-  delta's target.
-- Numbers beyond the double range in kgdiff JSON are dropped without a warning (step 2 above).
+One recorded behaviour is worth knowing, since a port might "fix" it by accident; it is a known
+issue of the reference (RFC 0002, §11): with `ignoreAttrs` (`options-ignore-watch`), the delta
+leaves the changes of ignored attributes out while `hashGraph` covers them, so `kgdiff apply`
+warns that its result differs from the delta's target.
 
 ## Unicode
 

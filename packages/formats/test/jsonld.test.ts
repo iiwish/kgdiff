@@ -296,6 +296,9 @@ describe('JSON-LD IRIs and contexts', () => {
         ),
       ).message;
     expect(run(() => Promise.resolve({}))).toMatch(/documentLoader returned a Promise/);
+    expect(run(() => '{"@context":{"ex":"\\ud83d"}}')).toBe(
+      'Invalid JSON-LD: loading remote context failed: "https://example.org/c": the escape \\ud83d is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.',
+    );
     expect(run(() => undefined)).toMatch(
       /documentLoader has no document for "https:\/\/example\.org\/c"/,
     );
