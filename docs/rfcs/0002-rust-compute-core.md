@@ -7,9 +7,11 @@
   ([#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0;
   [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2's `kgdiff-core` crate is
   merged ([#51](https://github.com/iiwish/kgdiff/pull/51), aafb0e9 to 3e096f2): every corpus case
-  and core vector passes, and the nightly differential run is in place. Its performance work is in
-  [#56](https://github.com/iiwish/kgdiff/pull/56), and the preview `@kgdiff/compute` in
-  [#63](https://github.com/iiwish/kgdiff/pull/63). Nothing is released yet
+  and core vector passes, and the nightly differential run is in place. Its performance work is
+  merged too ([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b); the preview
+  `@kgdiff/compute` is in [#63](https://github.com/iiwish/kgdiff/pull/63). The native `normalize`
+  memory target and the WebAssembly targets of [§7](#7-size-and-performance-budgets) are not met
+  yet; they are gates of 1.0 (phase 5) and do not block 0.7.0. Nothing is released yet
   ([Phase 2 results](#phase-2-results)).
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 results
   2026-11-09.
@@ -608,6 +610,12 @@ specifies; the Rust numbers are targets, to be confirmed by benchmarks (`divan`)
 | CLI, enterprise-kg summary end to end (warm)        | ~100 ms (measured)               | < 20 ms                 | —                                                         |
 | `kgdiff` binary (stripped, viewer bundles included) | —                                | < 12 MB                 | —                                                         |
 
+**Which phase each target gates.** Each phase's acceptance names the targets it must meet. The
+native `normalize` memory target, every WebAssembly target in the table above and the WebAssembly
+sizes below are gates of 1.0 (phase 5), not of the 0.x releases before it (decided 2026-11-09).
+Phase 2 measured them and did not meet them ([Phase 2 results](#phase-2-results)); the planned
+route for memory is a compact graph representation in `kgdiff-core`.
+
 **What WebAssembly buys in the browser is not speed.** For a large diff the transport to a
 `DiffResult` — `diff.v1` JSON text, `JSON.parse`, `diffFromJSON` with its consistency checks —
 costs about as much as the diff itself, so the WebAssembly targets including it are simply
@@ -784,16 +792,18 @@ Acceptance:
 - `diff_from_json(diff_to_json(d))` round-trips; the property tests of `packages/core/test` are
   ported to `proptest` and pass (delta round trips, `diff(A, A)` empty, shuffle invariance).
 - The nightly differential run finds no mismatch in 10,000 random pairs.
-- Benchmarks meet the native targets of §7.
+- Benchmarks meet the native speed targets of §7 (`diff`, similarity matching). The native
+  `normalize` memory target is measured here and gates 1.0 (phase 5), not this phase.
 - The crate's documentation shows, as tested examples, diffing two graphs, checking a delta with
   `apply_delta` and reading a `diff.v1` document.
 
 ##### Phase 2 results
 
 Status as of 2026-11-09: `kgdiff-core` is merged
-([#51](https://github.com/iiwish/kgdiff/pull/51)). Its performance work
-([#56](https://github.com/iiwish/kgdiff/pull/56)) and the preview `@kgdiff/compute`
-([#63](https://github.com/iiwish/kgdiff/pull/63)) are in review.
+([#51](https://github.com/iiwish/kgdiff/pull/51)), and so is its performance work
+([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b). The preview `@kgdiff/compute`
+([#63](https://github.com/iiwish/kgdiff/pull/63)) is in review. Phase 2 meets its acceptance
+except for the memory target, which now gates 1.0 instead (below).
 
 - **Corpus:** every case and every primitive vector except `label-width.json` passes, 299
   checks in all (`cargo test -p kgdiff-core --test conformance`). `diff_from_json(diff_to_json(d))`
@@ -807,7 +817,9 @@ Status as of 2026-11-09: `kgdiff-core` is merged
 
   `.github/workflows/differential.yml` repeats the check every night.
 - **Benchmarks** (`cargo bench -p kgdiff-core`, divan). The machine was a macOS M-class laptop
-  shared with other builds, so the load average is given with each number:
+  shared with other builds, so the load average is given with each number. The load never
+  stayed low: it fell to about 3 once, and the run started then saw it climb to 17.7, so that
+  run's numbers are not used.
 
   | What                              | Native target           | Measured                                                                                         |
   | --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
@@ -818,22 +830,32 @@ Status as of 2026-11-09: `kgdiff-core` is merged
 
   The memory target assumed a smaller graph than the TypeScript model the crate mirrors: one
   `Arc<KGEdge>` per edge, `Arc<str>` text and keyed maps. On a 64-bit target that model needs
-  about 90 MB for this graph even at its smallest. Reaching 50 MB would take a more compact
-  representation (interned ids, edges stored as columns), which is a decision for a later phase.
+  about 90 MB for this graph even at its smallest. Decided 2026-11-09: the target stands, as a
+  gate of 1.0 (phase 5), and does not block 0.7.0. The planned route is a compact graph
+  representation in `kgdiff-core`: interned ids, and edges stored as columns.
 - **WebAssembly** ([#63](https://github.com/iiwish/kgdiff/pull/63), with #56, Node 24): the
   core-only module is 771.6 KiB, 306.5 KiB gzip (cargo opt-level `z`, `wasm-opt -Oz`). The full
   engine's budget is < 250 kB. `diffJSON` (parsing and writing JSON included) takes a median
   144 ms for 10k / 30k (target < 80 ms) and 1.97 s for 100k / 300k (target < 1 s).
   `normalizeJSON` 100k / 300k reaches 265 MiB of linear memory, against a target of < 80 MB:
   the text transport holds the input text, the parsed value, the graph and the output at once.
-  None of the WebAssembly targets is met yet. About 80% of the module is code, much of it
-  generic code instantiated many times.
+  None of the WebAssembly targets is met yet. Like the memory target, they stand as gates of 1.0
+  (phase 5) and do not block 0.7.0. About 80% of the module is code, much of it generic code
+  instantiated many times.
+
+  The preview ships at opt-level `z` (decided 2026-11-09). In one run that alternated the two
+  builds (load 11 to 12), opt-level `3` diffed 10k / 30k in a median 93 ms instead of 143 ms and
+  100k / 300k in 1.33 s instead of 1.77 s, but its module is 441.7 KiB gzip, 44% larger. Size
+  is what a browser pays on every load, and the transport bounds a large diff's speed anyway;
+  phase 5 measures the trade again for the full engine.
 - **Decided along the way:** D-13 (`diff_from_json` stays typed). `foldhash` was added to §5's
-  crates. `thiserror` and the `serde` feature were not needed yet.
+  crates. `thiserror` and the `serde` feature were not needed yet. The native memory target and
+  the WebAssembly targets gate 1.0, not 0.7.0 ([§7](#7-size-and-performance-budgets)). The
+  preview `@kgdiff/compute` is built at opt-level `z`.
 - **Moved to later:**
   - the crates.io release, the registry names and kgdiff 0.7.0 (the maintainer's);
-  - the native memory target and the WebAssembly targets, above (a decision: size and speed
-    work in a later phase, or revised budgets);
+  - the native memory target (a compact graph representation) and the WebAssembly targets
+    (size and speed): phase 5, as gates of 1.0;
   - the viewer's layout-less payloads and `layoutFromJSON` version 2, a TypeScript change in
     progress ([before phase 2](#before-phase-2-a-typescript-0x-release), item 4);
   - lone surrogates (D-2), which the corpus leaves out and which phase 3 settles.
@@ -902,6 +924,10 @@ Acceptance:
 - In-browser diff of 10k nodes / 30k edges, with the module already initialized and including the
   transport to `DiffResult`, within the TypeScript budget (< 150 ms); initialization itself
   (compiling the module from the HTTP cache) < 100 ms.
+- The targets that phase 2 measured and did not meet, gates of 1.0
+  ([Phase 2 results](#phase-2-results)): the native `normalize` memory target (< 50 MB resident
+  growth for 100k nodes / 300k edges), and every WebAssembly target of §7 (`diff` 10k and 100k,
+  with and without the transport; `normalize` < 80 MB of linear memory; the module sizes).
 - The viewer, scene, renderer and G6 test suites pass unchanged; reports open without
   initializing WebAssembly unless a group is expanded.
 - Deleted: `match`, `merge-split`, `classify`, `edges`, `order`, hunk partitioning, delta
