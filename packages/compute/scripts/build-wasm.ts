@@ -42,7 +42,10 @@ const NAME = 'kgdiff_compute';
 const LIMIT_GZIP = 330 * 1024;
 const BUDGET_GZIP = 250 * 1024;
 
-/** The cargo profile of the build: release, optimized for size, one codegen unit, LTO. */
+/**
+ * The cargo profile of the build: release, optimized for size, one codegen unit, LTO. Opt-level
+ * 3 diffs about a third faster but makes the module 44% larger (README, "Why opt-level `z`").
+ */
 const PROFILE = [
   '--config',
   'profile.compute.inherits="release"',
