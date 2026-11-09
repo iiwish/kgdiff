@@ -206,8 +206,11 @@ impl Cyrb53 {
         match value {
             Value::Null => self.code(0x6e),                            // n
             Value::Bool(b) => self.code(if *b { 0x74 } else { 0x66 }), // t / f
-            Value::Number(x) => self.code(0x64).string(&js::number_to_string(*x)), // d
-            Value::String(s) => self.code(0x73).string(s),             // s
+            Value::Number(x) => {
+                let mut text = js::NumberText::new();
+                self.code(0x64).string(text.format(*x)) // d
+            }
+            Value::String(s) => self.code(0x73).string(s), // s
             Value::Array(items) => {
                 let len = length32(items.len());
                 self.code(0x61).code(len & 0xffff).code(len >> 16); // a
@@ -224,8 +227,18 @@ impl Cyrb53 {
     pub fn attrs(&mut self, attrs: &Attrs) -> &mut Cyrb53 {
         let len = length32(attrs.len());
         self.code(0x6f).code(len & 0xffff).code(len >> 16); // o
-        if attrs.len() == 1 {
-            for (key, value) in attrs {
+        if attrs.len() <= SMALL_SORT {
+            // Sorted on the stack: most attribute maps have a few members.
+            let mut members: [Option<(&JsStr, &Value)>; SMALL_SORT] = [None; SMALL_SORT];
+            for (slot, member) in members.iter_mut().zip(attrs.iter()) {
+                *slot = Some(member);
+            }
+            let members = &mut members[..attrs.len()];
+            members.sort_by(|a, b| match (a, b) {
+                (Some(a), Some(b)) => a.0.cmp(b.0),
+                _ => std::cmp::Ordering::Equal,
+            });
+            for (key, value) in members.iter().flatten() {
                 self.string(key).value(Some(value));
             }
         } else {
@@ -252,6 +265,9 @@ impl Cyrb53 {
         (u64::from(h2 & 0x1f_ffff) << 32) + u64::from(h1)
     }
 }
+
+/// Attribute maps up to this size are sorted on the stack when hashed.
+const SMALL_SORT: usize = 16;
 
 /// A length as JavaScript's `>>> 0` sees it (lengths stay far below 2³²).
 fn length32(len: usize) -> u32 {

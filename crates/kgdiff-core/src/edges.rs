@@ -8,7 +8,7 @@ use crate::js::IndexMap;
 
 use crate::canonical::{canonical_json, has_parallel_suffix, split_structural_key, triple_key};
 use crate::classify::{RestructureIndex, attr_changes, moved_key};
-use crate::js::{self, JsStr, Lookup, Value};
+use crate::js::{self, JsStr, KeySorted, Lookup, Value};
 use crate::model::{
     Cause, ChangeStatus, EdgeFacet, EdgeIdentity, End, GraphIssueCode, KGEdge, KGraph, UnionEdge,
     UnionId,
@@ -37,7 +37,8 @@ struct Mapped {
 struct Pairing<'a, 'c> {
     ctx: &'a Ctx<'c>,
     index: &'a RestructureIndex,
-    records: Vec<UnionEdge>,
+    /// The union edges, to be sorted by id.
+    records: KeySorted<UnionEdge>,
     /// Per after edge (by index): paired already.
     paired: Vec<bool>,
     remaining_after: usize,
@@ -82,7 +83,20 @@ impl Pairing<'_, '_> {
     }
 
     fn pair(&mut self, m: &Mapped, a: &Arc<KGEdge>, in_place: bool, forced: Option<Cause>) {
-        if let Some(i) = self.ctx.after.edges.get_index_of(&a.key)
+        let at = self.ctx.after.edges.get_index_of(&a.key);
+        self.pair_at(m, a, at, in_place, forced);
+    }
+
+    /// [`Pairing::pair`] with the position of `a` among the after edges known already.
+    fn pair_at(
+        &mut self,
+        m: &Mapped,
+        a: &Arc<KGEdge>,
+        at: Option<usize>,
+        in_place: bool,
+        forced: Option<Cause>,
+    ) {
+        if let Some(i) = at
             && !self.paired[i]
         {
             self.paired[i] = true;
@@ -137,7 +151,7 @@ impl Pairing<'_, '_> {
         } else {
             ChangeStatus::Modified
         };
-        self.records.push(UnionEdge {
+        let record = UnionEdge {
             id: a.key.clone(),
             source: a.source.clone(),
             target: a.target.clone(),
@@ -155,7 +169,8 @@ impl Pairing<'_, '_> {
             target_before: target_changed.then(|| m.target.clone()),
             predicate_before: predicate_changed.then(|| b.predicate.clone()),
             in_place: in_place && !source_changed && !target_changed && !predicate_changed,
-        });
+        };
+        self.records.push(record, |e| &e.id);
     }
 }
 
@@ -172,7 +187,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     let mut p = Pairing {
         ctx,
         index,
-        records: Vec::new(),
+        records: KeySorted::with_capacity(before.edges.len().max(after.edges.len())),
         paired: vec![false; after.edges.len()],
         remaining_after: after.edges.len(),
     };
@@ -233,10 +248,10 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             key,
         };
         if !is_structural {
-            match after.edges.get(&m.key) {
-                Some(a) if a.id == edge.id && !structural(a) => {
+            match after.edges.get_full(&m.key) {
+                Some((at, _, a)) if a.id == edge.id && !structural(a) => {
                     let a = a.clone();
-                    p.pair(&m, &a, true, None);
+                    p.pair_at(&m, &a, Some(at), true, None);
                 }
                 _ => remaining.push(m),
             }
@@ -249,15 +264,15 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
                 continue;
             }
         }
-        match after.edges.get(&m.key) {
-            Some(a)
+        match after.edges.get_full(&m.key) {
+            Some((at, _, a))
                 if structural(a)
                     && a.source == m.source
                     && a.target == m.target
                     && a.predicate == edge.predicate =>
             {
                 let a = a.clone();
-                p.pair(&m, &a, true, None);
+                p.pair_at(&m, &a, Some(at), true, None);
             }
             _ => remaining.push(m),
         }
@@ -479,15 +494,18 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
         if p.paired[i] {
             continue;
         }
-        p.records.push(edge_record(
-            a.key.clone(),
-            a.source.clone(),
-            a.target.clone(),
-            a,
-            ChangeStatus::Added,
-            Vec::new(),
-            ctx.hierarchy.contains_key(&a.predicate),
-        ));
+        p.records.push(
+            edge_record(
+                a.key.clone(),
+                a.source.clone(),
+                a.target.clone(),
+                a,
+                ChangeStatus::Added,
+                Vec::new(),
+                ctx.hierarchy.contains_key(&a.predicate),
+            ),
+            |e| &e.id,
+        );
     }
     let mut removed: Vec<(Mapped, Option<UnionId>)> = remaining
         .into_iter()
@@ -505,20 +523,20 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             .map(|into| vec![EdgeFacet::Collapsed { into }])
             .unwrap_or_default();
         let hierarchical = ctx.hierarchy.contains_key(&m.edge.predicate);
-        p.records.push(edge_record(
-            id,
-            m.source,
-            m.target,
-            &m.edge,
-            ChangeStatus::Removed,
-            facets,
-            hierarchical,
-        ));
+        p.records.push(
+            edge_record(
+                id,
+                m.source,
+                m.target,
+                &m.edge,
+                ChangeStatus::Removed,
+                facets,
+                hierarchical,
+            ),
+            |e| &e.id,
+        );
     }
-    let mut records = p.records;
-    // A stable sort by id that moves keys, not the large records.
-    js::sort_by_js_key(&mut records, |e| &e.id);
-    records
+    p.records.into_sorted(|e| &e.id)
 }
 
 /// Union id of a before-only edge (`uniqueBeforeId`): its union-space key; on collision the next

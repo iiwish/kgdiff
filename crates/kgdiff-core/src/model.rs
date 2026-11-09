@@ -134,21 +134,93 @@ pub struct KGraph {
     pub meta: Object,
     pub nodes: IndexMap<Id, Arc<KGNode>>,
     pub edges: IndexMap<EdgeKey, Arc<KGEdge>>,
-    /// Edge keys by source node id, in edge order.
-    pub outgoing: IndexMap<Id, Vec<EdgeKey>>,
-    /// Edge keys by target node id, in edge order.
-    pub incoming: IndexMap<Id, Vec<EdgeKey>>,
+    /// The edges leaving each node (`outgoing`), see [`KGraph::outgoing`].
+    pub(crate) outgoing: Adjacency,
+    /// The edges entering each node (`incoming`), see [`KGraph::incoming`].
+    pub(crate) incoming: Adjacency,
     pub edge_identity: EdgeIdentity,
     pub issues: Vec<GraphIssue>,
     /// `hash_graph`, computed once.
     pub(crate) hash: OnceLock<String>,
 }
 
+/// The edges at each node as positions in [`KGraph::edges`], grouped by the node's position in
+/// [`KGraph::nodes`] (compressed rows), each list in edge order. Built once with the graph.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct Adjacency {
+    /// The edges of node `i` are `edges[starts[i]..starts[i + 1]]`.
+    starts: Vec<usize>,
+    edges: Vec<usize>,
+}
+
+impl Adjacency {
+    /// The lists of `nodes` nodes from each edge's end (`None` for an end that is not a node),
+    /// in edge order.
+    pub(crate) fn build(nodes: usize, ends: impl Iterator<Item = Option<usize>> + Clone) -> Self {
+        let mut starts = vec![0usize; nodes + 1];
+        for at in ends.clone().flatten() {
+            starts[at + 1] += 1;
+        }
+        for i in 0..nodes {
+            starts[i + 1] += starts[i];
+        }
+        let mut next = starts.clone();
+        let mut edges = vec![0usize; starts[nodes]];
+        for (edge, at) in ends.enumerate() {
+            if let Some(at) = at {
+                edges[next[at]] = edge;
+                next[at] += 1;
+            }
+        }
+        Adjacency { starts, edges }
+    }
+
+    fn of(&self, node: usize) -> &[usize] {
+        match (self.starts.get(node), self.starts.get(node + 1)) {
+            (Some(&from), Some(&to)) => &self.edges[from..to],
+            _ => &[],
+        }
+    }
+}
+
 impl KGraph {
+    /// The edges leaving the node `id`, in edge order; none for an absent id.
+    pub fn outgoing(&self, id: &str) -> impl Iterator<Item = &Arc<KGEdge>> {
+        self.edges_of(&self.outgoing, id)
+    }
+
+    /// The edges entering the node `id`, in edge order; none for an absent id.
+    pub fn incoming(&self, id: &str) -> impl Iterator<Item = &Arc<KGEdge>> {
+        self.edges_of(&self.incoming, id)
+    }
+
+    /// [`outgoing`](KGraph::outgoing) or, with `out` false, [`incoming`](KGraph::incoming).
+    pub(crate) fn adjacent(&self, id: &str, out: bool) -> impl Iterator<Item = &Arc<KGEdge>> {
+        self.edges_of(if out { &self.outgoing } else { &self.incoming }, id)
+    }
+
+    fn edges_of<'a>(
+        &'a self,
+        adjacency: &'a Adjacency,
+        id: &str,
+    ) -> impl Iterator<Item = &'a Arc<KGEdge>> {
+        let list = self
+            .nodes
+            .get_index_of(id)
+            .map_or(&[][..], |at| adjacency.of(at));
+        list.iter()
+            .filter_map(|&at| self.edges.get_index(at).map(|(_, edge)| edge))
+    }
+
+    /// The degree of the node at position `index` of `nodes`, without a lookup.
+    pub fn degree_at(&self, index: usize) -> usize {
+        self.outgoing.of(index).len() + self.incoming.of(index).len()
+    }
+
     /// Number of edge ends at a node (a self-loop counts twice); 0 for an absent id (`degree`).
     pub fn degree(&self, id: Option<&str>) -> usize {
-        let Some(id) = id else { return 0 };
-        self.outgoing.get(id).map_or(0, Vec::len) + self.incoming.get(id).map_or(0, Vec::len)
+        id.and_then(|id| self.nodes.get_index_of(id))
+            .map_or(0, |at| self.degree_at(at))
     }
 }
 
@@ -585,9 +657,17 @@ pub struct UnionNode {
     pub hunk: Option<JsStr>,
     /// `after.label ?? before.label`.
     pub label: JsStr,
-    /// `after.types ?? before.types`.
-    pub types: Vec<JsStr>,
     pub degree: Degree,
+}
+
+impl UnionNode {
+    /// `after.types ?? before.types`.
+    pub fn types(&self) -> &[JsStr] {
+        self.after
+            .as_ref()
+            .or(self.before.as_ref())
+            .map_or(&[], |n| n.types.as_slice())
+    }
 }
 
 /// An edge of the union graph (`UnionEdge`).

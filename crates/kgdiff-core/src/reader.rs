@@ -908,7 +908,6 @@ pub fn diff_from_json(json: &Value) -> Result<DiffResult> {
         let shown = a.as_ref().or(b.as_ref()).unwrap_or_else(|| unreachable!());
         let node = UnionNode {
             label: shown.label.clone(),
-            types: shown.types.clone(),
             degree: Degree {
                 before: before.degree(before_id.as_deref()),
                 after: after.degree(after_id.as_deref()),

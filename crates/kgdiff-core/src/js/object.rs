@@ -1,5 +1,7 @@
 //! A JavaScript object's own string-keyed properties, in the order JavaScript enumerates them.
 
+use std::sync::Arc;
+
 use super::value::Value;
 use super::{JsStr, Lookup};
 
@@ -16,14 +18,21 @@ const SMALL: usize = 8;
 /// does with a duplicate key, J-23); removing a key keeps the order of the others. `__proto__`
 /// is an ordinary key (J-24). Every JSON object kgdiff writes is an `Object`, so its key order is
 /// right by construction. Equality ignores the order of the members, as for a map.
+///
+/// Clones share their members until one of them changes (copy on write), so copying an attribute
+/// map is cheap; empty objects allocate nothing.
 #[derive(Clone, Default)]
-pub struct Object {
+pub struct Object(Option<Arc<Members>>);
+
+/// The members of an object that has (or had) members.
+#[derive(Clone, Default)]
+struct Members {
     /// Array-index keys first (ascending), then the others in insertion order.
-    entries: Vec<(JsStr, Value)>,
+    entries: Vec<Entry>,
     /// How many of the first keys are array indices.
     indices: usize,
     /// Positions by key, once the object has more than `SMALL` members.
-    index: Option<Lookup<JsStr, usize>>,
+    index: Option<Box<Lookup<JsStr, usize>>>,
 }
 
 /// The numeric value of a canonical array-index key, or `None`.
@@ -50,27 +59,7 @@ fn pair_mut(entry: &mut Entry) -> (&JsStr, &mut Value) {
     (&entry.0, &mut entry.1)
 }
 
-impl Object {
-    pub fn new() -> Object {
-        Object::default()
-    }
-
-    pub fn with_capacity(capacity: usize) -> Object {
-        Object {
-            entries: Vec::with_capacity(capacity),
-            indices: 0,
-            index: None,
-        }
-    }
-
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
-    }
-
+impl Members {
     fn position(&self, key: &str) -> Option<usize> {
         match &self.index {
             Some(index) => index.get(key).copied(),
@@ -84,27 +73,11 @@ impl Object {
             for (at, (k, _)) in self.entries.iter().enumerate() {
                 index.insert(k.clone(), at);
             }
-            index
+            Box::new(index)
         });
     }
 
-    pub fn get(&self, key: &str) -> Option<&Value> {
-        self.position(key).map(|at| &self.entries[at].1)
-    }
-
-    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
-        self.position(key).map(|at| &mut self.entries[at].1)
-    }
-
-    pub fn contains_key(&self, key: &str) -> bool {
-        self.position(key).is_some()
-    }
-
-    /// Sets `key` to `value` (`object[key] = value`) and returns the previous value. A new key
-    /// takes its place in JavaScript's enumeration order.
-    pub fn insert(&mut self, key: impl Into<JsStr>, value: impl Into<Value>) -> Option<Value> {
-        let key = key.into();
-        let value = value.into();
+    fn insert(&mut self, key: JsStr, value: Value) -> Option<Value> {
         if let Some(at) = self.position(&key) {
             return Some(std::mem::replace(&mut self.entries[at].1, value));
         }
@@ -135,8 +108,7 @@ impl Object {
         None
     }
 
-    /// Removes `key` (`delete object[key]`), keeping the order of the other keys.
-    pub fn remove(&mut self, key: &str) -> Option<Value> {
+    fn remove(&mut self, key: &str) -> Option<Value> {
         let at = self.position(key)?;
         let (_, value) = self.entries.remove(at);
         if at < self.indices {
@@ -147,24 +119,88 @@ impl Object {
         }
         Some(value)
     }
+}
+
+impl Object {
+    pub fn new() -> Object {
+        Object::default()
+    }
+
+    pub fn with_capacity(capacity: usize) -> Object {
+        Object((capacity > 0).then(|| {
+            Arc::new(Members {
+                entries: Vec::with_capacity(capacity),
+                ..Members::default()
+            })
+        }))
+    }
+
+    /// The members to change, copied first if another object shares them.
+    fn members_mut(&mut self) -> Option<&mut Members> {
+        self.0.as_mut().map(Arc::make_mut)
+    }
+
+    fn entries(&self) -> &[Entry] {
+        self.0.as_ref().map_or(&[], |m| m.entries.as_slice())
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries().len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries().is_empty()
+    }
+
+    pub fn get(&self, key: &str) -> Option<&Value> {
+        let members = self.0.as_ref()?;
+        members.position(key).map(|at| &members.entries[at].1)
+    }
+
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
+        let at = self.0.as_ref()?.position(key)?;
+        self.members_mut().map(|members| &mut members.entries[at].1)
+    }
+
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.0.as_ref().is_some_and(|m| m.position(key).is_some())
+    }
+
+    /// Sets `key` to `value` (`object[key] = value`) and returns the previous value. A new key
+    /// takes its place in JavaScript's enumeration order.
+    pub fn insert(&mut self, key: impl Into<JsStr>, value: impl Into<Value>) -> Option<Value> {
+        Arc::make_mut(self.0.get_or_insert_with(Arc::default)).insert(key.into(), value.into())
+    }
+
+    /// Removes `key` (`delete object[key]`), keeping the order of the other keys.
+    pub fn remove(&mut self, key: &str) -> Option<Value> {
+        if !self.contains_key(key) {
+            return None;
+        }
+        self.members_mut()?.remove(key)
+    }
 
     /// Members in enumeration order.
     pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&JsStr, &Value)> + ExactSizeIterator {
-        self.entries.iter().map(pair)
+        self.entries().iter().map(pair)
     }
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (&JsStr, &mut Value)> {
-        self.entries.iter_mut().map(pair_mut)
+        let entries: &mut [Entry] = match self.members_mut() {
+            Some(members) => &mut members.entries,
+            None => &mut [],
+        };
+        entries.iter_mut().map(pair_mut)
     }
 
     /// Keys in enumeration order (`Object.keys`).
     pub fn keys(&self) -> impl DoubleEndedIterator<Item = &JsStr> + ExactSizeIterator {
-        self.entries.iter().map(|(k, _)| k)
+        self.entries().iter().map(|(k, _)| k)
     }
 
     /// Values in enumeration order (`Object.values`).
     pub fn values(&self) -> impl DoubleEndedIterator<Item = &Value> + ExactSizeIterator {
-        self.entries.iter().map(|(_, v)| v)
+        self.entries().iter().map(|(_, v)| v)
     }
 }
 
@@ -186,7 +222,7 @@ impl<'a> IntoIterator for &'a Object {
     type IntoIter =
         std::iter::Map<std::slice::Iter<'a, Entry>, fn(&'a Entry) -> (&'a JsStr, &'a Value)>;
     fn into_iter(self) -> Self::IntoIter {
-        self.entries.iter().map(pair)
+        self.entries().iter().map(pair)
     }
 }
 
@@ -194,7 +230,10 @@ impl IntoIterator for Object {
     type Item = (JsStr, Value);
     type IntoIter = std::vec::IntoIter<Entry>;
     fn into_iter(self) -> Self::IntoIter {
-        self.entries.into_iter()
+        self.0
+            .map(|m| Arc::unwrap_or_clone(m).entries)
+            .unwrap_or_default()
+            .into_iter()
     }
 }
 

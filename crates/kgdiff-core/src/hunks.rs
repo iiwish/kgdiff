@@ -49,15 +49,11 @@ fn endpoints(e: &UnionEdge) -> Vec<UnionId> {
 fn neighbors(ctx: &Ctx<'_>, node: &UnionNode) -> Vec<UnionId> {
     let mut out = Vec::new();
     let mut visit = |graph: &KGraph, id: &Id, to_union: &dyn Fn(&Id) -> UnionId| {
-        for key in graph.outgoing.get(id).into_iter().flatten() {
-            if let Some(e) = graph.edges.get(key) {
-                out.push(to_union(&e.target));
-            }
+        for e in graph.outgoing(id) {
+            out.push(to_union(&e.target));
         }
-        for key in graph.incoming.get(id).into_iter().flatten() {
-            if let Some(e) = graph.edges.get(key) {
-                out.push(to_union(&e.source));
-            }
+        for e in graph.incoming(id) {
+            out.push(to_union(&e.source));
         }
     };
     if let Some(id) = &node.before_id {

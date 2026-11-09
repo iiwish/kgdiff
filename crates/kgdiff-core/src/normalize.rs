@@ -5,13 +5,14 @@
 use std::cmp::Ordering;
 use std::sync::{Arc, OnceLock};
 
-use crate::js::IndexMap;
+use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::{canonical_json, triple_key, triple_key_in};
 use crate::error::{ErrorCode, KgdiffError, Result};
 use crate::js::{self, JsStr, Lookup, Object, Value};
 use crate::model::{
-    Attrs, EdgeIdentity, EdgeKey, GraphIssue, GraphIssueCode, Id, KGEdge, KGNode, KGraph, Point,
+    Adjacency, Attrs, EdgeIdentity, EdgeKey, GraphIssue, GraphIssueCode, Id, KGEdge, KGNode,
+    KGraph, Point,
 };
 use crate::options::{DanglingEdges, NormalizeOptions};
 use crate::text::{nfc_str, predicate_label, raw_predicate_label};
@@ -136,8 +137,18 @@ fn string_array(value: Option<&Value>, owner: &str, field: &str) -> Result<Vec<J
 const MAX_DEPTH: usize = 1000;
 
 /// An attribute value as JSON (`sanitize`): NaN and ±∞ become `"NaN"`, `"Infinity"`,
-/// `"-Infinity"`; every key, `__proto__` included, is data.
+/// `"-Infinity"`; every key, `__proto__` included, is data. A value that needs no change is
+/// shared, not copied.
 fn sanitize(value: &Value, depth: usize) -> Result<Value> {
+    if is_clean(value, depth)? {
+        Ok(value.clone())
+    } else {
+        rebuild(value, depth)
+    }
+}
+
+/// [`sanitize`] by copying.
+fn rebuild(value: &Value, depth: usize) -> Result<Value> {
     match value {
         Value::Number(x) if !x.is_finite() => Ok(Value::from(js::number_to_string(*x))),
         Value::Array(_) | Value::Object(_) if depth >= MAX_DEPTH => Err(fail(format!(
@@ -146,17 +157,40 @@ fn sanitize(value: &Value, depth: usize) -> Result<Value> {
         Value::Array(items) => Ok(Value::Array(
             items
                 .iter()
-                .map(|item| sanitize(item, depth + 1))
+                .map(|item| rebuild(item, depth + 1))
                 .collect::<Result<_>>()?,
         )),
         Value::Object(object) => {
             let mut out = Object::with_capacity(object.len());
             for (key, item) in object {
-                out.insert(key.clone(), sanitize(item, depth + 1)?);
+                out.insert(key.clone(), rebuild(item, depth + 1)?);
             }
             Ok(Value::Object(out))
         }
         other => Ok(other.clone()),
+    }
+}
+
+/// Whether [`sanitize`] keeps `value` as it is (no NaN or ±∞ in it), or the error it reports.
+fn is_clean(value: &Value, depth: usize) -> Result<bool> {
+    let nested = |items: &mut dyn Iterator<Item = &Value>| -> Result<bool> {
+        if depth >= MAX_DEPTH {
+            return Err(fail(format!(
+                "Attribute values may be nested at most {MAX_DEPTH} levels deep (or the value is cyclic)"
+            )));
+        }
+        for item in items {
+            if !is_clean(item, depth + 1)? {
+                return Ok(false);
+            }
+        }
+        Ok(true)
+    };
+    match value {
+        Value::Number(x) => Ok(x.is_finite()),
+        Value::Array(items) => nested(&mut items.iter()),
+        Value::Object(object) => nested(&mut object.values()),
+        _ => Ok(true),
     }
 }
 
@@ -321,11 +355,15 @@ struct EdgeDraft {
     predicate: JsStr,
     label: JsStr,
     attrs: Attrs,
+    /// Positions of the source and the target among the nodes.
+    ends: (usize, usize),
+    /// Which predicate it is, by order of first use.
+    predicate_at: usize,
 }
 
 impl EdgeDraft {
-    fn into_edge(self, key: EdgeKey) -> KGEdge {
-        KGEdge {
+    fn into_edge(self, key: EdgeKey) -> (KGEdge, (usize, usize)) {
+        let edge = KGEdge {
             key,
             id: self.id,
             source: self.source,
@@ -333,7 +371,8 @@ impl EdgeDraft {
             predicate: self.predicate,
             label: self.label,
             attrs: self.attrs,
-        }
+        };
+        (edge, self.ends)
     }
 }
 
@@ -345,16 +384,52 @@ fn parallel_content(edge: &EdgeDraft) -> String {
     ]))
 }
 
-/// All declarations of one edge identity (`EdgeGroup`).
+/// Node declarations by id, in the order ids first appear. The ids are kept apart from the
+/// drafts, so that looking an edge's ends up touches only the compact table of ids.
+struct Drafts {
+    ids: IndexSet<Id>,
+    drafts: Vec<NodeDraft>,
+}
+
+impl Drafts {
+    fn with_capacity(capacity: usize) -> Drafts {
+        Drafts {
+            ids: IndexSet::with_capacity_and_hasher(capacity, Default::default()),
+            drafts: Vec::with_capacity(capacity),
+        }
+    }
+
+    fn get_index_of(&self, id: &str) -> Option<usize> {
+        self.ids.get_index_of(id)
+    }
+
+    fn contains_key(&self, id: &str) -> bool {
+        self.ids.contains(id)
+    }
+
+    fn get_mut(&mut self, id: &str) -> Option<&mut NodeDraft> {
+        let at = self.ids.get_index_of(id)?;
+        self.drafts.get_mut(at)
+    }
+
+    /// Adds the draft of a new id, or replaces the draft of a known one.
+    fn insert(&mut self, id: Id, draft: NodeDraft) {
+        let (at, new) = self.ids.insert_full(id);
+        if new {
+            self.drafts.push(draft);
+        } else {
+            self.drafts[at] = draft;
+        }
+    }
+}
+
+/// The declarations of one edge identity (`EdgeGroup`).
 struct EdgeGroup {
-    base: JsStr,
+    /// The identity (an id or a structural key); the edge key once a single declaration has one.
+    key: JsStr,
     id_keyed: bool,
-    /// The declarations; most identities occur once, so repeats are kept aside.
-    first: Option<EdgeDraft>,
-    more: Vec<EdgeDraft>,
-    /// The edges the group becomes: one, or several for parallel copies.
-    edge: Option<KGEdge>,
-    edges: Vec<KGEdge>,
+    /// The first declaration, by position among the edge drafts.
+    first: usize,
 }
 
 fn is_record(value: &Value) -> Option<&Object> {
@@ -381,6 +456,38 @@ pub(crate) fn normalize_as(
     options: NormalizeOptions,
     form: TextForm,
 ) -> Result<KGraph> {
+    normalize_shared(input, options, form, &mut Shared::default())
+}
+
+/// Text that the graphs of one diff share: the second graph's ids and predicates that the first
+/// has too are the first's [`JsStr`]s, so that comparing the two graphs rarely reads text.
+/// Sharing changes no result.
+#[derive(Default)]
+pub(crate) struct Shared<'a> {
+    /// Each predicate once, with its default label and its position (which identifies it when
+    /// edges are grouped).
+    predicates: Lookup<JsStr, (JsStr, JsStr, usize)>,
+    /// The nodes of a graph normalized before, whose ids the next graph shares.
+    nodes: Option<&'a IndexMap<Id, Arc<KGNode>>>,
+}
+
+impl Shared<'_> {
+    /// The same table, sharing the ids of `nodes` from now on.
+    pub(crate) fn with_nodes(self, nodes: &IndexMap<Id, Arc<KGNode>>) -> Shared<'_> {
+        Shared {
+            predicates: self.predicates,
+            nodes: Some(nodes),
+        }
+    }
+}
+
+/// [`normalize_as`], sharing text with the graphs normalized with `shared` before.
+pub(crate) fn normalize_shared(
+    input: &Value,
+    options: NormalizeOptions,
+    form: TextForm,
+    shared: &mut Shared<'_>,
+) -> Result<KGraph> {
     if let Some(record) = is_record(input) {
         check_format(record)?;
     }
@@ -400,8 +507,7 @@ pub(crate) fn normalize_as(
     let mut issues: Vec<GraphIssue> = Vec::new();
 
     // ── Nodes ──
-    let mut drafts: IndexMap<Id, NodeDraft> =
-        IndexMap::with_capacity_and_hasher(raw_nodes.len(), Default::default());
+    let mut drafts = Drafts::with_capacity(raw_nodes.len());
     for raw in raw_nodes {
         let raw = is_record(raw).ok_or_else(|| fail("graph.nodes must contain objects"))?;
         let Some(id) = coerce_id(raw.get("id")) else {
@@ -411,6 +517,13 @@ pub(crate) fn normalize_as(
                 reference: None,
             });
             continue;
+        };
+        let id = match shared
+            .nodes
+            .and_then(|nodes| nodes.get_key_value(id.as_str()))
+        {
+            Some((known, _)) => known.clone(),
+            None => id,
         };
         let draft = draft_node(raw, id.clone(), form)?;
         if let Some(existing) = drafts.get_mut(&id) {
@@ -428,8 +541,10 @@ pub(crate) fn normalize_as(
     }
 
     // ── Edges: endpoints, defaults ──
-    let mut label_cache: Lookup<JsStr, JsStr> = Lookup::new();
-    let mut edge_drafts: Vec<EdgeDraft> = Vec::with_capacity(raw_edges.len());
+    // Each predicate once, with its default label: edges share both.
+    let predicates = &mut shared.predicates;
+    // Taken out one by one when the edges are keyed.
+    let mut edge_drafts: Vec<Option<EdgeDraft>> = Vec::with_capacity(raw_edges.len());
     for raw in raw_edges {
         let edge = is_record(raw).ok_or_else(|| fail("graph.edges must contain objects"))?;
         let (Some(source), Some(target)) =
@@ -446,18 +561,19 @@ pub(crate) fn normalize_as(
             optional_string(edge.get("predicate"), &source, Some(&target), "predicate")?
                 .unwrap_or_default();
         let explicit = optional_string(edge.get("label"), &source, Some(&target), "label")?;
+        let next = predicates.len();
+        let (predicate, default_label, predicate_at) = predicates
+            .get_or_insert_with(predicate.clone(), || {
+                let label = form.edge_label(&predicate);
+                (predicate, label, next)
+            })
+            .clone();
         let label = match explicit {
             Some(label) => form.text(&label),
-            None => match label_cache.get(&predicate) {
-                Some(label) => label.clone(),
-                None => {
-                    let label = form.edge_label(&predicate);
-                    label_cache.insert(predicate.clone(), label.clone());
-                    label
-                }
-            },
+            None => default_label,
         };
-        if !drafts.contains_key(&source) || !drafts.contains_key(&target) {
+        let mut ends = (drafts.get_index_of(&source), drafts.get_index_of(&target));
+        if ends.0.is_none() || ends.1.is_none() {
             handle_dangling(
                 &source,
                 &predicate,
@@ -469,52 +585,75 @@ pub(crate) fn normalize_as(
             if dangling == DanglingEdges::Drop {
                 continue;
             }
+            ends = (drafts.get_index_of(&source), drafts.get_index_of(&target));
         }
+        let (Some(source_at), Some(target_at)) = ends else {
+            unreachable!("dangling ends were created")
+        };
+        // The ends as the nodes' own ids, which the graph shares.
+        let id_at = |at: usize| drafts.ids.get_index(at).cloned();
+        let (Some(source), Some(target)) = (id_at(source_at), id_at(target_at)) else {
+            unreachable!("ends are nodes")
+        };
         let id = coerce_id(edge.get("id"));
         let attrs = attrs_of(edge.get("attrs"), &source, Some(&target))?.unwrap_or_default();
-        edge_drafts.push(EdgeDraft {
+        edge_drafts.push(Some(EdgeDraft {
             id,
             source,
             target,
             predicate,
             label,
             attrs,
-        });
+            ends: (source_at, target_at),
+            predicate_at,
+        }));
     }
 
     let nodes: IndexMap<Id, Arc<KGNode>> = drafts
+        .ids
         .into_iter()
+        .zip(drafts.drafts)
         .map(|(id, draft)| (id, Arc::new(finish_node(draft))))
         .collect();
 
     // ── Edges: identity keys ──
     // Ids and structural keys are grouped apart, and id-keyed groups are keyed first, so an id
     // that looks like a structural key can only push the structural key aside (to `#2`).
-    let mut groups: Vec<EdgeGroup> = Vec::with_capacity(edge_drafts.len());
-    let mut by_id: Lookup<JsStr, usize> = Lookup::new();
-    let mut by_triple: Lookup<JsStr, usize> = Lookup::with_capacity(edge_drafts.len());
-    let mut buffer = String::new();
     let edge_count = edge_drafts.len();
-    for draft in edge_drafts {
-        let id_keyed = edge_identity == EdgeIdentity::Id && draft.id.is_some();
-        let base = match (&draft.id, id_keyed) {
-            (Some(id), true) => id.clone(),
-            _ => triple_key_in(&mut buffer, &draft.source, &draft.predicate, &draft.target),
-        };
-        let index = if id_keyed { &mut by_id } else { &mut by_triple };
-        match index.get(&base) {
-            Some(&at) => groups[at].more.push(draft),
-            None => {
-                index.insert(base.clone(), groups.len());
-                groups.push(EdgeGroup {
-                    base,
-                    id_keyed,
-                    first: Some(draft),
-                    more: Vec::new(),
-                    edge: None,
-                    edges: Vec::new(),
-                });
+    let mut groups: Vec<EdgeGroup> = Vec::with_capacity(edge_count);
+    // The further declarations of an identity, by group; most identities occur once.
+    let mut repeats: Lookup<usize, Vec<usize>> = Lookup::new();
+    {
+        let mut by_id: Lookup<JsStr, usize> = Lookup::new();
+        // Triples by the positions of their source, predicate and target: equal positions are
+        // equal strings, so no structural key needs hashing.
+        let mut by_triple: Lookup<(usize, usize, usize), usize> = Lookup::with_capacity(edge_count);
+        let mut buffer = String::new();
+        for (at, draft) in edge_drafts.iter().enumerate() {
+            let Some(draft) = draft else { continue };
+            let next = groups.len();
+            let (group, id_keyed) = match &draft.id {
+                Some(id) if edge_identity == EdgeIdentity::Id => {
+                    (*by_id.get_or_insert_with(id.clone(), || next), true)
+                }
+                _ => {
+                    let triple = (draft.ends.0, draft.predicate_at, draft.ends.1);
+                    (*by_triple.get_or_insert_with(triple, || next), false)
+                }
+            };
+            if group != next {
+                repeats.get_or_insert_with(group, Vec::new).push(at);
+                continue;
             }
+            let key = match (&draft.id, id_keyed) {
+                (Some(id), true) => id.clone(),
+                _ => triple_key_in(&mut buffer, &draft.source, &draft.predicate, &draft.target),
+            };
+            groups.push(EdgeGroup {
+                key,
+                id_keyed,
+                first: at,
+            });
         }
     }
     // Collisions between keys are only possible when ids and structural keys mix.
@@ -533,47 +672,70 @@ pub(crate) fn normalize_as(
         taken.insert(candidate.clone(), ());
         candidate
     };
+    // The edges of groups declared more than once: one merged edge, or parallel copies.
+    let mut several: Lookup<usize, Vec<(EdgeKey, EdgeDraft)>> = Lookup::new();
     for pass in [true, false] {
-        for group in groups.iter_mut().filter(|g| g.id_keyed == pass) {
-            let Some(first) = group.first.take() else {
-                continue;
-            };
-            if group.more.is_empty() {
-                group.edge = Some(first.into_edge(unique(group.base.clone())));
+        for (at, group) in groups.iter_mut().enumerate() {
+            if group.id_keyed != pass {
                 continue;
             }
-            let mut drafts = vec![first];
-            drafts.append(&mut group.more);
+            let Some(more) = repeats.remove(&at) else {
+                group.key = unique(group.key.clone());
+                continue;
+            };
+            let drafts: Vec<EdgeDraft> = std::iter::once(group.first)
+                .chain(more)
+                .filter_map(|at| edge_drafts[at].take())
+                .collect();
             let count = drafts.len();
             if pass {
                 let merged = merge_edge_drafts(drafts);
-                group
-                    .edges
-                    .push(merged.into_edge(unique(group.base.clone())));
+                several.insert(at, vec![(unique(group.key.clone()), merged)]);
                 issues.push(GraphIssue {
                     code: GraphIssueCode::DuplicateEdge,
                     message: format!(
                         "Edge id \"{}\" is used {count} times; the declarations were merged",
-                        group.base
+                        group.key
                     ),
-                    reference: Some(group.base.clone()),
+                    reference: Some(group.key.clone()),
                 });
             } else {
-                let base = group.base.clone();
-                for (key, draft) in insert_parallel(&base, drafts, &mut issues) {
-                    group.edges.push(draft.into_edge(unique(key)));
-                }
+                let keyed = insert_parallel(&group.key, drafts, &mut issues)
+                    .into_iter()
+                    .map(|(key, draft)| (unique(key), draft))
+                    .collect();
+                several.insert(at, keyed);
             }
         }
     }
     // Edges keep the order in which their identity first appeared.
     let mut edges: IndexMap<EdgeKey, Arc<KGEdge>> =
         IndexMap::with_capacity_and_hasher(edge_count, Default::default());
-    for group in groups {
-        for edge in group.edge.into_iter().chain(group.edges) {
-            edges.insert(edge.key.clone(), Arc::new(edge));
+    let mut ends: Vec<(usize, usize)> = Vec::with_capacity(edge_count);
+    let mut add = |key: EdgeKey, draft: EdgeDraft| {
+        let (edge, at) = draft.into_edge(key);
+        let (index, replaced) = edges.insert_full(edge.key.clone(), Arc::new(edge));
+        if replaced.is_some() {
+            ends[index] = at;
+        } else {
+            ends.push(at);
+        }
+    };
+    for (at, group) in groups.into_iter().enumerate() {
+        match several.remove(&at) {
+            Some(keyed) => {
+                for (key, draft) in keyed {
+                    add(key, draft);
+                }
+            }
+            None => {
+                if let Some(draft) = edge_drafts[group.first].take() {
+                    add(group.key, draft);
+                }
+            }
         }
     }
+    drop(edge_drafts);
 
     issues.sort_by(|a, b| {
         a.code
@@ -587,17 +749,20 @@ pub(crate) fn normalize_as(
             })
             .then_with(|| js::cmp_utf16(&a.message, &b.message))
     });
-    Ok(index_graph(
+    Ok(graph_of(
         record.get("meta"),
         nodes,
         edges,
+        &ends,
         edge_identity,
         issues,
     ))
 }
 
-/// Edge keys by source and by target node id, in edge order; nodes without edges get empty lists
-/// after those with edges (`indexGraph`).
+/// The graph of indexed nodes and keyed edges, with its adjacency (`indexGraph`): for every node,
+/// in node order, its outgoing and its incoming edges, in edge order. Every end of
+/// an edge must be a node (`normalize` and `diff_from_json` make sure of it); an edge whose end is
+/// not is left out of the adjacency.
 pub(crate) fn index_graph(
     meta: Option<&Value>,
     nodes: IndexMap<Id, Arc<KGNode>>,
@@ -605,29 +770,30 @@ pub(crate) fn index_graph(
     edge_identity: EdgeIdentity,
     issues: Vec<GraphIssue>,
 ) -> KGraph {
-    let mut outgoing: IndexMap<Id, Vec<EdgeKey>> =
-        IndexMap::with_capacity_and_hasher(nodes.len(), Default::default());
-    let mut incoming: IndexMap<Id, Vec<EdgeKey>> =
-        IndexMap::with_capacity_and_hasher(nodes.len(), Default::default());
-    let push = |map: &mut IndexMap<Id, Vec<EdgeKey>>, id: &Id, key: &EdgeKey| match map.get_mut(id)
-    {
-        Some(list) => list.push(key.clone()),
-        None => {
-            map.insert(id.clone(), vec![key.clone()]);
-        }
-    };
-    for edge in edges.values() {
-        push(&mut outgoing, &edge.source, &edge.key);
-        push(&mut incoming, &edge.target, &edge.key);
-    }
-    for id in nodes.keys() {
-        if !outgoing.contains_key(id) {
-            outgoing.insert(id.clone(), Vec::new());
-        }
-        if !incoming.contains_key(id) {
-            incoming.insert(id.clone(), Vec::new());
-        }
-    }
+    let ends: Vec<(usize, usize)> = edges
+        .values()
+        .map(|e| {
+            let at = |id: &Id| nodes.get_index_of(id).unwrap_or(usize::MAX);
+            (at(&e.source), at(&e.target))
+        })
+        .collect();
+    graph_of(meta, nodes, edges, &ends, edge_identity, issues)
+}
+
+/// [`index_graph`] with the positions of each edge's ends among the nodes known already.
+fn graph_of(
+    meta: Option<&Value>,
+    nodes: IndexMap<Id, Arc<KGNode>>,
+    edges: IndexMap<EdgeKey, Arc<KGEdge>>,
+    ends: &[(usize, usize)],
+    edge_identity: EdgeIdentity,
+    issues: Vec<GraphIssue>,
+) -> KGraph {
+    let n = nodes.len();
+    // An edge whose source or target is not a node is in neither list.
+    let both = |&(s, t): &(usize, usize)| s < n && t < n;
+    let outgoing = Adjacency::build(n, ends.iter().map(|e| both(e).then_some(e.0)));
+    let incoming = Adjacency::build(n, ends.iter().map(|e| both(e).then_some(e.1)));
     KGraph {
         meta: meta.and_then(Value::as_object).cloned().unwrap_or_default(),
         nodes,
@@ -646,7 +812,7 @@ fn handle_dangling(
     predicate: &JsStr,
     target: &Id,
     policy: DanglingEdges,
-    drafts: &mut IndexMap<Id, NodeDraft>,
+    drafts: &mut Drafts,
     issues: &mut Vec<GraphIssue>,
 ) -> Result<()> {
     let endpoints: &[&Id] = if source == target {

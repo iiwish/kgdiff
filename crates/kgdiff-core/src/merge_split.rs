@@ -163,16 +163,9 @@ impl<'a> Neighbourhoods<'a> {
             return found.clone();
         }
         let graph = self.graph;
-        let keys = if incoming {
-            graph.incoming.get(anchor)
-        } else {
-            graph.outgoing.get(anchor)
-        };
         let mut ends: IndexSet<Id> = IndexSet::default();
-        for k in keys.into_iter().flatten() {
-            if let Some(edge) = graph.edges.get(k)
-                && edge.predicate == *predicate
-            {
+        for edge in graph.adjacent(anchor, !incoming) {
+            if edge.predicate == *predicate {
                 ends.insert(if incoming {
                     edge.source.clone()
                 } else {
@@ -276,15 +269,7 @@ fn carry_over(
     let mut edges = Vec::new();
     let mut candidates: IndexSet<Id> = IndexSet::default();
     for out in [true, false] {
-        let keys = if out {
-            graph.outgoing.get(&subject.id)
-        } else {
-            graph.incoming.get(&subject.id)
-        };
-        for key in keys.into_iter().flatten() {
-            let Some(edge) = graph.edges.get(key) else {
-                continue;
-            };
+        for edge in graph.adjacent(&subject.id, out) {
             let end = if out { &edge.target } else { &edge.source };
             let other = if *end == subject.id {
                 None
