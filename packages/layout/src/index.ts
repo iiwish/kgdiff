@@ -91,12 +91,12 @@ export interface LayoutResult {
 }
 
 /**
- * A layout document, as `layoutFromJSON` reads it: version 1, what `layoutToJSON` writes, or
- * version 2, written by kgdiff's Rust layout engine.
+ * A layout document, as `layoutFromJSON` reads it and `layoutToJSON` writes it: version 1, for
+ * this package's layouts, or version 2, written by kgdiff's Rust layout engine.
  */
 export type LayoutJSON = LayoutJSONV1 | LayoutJSONV2;
 
-/** Deterministic JSON transport (no timing information), version 1: what `layoutToJSON` writes. */
+/** Deterministic JSON transport (no timing information), version 1: this package's layouts. */
 export interface LayoutJSONV1 {
   readonly format: 'kgdiff.layout';
   readonly version: 1;
@@ -203,11 +203,11 @@ export function estimateLabelWidth(text: string, fontSize: number): number {
 
 /**
  * Deterministic JSON form: keys sorted by id, coordinates and radii rounded to 0.01, no timing.
- * Always version 1, the document of this package's layout engine: a layout read from version 2
- * is written as version 1, without its `generator`. `layoutToJSON(layoutFromJSON(json))`
- * reproduces a version 1 `json`.
+ * Version 1 for the layouts this package computes; version 2 with the `generator` for a layout
+ * that has one (read from version 2, and not extended since), as kgdiff's Rust layout engine
+ * writes it. `layoutToJSON(layoutFromJSON(json))` reproduces `json` of either version.
  */
-export function layoutToJSON(layout: LayoutResult): LayoutJSONV1 {
+export function layoutToJSON(layout: LayoutResult): LayoutJSON {
   return toJSON(layout);
 }
 

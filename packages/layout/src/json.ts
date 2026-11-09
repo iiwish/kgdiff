@@ -26,11 +26,13 @@ const rect = (r: Rect): Rect => ({
   height: round2(r.height),
 });
 
-/** Always version 1: a `generator` read from version 2 is not written. */
-export function toJSON(layout: LayoutResult): LayoutJSONV1 {
-  return {
-    format: 'kgdiff.layout',
-    version: 1,
+/**
+ * Version 2 with the layout's `generator` when it has one (read from version 2), else version 1,
+ * as kgdiff-layout's `layout_to_json` writes them: what a layout document says about its
+ * positions survives a round trip (RFC 0002, D-3).
+ */
+export function toJSON(layout: LayoutResult): LayoutJSON {
+  const members = {
     strategy: layout.stats.strategy,
     scope: layout.scope,
     iterations: layout.stats.iterations,
@@ -42,6 +44,10 @@ export function toJSON(layout: LayoutResult): LayoutJSONV1 {
     bounds: rect(layout.bounds),
     components: layout.components.map((c) => ({ nodes: [...c.nodes], bounds: rect(c.bounds) })),
   };
+  if (layout.generator !== undefined) {
+    return { format: 'kgdiff.layout', version: 2, generator: layout.generator, ...members };
+  }
+  return { format: 'kgdiff.layout', version: 1, ...members } satisfies LayoutJSONV1;
 }
 
 function fail(message: string, details?: Readonly<Record<string, unknown>>): never {

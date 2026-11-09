@@ -121,6 +121,7 @@ describe('layout documents, version 2', () => {
   // rounded to 0.01.
   const v1: LayoutJSONV1 = (() => {
     const json = layoutToJSON(layout);
+    if (json.version !== 1) throw new Error('layoutDiff writes version 1');
     const positions = Object.fromEntries(
       Object.entries(json.positions).map(([id, [x, y]]) => [
         id,
@@ -145,11 +146,23 @@ describe('layout documents, version 2', () => {
     }
   });
 
-  it('writes what it read from version 2 as version 1, without the generator', () => {
+  it('writes what it read from version 2 back as version 2, with its generator (D-3)', () => {
     const out = layoutToJSON(layoutFromJSON(v2));
-    expect(out.version).toBe(1);
-    expect(JSON.stringify(out)).toBe(JSON.stringify(v1));
-    expect(JSON.stringify(out)).not.toContain('generator');
+    expect(out).toEqual(v2);
+    // In the member order of kgdiff-layout's layout_to_json: format, version, generator, …
+    const { format, ...rest } = members;
+    const canonical = { format, version: 2, generator: 'kgdiff-layout/1', ...rest };
+    expect(JSON.stringify(out)).toBe(JSON.stringify(canonical));
+    expect(JSON.stringify(layoutToJSON(layoutFromJSON(out)))).toBe(JSON.stringify(out));
+  });
+
+  it('writes its own layouts as version 1', () => {
+    expect(layoutToJSON(layoutDiff(diff)).version).toBe(1);
+    const read = layoutFromJSON(v2);
+    const outside = diff.nodes.map((n) => n.id).filter((id) => !read.positions.has(id));
+    const extended = layoutToJSON(extendLayout(diff, read, outside.slice(0, 1)));
+    expect(extended.version).toBe(1);
+    expect(JSON.stringify(extended)).not.toContain('generator');
   });
 
   it('ignores a generator in a version 1 document', () => {
