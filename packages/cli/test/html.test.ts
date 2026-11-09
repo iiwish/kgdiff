@@ -115,8 +115,8 @@ describe('HTML report', () => {
     expect(payload.version).toBe(1);
     expect(payload.diff.format).toBe('kgdiff.diff.packed');
     expect(diffOf(payload).nodes.map((n) => n.id)).toEqual(['a', 'b', 'c']);
-    expect(payload.layout.format).toBe('kgdiff.layout');
-    expect(Object.keys(payload.layout.positions).sort()).toEqual(['a', 'b', 'c']);
+    expect(payload.layout?.format).toBe('kgdiff.layout');
+    expect(Object.keys(payload.layout!.positions).sort()).toEqual(['a', 'b', 'c']);
     expect(payload.meta).toMatchObject({
       title: 'Release <2>',
       generatedAt: '2026-11-01T12:00:00.000Z',

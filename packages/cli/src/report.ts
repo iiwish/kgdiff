@@ -76,10 +76,11 @@ export async function createGzip(): Promise<(data: Uint8Array) => Uint8Array> {
 /**
  * Whether a report should inline the compute add-on: only when the layout covers just the
  * changes (large graphs), where the viewer may need to lay out collapsed groups the user
- * expands. Full layouts need no browser-side computation, so small reports stay small.
+ * expands, or when there is no layout at all. Full layouts need no browser-side computation,
+ * so small reports stay small.
  */
 export function needsCompute(payload: ReportPayload): boolean {
-  return payload.layout.scope === 'changes';
+  return payload.layout === undefined || payload.layout.scope === 'changes';
 }
 
 export interface ReportBundles {

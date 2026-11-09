@@ -32,10 +32,13 @@ ESM only. Runs in evergreen browsers.
 - `load()` also takes structured graphs (`{ nodes, edges }`). The parsers, the diff engine and the
   force layout are imported on demand, so they stay out of your initial bundle.
 - To show a precomputed diff without any work in the browser, set `viewer.payload` to a report
-  payload: that is what the `kgdiff` CLI embeds in its HTML reports.
+  payload: that is what the `kgdiff` CLI embeds in its HTML reports. A payload may leave its
+  `layout` out (for a diff your application computed itself): the viewer then lays the diff out
+  when it reads the payload, with the compute module, but never runs the diff engine.
 - Without a bundler, `@kgdiff/viewer/standalone` (`dist/standalone/kgdiff-viewer.js`) is a
   self-contained script that defines the element and shows embedded payloads. The optional
-  `@kgdiff/viewer/standalone/compute` add-on brings the diff engine and force layout for `load()`.
+  `@kgdiff/viewer/standalone/compute` add-on brings the diff engine and force layout for `load()`
+  and for payloads without a layout; without it, such a payload shows an error that says so.
 
 Every attribute, property, method and event (with its values and default) is in the
 [reference](../../docs/viewer-elements.md), generated from the sources. The legacy

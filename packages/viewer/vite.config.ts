@@ -7,7 +7,7 @@
  *   viewer imports on demand — from an import map, or from the add-on below.
  * - `dist/standalone/kgdiff-viewer-compute.js` (`--mode compute`): optional add-on that
  *   provides the compute module as `globalThis.KgdiffCompute`, enabling `load()` with parsed
- *   graphs and expanding nodes outside a `changes`-scoped layout.
+ *   graphs, reports without a layout and expanding nodes outside a `changes`-scoped layout.
  *
  *   pnpm --filter @kgdiff/viewer build
  */

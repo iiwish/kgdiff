@@ -151,4 +151,4 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
 
 文档结构：`<!doctype html>`；`lang` 取自语言设置；字符集、视口和 `<title>`；一段内联样式先画出主题背景（按 `prefers-color-scheme`，`--theme` 指定时以它为准），避免白屏闪烁；一个视觉上隐藏的 `<h1>`；`<main>` 里铺满视口的 `<kgdiff-viewer global-shortcuts>`（整个页面就是查看器，所以它的快捷键在整页生效）；一段 `<noscript>` 摘要；数据脚本；最后是查看器脚本。内联的 JSON 和 JavaScript 中从不出现 `</script` 和 `<!--`。查看器元素上只在给出时带 `mode` 和 `scope`；主题、语言和面板状态只放在数据的 `view` 里（写成属性会压过读者之前的选择），查看器读到数据后立即应用。
 
-数据（`ReportPayload`，`format: "kgdiff.report"`，`version: 1`）包含打包的 diff、布局、`meta`（标题、生成器、时间戳、两侧的名称和格式）和 `view`：`mode`、`scope`、`theme`、`locale`，以及从 kgdiff 0.6 起的 `panels`（区域到状态的对象，例如 `{ "detail": "collapsed" }`）。`view` 的每个字段都可省略；查看器忽略不认识或无效的字段（在控制台给出警告），所以没有 `panels` 的旧报告按默认布局打开。
+数据（`ReportPayload`，`format: "kgdiff.report"`，`version: 1`）包含打包的 diff、布局、`meta`（标题、生成器、时间戳、两侧的名称和格式）和 `view`：`mode`、`scope`、`theme`、`locale`，以及从 kgdiff 0.6 起的 `panels`（区域到状态的对象，例如 `{ "detail": "collapsed" }`）。`view` 的每个字段都可省略；查看器忽略不认识或无效的字段（在控制台给出警告），所以没有 `panels` 的旧报告按默认布局打开。从 kgdiff 0.7 起 `layout` 也可省略：查看器读到没有布局的数据（不写这个成员）时，会在打开时用计算插件（`globalThis.KgdiffCompute`）给 diff 布局；缺少计算插件时，显示一条说明原因的错误。这个命令行总是写出布局。

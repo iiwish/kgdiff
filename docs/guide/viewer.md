@@ -446,8 +446,9 @@ $effect(() => {
 `@kgdiff/viewer/standalone` (`dist/standalone/kgdiff-viewer.js`) is a classic script that defines
 the element and shows precomputed diffs: it is what the HTML reports of the CLI embed. With its
 compute add-on, `@kgdiff/viewer/standalone/compute` (`kgdiff-viewer-compute.js`), it can also
-`load()` graph objects (`{ nodes, edges }`). Parsing text in the browser needs the ESM package
-and a bundler.
+`load()` graph objects (`{ nodes, edges }`) and show payloads without a layout, which it lays out
+when it reads them (without the add-on, such a payload shows an error that says so). Parsing
+text in the browser needs the ESM package and a bundler.
 
 ## Large graphs
 

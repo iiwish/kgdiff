@@ -250,5 +250,8 @@ layout, `meta` (title, generator, timestamp, the two sides' names and formats) a
 `scope`, `theme`, `locale` and, from kgdiff 0.6, `panels` (an object of region → state, e.g.
 `{ "detail": "collapsed" }`). Every `view` field is optional; a viewer ignores the ones it does
 not know or that are invalid (with a console warning), so older reports without `panels` open
-with the default layout.
+with the default layout. From kgdiff 0.7 the `layout` is optional too: a viewer reads a payload
+without one (the member left out) by laying the diff out when it opens, with the compute add-on
+(`globalThis.KgdiffCompute`), and shows an error that says so when the add-on is missing. This
+CLI always writes the layout.
 `</script` and `<!--` never appear inside inline JSON or JavaScript.

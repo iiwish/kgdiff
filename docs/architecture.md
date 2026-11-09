@@ -74,7 +74,10 @@ text ──formats.parseGraph──▶ GraphInput ×2
 
 The CLI runs everything up to `layoutDiff` in Node and embeds `packDiffJSON(diffToJSON(…))` +
 `layoutToJSON` in the HTML report (`ReportPayload`), so the browser only builds the scene and
-renders. Reports are reproducible and open instantly. The packed diff stores the unchanged
+renders. Reports are reproducible and open instantly. A payload may also leave the layout out
+(an application that computed the diff itself): the viewer then runs `layoutDiff` with its
+default options when it reads the payload, with the compute module, and still never the diff
+engine. The packed diff stores the unchanged
 elements (most of a large diff) as tables of indices into one string table: for 100k nodes /
 300k edges, 28% of the bytes and 46% once gzipped (edges with a label or attributes of their own
 are not packed, so diffs of such graphs shrink less). The viewer unpacks it and reads it with `diffFromJSON`,

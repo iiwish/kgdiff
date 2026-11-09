@@ -1,6 +1,7 @@
 import { diff, diffToJSON } from '@kgdiff/core';
 import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { KgdiffViewer } from '../src/element.js';
 import { hydrateEmbeddedPayloads, PAYLOAD_SCRIPT_TYPE, type ReportPayload } from '../src/index.js';
 import { assertPayload, decodePayloadText } from '../src/payload.js';
 import { setRenderBackend } from '../src/renderer-port.js';
@@ -76,6 +77,19 @@ describe('payload decoding', () => {
     expect(() => assertPayload({ format: 'kgdiff.report', version: 2 })).toThrow(/version/);
     expect(() => assertPayload({ format: 'kgdiff.report', version: 1 })).toThrow(/diff/);
   });
+
+  it('takes the layout as optional, and an object when present', async () => {
+    const { layout: _, ...rest } = payload();
+    expect(assertPayload(rest)).toBe(rest);
+    expect(await decodePayloadText(JSON.stringify(rest), null)).toEqual(rest);
+    for (const layout of [null, 'none', 1, false]) {
+      expect(() => assertPayload({ ...rest, layout })).toThrow(/layout/);
+      expect(() => assertPayload({ ...rest, layout })).toThrow(
+        expect.objectContaining({ code: 'invalid-input' }),
+      );
+    }
+    expect(() => assertPayload({ ...payload(), diff: undefined })).toThrow(/diff/);
+  });
 });
 
 describe('hydrateEmbeddedPayloads', () => {
@@ -103,6 +117,28 @@ describe('hydrateEmbeddedPayloads', () => {
     expect(b.mode).toBe('replay');
     expect(b.locale).toBe('zh-CN');
     expect(b.reviewState().total).toBe(p.diff.hunks.length);
+  });
+
+  it('lays out a payload without a layout, importing the compute module (ESM build)', async () => {
+    const p = payload();
+    const { layout, ...rest } = p;
+    const v = document.createElement('kgdiff-viewer');
+    let ready = false;
+    v.addEventListener('kgdiff-ready', () => {
+      ready = true;
+    });
+    document.body.append(v, script(JSON.stringify(rest)));
+    await hydrateEmbeddedPayloads();
+    await until(() => ready);
+    expect(v.payload).toEqual(rest);
+    expect(v.mode).toBe('replay');
+    expect(v.locale).toBe('zh-CN');
+    expect(v.reviewState().total).toBe(p.diff.hunks.length);
+    // The layout the CLI would have embedded: same input, same default options.
+    const positions = (v as unknown as KgdiffViewer).controller.layout!.positions;
+    expect(Object.fromEntries([...positions].map(([id, q]) => [id, [q.x, q.y]]))).toEqual(
+      layout?.positions,
+    );
   });
 
   it('defaults to the first viewer and works before the element is connected', async () => {

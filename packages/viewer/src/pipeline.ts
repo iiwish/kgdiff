@@ -1,5 +1,6 @@
 /**
- * Load pipeline: sources → (parse) → diff → layout, or a precomputed report → diff + layout.
+ * Load pipeline: sources → (parse) → diff → layout, or a precomputed report → diff + layout
+ * (laid out here when the report has none).
  * Each step is announced through `onStep`, which the controller awaits so the loading state
  * can paint between the (synchronous, CPU-bound) steps.
  */
@@ -14,7 +15,7 @@ import {
   unpackDiffJSON,
 } from '@kgdiff/core';
 import { type LayoutOptions, type LayoutResult, layoutFromJSON } from '@kgdiff/layout';
-import { loadCompute } from './compute-loader.js';
+import { type Compute, loadCompute } from './compute-loader.js';
 import { translate } from './i18n.js';
 import type { GraphSource, LoadOptions, ReportPayload } from './index.js';
 import { sanitizeView } from './prefs.js';
@@ -153,16 +154,32 @@ export async function runLoad(
   };
 }
 
+/** The compute module, for a payload without a layout: rejects with what is missing. */
+async function layoutEngine(): Promise<Compute> {
+  try {
+    return await loadCompute();
+  } catch (error) {
+    throw new KgdiffError('invalid-input', translate('en', 'error.noLayout'), {
+      cause: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 export async function readPayload(
   payload: ReportPayload,
   onStep: (step: LoadStep) => Promise<void>,
 ): Promise<LoadedDiff> {
+  // A payload without a layout is laid out here; the layout engine loads while the diff is
+  // read. A payload with one never loads it.
+  const engine = payload.layout === undefined ? layoutEngine() : null;
+  // Awaited below; a diff that fails to read first must not leave a rejection unhandled.
+  engine?.catch(() => {});
   await onStep('match');
   const json =
     payload.diff.format === 'kgdiff.diff.packed' ? unpackDiffJSON(payload.diff) : payload.diff;
   const diff = diffFromJSON(json);
   await onStep('layout');
-  const layout = layoutFromJSON(payload.layout);
+  const layout = engine ? (await engine).layoutDiff(diff) : layoutFromJSON(payload.layout!);
   const vb = str(diff.before.meta.version);
   const va = str(diff.after.meta.version);
   const meta = payload.meta;

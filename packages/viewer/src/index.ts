@@ -126,13 +126,24 @@ export interface ViewerLayout {
   readonly detailShare: number | null;
 }
 
-/** A precomputed diff + layout: what the CLI embeds in HTML reports. Deterministic. */
+/**
+ * A precomputed diff, with its layout or without: what the CLI embeds in HTML reports.
+ * Deterministic.
+ */
 export interface ReportPayload {
   readonly format: 'kgdiff.report';
   readonly version: 1;
   /** The diff, packed (`packDiffJSON`, what the CLI writes) or not. */
   readonly diff: DiffJSON | PackedDiffJSON;
-  readonly layout: LayoutJSON;
+  /**
+   * The diff's layout (`layoutToJSON`): with it, a report opens without computing anything.
+   * Without it (the member left out), the viewer lays the diff out when it reads the payload
+   * (`layoutDiff`, default options) with the compute module, which the ESM build imports on
+   * demand and the standalone viewer takes from the `@kgdiff/viewer/standalone/compute`
+   * add-on (`globalThis.KgdiffCompute`); without either, the viewer shows an error that says
+   * so. The diff engine never runs for a payload.
+   */
+  readonly layout?: LayoutJSON;
   readonly meta: {
     readonly title?: string;
     /** e.g. `kgdiff 0.1.0`. */
@@ -261,7 +272,10 @@ export interface KgdiffRootElement extends HTMLElement {
    * leaves (a mouse or pen; not touch). Reflected as `pause-on-hover="false"` when off. Default true.
    */
   pauseOnHover: boolean;
-  /** Set a precomputed report (no diff / layout work in the browser). */
+  /**
+   * Set a precomputed report: shown without computing anything when it carries its layout,
+   * else laid out with the compute module (see `ReportPayload.layout`).
+   */
   payload: ReportPayload | null;
   /** Parse (if needed), diff, lay out and show two graphs. Rejects with a KgdiffError on bad input. */
   load(options: LoadOptions): Promise<void>;

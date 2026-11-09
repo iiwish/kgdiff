@@ -66,7 +66,7 @@ The canvas has the slots of `<kgdiff-stage>` (`top-start`, `top-end`, `bottom-st
 | JavaScript 属性 | 类型 | 说明 |
 | --- | --- | --- |
 | `layout` (只读) | `ViewerLayout` | Every region's state and the sizes now (what `kgdiff-layout` reports, without `source`). |
-| `payload` | `ReportPayload \| null` | Set a precomputed report (no diff / layout work in the browser). |
+| `payload` | `ReportPayload \| null` | Set a precomputed report: shown without computing anything when it carries its layout, else laid out with the compute module (see `ReportPayload.layout`). |
 
 ### 方法
 
@@ -139,7 +139,7 @@ It renders as `display: contents`, so its children are laid out by the page as i
 
 | JavaScript 属性 | 类型 | 说明 |
 | --- | --- | --- |
-| `payload` | `ReportPayload \| null` | Set a precomputed report (no diff / layout work in the browser). |
+| `payload` | `ReportPayload \| null` | Set a precomputed report: shown without computing anything when it carries its layout, else laid out with the compute module (see `ReportPayload.layout`). |
 
 ### 方法
 
