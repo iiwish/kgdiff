@@ -1,5 +1,14 @@
 # @kgdiff/renderer
 
+## 0.7.0
+
+### Patch Changes
+
+- Updated dependencies [d01c4e0]
+- Updated dependencies [7586808]
+  - @kgdiff/core@0.7.0
+  - @kgdiff/scene@0.7.0
+
 ## 0.6.0
 
 ### Patch Changes

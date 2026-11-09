@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/layout",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Stable, deterministic, label-aware layout for graph diffs: both versions share one mental map.",
   "keywords": [
     "kgdiff",

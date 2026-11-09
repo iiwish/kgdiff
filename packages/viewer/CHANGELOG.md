@@ -1,5 +1,25 @@
 # @kgdiff/viewer
 
+## 0.7.0
+
+### Minor Changes
+
+- e510258: Report payloads may leave their layout out. `ReportPayload.layout` is optional: a payload without one (the member left out) is laid out in the browser when the viewer reads it, with `layoutDiff`'s default options, so an application that computed a diff itself can show it by passing its `diff.v1` JSON as a payload. The ESM build imports the compute module on demand for it; the standalone viewer takes it from the `@kgdiff/viewer/standalone/compute` add-on (`globalThis.KgdiffCompute`), and without the add-on shows an error that says what is missing instead of failing to read the layout. The diff engine never runs for a payload, and payloads with a layout open exactly as before, without loading the compute module. A `layout` that is present but not an object (`null`, for instance) is rejected. The CLI keeps writing the layout into its reports.
+
+### Patch Changes
+
+- 7586808: Reports open the same way whatever Unicode version the browser has. `diffFromJSON` takes the labels, aliases and types of a document's snapshots as written instead of composing them to NFC again with the runtime's ICU, and the content hashes in the delta check that text: a report made with Node 24 (Unicode 17) no longer fails to open in a browser with older tables when a label holds a character whose composition changed in between, and a snapshot whose text was edited or is not in NFC is still rejected. To restore a label it left out without Unicode tables either, kgdiff JSON (diffs, graphs and deltas) now leaves an edge label out only when it equals `predicateLabel(predicate)` before its NFC step; a predicate whose readable part is written decomposed keeps its label in the document. A diff written by an earlier version for such a predicate, with that label left out, no longer opens: write it again. `normalize` composes API input to NFC as before.
+- Updated dependencies [d01c4e0]
+- Updated dependencies [cca58f9]
+- Updated dependencies [cca58f9]
+- Updated dependencies [9ebb278]
+- Updated dependencies [7586808]
+  - @kgdiff/core@0.7.0
+  - @kgdiff/formats@0.7.0
+  - @kgdiff/layout@0.7.0
+  - @kgdiff/renderer@0.7.0
+  - @kgdiff/scene@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
