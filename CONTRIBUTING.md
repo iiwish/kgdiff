@@ -33,6 +33,8 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all
 cargo deny check                                # licenses, advisories, duplicates (deny.toml)
 cargo bench -p kgdiff-core                      # the native targets of RFC 0002 §7
+pnpm build:viewer-assets                        # the viewer bundles the Rust HTML reports embed
+cargo test -p kgdiff-report --features embed-viewer
 ```
 
 The differential run compares TypeScript and Rust byte for byte on seeded random graph pairs (CI

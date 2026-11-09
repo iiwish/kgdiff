@@ -15,3 +15,5 @@ packages/viewer/test/recipes/.out/
 
 # Cargo
 /target/
+# The viewer bundles `pnpm build:viewer-assets` copies for the Rust reports (packaged by Cargo).
+/crates/kgdiff-report/assets/
