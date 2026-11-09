@@ -1,7 +1,8 @@
-//! kgdiff-core against the conformance corpus (`conformance/README.md`).
+//! kgdiff-core and kgdiff-formats against the conformance corpus (`conformance/README.md`).
 //!
-//! Walks `conformance/manifest.json`, computes every part of every case that kgdiff-core ports
-//! (RFC 0002, phase 2) and every primitive vector, and prints which pass. A part that the port
+//! Walks `conformance/manifest.json`, computes every part of every case that the two crates port
+//! (RFC 0002, phases 2 and 3) from the case's input files, and every primitive vector, and prints
+//! which pass. A part that the port
 //! does not compute yet is reported as pending; a part it computes must pass for every case.
 //!
 //! ```sh
@@ -65,7 +66,7 @@ fn main() -> ExitCode {
         .max(5);
     writeln!(
         out,
-        "kgdiff-core against the conformance corpus: {} cases, {} primitive vectors\n",
+        "kgdiff-core and kgdiff-formats against the conformance corpus: {} cases, {} primitive vectors\n",
         corpus.cases.len(),
         corpus.primitives.len()
     )

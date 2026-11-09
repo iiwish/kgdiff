@@ -28,8 +28,8 @@ pub struct Vector {
     pub verify: Option<Verify>,
 }
 
-/// The parts of a case that kgdiff-core computes (RFC 0002, phase 2, Acceptance), starting from
-/// `expected/parse.<side>.json`'s graph.
+/// The parts of a case that kgdiff-formats and kgdiff-core compute (RFC 0002, phases 2 and 3),
+/// starting from the case's input files.
 pub fn parts() -> Vec<Part> {
     use Mode::{Bytes, Value};
     let _part = |name, file, mode| Part {
@@ -45,6 +45,18 @@ pub fn parts() -> Vec<Part> {
         produce: Some(produce),
     };
     vec![
+        ported(
+            "parse.before",
+            "expected/parse.before.json",
+            Value,
+            library::parse_before,
+        ),
+        ported(
+            "parse.after",
+            "expected/parse.after.json",
+            Value,
+            library::parse_after,
+        ),
         ported(
             "graph.before",
             "expected/graph.before.json",
@@ -80,8 +92,6 @@ pub fn parts() -> Vec<Part> {
 
 /// Expected files of a case that other crates compute, with the phase that ports them.
 pub const ELSEWHERE: &[(&str, &str)] = &[
-    ("expected/parse.before.json", "kgdiff-formats, phase 3"),
-    ("expected/parse.after.json", "kgdiff-formats, phase 3"),
     ("expected/report.json", "kgdiff-report, phase 3"),
     ("expected/layout-contract.json", "kgdiff-layout, phase 4"),
     ("expected/cli/", "the kgdiff binary, phase 3"),
