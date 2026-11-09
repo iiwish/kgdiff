@@ -58,7 +58,8 @@ describe('compute add-on', () => {
     await c.loadPayload(v2);
     expect(c.status).toBe('ready');
     expect(c.layout?.generator).toBe('kgdiff-layout/1');
-    expect(layoutToJSON(c.layout!)).toEqual(v1.layout);
+    // The layout the viewer holds is still the Rust layout: written back as version 2.
+    expect(layoutToJSON(c.layout!)).toEqual(v2.layout);
   });
 
   it('reports work without it; load() rejects with an actionable KgdiffError', async () => {
