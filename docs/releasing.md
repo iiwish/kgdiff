@@ -133,20 +133,23 @@ publish. Every build runs `pnpm build:viewer-assets` first: the binary embeds th
 
 Publishing stays off until these are done:
 
-1. **crates.io, first publish by hand.** Trusted publishing can only be configured for a crate that
-   exists, so publish the first version from a maintainer's machine, logged in to crates.io:
+1. **crates.io, each crate's first version by hand.** crates.io cannot create a crate through
+   trusted publishing, so the first version of each crate is published from a maintainer's
+   machine with a token: `kgdiff-core` at 0.7.0, the other three when their phase ships. Until a
+   crate exists, `crates-publish` skips it with a notice and publishes the ones that do (a version
+   already there is skipped too).
 
    ```sh
    pnpm install && pnpm build:viewer-assets
    git status --porcelain   # nothing: the viewer bundles are git-ignored
-   cargo publish --workspace --locked --allow-dirty
+   cargo publish -p kgdiff-core --locked --allow-dirty   # or --workspace, for all four
    ```
 
    `--allow-dirty` because cargo counts the git-ignored viewer bundles, which `kgdiff-report`
    packages, as uncommitted changes.
 
-2. **crates.io trusted publishers.** For each of the four crates, open Settings → Trusted
-   Publishing on crates.io and add GitHub with the owner `iiwish`, repository `kgdiff`, workflow
+2. **crates.io trusted publishers.** For each crate on crates.io, open Settings → Trusted
+   Publishing and add GitHub with the owner `iiwish`, repository `kgdiff`, workflow
    `release.yml` and environment `crates-io`. Under Settings → Environments here, create
    `crates-io` with deployment branches limited to `main`. Then set the repository variable
    `CRATES_RELEASE_ENABLED` to `true`: the `crates-publish` job publishes with a short-lived
@@ -159,7 +162,9 @@ Publishing stays off until these are done:
    the `v<version>` GitHub release, and commits `Formula/kgdiff.rb` to the tap.
 
 Releases before these steps still build and check everything; the artifacts stay with the
-workflow run.
+workflow run. The Python package, `pykgdiff` (D-6), publishes the same way with its own job and
+the `pypi` environment (trusted publisher: owner `iiwish`, repository `kgdiff`, workflow
+`release.yml`) once it exists; PyPI can take its first upload from CI through a pending publisher.
 
 ## Repository settings
 

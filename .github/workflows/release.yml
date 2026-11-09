@@ -339,7 +339,10 @@ jobs:
           git push
 
   # Off until CRATES_RELEASE_ENABLED is true: crates.io trusted publishing (OIDC), no token
-  # stored. Configure the trusted publisher of each crate first (docs/releasing.md).
+  # stored. crates.io cannot create a crate through trusted publishing, so each crate's first
+  # version is published by hand (kgdiff-core at 0.7.0, the others when their phase ships) and this
+  # job publishes only the crates that exist there; it skips the others, saying so
+  # (docs/releasing.md, "Native binaries and crates").
   crates-publish:
     name: Publish the crates
     needs: [release, crates-dry-run, native-global]
@@ -367,8 +370,29 @@ jobs:
       - run: pnpm build:viewer-assets
       - id: auth
         uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
-      - run: |
-          test -z "$(git status --porcelain)"
-          cargo publish --workspace --locked --allow-dirty
+      # In dependency order; a version already on crates.io is skipped too, so a rerun is safe.
+      # The viewer bundles are git-ignored build output that kgdiff-report packages: cargo counts
+      # them as uncommitted, so --allow-dirty, once nothing else differs from the commit.
+      - name: Publish the crates that exist on crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          test -z "$(git status --porcelain)"
+          api=https://crates.io/api/v1/crates
+          agent="kgdiff release workflow (https://github.com/iiwish/kgdiff)"
+          for crate in kgdiff-core kgdiff-formats kgdiff-report kgdiff; do
+            status=$(curl -sS -o /dev/null -w '%{http_code}' -A "$agent" "$api/$crate")
+            if [ "$status" = 404 ]; then
+              echo "::notice::Skipped $crate: it is not on crates.io yet, and trusted publishing cannot create a crate. Publish its first version by hand (docs/releasing.md)."
+              continue
+            fi
+            test "$status" = 200
+            status=$(curl -sS -o /dev/null -w '%{http_code}' -A "$agent" "$api/$crate/$VERSION")
+            if [ "$status" = 200 ]; then
+              echo "Skipped $crate: $VERSION is already on crates.io."
+              continue
+            fi
+            echo "Publishing $crate $VERSION"
+            cargo publish -p "$crate" --locked --allow-dirty
+          done
