@@ -1,7 +1,12 @@
 /**
- * Regenerates the conformance corpus from the TypeScript implementation:
+ * Regenerates the conformance corpus: the library outputs from the TypeScript packages, what the
+ * CLI produces (the CLI runs and `report.json`) from the Rust `kgdiff` (RFC 0002, §9, "Corpus
+ * ownership"), which it builds first, with the viewer bundles a report embeds:
  *
+ *   pnpm build:viewer-assets   # once, and after the viewer changed
  *   pnpm conformance:update
+ *
+ * `--bin <path>` records with that executable instead of building one.
  *
  * Writes `manifest.json`, `primitives/*` and, for every case, `case.json`, `expected/*` and the
  * inputs copied from `examples/datasets`. Of what is on disk, it only removes generated files
@@ -10,12 +15,45 @@
  * Review the diff before committing: a changed expected file is a behaviour change every
  * implementation has to follow.
  */
-import { mkdirSync, readdirSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readdirSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { CASES } from './cases.js';
-import { authoredInputs, filesOnDisk, generateCorpus, OS_FILES, ROOT } from './corpus.js';
+import {
+  authoredInputs,
+  filesOnDisk,
+  generateCorpus,
+  OS_FILES,
+  REPO,
+  ROOT,
+  recorder,
+} from './corpus.js';
 
-const corpus = await generateCorpus();
+/** The Rust kgdiff to record with: `--bin <path>`, or the release build, built now. */
+function kgdiffBinary(argv: readonly string[]): string {
+  const at = argv.indexOf('--bin');
+  if (at !== -1) {
+    const path = argv[at + 1];
+    if (path === undefined || path.startsWith('-')) {
+      throw new Error('--bin needs the path of an executable');
+    }
+    return resolve(path);
+  }
+  if (!existsSync(join(REPO, 'crates/kgdiff-report/assets/kgdiff-viewer.js'))) {
+    throw new Error(
+      'conformance: the viewer bundles kgdiff embeds are missing; run `pnpm build:viewer-assets` first.',
+    );
+  }
+  const build = spawnSync('cargo', ['build', '--release', '-p', 'kgdiff', '--locked'], {
+    cwd: REPO,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+  if (build.status !== 0) throw new Error('conformance: `cargo build -p kgdiff` failed.');
+  return join(REPO, 'target/release', process.platform === 'win32' ? 'kgdiff.exe' : 'kgdiff');
+}
+
+const corpus = await generateCorpus(await recorder(kgdiffBinary(process.argv.slice(2))));
 const keep = new Set([...corpus.keys(), ...authoredInputs()]);
 const ids = new Set(CASES.map((c) => c.id));
 const generated = (path: string): boolean => {
