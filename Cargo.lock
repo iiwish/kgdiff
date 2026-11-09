@@ -417,6 +417,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kgdiff-layout"
+version = "0.6.0"
+dependencies = [
+ "icu_properties",
+ "kgdiff-core",
+ "serde_json",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.191"
 source = "registry+https://github.com/rust-lang/crates.io-index"
