@@ -40,6 +40,9 @@ use kgdiff_core::KgdiffError;
 use kgdiff_core::js::{JsStr, Object, Value};
 
 pub use detect::FORMAT_EXTENSIONS;
+/// `JSON.parse` as kgdiff reads JSON documents: any depth, lone surrogate escapes refused
+/// (RFC 0002, D-2). `kgdiff apply` reads deltas with it.
+pub use json::{JsonTextError, parse_deep_json};
 pub use prefixes::{PrefixTable, WELL_KNOWN_PREFIXES};
 
 use crate::shared::{Warnings, make_meta};
