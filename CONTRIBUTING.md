@@ -32,6 +32,15 @@ cargo test -p kgdiff-core --test conformance    # which parts of the corpus kgdi
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all
 cargo deny check                                # licenses, advisories, duplicates (deny.toml)
+cargo bench -p kgdiff-core                      # the native targets of RFC 0002 §7
+```
+
+The differential run compares TypeScript and Rust byte for byte on seeded random graph pairs (CI
+runs it nightly, `.github/workflows/differential.yml`):
+
+```sh
+pnpm tsx scripts/differential.ts --pairs 1000 --seed 1 --out target/differential.jsonl
+KGDIFF_DIFFERENTIAL=$PWD/target/differential.jsonl cargo test --release -p kgdiff-core --test differential
 ```
 
 ## Where things live

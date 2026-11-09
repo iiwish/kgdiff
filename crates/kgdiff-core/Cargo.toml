@@ -13,6 +13,7 @@ keywords = ["kgdiff", "diff", "knowledge-graph", "ontology", "graph"]
 categories = ["algorithms", "data-structures"]
 
 [dependencies]
+foldhash = "0.2"
 icu_casemap = "2.4"
 icu_locale_core = "2.4"
 icu_normalizer = "2.4"
@@ -21,6 +22,7 @@ indexmap = "2.14"
 ryu-js = "1.0.3"
 
 [dev-dependencies]
+divan = "0.1"
 proptest = "1.12"
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 sha2 = "0.11"
@@ -33,3 +35,8 @@ harness = false
 
 [lints]
 workspace = true
+
+# The native targets of RFC 0002 §7 (`cargo bench -p kgdiff-core`).
+[[bench]]
+name = "diff"
+harness = false

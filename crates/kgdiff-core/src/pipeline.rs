@@ -1,7 +1,7 @@
 //! The diff pipeline (`diff.ts`, docs/algorithms.md): normalize → match → merges / splits →
 //! classify nodes → pair edges → hunks → delta → order → stats.
 
-use indexmap::IndexMap;
+use crate::js::IndexMap;
 
 use crate::classify::{assign_union_ids, classify_nodes};
 use crate::delta::{Delta, build_delta};
@@ -62,28 +62,41 @@ pub struct DiffResult {
     pub suggestions: Vec<MatchSuggestion>,
     pub delta: Delta,
     pub stats: DiffStats,
-    pub index: DiffIndex,
+    /// Lookups by id, built on first use (not serialized).
+    pub(crate) index: DiffIndex,
 }
 
 impl DiffResult {
+    /// The union node with this union id.
     pub fn node(&self, id: &str) -> Option<&UnionNode> {
-        self.index.node(id).map(|i| &self.nodes[i])
+        self.index.node(&self.nodes, id).map(|i| &self.nodes[i])
     }
+    /// The union node of this before-version id.
     pub fn node_by_before(&self, id: &str) -> Option<&UnionNode> {
-        self.index.node_by_before(id).map(|i| &self.nodes[i])
+        self.index
+            .node_by_before(&self.nodes, id)
+            .map(|i| &self.nodes[i])
     }
+    /// The union node of this after-version id.
     pub fn node_by_after(&self, id: &str) -> Option<&UnionNode> {
-        self.index.node_by_after(id).map(|i| &self.nodes[i])
+        self.index
+            .node_by_after(&self.nodes, id)
+            .map(|i| &self.nodes[i])
     }
+    /// The union edge with this union id.
     pub fn edge(&self, id: &str) -> Option<&UnionEdge> {
-        self.index.edge(id).map(|i| &self.edges[i])
+        self.index.edge(&self.edges, id).map(|i| &self.edges[i])
     }
+    /// The hunk with this id.
     pub fn hunk(&self, id: &str) -> Option<&Hunk> {
-        self.index.hunk(id).map(|i| &self.hunks[i])
+        self.index.hunk(&self.hunks, id).map(|i| &self.hunks[i])
     }
-    /// Incident union edges, sorted by id.
+    /// Incident union edges (both directions), sorted by id.
     pub fn edges_of(&self, id: &str) -> impl Iterator<Item = &UnionEdge> {
-        self.index.edges_of(id).iter().map(|&i| &self.edges[i])
+        self.index
+            .edges_of(&self.edges, id)
+            .iter()
+            .map(|&i| &self.edges[i])
     }
 }
 
@@ -97,7 +110,7 @@ fn set_of(list: &[JsStr]) -> StringSet {
 
 /// Suggestions from matching and from merge / split heuristics, one per pair (best score).
 fn merge_suggestions(lists: [Vec<MatchSuggestion>; 2]) -> Vec<MatchSuggestion> {
-    let mut best: IndexMap<String, MatchSuggestion> = IndexMap::new();
+    let mut best: IndexMap<String, MatchSuggestion> = IndexMap::default();
     for s in lists.into_iter().flatten() {
         let key = format!("{}\u{0}{}", s.before, s.after);
         match best.get_mut(&key) {
@@ -172,7 +185,6 @@ pub fn diff_graphs(before: KGraph, after: KGraph, options: DiffOptions) -> Resul
     let mut matches: Vec<NodeMatch> = alignment.inferred.values().cloned().collect();
     matches.sort_by(|x, y| x.after.cmp(&y.after));
     let stats = compute_stats(&before, &after, &nodes, &edge_kinds(&edges), &ordered.hunks);
-    let index = DiffIndex::new(&nodes, &edges, &ordered.hunks);
     let suggestions = merge_suggestions([alignment.suggestions, restructuring.suggestions]);
     Ok(DiffResult {
         before,
@@ -185,7 +197,7 @@ pub fn diff_graphs(before: KGraph, after: KGraph, options: DiffOptions) -> Resul
         suggestions,
         delta,
         stats,
-        index,
+        index: DiffIndex::default(),
     })
 }
 

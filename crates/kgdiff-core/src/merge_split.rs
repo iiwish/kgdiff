@@ -2,7 +2,7 @@
 //! after matching: explicit hints (`replacedBy` / `replaces`, confidence 1) or a heuristic
 //! (near-identical names plus edge carry-over).
 
-use indexmap::{IndexMap, IndexSet};
+use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::triple_key;
 use crate::js::{self, JsStr, Lookup};
@@ -147,7 +147,7 @@ impl<'a> Neighbourhoods<'a> {
             self.names.insert(key.clone(), index);
         }
         let index = &self.names.get(&key).unwrap_or_else(|| unreachable!());
-        let mut found: IndexSet<Id> = IndexSet::new();
+        let mut found: IndexSet<Id> = IndexSet::default();
         for k in query {
             if let Some(postings) = index.get(k)
                 && postings.len() <= COMMON_KEY
@@ -168,7 +168,7 @@ impl<'a> Neighbourhoods<'a> {
         } else {
             graph.outgoing.get(anchor)
         };
-        let mut ends: IndexSet<Id> = IndexSet::new();
+        let mut ends: IndexSet<Id> = IndexSet::default();
         for k in keys.into_iter().flatten() {
             if let Some(edge) = graph.edges.get(k)
                 && edge.predicate == *predicate
@@ -274,7 +274,7 @@ fn carry_over(
 ) -> CarryOver {
     let query = keys_of(subject, text_keys);
     let mut edges = Vec::new();
-    let mut candidates: IndexSet<Id> = IndexSet::new();
+    let mut candidates: IndexSet<Id> = IndexSet::default();
     for out in [true, false] {
         let keys = if out {
             graph.outgoing.get(&subject.id)
@@ -474,7 +474,7 @@ fn detect_merges_of(
             .is_some_and(|y| before.nodes.get(y).is_some_and(|n| n.replaces.contains(x)))
     };
 
-    let mut hints: IndexMap<Id, IndexSet<Id>> = IndexMap::new();
+    let mut hints: IndexMap<Id, IndexSet<Id>> = IndexMap::default();
     let mut hint = |x: Option<Id>, target: Option<Id>| {
         let (Some(x), Some(target)) = (x, target) else {
             return;
@@ -502,7 +502,7 @@ fn detect_merges_of(
     }
 
     // A hinted target is valid when it absorbs into a surviving node or gathers ≥ 2 sources.
-    let mut hinted_sources: IndexMap<Id, Vec<Id>> = IndexMap::new();
+    let mut hinted_sources: IndexMap<Id, Vec<Id>> = IndexMap::default();
     for (x, targets) in &hints {
         for t in targets {
             hinted_sources.entry(t.clone()).or_default().push(x.clone());
@@ -510,7 +510,7 @@ fn detect_merges_of(
     }
     let valid = |t: &Id| a2b.contains_key(t) || hinted_sources.get(t).map_or(0, Vec::len) >= 2;
 
-    let mut assigned: IndexMap<Id, Vec<Contribution>> = IndexMap::new();
+    let mut assigned: IndexMap<Id, Vec<Contribution>> = IndexMap::default();
     let mut merged: Lookup<Id, ()> = Lookup::new();
     let mut sources: Vec<&Id> = hints.keys().collect();
     sources.sort();
@@ -617,7 +617,7 @@ fn group_merges(
         }
         result
     };
-    let mut by_final: IndexMap<Id, Vec<Contribution>> = IndexMap::new();
+    let mut by_final: IndexMap<Id, Vec<Contribution>> = IndexMap::default();
     let mut targets: Vec<&Id> = assigned.keys().collect();
     targets.sort();
     for target in targets {
@@ -677,7 +677,7 @@ fn detect_splits_of(
     let can_split =
         |x: &Id| before.nodes.contains_key(x) && !merges.merge_by_source.contains_key(x);
 
-    let mut found: IndexMap<Id, IndexMap<Id, Contribution>> = IndexMap::new();
+    let mut found: IndexMap<Id, IndexMap<Id, Contribution>> = IndexMap::default();
     let add = |found: &mut IndexMap<Id, IndexMap<Id, Contribution>>,
                x: Option<Id>,
                t: &Id,

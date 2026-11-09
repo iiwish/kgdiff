@@ -473,9 +473,11 @@ pub fn mutate(graph: &GraphIn, script: &[Mutation]) -> GraphIn {
             Mutation::DelAttr { i } => {
                 if let Some(k) = at(nodes.len(), *i)
                     && let Some(attrs) = &mut nodes[k].attrs
-                    && let Some(first) = attrs.keys().next().cloned()
                 {
-                    attrs.remove(&first);
+                    let first = attrs.keys().next().cloned();
+                    if let Some(first) = first {
+                        attrs.remove(&first);
+                    }
                 }
             }
             Mutation::SetTypes { i, types } => {

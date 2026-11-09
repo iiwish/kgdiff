@@ -5,9 +5,9 @@
 use std::cmp::Ordering;
 use std::sync::{Arc, OnceLock};
 
-use indexmap::IndexMap;
+use crate::js::IndexMap;
 
-use crate::canonical::{canonical_json, triple_key};
+use crate::canonical::{canonical_json, triple_key, triple_key_in};
 use crate::error::{ErrorCode, KgdiffError, Result};
 use crate::js::{self, JsStr, Lookup, Object, Value};
 use crate::model::{
@@ -24,10 +24,6 @@ pub(crate) enum TextForm {
     /// `INPUT_TEXT`: NFC, and `predicateLabel` for edges without a label.
     Input,
     /// `SNAPSHOT_TEXT`: as written, and `rawPredicateLabel`.
-    #[expect(
-        dead_code,
-        reason = "diff_from_json reads snapshots with it (RFC 0002 phase 2, slice 5)"
-    )]
     Snapshot,
 }
 
@@ -353,7 +349,11 @@ fn parallel_content(edge: &EdgeDraft) -> String {
 struct EdgeGroup {
     base: JsStr,
     id_keyed: bool,
-    drafts: Vec<EdgeDraft>,
+    /// The declarations; most identities occur once, so repeats are kept aside.
+    first: Option<EdgeDraft>,
+    more: Vec<EdgeDraft>,
+    /// The edges the group becomes: one, or several for parallel copies.
+    edge: Option<KGEdge>,
     edges: Vec<KGEdge>,
 }
 
@@ -400,7 +400,8 @@ pub(crate) fn normalize_as(
     let mut issues: Vec<GraphIssue> = Vec::new();
 
     // ── Nodes ──
-    let mut drafts: IndexMap<Id, NodeDraft> = IndexMap::new();
+    let mut drafts: IndexMap<Id, NodeDraft> =
+        IndexMap::with_capacity_and_hasher(raw_nodes.len(), Default::default());
     for raw in raw_nodes {
         let raw = is_record(raw).ok_or_else(|| fail("graph.nodes must contain objects"))?;
         let Some(id) = coerce_id(raw.get("id")) else {
@@ -428,7 +429,7 @@ pub(crate) fn normalize_as(
 
     // ── Edges: endpoints, defaults ──
     let mut label_cache: Lookup<JsStr, JsStr> = Lookup::new();
-    let mut edge_drafts: Vec<EdgeDraft> = Vec::new();
+    let mut edge_drafts: Vec<EdgeDraft> = Vec::with_capacity(raw_edges.len());
     for raw in raw_edges {
         let edge = is_record(raw).ok_or_else(|| fail("graph.edges must contain objects"))?;
         let (Some(source), Some(target)) =
@@ -447,9 +448,14 @@ pub(crate) fn normalize_as(
         let explicit = optional_string(edge.get("label"), &source, Some(&target), "label")?;
         let label = match explicit {
             Some(label) => form.text(&label),
-            None => label_cache
-                .get_or_insert_with(predicate.clone(), || form.edge_label(&predicate))
-                .clone(),
+            None => match label_cache.get(&predicate) {
+                Some(label) => label.clone(),
+                None => {
+                    let label = form.edge_label(&predicate);
+                    label_cache.insert(predicate.clone(), label.clone());
+                    label
+                }
+            },
         };
         if !drafts.contains_key(&source) || !drafts.contains_key(&target) {
             handle_dangling(
@@ -484,24 +490,28 @@ pub(crate) fn normalize_as(
     // ── Edges: identity keys ──
     // Ids and structural keys are grouped apart, and id-keyed groups are keyed first, so an id
     // that looks like a structural key can only push the structural key aside (to `#2`).
-    let mut groups: Vec<EdgeGroup> = Vec::new();
+    let mut groups: Vec<EdgeGroup> = Vec::with_capacity(edge_drafts.len());
     let mut by_id: Lookup<JsStr, usize> = Lookup::new();
-    let mut by_triple: Lookup<JsStr, usize> = Lookup::new();
+    let mut by_triple: Lookup<JsStr, usize> = Lookup::with_capacity(edge_drafts.len());
+    let mut buffer = String::new();
+    let edge_count = edge_drafts.len();
     for draft in edge_drafts {
         let id_keyed = edge_identity == EdgeIdentity::Id && draft.id.is_some();
         let base = match (&draft.id, id_keyed) {
             (Some(id), true) => id.clone(),
-            _ => triple_key(&draft.source, &draft.predicate, &draft.target),
+            _ => triple_key_in(&mut buffer, &draft.source, &draft.predicate, &draft.target),
         };
         let index = if id_keyed { &mut by_id } else { &mut by_triple };
         match index.get(&base) {
-            Some(&at) => groups[at].drafts.push(draft),
+            Some(&at) => groups[at].more.push(draft),
             None => {
                 index.insert(base.clone(), groups.len());
                 groups.push(EdgeGroup {
                     base,
                     id_keyed,
-                    drafts: vec![draft],
+                    first: Some(draft),
+                    more: Vec::new(),
+                    edge: None,
                     edges: Vec::new(),
                 });
             }
@@ -525,14 +535,17 @@ pub(crate) fn normalize_as(
     };
     for pass in [true, false] {
         for group in groups.iter_mut().filter(|g| g.id_keyed == pass) {
-            let drafts = std::mem::take(&mut group.drafts);
+            let Some(first) = group.first.take() else {
+                continue;
+            };
+            if group.more.is_empty() {
+                group.edge = Some(first.into_edge(unique(group.base.clone())));
+                continue;
+            }
+            let mut drafts = vec![first];
+            drafts.append(&mut group.more);
             let count = drafts.len();
-            if count == 1 {
-                let draft = drafts.into_iter().next().unwrap_or_else(|| unreachable!());
-                group
-                    .edges
-                    .push(draft.into_edge(unique(group.base.clone())));
-            } else if pass {
+            if pass {
                 let merged = merge_edge_drafts(drafts);
                 group
                     .edges
@@ -554,9 +567,10 @@ pub(crate) fn normalize_as(
         }
     }
     // Edges keep the order in which their identity first appeared.
-    let mut edges: IndexMap<EdgeKey, Arc<KGEdge>> = IndexMap::new();
+    let mut edges: IndexMap<EdgeKey, Arc<KGEdge>> =
+        IndexMap::with_capacity_and_hasher(edge_count, Default::default());
     for group in groups {
-        for edge in group.edges {
+        for edge in group.edge.into_iter().chain(group.edges) {
             edges.insert(edge.key.clone(), Arc::new(edge));
         }
     }
@@ -591,21 +605,28 @@ pub(crate) fn index_graph(
     edge_identity: EdgeIdentity,
     issues: Vec<GraphIssue>,
 ) -> KGraph {
-    let mut outgoing: IndexMap<Id, Vec<EdgeKey>> = IndexMap::new();
-    let mut incoming: IndexMap<Id, Vec<EdgeKey>> = IndexMap::new();
+    let mut outgoing: IndexMap<Id, Vec<EdgeKey>> =
+        IndexMap::with_capacity_and_hasher(nodes.len(), Default::default());
+    let mut incoming: IndexMap<Id, Vec<EdgeKey>> =
+        IndexMap::with_capacity_and_hasher(nodes.len(), Default::default());
+    let push = |map: &mut IndexMap<Id, Vec<EdgeKey>>, id: &Id, key: &EdgeKey| match map.get_mut(id)
+    {
+        Some(list) => list.push(key.clone()),
+        None => {
+            map.insert(id.clone(), vec![key.clone()]);
+        }
+    };
     for edge in edges.values() {
-        outgoing
-            .entry(edge.source.clone())
-            .or_default()
-            .push(edge.key.clone());
-        incoming
-            .entry(edge.target.clone())
-            .or_default()
-            .push(edge.key.clone());
+        push(&mut outgoing, &edge.source, &edge.key);
+        push(&mut incoming, &edge.target, &edge.key);
     }
     for id in nodes.keys() {
-        outgoing.entry(id.clone()).or_default();
-        incoming.entry(id.clone()).or_default();
+        if !outgoing.contains_key(id) {
+            outgoing.insert(id.clone(), Vec::new());
+        }
+        if !incoming.contains_key(id) {
+            incoming.insert(id.clone(), Vec::new());
+        }
     }
     KGraph {
         meta: meta.and_then(Value::as_object).cloned().unwrap_or_default(),
@@ -719,7 +740,7 @@ fn insert_parallel(
     group: Vec<EdgeDraft>,
     issues: &mut Vec<GraphIssue>,
 ) -> Vec<(JsStr, EdgeDraft)> {
-    let mut by_content: IndexMap<String, EdgeDraft> = IndexMap::new();
+    let mut by_content: IndexMap<String, EdgeDraft> = IndexMap::default();
     let mut collapsed = 0;
     for draft in group {
         let content = parallel_content(&draft);
@@ -769,4 +790,55 @@ fn insert_parallel(
             (key, draft)
         })
         .collect()
+}
+
+// ─── Single declarations ─────────────────────────────────────────────────────
+// `diff_from_json` reads graphs in which every node and edge is declared once. These make one of
+// a snapshot the way `normalize` does with the snapshot text form.
+
+/// The node `normalize` makes of the snapshot `raw` declared once, under `raw_id` (`nodeOf`).
+pub(crate) fn node_of(
+    raw: &Object,
+    _issues: &mut Vec<GraphIssue>,
+    raw_id: Option<&Value>,
+) -> Result<Option<KGNode>> {
+    let Some(id) = coerce_id(raw_id) else {
+        return Ok(None);
+    };
+    Ok(Some(finish_node(draft_node(raw, id, TextForm::Snapshot)?)))
+}
+
+/// The edge `normalize` makes of the snapshot `raw` when no other edge has its identity
+/// (`edgeOf`); `None` for an empty end. `key`: known already.
+pub(crate) fn edge_of(
+    raw: &Object,
+    edge_identity: EdgeIdentity,
+    _issues: &mut Vec<GraphIssue>,
+    key: Option<EdgeKey>,
+) -> Result<Option<KGEdge>> {
+    let (Some(source), Some(target)) = (coerce_id(raw.get("source")), coerce_id(raw.get("target")))
+    else {
+        return Ok(None);
+    };
+    let predicate = optional_string(raw.get("predicate"), &source, Some(&target), "predicate")?
+        .unwrap_or_default();
+    let label = match optional_string(raw.get("label"), &source, Some(&target), "label")? {
+        Some(label) => label,
+        None => raw_predicate_label(&predicate),
+    };
+    let id = coerce_id(raw.get("id"));
+    let attrs = attrs_of(raw.get("attrs"), &source, Some(&target))?.unwrap_or_default();
+    let key = key.unwrap_or_else(|| match (&id, edge_identity) {
+        (Some(id), EdgeIdentity::Id) => id.clone(),
+        _ => triple_key(&source, &predicate, &target),
+    });
+    Ok(Some(KGEdge {
+        key,
+        id,
+        source,
+        target,
+        predicate,
+        label,
+        attrs,
+    }))
 }

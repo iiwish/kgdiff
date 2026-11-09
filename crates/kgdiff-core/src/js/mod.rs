@@ -17,19 +17,32 @@
 //! | object key order (J-21, J-23, J-24)           | [`Object`]                                 |
 //! | `JSON.parse`, `JSON.stringify` (J-02, J-04, J-05) | [`json`], [`Value`]                    |
 //! | `Map` / `Set` lookups (§3 rule 1)             | [`Lookup`]                                 |
+//! | `Map` order under `delete` and `set`          | [`OrderedMap`]                             |
 
 pub mod json;
 mod lookup;
 pub mod math;
 mod number;
 mod object;
+mod ordered;
 mod string;
 mod value;
 
 pub use lookup::Lookup;
+
+/// The hasher of every map and set in the engine: fast, seeded per process. No result depends on
+/// it: `IndexMap` and `IndexSet` iterate in insertion order, and `Lookup` cannot be iterated.
+pub type BuildHasher = foldhash::fast::RandomState;
+/// An insertion-ordered map (JavaScript's `Map` without deletion).
+pub type IndexMap<K, V> = indexmap::IndexMap<K, V, BuildHasher>;
+/// An insertion-ordered set (JavaScript's `Set` without deletion).
+pub type IndexSet<K> = indexmap::IndexSet<K, BuildHasher>;
 pub use number::{
     number_from_str, number_to_string, push_number, to_exponential, to_fixed, to_int32, to_uint32,
 };
 pub use object::{Object, array_index};
-pub use string::{JsStr, cmp_utf16, is_whitespace, trim, trim_end, trim_start, utf16_len};
+pub use ordered::OrderedMap;
+pub use string::{
+    JsStr, cmp_utf16, is_whitespace, sort_by_js_key, trim, trim_end, trim_start, utf16_len,
+};
 pub use value::Value;

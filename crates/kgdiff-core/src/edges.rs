@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use indexmap::IndexMap;
+use crate::js::IndexMap;
 
 use crate::canonical::{canonical_json, has_parallel_suffix, split_structural_key, triple_key};
 use crate::classify::{RestructureIndex, attr_changes, moved_key};
@@ -213,7 +213,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
 
     // ── 1. Exact ── (before edges are mapped into union space on the way)
     let mut remaining: Vec<Mapped> = Vec::new();
-    let mut groups: IndexMap<String, (Vec<Mapped>, Vec<Arc<KGEdge>>)> = IndexMap::new();
+    let mut groups: IndexMap<String, (Vec<Mapped>, Vec<Arc<KGEdge>>)> = IndexMap::default();
     for edge in before.edges.values() {
         let source = ctx.union_of_before(&edge.source);
         let target = ctx.union_of_before(&edge.target);
@@ -283,7 +283,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             after_copies.sort_by(|x, y| x.key.cmp(&y.key));
             // Identical content first, so an unchanged copy is never reported as modified; then
             // the rest in key order.
-            let mut by_content: IndexMap<String, Vec<usize>> = IndexMap::new();
+            let mut by_content: IndexMap<String, Vec<usize>> = IndexMap::default();
             for (i, a) in after_copies.iter().enumerate() {
                 by_content.entry(parallel_content(a)).or_default().push(i);
             }
@@ -337,7 +337,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
         }
         by_triple
     };
-    remaining.sort_by(|x, y| x.key.cmp(&y.key));
+    js::sort_by_js_key(&mut remaining, |m| &m.key);
 
     // ── 2. Carried by merge / split ──
     let mut collapsed: Vec<(Mapped, UnionId)> = Vec::new();
@@ -409,7 +409,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
         if remaining.is_empty() || p.remaining_after == 0 {
             return;
         }
-        let mut b_groups: IndexMap<String, Vec<usize>> = IndexMap::new();
+        let mut b_groups: IndexMap<String, Vec<usize>> = IndexMap::default();
         for (i, m) in remaining.iter().enumerate() {
             b_groups.entry(before_key(m)).or_default().push(i);
         }
@@ -494,7 +494,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
         .map(|m| (m, None))
         .chain(collapsed.into_iter().map(|(m, into)| (m, Some(into))))
         .collect();
-    removed.sort_by(|x, y| x.0.key.cmp(&y.0.key));
+    js::sort_by_js_key(&mut removed, |x| &x.0.key);
     let mut taken: Lookup<JsStr, ()> = Lookup::new();
     for (m, into) in removed {
         let id = unique_before_id(&m, structural(&m.edge), &|k| {
@@ -516,7 +516,8 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
         ));
     }
     let mut records = p.records;
-    records.sort_by(|x, y| x.id.cmp(&y.id));
+    // A stable sort by id that moves keys, not the large records.
+    js::sort_by_js_key(&mut records, |e| &e.id);
     records
 }
 

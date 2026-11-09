@@ -4,7 +4,7 @@
 
 use std::cmp::Ordering;
 
-use indexmap::{IndexMap, IndexSet};
+use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::{attr_keys, attr_value_equals};
 use crate::js::{self, JsStr, Lookup};
@@ -158,7 +158,7 @@ fn build_signature(
     counterpart: &dyn Fn(&Id) -> Option<Id>,
     after: &KGraph,
 ) -> Signature {
-    let mut acc: IndexMap<JsStr, f64> = IndexMap::new();
+    let mut acc: IndexMap<JsStr, f64> = IndexMap::default();
     let mut visit = |keys: Option<&Vec<JsStr>>, outgoing: bool| {
         for key in keys.into_iter().flatten() {
             let Some(edge) = graph.edges.get(key) else {
@@ -261,7 +261,7 @@ struct Pair {
 }
 
 fn keys_of(node: &KGNode, profiles: &mut ProfileCache) -> IndexSet<String> {
-    let mut keys = IndexSet::new();
+    let mut keys = IndexSet::default();
     for text in node_texts(node) {
         block_keys(&profiles.get(text), &mut keys);
     }
@@ -306,7 +306,7 @@ fn blocked_candidates(
                 .cmp(&y.1.len())
                 .then_with(|| js::cmp_utf16(&x.0, &y.0))
         });
-        let mut overlap: IndexMap<usize, f64> = IndexMap::new();
+        let mut overlap: IndexMap<usize, f64> = IndexMap::default();
         if let Some(same) = same {
             overlap.insert(same, 0.0);
         }
@@ -366,7 +366,7 @@ fn generate_candidates(
     prune_below_floor: bool,
     profiles: &mut ProfileCache,
 ) -> Vec<Pair> {
-    let mut pairs: IndexMap<usize, Pair> = IndexMap::new();
+    let mut pairs: IndexMap<usize, Pair> = IndexMap::default();
     let width = a_nodes.len();
     let mut add = |r: usize, a: usize, label: f64| {
         pairs.entry(r * width + a).or_insert_with(|| Pair {
@@ -436,8 +436,8 @@ fn is_ambiguous(p: usize, rivals: &[usize], pairs: &[Pair], free: &dyn Fn(&Pair)
 
 /// 1:1 replacement hints (`matchReplacements`, docs/algorithms.md §2, step 2).
 fn match_replacements(before: &KGraph, after: &KGraph, alignment: &mut Alignment) {
-    let mut targets_of: IndexMap<Id, IndexSet<Id>> = IndexMap::new();
-    let mut sources_of: IndexMap<Id, IndexSet<Id>> = IndexMap::new();
+    let mut targets_of: IndexMap<Id, IndexSet<Id>> = IndexMap::default();
+    let mut sources_of: IndexMap<Id, IndexSet<Id>> = IndexMap::default();
     let mut link = |x: &Id, y: &Id| {
         if x == y {
             return;
@@ -608,8 +608,8 @@ pub(crate) fn align_nodes(
         }
         score(&live, &mut pairs, &alignment);
         live.sort_by(|&x, &y| by_score(&pairs, x, y));
-        let mut by_r: IndexMap<usize, Vec<usize>> = IndexMap::new();
-        let mut by_a: IndexMap<usize, Vec<usize>> = IndexMap::new();
+        let mut by_r: IndexMap<usize, Vec<usize>> = IndexMap::default();
+        let mut by_a: IndexMap<usize, Vec<usize>> = IndexMap::default();
         for &i in &live {
             by_r.entry(pairs[i].r).or_default().push(i);
             by_a.entry(pairs[i].a).or_default().push(i);

@@ -7,12 +7,12 @@
 use std::borrow::Cow;
 use std::rc::Rc;
 
+use crate::js::{IndexMap, IndexSet};
 use icu_casemap::CaseMapperBorrowed;
 use icu_locale_core::LanguageIdentifier;
 use icu_normalizer::ComposingNormalizerBorrowed;
 use icu_properties::CodePointMapDataBorrowed;
 use icu_properties::props::{GeneralCategory, GeneralCategoryGroup, Script};
-use indexmap::{IndexMap, IndexSet};
 
 use crate::js::{self, JsStr, Lookup};
 use crate::util::{clamp01, round6};
@@ -278,7 +278,7 @@ pub struct TextProfile {
 
 /// Digit runs (`\p{Nd}+`) without leading zeros (one digit kept), sorted, unique, joined.
 fn numbers_of(normalized: &str) -> String {
-    let mut runs: IndexSet<String> = IndexSet::new();
+    let mut runs: IndexSet<String> = IndexSet::default();
     let mut run = String::new();
     let mut flush = |run: &mut String| {
         if !run.is_empty() {
@@ -308,8 +308,8 @@ fn numbers_of(normalized: &str) -> String {
 pub fn text_profile(text: &str) -> TextProfile {
     let lowered = fold(text);
     let normalized = collapse_separators(&lowered);
-    let mut token_set: IndexSet<JsStr> = IndexSet::new();
-    let mut abbreviations: IndexSet<JsStr> = IndexSet::new();
+    let mut token_set: IndexSet<JsStr> = IndexSet::default();
+    let mut abbreviations: IndexSet<JsStr> = IndexSet::default();
     // `/[^\p{P}\s]+\.?/gu` over the folded text.
     let mut rest = lowered.as_str();
     while let Some(start) = rest.find(|c: char| !is_separator(c)) {
@@ -324,7 +324,7 @@ pub fn text_profile(text: &str) -> TextProfile {
         rest = &tail[end + usize::from(abbreviated)..];
     }
     let chars: Vec<char> = normalized.chars().filter(|&c| c != ' ').collect();
-    let mut bigrams: IndexMap<(char, char), u32> = IndexMap::new();
+    let mut bigrams: IndexMap<(char, char), u32> = IndexMap::default();
     for pair in chars.windows(2) {
         *bigrams.entry((pair[0], pair[1])).or_insert(0) += 1;
     }
@@ -613,7 +613,7 @@ pub type NameKey = Vec<u16>;
 /// Keys for finding near-identical names (`nameKeys`): the normalized text, informative words
 /// (≥ 2 UTF-16 units, not stop words) and their first four UTF-16 units.
 pub fn name_keys(texts: &[&str]) -> Vec<NameKey> {
-    let mut keys: IndexSet<NameKey> = IndexSet::new();
+    let mut keys: IndexSet<NameKey> = IndexSet::default();
     let key = |prefix: &str, units: &[u16]| -> NameKey {
         prefix.encode_utf16().chain(units.iter().copied()).collect()
     };

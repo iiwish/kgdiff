@@ -5,7 +5,10 @@
   ([PR #41](https://github.com/iiwish/kgdiff/pull/41), merged as a0c52d5). Items 1 and 2 of
   [Before phase 2](#before-phase-2-a-typescript-0x-release) are merged
   ([#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0;
-  [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808); phase 2 has started.
+  [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2, the `kgdiff-core` crate,
+  is implemented in [#47](https://github.com/iiwish/kgdiff/pull/47) to
+  [#51](https://github.com/iiwish/kgdiff/pull/51): every corpus case and core vector passes;
+  not released yet.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)).
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
