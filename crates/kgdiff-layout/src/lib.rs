@@ -12,6 +12,29 @@
 //! every target, WebAssembly included: results use only `+ − × ÷ √`, comparisons and
 //! conversions, and a seeded PRNG.
 //!
+//! # Laying out a diff
+//!
+//! ```
+//! use kgdiff_core::js::json;
+//! use kgdiff_core::{DiffOptions, diff};
+//! use kgdiff_layout::{GENERATOR, LayoutOptions, layout_diff, layout_from_json, layout_to_json};
+//!
+//! let before = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"}],
+//!     "edges":[{"source":"a","target":"b","predicate":"p"}]}"#)?;
+//! let after = json::parse(r#"{"nodes":[{"id":"a"},{"id":"c"}],
+//!     "edges":[{"source":"a","target":"c","predicate":"p"}]}"#)?;
+//! let result = diff(&before, &after, &DiffOptions::default())?;
+//! let layout = layout_diff(&result, &LayoutOptions::default())?;
+//! assert_eq!(layout.positions.len(), 3);
+//!
+//! // The kgdiff.layout document (version 2), and back.
+//! let text = json::to_string(&layout_to_json(&layout));
+//! assert!(text.starts_with(r#"{"format":"kgdiff.layout","version":2,"generator":"kgdiff-layout/1""#));
+//! let read = layout_from_json(&json::parse(&text)?)?;
+//! assert_eq!(read.generator.as_deref(), Some(GENERATOR));
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
 //! # Expanding a changes-only layout
 //!
 //! [`extend_layout`] adds nodes without moving any node already placed:
@@ -46,6 +69,7 @@ mod forces;
 mod geometry;
 mod graph;
 mod init;
+mod json;
 mod math;
 mod options;
 mod pack;
@@ -59,10 +83,16 @@ mod text_metrics;
 mod union;
 
 use kgdiff_core::model::{UnionEdge, UnionId, UnionNode};
-use kgdiff_core::{DiffResult, Result};
+use kgdiff_core::{DiffResult, Result, js::Value};
 
+pub use json::FORMAT;
 pub use options::{LayoutOptions, LayoutScope, LayoutStrategy};
 pub use result::{LayoutComponent, LayoutResult, LayoutStats, Rect};
+
+/// The engine generation of this crate's layouts, written as `generator` in layout documents
+/// (version 2). It changes whenever an algorithm change moves positions for the same input, so
+/// that caches can tell layout generations apart (RFC 0002, §2).
+pub const GENERATOR: &str = "kgdiff-layout/1";
 
 /// The union graph a layout is computed from: the nodes and edges of a [`DiffResult`] (in any
 /// order; they are sorted by id).
@@ -99,7 +129,7 @@ pub fn estimate_label_width(text: &str, font_size: f64) -> f64 {
 }
 
 /// Computes the shared layout of a diff: deterministic, the same diff and options give the same
-/// positions, bit for bit, on every platform and in WebAssembly.
+/// [`layout_to_json`] bytes on every platform and in WebAssembly.
 ///
 /// Steps: select the scope (`Changes` above `large_graph_threshold` nodes), pick the strategy
 /// (`Anchored` when any position is known), lay out every connected component with a seeded
@@ -153,4 +183,21 @@ pub fn extend_layout<'a>(
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
     extend::extend(input.into(), layout, nodes, options)
+}
+
+/// The `kgdiff.layout` document of a layout: version 2 with its `generator` (version 1 for a
+/// version 1 document read back), keys sorted by id, coordinates and radii rounded to 0.01.
+/// Write it with [`kgdiff_core::js::json::to_string`];
+/// `layout_to_json(&layout_from_json(&document)?)` reproduces the document.
+pub fn layout_to_json(layout: &LayoutResult) -> Value {
+    json::to_json(layout)
+}
+
+/// Reads a `kgdiff.layout` document of version 1 or 2.
+///
+/// # Errors
+///
+/// `invalid-input` for a malformed document, `unsupported-version` for another version.
+pub fn layout_from_json(document: &Value) -> Result<LayoutResult> {
+    json::from_json(document)
 }

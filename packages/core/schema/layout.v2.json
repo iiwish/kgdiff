@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/layout.v2.json",
+  "title": "kgdiff layout, version 2",
+  "description": "One set of coordinates for both versions of a diff (the union layout), as the Rust layout engine (crate kgdiff-layout, `layout_to_json`) writes it: world units, y down. Version 1, written by the TypeScript engine (`layoutToJSON` of @kgdiff/layout), has the same members without `generator`. See https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#2-contract-boundary",
+  "type": "object",
+  "properties": {
+    "format": { "const": "kgdiff.layout" },
+    "version": {
+      "const": 2,
+      "description": "Readers reject versions they do not support; readers of version 2 also read version 1."
+    },
+    "generator": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The engine generation the positions come from, `kgdiff-layout/<n>`. It changes whenever an algorithm change moves positions for the same input, so that caches can tell layout generations apart; readers treat it as an opaque string."
+    },
+    "strategy": {
+      "enum": ["union", "anchored"],
+      "description": "`union`: the union graph laid out so that neither version is favoured. `anchored`: known positions (pins, or `position` on graph nodes) kept, the other nodes placed around them."
+    },
+    "scope": {
+      "enum": ["all", "changes"],
+      "description": "`all`: every union node has a position. `changes`: changed nodes, the endpoints of changed edges and some context around them; `hidden` counts the neighbours left out."
+    },
+    "iterations": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Simulation ticks of the largest simulation run (0 when none ran)."
+    },
+    "positions": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/point" },
+      "description": "The position of every node in scope, by union node id, in UTF-16 code unit order of the ids (array-index ids first, as JSON.stringify writes objects). Computed coordinates are rounded to 0.01."
+    },
+    "radii": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 4, "maximum": 14 },
+      "description": "The radius of every node in scope, by union node id: nodeRadius of its larger degree across versions, rounded to 0.01."
+    },
+    "hidden": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 },
+      "description": "For scope `changes`: the number of neighbours left out of the layout, for every node in scope that has any. Empty for scope `all`."
+    },
+    "bounds": {
+      "$ref": "#/$defs/rect",
+      "description": "The bounds of every node in scope, label boxes included."
+    },
+    "components": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/component" },
+      "description": "Connected components (over edges and merge / split partners), largest first."
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "generator",
+    "strategy",
+    "scope",
+    "iterations",
+    "positions",
+    "radii",
+    "hidden",
+    "bounds",
+    "components"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "point": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 2,
+      "description": "[x, y]."
+    },
+    "rect": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 }
+      },
+      "required": ["x", "y", "width", "height"],
+      "additionalProperties": false,
+      "description": "An axis-aligned rectangle; the 0.01-aligned hull of what it bounds."
+    },
+    "component": {
+      "type": "object",
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Union node ids, in UTF-16 code unit order."
+        },
+        "bounds": { "$ref": "#/$defs/rect" }
+      },
+      "required": ["nodes", "bounds"],
+      "additionalProperties": false
+    }
+  }
+}

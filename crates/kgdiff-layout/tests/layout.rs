@@ -4,7 +4,8 @@ mod support;
 
 use kgdiff_core::model::Point;
 use kgdiff_layout::{
-    LayoutOptions, LayoutStrategy, Rect, estimate_label_width, layout_diff, node_radius,
+    LayoutOptions, LayoutStrategy, Rect, estimate_label_width, layout_diff, layout_to_json,
+    node_radius,
 };
 use support::{
     EdgeSpec, GraphSpec, LABEL_GAP, NodeSpec, changes, components, english_label, json,
@@ -77,6 +78,11 @@ fn handles_self_loops_parallel_edges_cycles_and_special_ids() {
             .values()
             .all(|p| p.x.is_finite() && p.y.is_finite())
     );
+    let document = layout_to_json(&layout);
+    let positions = document.get("positions").unwrap().as_object().unwrap();
+    assert!(positions.contains_key("__proto__"));
+    // Array-index ids first, as JavaScript writes them.
+    assert_eq!(positions.keys().next().unwrap().as_str(), "42");
 }
 
 #[test]
