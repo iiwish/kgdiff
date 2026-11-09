@@ -5,11 +5,13 @@
   ([PR #41](https://github.com/iiwish/kgdiff/pull/41), merged as a0c52d5). Items 1 and 2 of
   [Before phase 2](#before-phase-2-a-typescript-0x-release) are merged
   ([#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0;
-  [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2, the `kgdiff-core` crate,
-  is implemented in [#47](https://github.com/iiwish/kgdiff/pull/47) to
-  [#51](https://github.com/iiwish/kgdiff/pull/51): every corpus case and core vector passes;
-  not released yet.
-- **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)).
+  [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2's `kgdiff-core` crate is
+  merged ([#51](https://github.com/iiwish/kgdiff/pull/51), aafb0e9 to 3e096f2): every corpus case
+  and core vector passes, and the nightly differential run is in place. Its performance work is in
+  [#56](https://github.com/iiwish/kgdiff/pull/56). The preview `@kgdiff/compute` is still to come.
+  Nothing is released yet ([Phase 2 results](#phase-2-results)).
+- **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 results
+  2026-11-09.
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
@@ -449,8 +451,12 @@ against this list.
 | `i18n.ts` (791)                                               | `i18n`                              | `format_hunk`, `facet_label`, English and Simplified Chinese; the strings stay in sync through the corpus's `titles.json`                             |
 | `model.ts` (106), `diff.ts` (272), `index.ts` (205)           | `records`, `pipeline`, `lib.rs`     |                                                                                                                                                       |
 
-External crates: `indexmap`, `ryu-js`, `icu_normalizer`, `icu_casemap`, `icu_properties`,
-`thiserror`; `serde` behind the optional feature `serde` (§4.1). No `serde_json` and no `libm`:
+External crates: `indexmap`, `foldhash`, `ryu-js`, `icu_normalizer`, `icu_casemap`
+(with `icu_locale_core` for its root locale), `icu_properties`, `thiserror`; `serde` behind the
+optional feature `serde` (§4.1). `foldhash` is the hasher of every map (zlib licence): its
+seeding is fixed per process and none of its results reach an output. Ordered maps keep
+insertion order, and `js::Lookup`, the only unordered one, has no iteration API (§3, rule 1). Its
+speed matters for the native targets of §7. No `serde_json` and no `libm`:
 kgdiff's JSON is its own ([§4.1](#41-numbers-and-json)) and no result uses a transcendental
 function (§3). Development: `proptest` (the fast-check properties, ported), `divan` (benchmarks),
 `serde_json` and `cargo-fuzz` (the oracle and the fuzzer of `js::json`).
@@ -781,6 +787,49 @@ Acceptance:
 - The crate's documentation shows, as tested examples, diffing two graphs, checking a delta with
   `apply_delta` and reading a `diff.v1` document.
 
+##### Phase 2 results
+
+Status as of 2026-11-09: `kgdiff-core` is merged
+([#51](https://github.com/iiwish/kgdiff/pull/51)) and its performance work is in review
+([#56](https://github.com/iiwish/kgdiff/pull/56)).
+
+- **Corpus:** every case and every primitive vector except `label-width.json` passes, 299
+  checks in all (`cargo test -p kgdiff-core --test conformance`). `diff_from_json(diff_to_json(d))`
+  round-trips. The properties of `packages/core/test` (delta round trips, `diff(A, A)` empty,
+  shuffle invariance) are ported to `proptest` and pass. The three documentation examples are
+  doc tests.
+- **Differential:** two runs, each of 10,000 random pairs plus gen-synthetic pairs of 40 to 400
+  nodes, found no mismatch:
+  - seed 7: 10,050 pairs, 110,550 outputs;
+  - seed 42: 10,040 pairs, 110,440 outputs.
+
+  `.github/workflows/differential.yml` repeats the check every night.
+- **Benchmarks** (`cargo bench -p kgdiff-core`, divan). The machine was a macOS M-class laptop
+  shared with other builds, so the load average is given with each number:
+
+  | What                              | Native target           | Measured                                                                                         |
+  | --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------ |
+  | `diff` 10k / 30k                  | < 40 ms                 | median 29.9 ms (load 11.4)                                                                       |
+  | `diff` 100k / 300k                | < 500 ms                | median 471 ms, fastest 450 ms (load 11.4) with #56; about 717 ms (load 7.7) without it           |
+  | similarity, 5k unmatched per side | < 400 ms                | median 105 ms (load 11.4)                                                                        |
+  | `normalize` memory, 100k / 300k   | < 50 MB resident growth | **not met**: 150 MiB resident growth, 95.6 MB of heap retained (was 362 MiB / 151 MB before #56) |
+
+  The memory target assumed a smaller graph than the TypeScript model the crate mirrors: one
+  `Arc<KGEdge>` per edge, `Arc<str>` text and keyed maps. On a 64-bit target that model needs
+  about 90 MB for this graph even at its smallest. Reaching 50 MB would take a more compact
+  representation (interned ids, edges stored as columns), which is a decision for a later phase.
+  With WebAssembly's 32-bit pointers the same model takes roughly half as much, within that
+  row's < 80 MB of linear memory (an estimate until `@kgdiff/compute` measures it).
+- **Decided along the way:** D-13 (`diff_from_json` stays typed). `foldhash` was added to §5's
+  crates. `thiserror` and the `serde` feature were not needed yet.
+- **Moved to later:**
+  - the crates.io release, the registry names and kgdiff 0.7.0 (the maintainer's);
+  - the preview `@kgdiff/compute`, which follows in its own pull request;
+  - the native memory target, above;
+  - the viewer's layout-less payloads and `layoutFromJSON` version 2, a TypeScript change in
+    progress ([before phase 2](#before-phase-2-a-typescript-0x-release), item 4);
+  - lone surrogates (D-2), which the corpus leaves out and which phase 3 settles.
+
 #### Phase 3 — `kgdiff-formats`, `kgdiff-report` and the Rust CLI
 
 Deliverables: the parsers, the text outputs and the `kgdiff` binary on the native channels of §8
@@ -918,6 +967,7 @@ Acceptance:
 | D-10 | Phase 3 reports without a precomputed layout, or swap phases 3 and 4                                        | Keep the order and accept the bounded regression on the native channels only (phase 3); swapping would delay the CLI, the larger win, behind the riskiest port                                                                                                                                                                                                                                                                                                                             |
 | D-11 | Non-finite numbers in kgdiff JSON (§11)                                                                     | Warn (`json-non-finite`) and keep them as `"Infinity"` / `"-Infinity"` like `normalize`, in a TypeScript 0.x release with a corpus update, before phase 3                                                                                                                                                                                                                                                                                                                                  |
 | D-12 | JSON in Rust: serde_json with `arbitrary_precision` and `preserve_order`, or kgdiff's own reader and writer | Its own, `kgdiff_core::js::json` ([§4.1](#41-numbers-and-json)): Cargo would turn serde_json's two features on in every application that embeds the crates, and kgdiff needs its own number, key-order, duplicate-key, surrogate and error-position rules either way                                                                                                                                                                                                                       |
+| D-13 | What `diff_from_json` keeps of a `diff.v1` document                                                         | Decided: typed, only what `diff_to_json` writes. `diff.v1.json` forbids extra members in 32 of its 34 objects; the other two, `stats.facets` and `stats.hunks`, hold counts that the reader checks against the recomputed statistics. A consistent document therefore loses nothing, and the Rust `DiffResult` needs no bag of unknown members.                                                                                                                                            |
 
 ## Review
 
