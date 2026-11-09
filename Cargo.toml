@@ -26,6 +26,7 @@ serde_json = "1.0.149"
 kgdiff-core = { version = "=0.6.0", path = "crates/kgdiff-core" }
 kgdiff-formats = { version = "=0.6.0", path = "crates/kgdiff-formats" }
 kgdiff-report = { version = "=0.6.0", path = "crates/kgdiff-report" }
+kgdiff-layout = { version = "=0.6.0", path = "crates/kgdiff-layout" }
 
 # The lints every engine crate opts into with `[lints] workspace = true` (RFC 0002, §3,
 # Enforcement). The bindings crates set their own.

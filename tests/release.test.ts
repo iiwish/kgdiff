@@ -64,7 +64,7 @@ describe('the Rust workspace', () => {
     // The published crates require each other at exactly that version.
     const requirements = internalRequirements(readFileSync(CARGO_TOML, 'utf8'));
     expect(requirements.map((r) => r.name)).toEqual(
-      expect.arrayContaining(['kgdiff-core', 'kgdiff-formats', 'kgdiff-report']),
+      expect.arrayContaining(['kgdiff-core', 'kgdiff-formats', 'kgdiff-report', 'kgdiff-layout']),
     );
     for (const r of requirements) expect(r).toEqual({ ...r, version: packagesVersion() });
   });
