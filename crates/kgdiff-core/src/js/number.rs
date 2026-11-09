@@ -10,6 +10,26 @@ pub fn number_to_string(x: f64) -> String {
     ryu_js::Buffer::new().format(x).to_owned()
 }
 
+/// A buffer for [`number_to_string`] without an allocation per number.
+pub struct NumberText(ryu_js::Buffer);
+
+impl NumberText {
+    pub fn new() -> NumberText {
+        NumberText(ryu_js::Buffer::new())
+    }
+
+    /// `Number::toString(x)`, in the buffer.
+    pub fn format(&mut self, x: f64) -> &str {
+        self.0.format(x)
+    }
+}
+
+impl Default for NumberText {
+    fn default() -> NumberText {
+        NumberText::new()
+    }
+}
+
 /// Appends [`number_to_string`] of `x` to `out`.
 pub fn push_number(out: &mut String, x: f64) {
     out.push_str(ryu_js::Buffer::new().format(x));

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::{attr_keys, attr_value_equals, attrs_equal, canonicalize};
-use crate::js::{self, JsStr, Lookup};
+use crate::js::{JsStr, KeySorted, Lookup};
 use crate::matching::StringSet;
 use crate::merge_split::{MergeGroup, Restructuring};
 use crate::model::{
@@ -180,13 +180,31 @@ fn parents_of<'a>(parents: Option<&'a Parents>, predicate: &JsStr) -> &'a [Union
         .map_or(&[], |(_, list)| list.as_slice())
 }
 
-/// A set of union ids for the comparisons of `move_facets`.
-fn id_set(ids: impl Iterator<Item = UnionId>) -> Lookup<UnionId, ()> {
+/// A set of union ids for the comparisons of `move_facets`: scanned when small (most nodes have a
+/// parent or two), hashed when large.
+enum IdSet {
+    Small(Vec<UnionId>),
+    Large(Lookup<UnionId, ()>),
+}
+
+impl IdSet {
+    fn contains(&self, id: &UnionId) -> bool {
+        match self {
+            IdSet::Small(ids) => ids.contains(id),
+            IdSet::Large(ids) => ids.contains_key(id),
+        }
+    }
+}
+
+fn id_set(ids: impl ExactSizeIterator<Item = UnionId>) -> IdSet {
+    if ids.len() <= 16 {
+        return IdSet::Small(ids.collect());
+    }
     let mut set = Lookup::new();
     for id in ids {
         set.insert(id, ());
     }
-    set
+    IdSet::Large(set)
 }
 
 /// `move` facets, one per hierarchy predicate whose parent set changed; parents that merged into
@@ -210,6 +228,10 @@ fn move_facets(
     for predicate in predicates {
         let from = parents_of(before, predicate);
         let to = parents_of(after, predicate);
+        // Without merges or splits every parent counts as itself: the same list is no move.
+        if from == to && index.merge_target_of.is_empty() && index.split_source_of.is_empty() {
+            continue;
+        }
         let merged = |u: &UnionId| {
             index
                 .merge_target_of
@@ -228,12 +250,12 @@ fn move_facets(
         let canonical_to = id_set(to.iter().map(split));
         let mut removed: Vec<UnionId> = from
             .iter()
-            .filter(|u| !canonical_to.contains_key(&merged(u)))
+            .filter(|u| !canonical_to.contains(&merged(u)))
             .cloned()
             .collect();
         let mut added: Vec<UnionId> = to
             .iter()
-            .filter(|u| !canonical_from.contains_key(&split(u)))
+            .filter(|u| !canonical_from.contains(&split(u)))
             .cloned()
             .collect();
         if !removed.is_empty() || !added.is_empty() {
@@ -356,30 +378,31 @@ fn matched_facets(
     facets
 }
 
+/// A union node of the versions given with their positions in their graphs (for the degrees).
 fn union_node(
     ctx: &Ctx<'_>,
     id: UnionId,
     status: ChangeStatus,
-    before: Option<&Arc<KGNode>>,
-    after: Option<&Arc<KGNode>>,
+    before: Option<(usize, &Arc<KGNode>)>,
+    after: Option<(usize, &Arc<KGNode>)>,
     facets: Vec<NodeFacet>,
 ) -> UnionNode {
     let shown = after
         .or(before)
+        .map(|(_, n)| n)
         .unwrap_or_else(|| unreachable!("a union node has a version"));
     UnionNode {
         id,
         status,
-        before_id: before.map(|n| n.id.clone()),
-        after_id: after.map(|n| n.id.clone()),
+        before_id: before.map(|(_, n)| n.id.clone()),
+        after_id: after.map(|(_, n)| n.id.clone()),
         label: shown.label.clone(),
-        types: shown.types.clone(),
         degree: Degree {
-            before: ctx.before.degree(before.map(|n| n.id.as_str())),
-            after: ctx.after.degree(after.map(|n| n.id.as_str())),
+            before: before.map_or(0, |(i, _)| ctx.before.degree_at(i)),
+            after: after.map_or(0, |(i, _)| ctx.after.degree_at(i)),
         },
-        before: before.cloned(),
-        after: after.cloned(),
+        before: before.map(|(_, n)| n.clone()),
+        after: after.map(|(_, n)| n.clone()),
         facets,
         hunk: None,
     }
@@ -394,8 +417,8 @@ pub(crate) fn classify_nodes(ctx: &Ctx<'_>) -> (Vec<UnionNode>, RestructureIndex
         before: hierarchy_parents(ctx.before, &ctx.hierarchy, &|id| ctx.union_of_before(id)),
         after: hierarchy_parents(ctx.after, &ctx.hierarchy, &|id| id.clone()),
     };
-    let mut nodes = Vec::with_capacity(ctx.before.nodes.len().max(ctx.after.nodes.len()));
-    for a in ctx.after.nodes.values() {
+    let mut nodes = KeySorted::with_capacity(ctx.before.nodes.len().max(ctx.after.nodes.len()));
+    for (a_at, a) in ctx.after.nodes.values().enumerate() {
         let Some(before_id) = ctx.after_to_before.get(&a.id) else {
             let mut facets = Vec::new();
             if let Some(group) = r.merge_of_target(&a.id) {
@@ -409,17 +432,24 @@ pub(crate) fn classify_nodes(ctx: &Ctx<'_>) -> (Vec<UnionNode>, RestructureIndex
                     via: t.map_or(Via::Hint, |t| t.via),
                 });
             }
-            nodes.push(union_node(
-                ctx,
-                a.id.clone(),
-                ChangeStatus::Added,
-                None,
-                Some(a),
-                facets,
-            ));
+            nodes.push(
+                union_node(
+                    ctx,
+                    a.id.clone(),
+                    ChangeStatus::Added,
+                    None,
+                    Some((a_at, a)),
+                    facets,
+                ),
+                |n| &n.id,
+            );
             continue;
         };
-        let b = &ctx.before.nodes[before_id];
+        let (b_at, _, b) = ctx
+            .before
+            .nodes
+            .get_full(before_id)
+            .unwrap_or_else(|| unreachable!("matches are between nodes"));
         let facets = matched_facets(ctx, b, a, &index, &parents);
         for f in &facets {
             if let NodeFacet::Move { predicate, .. } = f {
@@ -431,16 +461,19 @@ pub(crate) fn classify_nodes(ctx: &Ctx<'_>) -> (Vec<UnionNode>, RestructureIndex
         } else {
             ChangeStatus::Modified
         };
-        nodes.push(union_node(
-            ctx,
-            a.id.clone(),
-            status,
-            Some(b),
-            Some(a),
-            facets,
-        ));
+        nodes.push(
+            union_node(
+                ctx,
+                a.id.clone(),
+                status,
+                Some((b_at, b)),
+                Some((a_at, a)),
+                facets,
+            ),
+            |n| &n.id,
+        );
     }
-    for b in ctx.before.nodes.values() {
+    for (b_at, b) in ctx.before.nodes.values().enumerate() {
         if ctx.before_to_after.contains_key(&b.id) {
             continue;
         }
@@ -453,16 +486,17 @@ pub(crate) fn classify_nodes(ctx: &Ctx<'_>) -> (Vec<UnionNode>, RestructureIndex
                 targets: group.targets.iter().map(|t| t.id.clone()).collect(),
             });
         }
-        nodes.push(union_node(
-            ctx,
-            ctx.union_of_before(&b.id),
-            ChangeStatus::Removed,
-            Some(b),
-            None,
-            facets,
-        ));
+        nodes.push(
+            union_node(
+                ctx,
+                ctx.union_of_before(&b.id),
+                ChangeStatus::Removed,
+                Some((b_at, b)),
+                None,
+                facets,
+            ),
+            |n| &n.id,
+        );
     }
-    // A stable sort by id that moves keys, not the large records.
-    js::sort_by_js_key(&mut nodes, |n| &n.id);
-    (nodes, index)
+    (nodes.into_sorted(|n| &n.id), index)
 }

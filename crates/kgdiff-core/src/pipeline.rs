@@ -15,7 +15,7 @@ use crate::merge_split::{Restructuring, detect_restructuring};
 use crate::model::{
     DiffStats, Hunk, Id, KGraph, MatchSuggestion, NodeMatch, UnionEdge, UnionId, UnionNode,
 };
-use crate::normalize::normalize;
+use crate::normalize::{Shared, TextForm, normalize_shared};
 use crate::options::{DiffOptions, NormalizeOptions};
 use crate::order::order_hunks;
 use crate::stats::{compute_stats, edge_kinds};
@@ -212,7 +212,11 @@ pub fn diff(before: &Value, after: &Value, options: &DiffOptions) -> Result<Diff
         edge_identity: options.edge_identity,
         ..NormalizeOptions::default()
     };
-    let before = normalize(before, normalize_options)?;
-    let after = normalize(after, normalize_options)?;
+    // The after graph shares the before graph's ids and predicates, which makes comparing them
+    // cheaper; the graphs are the same as `normalize` gives.
+    let mut shared = Shared::default();
+    let before = normalize_shared(before, normalize_options, TextForm::Input, &mut shared)?;
+    let mut shared = shared.with_nodes(&before.nodes);
+    let after = normalize_shared(after, normalize_options, TextForm::Input, &mut shared)?;
     diff_graphs(before, after, options.clone())
 }

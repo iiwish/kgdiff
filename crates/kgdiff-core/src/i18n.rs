@@ -681,7 +681,7 @@ fn format_group(x: &Parts<'_>, added: bool) -> (String, String) {
         .iter()
         .map(|id| name_of(x.diff, id))
         .collect();
-    let types = x.anchor.map_or(&[][..], |a| a.types.as_slice());
+    let types = x.anchor.map_or(&[][..], UnionNode::types);
     let typed = if types.is_empty() {
         String::new()
     } else {

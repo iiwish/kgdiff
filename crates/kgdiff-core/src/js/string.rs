@@ -51,11 +51,14 @@ fn word(bytes: &[u8]) -> u64 {
     u64::from_le_bytes(word)
 }
 
-/// A sort key's first 16 bytes, remapped so that comparing them as an integer is UTF-16 order:
+/// A sort key's first 24 bytes, remapped so that comparing them as integers is UTF-16 order:
 /// the lead bytes F0–F4 (U+10000 and up) move below EE / EF (U+E000–U+FFFF), everything else
 /// keeps its place. Strings with equal prefixes need their full comparison.
-fn order_prefix(s: &str) -> u128 {
-    let mut bytes = [0u8; 16];
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct OrderPrefix(u128, u64);
+
+fn order_prefix(s: &str) -> OrderPrefix {
+    let mut bytes = [0u8; 24];
     for (slot, &b) in bytes.iter_mut().zip(s.as_bytes()) {
         *slot = match b {
             0xF0..=0xF4 => b - 2,
@@ -63,7 +66,66 @@ fn order_prefix(s: &str) -> u128 {
             _ => b,
         };
     }
-    u128::from_be_bytes(bytes)
+    let (high, low) = bytes.split_at(16);
+    let mut high16 = [0u8; 16];
+    high16.copy_from_slice(high);
+    let mut low8 = [0u8; 8];
+    low8.copy_from_slice(low);
+    OrderPrefix(u128::from_be_bytes(high16), u64::from_be_bytes(low8))
+}
+
+/// Items to be sorted stably by a text key in UTF-16 order, each key's prefix taken as the item
+/// is added (while its text is likely still in cache): [`sort_by_js_key`] for items collected
+/// one by one.
+pub struct KeySorted<T> {
+    /// Each taken out once, when sorted.
+    items: Vec<Option<T>>,
+    prefixes: Vec<OrderPrefix>,
+}
+
+impl<T> KeySorted<T> {
+    pub fn with_capacity(capacity: usize) -> KeySorted<T> {
+        KeySorted {
+            items: Vec::with_capacity(capacity),
+            prefixes: Vec::with_capacity(capacity),
+        }
+    }
+
+    /// Adds `item`, whose key `key` gives.
+    pub fn push(&mut self, item: T, key: impl FnOnce(&T) -> &str) {
+        self.prefixes.push(order_prefix(key(&item)));
+        self.items.push(Some(item));
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    /// The items sorted by `key` (the keys they were added with), equal keys in the order added.
+    pub fn into_sorted(self, key: impl Fn(&T) -> &JsStr) -> Vec<T> {
+        let KeySorted {
+            items: mut slots,
+            prefixes,
+        } = self;
+        let key = |at: usize| slots[at].as_ref().map(&key);
+        let mut order: Vec<(OrderPrefix, usize)> = prefixes.into_iter().zip(0..).collect();
+        // The index breaks ties, so the order is total and an unstable sort is stable here.
+        #[expect(
+            clippy::disallowed_methods,
+            reason = "no two elements compare equal: the index breaks ties"
+        )]
+        order.sort_unstable_by(|&(p, i), &(q, j)| {
+            p.cmp(&q).then_with(|| key(i).cmp(&key(j))).then(i.cmp(&j))
+        });
+        order
+            .into_iter()
+            .filter_map(|(_, i)| slots[i].take())
+            .collect()
+    }
 }
 
 /// Sorts `items` stably by a text key in UTF-16 order (as `sort_by(|a, b| key(a).cmp(key(b)))`),
@@ -73,18 +135,11 @@ pub fn sort_by_js_key<T>(items: &mut Vec<T>, key: impl Fn(&T) -> &JsStr) {
     if items.len() < 2 {
         return;
     }
-    let mut order: Vec<(u128, usize)> = items
-        .iter()
-        .enumerate()
-        .map(|(i, item)| (order_prefix(key(item)), i))
-        .collect();
-    order.sort_by(|&(p, i), &(q, j)| {
-        p.cmp(&q)
-            .then_with(|| key(&items[i]).cmp(key(&items[j])))
-            .then(i.cmp(&j))
-    });
-    let mut slots: Vec<Option<T>> = items.drain(..).map(Some).collect();
-    items.extend(order.into_iter().filter_map(|(_, i)| slots[i].take()));
+    let mut sorted = KeySorted::with_capacity(items.len());
+    for item in items.drain(..) {
+        sorted.push(item, |item| key(item));
+    }
+    *items = sorted.into_sorted(key);
 }
 
 /// The length of a string in UTF-16 code units (JavaScript's `.length`).

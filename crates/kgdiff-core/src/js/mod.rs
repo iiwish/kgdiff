@@ -38,11 +38,13 @@ pub type IndexMap<K, V> = indexmap::IndexMap<K, V, BuildHasher>;
 /// An insertion-ordered set (JavaScript's `Set` without deletion).
 pub type IndexSet<K> = indexmap::IndexSet<K, BuildHasher>;
 pub use number::{
-    number_from_str, number_to_string, push_number, to_exponential, to_fixed, to_int32, to_uint32,
+    NumberText, number_from_str, number_to_string, push_number, to_exponential, to_fixed, to_int32,
+    to_uint32,
 };
 pub use object::{Object, array_index};
 pub use ordered::OrderedMap;
 pub use string::{
-    JsStr, cmp_utf16, is_whitespace, sort_by_js_key, trim, trim_end, trim_start, utf16_len,
+    JsStr, KeySorted, cmp_utf16, is_whitespace, sort_by_js_key, trim, trim_end, trim_start,
+    utf16_len,
 };
 pub use value::Value;

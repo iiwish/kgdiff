@@ -159,11 +159,8 @@ fn build_signature(
     after: &KGraph,
 ) -> Signature {
     let mut acc: IndexMap<JsStr, f64> = IndexMap::default();
-    let mut visit = |keys: Option<&Vec<JsStr>>, outgoing: bool| {
-        for key in keys.into_iter().flatten() {
-            let Some(edge) = graph.edges.get(key) else {
-                continue;
-            };
+    let mut visit = |outgoing: bool| {
+        for edge in graph.adjacent(id, outgoing) {
             let Some(other) = counterpart(if outgoing { &edge.target } else { &edge.source })
             else {
                 continue;
@@ -178,8 +175,8 @@ fn build_signature(
             *acc.entry(sig).or_insert(0.0) += weight;
         }
     };
-    visit(graph.outgoing.get(id), true);
-    visit(graph.incoming.get(id), false);
+    visit(true);
+    visit(false);
     if acc.is_empty() {
         return Signature::default();
     }
@@ -228,21 +225,7 @@ fn neighbor_evidence(a: &Signature, b: &Signature) -> Option<f64> {
 
 /// Whether `id` has an edge to another node (`hasNeighbour`).
 fn has_neighbour(graph: &KGraph, id: &str) -> bool {
-    let outgoing = graph
-        .outgoing
-        .get(id)
-        .into_iter()
-        .flatten()
-        .filter_map(|k| graph.edges.get(k))
-        .any(|e| e.target != *id);
-    outgoing
-        || graph
-            .incoming
-            .get(id)
-            .into_iter()
-            .flatten()
-            .filter_map(|k| graph.edges.get(k))
-            .any(|e| e.source != *id)
+    graph.outgoing(id).any(|e| e.target != *id) || graph.incoming(id).any(|e| e.source != *id)
 }
 
 // ─── Candidate generation ────────────────────────────────────────────────────

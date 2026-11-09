@@ -11,6 +11,9 @@
 //!   of the JSON reader of `@kgdiff/formats` (J-54), so that the messages built from them match.
 //! - **Lone surrogates** (`"\ud800"`), which `JSON.parse` accepts, are rejected: whether kgdiff
 //!   accepts them is open (RFC 0002, D-2) and the corpus leaves them out.
+//! - **Repeated text** is shared: a property name or a short string read again shortly after is
+//!   the same [`JsStr`], as JavaScript engines share property names, so that the records of a
+//!   large graph do not each hold their own copy of `"source"` or `"knows"`.
 //! - **Nesting** is limited ([`Parser::max_depth`], 1,000 levels by default as in kgdiff's JSON
 //!   reader), where `JSON.parse` has none.
 
@@ -81,6 +84,22 @@ pub struct Parser<'a> {
     bytes: &'a [u8],
     at: usize,
     max_depth: usize,
+    /// Recently read short strings without escapes, by a hash of their text.
+    recent: Vec<Option<JsStr>>,
+}
+
+/// Slots of [`Parser::recent`] (a power of two).
+const RECENT: usize = 256;
+/// Strings up to this many bytes are shared.
+const SHORT: usize = 32;
+
+/// The slot of a short string's text in [`Parser::recent`].
+fn slot(text: &[u8]) -> usize {
+    let mut hash: u32 = 0x811c_9dc5;
+    for &b in text {
+        hash = (hash ^ u32::from(b)).wrapping_mul(0x0100_0193);
+    }
+    usize::try_from(hash).unwrap_or(0) & (RECENT - 1)
 }
 
 type Fail<T> = Result<T, (usize, ErrorKind)>;
@@ -92,6 +111,7 @@ impl<'a> Parser<'a> {
             bytes: text.as_bytes(),
             at: 0,
             max_depth: DEFAULT_MAX_DEPTH,
+            recent: vec![None; RECENT],
         }
     }
 
@@ -145,7 +165,7 @@ impl<'a> Parser<'a> {
             }
             Some(b'{') => self.object(depth),
             Some(b'[') => self.array(depth),
-            Some(b'"') => self.string().map(Value::String),
+            Some(b'"') => self.shared_string().map(Value::String),
             Some(b't') if self.bytes[self.at..].starts_with(b"true") => {
                 self.at += 4;
                 Ok(Value::Bool(true))
@@ -175,7 +195,7 @@ impl<'a> Parser<'a> {
             if self.peek() != Some(b'"') {
                 return self.expected("a property name in double quotes");
             }
-            let key = self.string()?;
+            let key = self.shared_string()?;
             self.space();
             if self.peek() != Some(b':') {
                 return self.expected("':'");
@@ -215,6 +235,31 @@ impl<'a> Parser<'a> {
                 _ => return self.expected("',' or ']'"),
             }
         }
+    }
+
+    /// A string starting at the opening quote, the same `JsStr` as a recent one with its text if
+    /// it is short and has no escapes.
+    fn shared_string(&mut self) -> Fail<JsStr> {
+        let from = self.at + 1;
+        let end = self.bytes[from..]
+            .iter()
+            .take(SHORT + 1)
+            .position(|&b| b == b'"' || b == b'\\' || b < 0x20)
+            .map(|n| from + n);
+        let Some(end) = end.filter(|&end| self.bytes[end] == b'"') else {
+            return self.string();
+        };
+        let text = &self.bytes[from..end];
+        let at = slot(text);
+        if let Some(seen) = &self.recent[at]
+            && seen.as_bytes() == text
+        {
+            self.at = end + 1;
+            return Ok(seen.clone());
+        }
+        let s = self.string()?;
+        self.recent[at] = Some(s.clone());
+        Ok(s)
     }
 
     /// A string starting at the opening quote.
