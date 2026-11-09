@@ -23,6 +23,11 @@ ryu-js = "1.0.3"
 
 [dev-dependencies]
 divan = "0.1"
+flate2 = "1.1"
+# The conformance harness parses the corpus inputs (README, "Library outputs", steps 1 and 2) and
+# computes every library output from them (RFC 0002, phase 3). A dev-dependency cycle: the
+# integration tests link one kgdiff-core.
+kgdiff-formats = { path = "../kgdiff-formats" }
 proptest = "1.12"
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 sha2 = "0.11"

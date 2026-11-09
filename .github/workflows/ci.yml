@@ -57,8 +57,8 @@ jobs:
         run: pnpm build:site
 
   # The Rust workspace (RFC 0002): the crates' tests, the conformance corpus against kgdiff-core
-  # (`cargo test` runs it, and prints which parts pass) on every OS; formatting, lints, docs and a
-  # WebAssembly build once. The toolchain is the one rust-toolchain.toml pins.
+  # and kgdiff-formats (`cargo test` runs it, and prints which parts pass) on every OS;
+  # formatting, lints, docs and a WebAssembly build once. The toolchain is the one rust-toolchain.toml pins.
   rust:
     name: Rust (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

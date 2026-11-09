@@ -1,0 +1,27 @@
+[package]
+name = "kgdiff-formats"
+description = "Graph file parsers for kgdiff: kgdiff JSON and five other JSON graph shapes, RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) and OBO, byte-compatible with @kgdiff/formats."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["kgdiff", "rdf", "turtle", "obo", "knowledge-graph"]
+categories = ["parser-implementations", "encoding"]
+
+[dependencies]
+# The version requirement for crates.io comes with the release tooling (RFC 0002, §8).
+kgdiff-core = { path = "../kgdiff-core" }
+# RFC 0002, D-9: the Turtle family only; RDF/XML and JSON-LD are kgdiff's own readers.
+oxrdf = { version = "0.3.5", features = ["rdf-12"] }
+oxttl = { version = "0.2.5", features = ["rdf-12"] }
+
+[dev-dependencies]
+flate2 = "1.1"
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+
+[lints]
+workspace = true
