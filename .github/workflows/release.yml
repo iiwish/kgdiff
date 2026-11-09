@@ -283,7 +283,7 @@ jobs:
           if-no-files-found: error
 
   # Every crate packaged and verified against the others, as `cargo publish --workspace` uploads
-  # them (kgdiff-core, kgdiff-formats, kgdiff-report, kgdiff).
+  # them (kgdiff-core, kgdiff-formats, kgdiff-layout, kgdiff-report, kgdiff).
   crates-dry-run:
     name: Package the crates (dry run)
     needs: native-viewer
@@ -399,7 +399,7 @@ jobs:
           test -z "$(git status --porcelain)"
           api=https://crates.io/api/v1/crates
           agent="kgdiff release workflow (https://github.com/iiwish/kgdiff)"
-          for crate in kgdiff-core kgdiff-formats kgdiff-report kgdiff; do
+          for crate in kgdiff-core kgdiff-formats kgdiff-layout kgdiff-report kgdiff; do
             status=$(curl -sS -o /dev/null -w '%{http_code}' -A "$agent" "$api/$crate")
             if [ "$status" = 404 ]; then
               echo "::notice::Skipped $crate: it is not on crates.io yet, and trusted publishing cannot create a crate. Publish its first version by hand (docs/releasing.md)."

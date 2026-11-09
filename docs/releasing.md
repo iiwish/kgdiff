@@ -118,7 +118,8 @@ The Rust `kgdiff` ([RFC 0002](rfcs/0002-rust-compute-core.md), phase 3) ships on
 binaries for macOS, Linux (gnu and musl) and Windows on the GitHub release, with SHA-256
 checksums, build provenance and shell / PowerShell installers; a Homebrew formula in
 [`iiwish/homebrew-tap`](https://github.com/iiwish/homebrew-tap) (`brew install iiwish/tap/kgdiff`);
-and the crates `kgdiff-core`, `kgdiff-formats`, `kgdiff-report` and `kgdiff` on crates.io
+and the crates `kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`, `kgdiff-report` and `kgdiff` on
+crates.io
 (`cargo install kgdiff`). npm's `@kgdiff/cli` and the GitHub Action stay on the TypeScript CLI
 until phase 4.
 
@@ -136,14 +137,14 @@ Publishing stays off until these are done:
 
 1. **crates.io, each crate's first version by hand.** crates.io cannot create a crate through
    trusted publishing, so the first version of each crate is published from a maintainer's
-   machine with a token: `kgdiff-core` at 0.7.0, the other three when their phase ships. Until a
+   machine with a token: `kgdiff-core` at 0.7.0, the other four when their phase ships. Until a
    crate exists, `crates-publish` skips it with a notice and publishes the ones that do (a version
    already there is skipped too).
 
    ```sh
    pnpm install && pnpm build:viewer-assets
    git status --porcelain   # nothing: the viewer bundles are git-ignored
-   cargo publish -p kgdiff-core --locked --allow-dirty   # or --workspace, for all four
+   cargo publish -p kgdiff-core --locked --allow-dirty   # or --workspace, for all five
    ```
 
    `--allow-dirty` because cargo counts the git-ignored viewer bundles, which `kgdiff-report`
