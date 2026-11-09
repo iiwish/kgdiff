@@ -19,11 +19,18 @@
   e319f6d; [Phase 3 results](#phase-3-results)). Of phase 4, the `kgdiff-layout` crate and layout
   JSON version 2 are merged ([#62](https://github.com/iiwish/kgdiff/pull/62), f91a5df to 86ecec9),
   with the TypeScript readers for both ([#52](https://github.com/iiwish/kgdiff/pull/52), e510258;
-  [#54](https://github.com/iiwish/kgdiff/pull/54), 9ebb278); the Rust CLI writing complete reports
-  is in review ([#69](https://github.com/iiwish/kgdiff/pull/69)), and the launcher and Action work
-  of phase 4 waits for 0.7.0 ([Phase 4 progress](#phase-4-progress)). Nothing is released yet.
+  [#54](https://github.com/iiwish/kgdiff/pull/54), 9ebb278), and so is the Rust CLI writing
+  complete reports ([#69](https://github.com/iiwish/kgdiff/pull/69), 687b0af to e1045c3).
+  **0.7.0 is released** (27aa871): the npm packages, and the five crates on crates.io. The rest of
+  phase 4 is merged too, for 0.8.0: the corpus's CLI runs recorded with the Rust `kgdiff`
+  ([#70](https://github.com/iiwish/kgdiff/pull/70), 7ae2a81), npm's `@kgdiff/cli` as the
+  launcher of the native binary with the TypeScript CLI removed
+  ([#71](https://github.com/iiwish/kgdiff/pull/71), c3e8a63 and e0480ca), the GitHub Action on
+  the native binary ([#72](https://github.com/iiwish/kgdiff/pull/72), 403f63c and 1182f6a) and
+  D-3 ([#73](https://github.com/iiwish/kgdiff/pull/73), 3fe4030 and 0d42e7a). Phase 4 is
+  complete ([Phase 4 progress](#phase-4-progress)).
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
-  results and phase 4 progress 2026-11-09.
+  results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10.
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
@@ -704,10 +711,12 @@ test fails if any of them differs (as `CITATION.cff` is checked today).
 3. A registry that fails after others succeeded cannot reuse the version; the remedy is a patch
    release, and the order above puts the registries most likely to reject a package first.
 
-With phase 4 the GitHub Action switches from `npx @kgdiff/cli` to downloading the release binary
-for the runner (checksum-verified), which removes the npm install from every run. Its `version`
-input takes a version, a range or a tag today (handed to npx); the action resolves it against the
-npm dist-tags and versions of `@kgdiff/cli`, which keep naming the same releases.
+With phase 4 the GitHub Action switches from `npx @kgdiff/cli` to downloading the release binary for
+the runner (checksum-verified), which removes the npm install from every run. (As built, it
+downloads the same binary from the npm platform package, checked against the registry's integrity:
+[Phase 4 progress](#phase-4-progress).) Its `version` input takes a version, a range or a tag today
+(handed to npx); the action resolves it against the npm dist-tags and versions of `@kgdiff/cli`,
+which keep naming the same releases.
 
 ### 9. Phased plan
 
@@ -954,9 +963,10 @@ Acceptance:
 
 ##### Phase 4 progress
 
-Status as of 2026-11-09: the layout crate and layout JSON version 2 are merged; the Rust CLI
-writing complete reports is in review ([#69](https://github.com/iiwish/kgdiff/pull/69)); the npm
-launcher and the Action are not started.
+Status as of 2026-11-10: phase 4 is complete. The layout crate,
+layout JSON version 2 and the Rust CLI's complete reports are merged and released with 0.7.0;
+the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
+([#70](https://github.com/iiwish/kgdiff/pull/70)–[#73](https://github.com/iiwish/kgdiff/pull/73)).
 
 - **Merged**: `crates/kgdiff-layout` in [#62](https://github.com/iiwish/kgdiff/pull/62) (f91a5df
   to 86ecec9; the stacked #58–#61 went in with it): options, scope, union, components and label
@@ -964,20 +974,49 @@ launcher and the Action are not started.
   `generator: "kgdiff-layout/1"`, version 1 still read; `packages/core/schema/layout.v2.json`.
   TypeScript's `layoutFromJSON` reads version 2 ([#54](https://github.com/iiwish/kgdiff/pull/54),
   9ebb278), and the viewer lays out reports that carry no layout
-  ([#52](https://github.com/iiwish/kgdiff/pull/52), e510258).
-- **In review**: [#69](https://github.com/iiwish/kgdiff/pull/69), the Rust CLI's reports carry the
-  layout of `kgdiff-layout` as a version 2 document and open instantly again (338–492 ms to
+  ([#52](https://github.com/iiwish/kgdiff/pull/52), e510258). The Rust CLI's reports carry the
+  layout of `kgdiff-layout` as a version 2 document and open instantly again
+  ([#69](https://github.com/iiwish/kgdiff/pull/69), 687b0af to e1045c3; 338–492 ms to
   `kgdiff-ready` for the six datasets, as the TypeScript CLI's 340–472 ms; phase 3's layout-less
   reports took 518–715 ms); the compute add-on is inlined only for changes-only layouts and
-  `--no-compute` works. For every corpus case the report's payload equals the TypeScript CLI's
-  but for the layout's `version` (1 → 2) and `generator` (30 bytes), which
-  `conformance/compare-reports.ts` checks in CI; all 257 CLI runs and every `report.json` still
-  match, and each report's layout matches the case's layout contract.
+  `--no-compute` works. 0.7.0 released all of it (27aa871), and its five crates are on crates.io.
+- **Corpus ownership** ([#70](https://github.com/iiwish/kgdiff/pull/70), 7ae2a81): `pnpm
+  conformance:update` records every CLI run (stdout, stderr, exit code) and `report.json` with the
+  Rust `kgdiff`, run as a real process in a copy of the case directory, exactly as replays run
+  them; the TypeScript generator no longer imports `@kgdiff/cli`. The TypeScript check (`pnpm
+  test`) regenerates the library outputs and `case.json`'s definitions and reads the CLI's outputs
+  as given, so it needs no Rust toolchain; CI regenerates the whole corpus with the Rust `kgdiff`
+  and fails on any difference, besides replaying every run on Linux, macOS and Windows.
+  Regenerated this way, the corpus was byte for byte what the TypeScript CLI had written.
+- **npm's `@kgdiff/cli`** ([#71](https://github.com/iiwish/kgdiff/pull/71), c3e8a63 and
+  e0480ca) is a launcher
+  (`bin/kgdiff.js`, `lib/launcher.js`) of the binary of seven platform packages,
+  `@kgdiff/cli-darwin-arm64`, `-darwin-x64`, `-linux-arm64-gnu`, `-linux-x64-gnu`,
+  `-linux-arm64-musl`, `-linux-x64-musl` and `-win32-x64`, one per dist target, which npm picks by
+  `os`, `cpu` and `libc`; the launcher picks musl on Alpine and falls back to x64 on Arm64 macOS
+  and Windows (no `win32-arm64` build). The TypeScript CLI's sources and tests are deleted, with
+  its JavaScript exports, as §6 planned; its golden snapshots move to
+  `crates/kgdiff/tests/snapshots`. `release.yml` now builds everything before it publishes
+  anything (§8): a plan job decides whether a push releases, and the native builds, the crates'
+  dry run, the platform packages and a smoke test through the launcher on Linux (x64 and Arm64,
+  glibc and musl), macOS and Windows gate "Version or publish".
+- **The GitHub Action** ([#72](https://github.com/iiwish/kgdiff/pull/72), 1182f6a) runs the
+  native binary of the runner's platform package directly, for every file, and npx only for
+  versions before 0.8.0; its workflow runs it with the binary built from the commit on Linux and
+  Windows. A table of which package to install for what (README and docs home, en and zh) went in
+  with it (403f63c).
+- **D-3** ([#73](https://github.com/iiwish/kgdiff/pull/73), 3fe4030 and 0d42e7a): TypeScript's
+  `layoutToJSON` writes a
+  layout that has a `generator` (read from version 2) back as version 2, as `layout_to_json`
+  does, so the round trip keeps what a stored layout says; its own layouts stay version 1.
 - **Against the acceptance**: `layout-contract.json` and `label-width.json` pass for every corpus
   case; the properties hold for every corpus case and for synthetic graphs up to 10k nodes. The
   positions are bit-identical to TypeScript's on every corpus case and on synthetic graphs of
   1k–10k nodes, so the five quality metrics are equal, not just within 10%. The `targets` job
   finds the same bytes for 102 layouts on x86-64 Linux, AArch64 macOS, x86-64 Windows and wasm32.
+  The corpus generator checks that each case's report carries the layout `@kgdiff/layout`
+  computes (what `conformance/compare-reports.ts` checked against the deleted TypeScript CLI), and
+  the action workflow passes with the binary.
 - **2k-node layout**: 158.6 ms (`tree_2k`) and 194.0 ms (`scale_free_2k`) at load average 3–5,
   against the 250 ms of §7 (earlier 175–234 ms at load average about 5, and 250–370 ms under heavy
   load). The WebAssembly layout budgets of §7 are gates of 1.0 with the other WebAssembly
@@ -986,15 +1025,25 @@ launcher and the Action are not started.
   counts to be integers (TypeScript accepts any finite number; everything kgdiff writes satisfies
   both); `extend_layout` on an empty layout keeps the new nodes at the origin, where TypeScript
   produces NaN positions.
-- **Open**: TypeScript's `layoutToJSON` writes only version 1, so a version 2 layout that
-  TypeScript reads and writes again loses its `generator`, the silent change
-  [D-3](#open-decisions) rules out; before phase 5, either TypeScript writes version 2 or its read
-  path keeps the version it read.
-- **Left**, after the 0.7.0 release: npm's `@kgdiff/cli` as the launcher of the binary, the GitHub
-  Action on the binary, deleting the TypeScript CLI, and moving the corpus's CLI runs,
-  `report.json` and layout contract to the Rust generator. `kgdiff-layout` is published with the
-  other crates from #69 on (`publish = false` is gone; the crates go core, formats, layout, report,
-  `kgdiff`).
+- **Where the implementation differs from this RFC's plan**:
+  - The CLI's outputs are recorded by `pnpm conformance:update`, which builds and runs the Rust
+    `kgdiff`, not by a `cargo xtask conformance`: the case definitions stay in `cases.ts` until
+    phase 5 moves the whole generator to Rust. The layout contract stays a library output of the
+    TypeScript generator meanwhile (`@kgdiff/layout` keeps its engine until phase 5, and
+    `kgdiff-layout`'s conformance tests check the file).
+  - The platform packages are not in the pnpm workspace: the release assembles them from dist's
+    archives (`scripts/npm-platforms.ts`), publishes them first and only then writes them into
+    `@kgdiff/cli`'s optional dependencies (as napi-rs does). In the workspace, every `pnpm -r`
+    warned about six unsupported platforms, and the version pull request would ask npm for
+    versions not published yet.
+  - The Action fetches the npm platform package (`npm pack`, checked against the registry's sha512
+    integrity) instead of the GitHub release's archive: the same binary, with the version resolved
+    on npm as §8 asks, and without depending on the release's assets, which stay off until
+    `NATIVE_RELEASE_ENABLED`.
+- **Before 0.8.0 is released**: npm trusted publishing needs a package to exist, so each platform
+  package gets a first version by hand (from the 0.7.0 archives of the release run) and a trusted
+  publisher, as `docs/releasing.md` describes; `CRATES_RELEASE_ENABLED` is set, so the crates
+  publish from CI from 0.8.0 on.
 
 #### Phase 5 — `@kgdiff/compute` replaces TypeScript compute in the browser (kgdiff 1.0)
 
@@ -1078,7 +1127,7 @@ Acceptance:
 | ---- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | D-1  | Make `Math.log2` in TypeScript matching exact (like the layout's) before phase 2?                           | **Yes** (revised after review; first recommended no, since a Rust port of FreeBSD's `e_log2.c` equals V8 on every integer up to 2²², Appendix A). The playground runs TypeScript matching in every browser engine until phase 5, so the difference exists now; the change moves a match only where a score sits within ~1e-15 of a rounding boundary or a tie, which the corpus update shows; and the port then copies a short loop of exact operations instead of V8's fdlibm bit for bit |
 | D-2  | Lone surrogates from JSON escapes (J-14)                                                                    | **Taken.** Reject with `invalid-input` in Rust and, in a 0.x release before phase 3, in TypeScript too, so that behaviour stays identical; the corpus leaves them out until then                                                                                                                                                                                                                                                                                                           |
-| D-3  | Layout version 2 with `generator`, or keep version 1                                                        | Version 2 (§2); the alternative is silent change of what a stored layout means                                                                                                                                                                                                                                                                                                                                                                                                             |
+| D-3  | Layout version 2 with `generator`, or keep version 1                                                        | **Taken.** Version 2 (§2), written back by TypeScript's `layoutToJSON` too ([#73](https://github.com/iiwish/kgdiff/pull/73)); the alternative is silent change of what a stored layout means                                                                                                                                                                                                                                                                                               |
 | D-4  | `kgdiff-report` as its own crate, or a feature of `kgdiff`                                                  | Its own crate (an embedding application depends on it without the CLI's dependencies)                                                                                                                                                                                                                                                                                                                                                                                                      |
 | D-5  | Ship the viewer's layout-less payloads before phase 2 or with phase 3                                       | Before phase 2: small and additive; applications that compute diffs themselves can use the viewer at once                                                                                                                                                                                                                                                                                                                                                                                  |
 | D-6  | Registry names                                                                                              | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now                                                                                                                                                                                                                                                                                           |
