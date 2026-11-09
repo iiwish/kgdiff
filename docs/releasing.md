@@ -129,7 +129,8 @@ a version, `native-build` builds and smoke-tests every target, `native-global` m
 installers and formula, and `crates-dry-run` packages and verifies every crate
 (`cargo publish --workspace --dry-run`). A pull request that changes the workflow or
 `dist-workspace.toml` runs the same jobs, and so does Actions → Release → Run workflow; they never
-publish. Every build runs `pnpm build:viewer-assets` first: the binary embeds the viewer.
+publish. The viewer bundles are built once (`pnpm build:viewer-assets`, job `native-viewer`) and
+embedded by every build, so that all binaries carry the same viewer.
 
 Publishing stays off until these are done:
 
