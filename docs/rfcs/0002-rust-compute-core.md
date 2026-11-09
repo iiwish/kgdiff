@@ -8,8 +8,9 @@
   [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2's `kgdiff-core` crate is
   merged ([#51](https://github.com/iiwish/kgdiff/pull/51), aafb0e9 to 3e096f2): every corpus case
   and core vector passes, and the nightly differential run is in place. Its performance work is in
-  [#56](https://github.com/iiwish/kgdiff/pull/56). The preview `@kgdiff/compute` is still to come.
-  Nothing is released yet ([Phase 2 results](#phase-2-results)).
+  [#56](https://github.com/iiwish/kgdiff/pull/56), and the preview `@kgdiff/compute` in
+  [#63](https://github.com/iiwish/kgdiff/pull/63). Nothing is released yet
+  ([Phase 2 results](#phase-2-results)).
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 results
   2026-11-09.
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
@@ -790,8 +791,9 @@ Acceptance:
 ##### Phase 2 results
 
 Status as of 2026-11-09: `kgdiff-core` is merged
-([#51](https://github.com/iiwish/kgdiff/pull/51)) and its performance work is in review
-([#56](https://github.com/iiwish/kgdiff/pull/56)).
+([#51](https://github.com/iiwish/kgdiff/pull/51)). Its performance work
+([#56](https://github.com/iiwish/kgdiff/pull/56)) and the preview `@kgdiff/compute`
+([#63](https://github.com/iiwish/kgdiff/pull/63)) are in review.
 
 - **Corpus:** every case and every primitive vector except `label-width.json` passes, 299
   checks in all (`cargo test -p kgdiff-core --test conformance`). `diff_from_json(diff_to_json(d))`
@@ -818,14 +820,20 @@ Status as of 2026-11-09: `kgdiff-core` is merged
   `Arc<KGEdge>` per edge, `Arc<str>` text and keyed maps. On a 64-bit target that model needs
   about 90 MB for this graph even at its smallest. Reaching 50 MB would take a more compact
   representation (interned ids, edges stored as columns), which is a decision for a later phase.
-  With WebAssembly's 32-bit pointers the same model takes roughly half as much, within that
-  row's < 80 MB of linear memory (an estimate until `@kgdiff/compute` measures it).
+- **WebAssembly** ([#63](https://github.com/iiwish/kgdiff/pull/63), with #56, Node 24): the
+  core-only module is 771.6 KiB, 306.5 KiB gzip (cargo opt-level `z`, `wasm-opt -Oz`). The full
+  engine's budget is < 250 kB. `diffJSON` (parsing and writing JSON included) takes a median
+  144 ms for 10k / 30k (target < 80 ms) and 1.97 s for 100k / 300k (target < 1 s).
+  `normalizeJSON` 100k / 300k reaches 265 MiB of linear memory, against a target of < 80 MB:
+  the text transport holds the input text, the parsed value, the graph and the output at once.
+  None of the WebAssembly targets is met yet. About 80% of the module is code, much of it
+  generic code instantiated many times.
 - **Decided along the way:** D-13 (`diff_from_json` stays typed). `foldhash` was added to §5's
   crates. `thiserror` and the `serde` feature were not needed yet.
 - **Moved to later:**
   - the crates.io release, the registry names and kgdiff 0.7.0 (the maintainer's);
-  - the preview `@kgdiff/compute`, which follows in its own pull request;
-  - the native memory target, above;
+  - the native memory target and the WebAssembly targets, above (a decision: size and speed
+    work in a later phase, or revised budgets);
   - the viewer's layout-less payloads and `layoutFromJSON` version 2, a TypeScript change in
     progress ([before phase 2](#before-phase-2-a-typescript-0x-release), item 4);
   - lone surrogates (D-2), which the corpus leaves out and which phase 3 settles.
