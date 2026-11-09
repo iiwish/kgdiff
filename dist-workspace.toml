@@ -31,3 +31,7 @@ install-path = "CARGO_HOME"
 install-updater = false
 checksum = "sha256"
 github-attestations = true
+
+# GitHub retired the macos-14 image dist picks for Apple silicon.
+[dist.github-custom-runners]
+aarch64-apple-darwin = "macos-15"
