@@ -18,9 +18,11 @@ mod corpus;
 use std::fmt::Write as _;
 use std::process::ExitCode;
 
-use kgdiff_core::js::{Object, Value, json};
+use kgdiff_core::js::{self, Object, Value, json};
 use kgdiff_core::{DiffResult, resolve_options};
-use kgdiff_layout::{LayoutOptions, estimate_label_width, layout_contract, node_radius};
+use kgdiff_layout::{
+    LayoutOptions, LayoutStrategy, estimate_label_width, layout_diff, node_radius,
+};
 
 use corpus::{Case, Corpus, Mode, compare, read_json};
 
@@ -56,16 +58,46 @@ fn diffed(case: &Case) -> Result<(DiffResult, Value), String> {
     Ok((result, member(&spec, "layoutOptions")))
 }
 
-/// `layout-contract.json`: the case's layout options, then what `layout_contract` computes.
+/// `layout-contract.json` as the corpus generator computes it (`conformance/corpus.ts`), from
+/// `layout_diff`: radii rounded to 0.01 as layout documents write them.
 fn contract(case: &Case) -> Result<Vec<u8>, String> {
     let (diff, given) = diffed(case)?;
     let options = LayoutOptions::from_value(&given).map_err(|e| e.message)?;
-    let computed = layout_contract(&diff, &options).map_err(|e| e.message)?;
+    let layout = layout_diff(&diff, &options).map_err(|e| e.message)?;
     let mut out = Object::new();
     out.insert("options", given);
-    for (key, value) in computed.as_object().into_iter().flat_map(Object::iter) {
-        out.insert(key.clone(), value.clone());
+    out.insert("strategy", layout.stats.strategy.as_str());
+    out.insert("scope", layout.scope.as_str());
+    if layout.stats.strategy == LayoutStrategy::Union {
+        out.insert("iterations", layout.stats.iterations);
     }
+    let mut nodes: Vec<&js::JsStr> = layout.positions.keys().collect();
+    nodes.sort();
+    out.insert(
+        "nodes",
+        Value::Array(nodes.into_iter().map(Value::from).collect()),
+    );
+    let mut radii = Object::new();
+    for (id, r) in &layout.radii {
+        let rounded = js::math::round(r * 100.0) / 100.0;
+        radii.insert(id.clone(), rounded);
+    }
+    out.insert("radii", radii);
+    let mut hidden = Object::new();
+    for (id, count) in &layout.hidden {
+        hidden.insert(id.clone(), *count);
+    }
+    out.insert("hidden", hidden);
+    out.insert(
+        "components",
+        Value::Array(
+            layout
+                .components
+                .iter()
+                .map(|c| Value::Array(c.nodes.iter().map(Value::from).collect()))
+                .collect(),
+        ),
+    );
     let mut text = json::to_string_pretty(&Value::Object(out));
     text.push('\n');
     Ok(text.into_bytes())

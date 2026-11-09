@@ -3,6 +3,9 @@
 use kgdiff_core::js::IndexMap;
 use kgdiff_core::model::{Point, UnionId};
 
+use crate::components::connected_components;
+use crate::geometry::{Extent, extent_of, to_rect};
+use crate::graph::LayoutGraph;
 use crate::{LayoutScope, LayoutStrategy};
 
 /// An axis-aligned rectangle in world units (y down), as `Rect` of `@kgdiff/core`.
@@ -62,4 +65,60 @@ pub struct LayoutResult {
     /// Connected components after packing, largest first.
     pub components: Vec<LayoutComponent>,
     pub stats: LayoutStats,
+}
+
+/// What [`assemble`] builds a result from.
+pub(crate) struct Assemble<'g, 'a> {
+    pub graph: &'g LayoutGraph<'a>,
+    /// The final positions of every graph node (and possibly of nodes outside the graph).
+    pub positions: Vec<(UnionId, Point)>,
+    pub radii: Vec<(UnionId, f64)>,
+    pub hidden: Vec<(UnionId, usize)>,
+    pub scope: LayoutScope,
+    pub strategy: LayoutStrategy,
+    pub iterations: usize,
+}
+
+/// Entries sorted by id (UTF-16 code units), as an ordered map.
+fn by_id<T>(mut entries: Vec<(UnionId, T)>) -> IndexMap<UnionId, T> {
+    entries.sort_by(|a, b| a.0.cmp(&b.0));
+    entries.into_iter().collect()
+}
+
+/// The bounds, the components and their bounds, everything in id order.
+pub(crate) fn assemble(input: Assemble<'_, '_>) -> LayoutResult {
+    let graph = input.graph;
+    let positions = by_id(input.positions);
+    let mut x = vec![0.0; graph.n];
+    let mut y = vec![0.0; graph.n];
+    let mut bounds = Extent::EMPTY;
+    for (i, node) in graph.nodes.iter().enumerate() {
+        let Some(p) = positions.get(node.id.as_str()) else {
+            continue;
+        };
+        x[i] = p.x;
+        y[i] = p.y;
+        bounds.include_node(graph, i, p.x, p.y);
+    }
+    let components = connected_components(graph, None)
+        .into_iter()
+        .map(|members| LayoutComponent {
+            nodes: members.iter().map(|&i| graph.nodes[i].id.clone()).collect(),
+            bounds: to_rect(&extent_of(graph, members.iter().copied(), &x, &y)),
+        })
+        .collect();
+    let nodes = positions.len();
+    LayoutResult {
+        positions,
+        radii: by_id(input.radii),
+        bounds: to_rect(&bounds),
+        scope: input.scope,
+        hidden: by_id(input.hidden),
+        components,
+        stats: LayoutStats {
+            strategy: input.strategy,
+            iterations: input.iterations,
+            nodes,
+        },
+    }
 }

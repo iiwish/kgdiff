@@ -14,10 +14,6 @@ pub(crate) struct Partner {
     pub anchor: usize,
 }
 
-#[allow(
-    dead_code,
-    reason = "extend_layout (the next pull request) reads `index_of`"
-)]
 pub(crate) struct UnionGraph<'a> {
     /// Union nodes sorted by id (UTF-16 code unit order).
     pub nodes: Vec<&'a UnionNode>,
