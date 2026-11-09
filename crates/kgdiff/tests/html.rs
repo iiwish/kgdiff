@@ -1,7 +1,5 @@
-//! `packages/cli/test/html.test.ts`, ported. The reports of this kgdiff carry no layout
-//! (RFC 0002, D-10): where the TypeScript tests look at the layout or at when the compute add-on
-//! is inlined, these check that there is no `layout` and that the add-on always follows the
-//! viewer.
+//! `packages/cli/test/html.test.ts`, ported: the report document, its payload with the
+//! precomputed diff and layout, escaping, compression, and when the compute add-on is inlined.
 
 mod common;
 
@@ -114,7 +112,7 @@ fn sets_the_scope_and_reads_the_legacy_mode_changes() {
 }
 
 #[test]
-fn embeds_the_precomputed_diff_meta_and_view_and_no_layout() {
+fn embeds_the_precomputed_diff_layout_meta_and_view_preferences() {
     let html = report(&["--mode", "swipe", "--title", "Release <2>"]);
     let (encoding, payload) = extract_payload(&html);
     assert!(encoding.is_none());
@@ -138,8 +136,25 @@ fn embeds_the_precomputed_diff_meta_and_view_and_no_layout() {
         .map(|n| n.get("id").and_then(Value::as_str).unwrap().to_owned())
         .collect();
     assert_eq!(ids, ["a", "b", "c"]);
-    // D-10: the viewer lays the diff out in the browser.
-    assert!(payload.get("layout").is_none());
+    // The layout of kgdiff-layout, as a version 2 layout document.
+    let layout = payload.get("layout").expect("a layout");
+    assert_eq!(
+        layout.get("format").and_then(Value::as_str),
+        Some("kgdiff.layout")
+    );
+    assert_eq!(layout.get("version").and_then(Value::as_f64), Some(2.0));
+    assert_eq!(
+        layout.get("generator").and_then(Value::as_str),
+        Some(kgdiff_layout::GENERATOR)
+    );
+    let placed: Vec<&str> = layout
+        .get("positions")
+        .and_then(Value::as_object)
+        .unwrap()
+        .keys()
+        .map(|k| k.as_str())
+        .collect();
+    assert_eq!(placed, ["a", "b", "c"]);
     let meta = payload.get("meta").unwrap();
     assert_eq!(
         meta.get("title").and_then(Value::as_str),
@@ -181,9 +196,9 @@ fn embeds_panels_in_the_view_not_as_an_attribute() {
 #[test]
 fn cannot_be_broken_out_of_by_labels() {
     let html = report(&[]);
-    // The payload, the viewer and the compute add-on.
-    assert_eq!(count(&html, r"(?i)<script\b"), 3);
-    assert_eq!(count(&html, r"(?i)</script"), 3);
+    // The payload and the viewer: a full layout needs no compute add-on.
+    assert_eq!(count(&html, r"(?i)<script\b"), 2);
+    assert_eq!(count(&html, r"(?i)</script"), 2);
     assert!(!html.contains("<!--"));
     let labels: Vec<String> = diff_of(&payload_of(&html))
         .get("nodes")
@@ -212,9 +227,8 @@ fn escapes_script_terminators_and_comment_openers_in_the_inlined_bundles() {
         r#"const a = "</script><script>x()</script>"; const b = "<!--"; const c = /<\/SCRIPT/;"#;
     let mut io = files();
     io.bundle = Ok(bundle.to_owned());
-    io.compute = Ok(bundle.to_owned());
     let html = report_with(&[], io);
-    assert_eq!(count(&html, r"(?i)</script"), 3);
+    assert_eq!(count(&html, r"(?i)</script"), 2);
     assert!(html.contains(r#"const a = "<\/script><script>x()<\/script>""#));
     assert!(html.contains(r#"const b = "\x3C!--""#));
 }
@@ -295,12 +309,99 @@ fn gzips_and_base64_encodes_payloads_above_512_kb() {
     assert!(json::to_string(&payload).len() > 512 * 1024);
 }
 
+/// Above the layout's large-graph threshold (3,000 nodes) the layout covers only the changes.
+fn large() -> MemoryIo {
+    let many = |renamed: bool| {
+        let nodes: Vec<String> = (0..3200)
+            .map(|i| {
+                let label = if renamed && i == 7 {
+                    "Renamed seven".to_owned()
+                } else {
+                    format!("Node {i}")
+                };
+                format!("{{\"id\":\"n{i}\",\"label\":\"{label}\"}}")
+            })
+            .collect();
+        let edges: Vec<String> = (0..3199)
+            .map(|i| {
+                format!(
+                    "{{\"source\":\"n{}\",\"target\":\"n{i}\",\"predicate\":\"next\"}}",
+                    i + 1
+                )
+            })
+            .collect();
+        format!(
+            "{{\"nodes\":[{}],\"edges\":[{}]}}",
+            nodes.join(","),
+            edges.join(",")
+        )
+    };
+    io().file("big1.json", many(false))
+        .file("big2.json", many(true))
+}
+
+fn layout_scope(html: &str) -> Option<String> {
+    payload_of(html)
+        .get("layout")
+        .and_then(|l| l.get("scope"))
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+}
+
 #[test]
-fn inlines_the_compute_add_on_right_after_the_viewer_in_every_report() {
+fn leaves_the_compute_add_on_out_of_reports_whose_layout_covers_the_whole_graph() {
     let html = report(&[]);
+    assert!(!html.contains(FAKE_COMPUTE));
+    assert_eq!(layout_scope(&html).as_deref(), Some("all"));
+}
+
+#[test]
+fn inlines_the_compute_add_on_right_after_the_viewer_when_the_layout_covers_only_the_changes() {
+    let r = run_with(&["big1.json", "big2.json", "-o", "r.html", "-q"], large());
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    let html = r.file("r.html");
+    assert_eq!(layout_scope(&html).as_deref(), Some("changes"));
     assert!(html.contains(&format!(
         "<script>{FAKE_BUNDLE}</script>\n<script>{FAKE_COMPUTE}</script>\n</body>"
     )));
+}
+
+#[test]
+fn skips_the_compute_add_on_with_no_compute() {
+    let r = run_with(
+        &[
+            "big1.json",
+            "big2.json",
+            "-o",
+            "r.html",
+            "-q",
+            "--no-compute",
+        ],
+        large(),
+    );
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert!(!r.file("r.html").contains(FAKE_COMPUTE));
+}
+
+#[test]
+fn only_warns_when_the_compute_add_on_is_missing() {
+    let mut io = large();
+    io.compute = Err("The compute add-on was not found.".to_owned());
+    let r = run_with(&["big1.json", "big2.json", "-o", "r.html"], io);
+    assert_eq!(r.code, 0);
+    assert!(
+        r.stderr.contains(
+            "warning: The compute add-on was not found. The report is written without it"
+        ),
+        "{}",
+        r.stderr
+    );
+    assert!(!r.file("r.html").contains(FAKE_COMPUTE));
+    // A report that does not need it never asks for it.
+    let mut small = files();
+    small.compute = Err("The compute add-on was not found.".to_owned());
+    let r = run_with(&["v1.json", "v2.json", "-o", "r.html"], small);
+    assert!(!r.stderr.contains("warning"), "{}", r.stderr);
 }
 
 #[test]

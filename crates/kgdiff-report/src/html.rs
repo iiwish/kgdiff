@@ -1,10 +1,13 @@
 //! The single-file HTML report (`html.ts`, `report.ts`): the standalone viewer bundle and the
 //! report payload inlined in one accessible document that works offline.
 //!
-//! Phase 3 of RFC 0002 (decision D-10): a report carries no layout, and inlines the viewer's
-//! compute add-on, which lays the diff out when the report opens. Deterministic apart from
-//! `generatedAt`; the gzip stream of a large payload is this encoder's (reports are not
-//! byte-identical to the TypeScript CLI's, a non-goal of the RFC).
+//! The payload carries the diff and its layout from kgdiff-layout, a layout document of version
+//! 2 (RFC 0002, phase 4), so the report opens without laying anything out. The viewer's compute
+//! add-on is inlined only where the browser may still have to lay out: when the layout covers
+//! just the changes (large graphs), whose collapsed groups the reader can expand
+//! ([`needs_compute`]). Deterministic apart from `generatedAt`; the gzip stream of a large
+//! payload is this encoder's (reports are not byte-identical to the TypeScript CLI's, a non-goal
+//! of the RFC).
 
 use std::io::Write as _;
 
@@ -12,6 +15,7 @@ use base64::Engine as _;
 use flate2::{Compression, GzBuilder};
 use kgdiff_core::js::{Object, Value, json};
 use kgdiff_core::{DiffResult, Locale};
+use kgdiff_layout::{LayoutOptions, layout_diff, layout_to_json};
 
 use crate::locale::messages;
 use crate::model::overview;
@@ -123,8 +127,9 @@ fn side_value(side: &ReportSide) -> Value {
     Value::Object(out)
 }
 
-/// The report payload (`ReportPayload`, version 1) without a layout (D-10): format, version,
-/// the packed diff, meta and view.
+/// The report payload (`buildReportPayload`, `ReportPayload` version 1): format, version, the
+/// packed diff, the layout (`layout_diff` with the default options, as a version 2 layout
+/// document), meta and view.
 pub fn report_payload(diff: &DiffResult, info: &ReportInfo) -> Value {
     let mut meta = Object::new();
     meta.insert("title", info.title.as_str());
@@ -159,6 +164,11 @@ pub fn report_payload(diff: &DiffResult, info: &ReportInfo) -> Value {
         "diff",
         kgdiff_core::pack_diff_json(&kgdiff_core::diff_to_json(diff)),
     );
+    // The default options cannot be invalid; were the layout to fail anyway, the report would
+    // still open, laid out by the viewer.
+    if let Ok(layout) = layout_diff(diff, &LayoutOptions::default()) {
+        payload.insert("layout", layout_to_json(&layout));
+    }
     payload.insert("meta", Value::Object(meta));
     payload.insert("view", Value::Object(view));
     Value::Object(payload)
@@ -333,14 +343,28 @@ pub fn describe_diff(diff: &DiffResult, locale: Locale) -> String {
     }
 }
 
-/// The whole report document for a diff (`buildReportHtml`, phase 3: no layout, the compute
-/// add-on always inlined when given).
+/// Whether a report inlines the compute add-on (`needsCompute`): when its layout covers only the
+/// changes (large graphs), where the viewer may lay out the collapsed groups the reader expands,
+/// or when it has no layout at all. A full layout needs nothing computed in the browser.
+pub fn needs_compute(payload: &Value) -> bool {
+    match payload.get("layout") {
+        None => true,
+        Some(layout) => layout.get("scope").and_then(Value::as_str) == Some("changes"),
+    }
+}
+
+/// The whole report document for a diff (`buildReportHtml`): the compute add-on of `bundles` is
+/// inlined only when [`needs_compute`].
 pub fn build_report_html(
     diff: &DiffResult,
     info: &ReportInfo,
     bundles: ViewerBundles<'_>,
 ) -> String {
     let payload = report_payload(diff, info);
+    let bundles = ViewerBundles {
+        compute: bundles.compute.filter(|_| needs_compute(&payload)),
+        ..bundles
+    };
     render_report_html(
         &payload,
         bundles,

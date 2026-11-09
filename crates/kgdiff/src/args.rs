@@ -944,7 +944,6 @@ fn parse_diff(argv: &[String]) -> CliResult<Command> {
         watch_attrs: (!watch.is_empty()).then_some(watch),
     };
     check_outputs(&options)?;
-    check_compute(&options)?;
     Ok(Command::Diff(Box::new(options)))
 }
 
@@ -979,18 +978,6 @@ fn check_outputs(o: &DiffCommandOptions) -> CliResult<()> {
         return Err(usage_with(
             "The HTML report must be written to a file.",
             "Use -o report.html.",
-        ));
-    }
-    Ok(())
-}
-
-/// The reports of this kgdiff carry no layout (RFC 0002, D-10): the viewer lays them out in the
-/// browser with its compute add-on, so a report cannot leave the add-on out.
-fn check_compute(o: &DiffCommandOptions) -> CliResult<()> {
-    if !o.compute && (o.html.is_some() || o.open) {
-        return Err(usage_with(
-            "--no-compute cannot be honoured: the HTML reports of this kgdiff carry no layout, and the viewer lays them out in the browser with its compute add-on.",
-            "Leave out --no-compute.",
         ));
     }
     Ok(())

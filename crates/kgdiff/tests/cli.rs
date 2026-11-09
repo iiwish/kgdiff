@@ -1090,30 +1090,6 @@ fn fails_clearly_when_the_viewer_bundle_is_missing() {
 }
 
 #[test]
-fn fails_before_writing_when_the_compute_add_on_is_missing() {
-    // The reports of this kgdiff carry no layout (D-10): without the add-on they cannot open.
-    let mut io = zoo();
-    io.compute = Err("The HTML report needs the viewer compute add-on.".to_owned());
-    let r = run_with(
-        &[
-            "before.json",
-            "after.json",
-            "-o",
-            "r.html",
-            "--json",
-            "d.json",
-        ],
-        io,
-    );
-    assert_eq!(r.code, 2);
-    assert_eq!(
-        r.stderr,
-        "error: The HTML report needs the viewer compute add-on.\nhint: Build it.\n"
-    );
-    assert!(r.io.written.is_empty());
-}
-
-#[test]
 fn maps_invalid_diff_options_to_an_input_error() {
     assert!([0, 2].contains(&run(&["before.json", "after.json", "--hierarchy", ""], &FILES).code));
 }

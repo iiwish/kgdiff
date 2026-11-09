@@ -37,7 +37,7 @@ pub mod width;
 
 pub use html::{
     MISSING_VIEWER_HINT, ReportInfo, ReportSide, ViewerBundles, build_report_html, describe_diff,
-    embedded_viewer,
+    embedded_viewer, needs_compute,
 };
 pub use locale::{format_int, match_locale, messages, resolve_locale};
 pub use markdown::{MarkdownOptions, escape_markdown, render_markdown};

@@ -8,10 +8,11 @@ use kgdiff_core::{
     apply_delta, diff_to_json, graph_to_json, hash_graph, normalize, resolve_options,
 };
 use kgdiff_formats::{JsonTextError, ParseResult, ParseWarning, parse_deep_json};
+use kgdiff_report::html::{GZIP_THRESHOLD, render_report_html, report_payload};
 use kgdiff_report::width::sanitize;
 use kgdiff_report::{
-    MarkdownOptions, ReportInfo, ReportSide, TextContext, ViewerBundles, build_report_html,
-    format_int, render_markdown, render_name_status, render_stat, render_summary,
+    MarkdownOptions, ReportInfo, ReportSide, TextContext, ViewerBundles, describe_diff, format_int,
+    needs_compute, render_markdown, render_name_status, render_stat, render_summary,
 };
 
 use crate::VERSION;
@@ -186,6 +187,29 @@ fn format_flag(o: &DiffCommandOptions, side: &'static str) -> &'static str {
     }
 }
 
+/// The viewer's compute add-on for a report laid out around its changes (`loadCompute`), unless
+/// `--no-compute`. A missing add-on costs only the expansion of collapsed groups: a warning, not
+/// an error.
+fn load_compute(o: &DiffCommandOptions, io: &mut dyn CliIo, ctx: &OutputContext) -> Option<String> {
+    if !o.compute {
+        return None;
+    }
+    match io.viewer_bundle(ViewerBundle::Compute) {
+        Ok(source) => Some(source.into_owned()),
+        Err(failure) => {
+            let (message, _) = crate::errors::describe(&failure, None);
+            let text = format_warning(
+                &format!(
+                    "{message} The report is written without it: collapsed groups cannot be expanded. Pass --no-compute to skip it."
+                ),
+                &ctx.err_paint,
+            );
+            ctx.notice(io, &text);
+            None
+        }
+    }
+}
+
 /// Runs the diff command; the exit code.
 pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
     let ctx = OutputContext::new(io, &o.common);
@@ -338,15 +362,20 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
             locale: ctx.locale,
             panels: o.panels.clone(),
         };
-        // The report carries no layout (RFC 0002, D-10): the add-on lays it out in the browser.
-        let compute = io.viewer_bundle(ViewerBundle::Compute)?;
-        let html = build_report_html(
-            &result,
-            &info,
+        let payload = report_payload(&result, &info);
+        let compute = if needs_compute(&payload) {
+            load_compute(o, io, &ctx)
+        } else {
+            None
+        };
+        let html = render_report_html(
+            &payload,
             ViewerBundles {
                 main: bundle,
-                compute: Some(&compute),
+                compute: compute.as_deref(),
             },
+            &describe_diff(&result, ctx.locale),
+            GZIP_THRESHOLD,
         );
         files.push((path.clone(), html, "report".to_owned()));
     }

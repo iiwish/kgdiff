@@ -17,9 +17,10 @@
 //! assert_eq!(io.stdout, "R\tada\tRenamed “Ada” → “Ada Lovelace”\n");
 //! ```
 //!
-//! HTML reports carry no layout in phase 3 (decision D-10): the viewer lays the diff out in the
-//! browser with its compute add-on, which every report inlines. The viewer bundles are compiled
-//! in with the feature `embed-viewer` (on by default) once `pnpm build:viewer-assets` has run.
+//! HTML reports carry the layout of kgdiff-layout (a layout document of version 2) and open
+//! without laying anything out; the viewer's compute add-on is inlined only for layouts that
+//! cover just the changes of a large graph. The viewer bundles are compiled in with the feature
+//! `embed-viewer` (on by default) once `pnpm build:viewer-assets` has run.
 
 pub mod args;
 pub mod cli;
