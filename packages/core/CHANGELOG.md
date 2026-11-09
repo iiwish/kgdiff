@@ -1,5 +1,12 @@
 # @kgdiff/core
 
+## 0.7.0
+
+### Minor Changes
+
+- d01c4e0: Matching gives the same result in every JavaScript engine. Its neighbour and key weights (`1 / log₂(2 + degree)`, `1 / log₂(1 + postings)`) now use a `log₂` built from exactly rounded operations only, the one the layout already used, instead of `Math.log2`, which engines may approximate differently: V8 ports FreeBSD's `e_log2.c`, while an engine that calls the platform's C library gets that library's rounding (Apple's differs from V8 on 439 of the integers up to 2,000,000). A diff computed in a browser, as the playground does, now equals the CLI's whatever the engine. The new `log₂` differs from V8's by one unit in the last place on about 2% of integers; no match, suggestion or score changes in the conformance corpus, the example datasets or 144 synthetic diffs, but a score that sits exactly on a rounding boundary or a tie can move. The function is exported as `log2`, and `@kgdiff/layout` uses it from core.
+- 7586808: Reports open the same way whatever Unicode version the browser has. `diffFromJSON` takes the labels, aliases and types of a document's snapshots as written instead of composing them to NFC again with the runtime's ICU, and the content hashes in the delta check that text: a report made with Node 24 (Unicode 17) no longer fails to open in a browser with older tables when a label holds a character whose composition changed in between, and a snapshot whose text was edited or is not in NFC is still rejected. To restore a label it left out without Unicode tables either, kgdiff JSON (diffs, graphs and deltas) now leaves an edge label out only when it equals `predicateLabel(predicate)` before its NFC step; a predicate whose readable part is written decomposed keeps its label in the document. A diff written by an earlier version for such a predicate, with that label left out, no longer opens: write it again. `normalize` composes API input to NFC as before.
+
 ## 0.6.0
 
 No changes in this release.

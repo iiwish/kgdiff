@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/g6",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "AntV G6 v5 adapter for kgdiff: render semantic graph diffs inside your G6 graphs.",
   "keywords": [
     "kgdiff",
