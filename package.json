@@ -22,6 +22,7 @@
     "check:packages": "tsx scripts/check-packages.ts",
     "conformance:update": "tsx conformance/update.ts",
     "conformance:replay": "tsx conformance/replay.ts",
+    "conformance:compare-reports": "tsx conformance/compare-reports.ts",
     "dev:site": "pnpm --filter @kgdiff/site dev",
     "dev:docs": "pnpm --filter @kgdiff/docs dev",
     "build:docs": "pnpm --filter @kgdiff/docs build",

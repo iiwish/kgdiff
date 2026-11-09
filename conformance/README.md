@@ -169,6 +169,13 @@ The reference does exactly this on every CI run: the generator records the runs 
 `main()` in-process, and `pnpm conformance:replay` replays every one of them with the built CLI
 (`node packages/cli/dist/bin.js`) as a real process, after `pnpm build`.
 
+Another implementation is replayed with `pnpm conformance:replay --bin <executable>`. Its HTML
+reports, which no run records, are compared with the reference's by `pnpm
+conformance:compare-reports --bin <executable>`: for every case both write `-o report.html
+--reproducible` with the arguments of the `summary` run, and the payloads must be equal as values
+— a layout document of version 2 with its `generator` counts as the reference's version 1 — and
+inline the same scripts (the compute add-on exactly when the layout covers only the changes).
+
 Every case has the standard runs `summary` (no output option), `stat` (`--stat`), `name-status`
 (`--name-status`), `markdown` (`--markdown`), `json` (`--json`, stdout = `expected/diff.json`),
 `delta` (`--delta`, stdout = `expected/delta.json`), `exit-code` (`--exit-code --quiet`: empty
