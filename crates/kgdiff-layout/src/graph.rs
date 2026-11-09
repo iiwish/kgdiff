@@ -9,10 +9,6 @@ use crate::math::max;
 use crate::text_metrics::{LABEL_GAP, label_box};
 use crate::union::{Partner, UnionGraph, build_adjacency};
 
-#[allow(
-    dead_code,
-    reason = "the engine (the next pull request) reads the rest"
-)]
 pub(crate) struct LayoutGraph<'a> {
     pub n: usize,
     pub nodes: Vec<&'a UnionNode>,
@@ -37,7 +33,6 @@ pub(crate) struct LayoutGraph<'a> {
     pub partners: Vec<Partner>,
 }
 
-#[allow(dead_code, reason = "the engine (the next pull request) uses it")]
 impl LayoutGraph<'_> {
     pub(crate) fn neighbours(&self, i: usize) -> &[usize] {
         &self.adjacency[self.offsets[i]..self.offsets[i + 1]]

@@ -111,10 +111,6 @@ const COMPONENT_GAP: f64 = 96.0;
 
 /// Every option with its default filled in.
 #[derive(Clone, Debug)]
-#[allow(
-    dead_code,
-    reason = "the engine (the next pull request) reads the rest"
-)]
 pub(crate) struct Resolved<'a> {
     /// `None` = choose from the data (anchored when any position is known).
     pub strategy: Option<LayoutStrategy>,

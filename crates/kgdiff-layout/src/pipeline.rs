@@ -4,17 +4,16 @@
 use kgdiff_core::Result;
 use kgdiff_core::model::{Point, UnionId};
 
+use crate::engine::{Context, place_anchored, place_free};
 use crate::graph::{LayoutGraph, build_layout_graph};
+use crate::math::round2;
 use crate::options::Resolved;
+use crate::result::{Assemble, assemble};
 use crate::scope::select_scope;
 use crate::union::build_union_graph;
-use crate::{LayoutInput, LayoutOptions, LayoutScope, LayoutStrategy};
+use crate::{LayoutInput, LayoutOptions, LayoutResult, LayoutScope, LayoutStrategy};
 
 /// Known positions, by layout index.
-#[allow(
-    dead_code,
-    reason = "the engine (the next pull request) places around them"
-)]
 pub(crate) struct Known {
     pub fixed: Vec<bool>,
     pub x: Vec<f64>,
@@ -50,10 +49,6 @@ fn known_positions(graph: &LayoutGraph<'_>, options: &Resolved<'_>) -> Known {
 }
 
 /// Everything about a layout that does not depend on floating-point simulation.
-#[allow(
-    dead_code,
-    reason = "the engine (the next pull request) reads the rest"
-)]
 pub(crate) struct Plan<'a, 'o> {
     pub options: Resolved<'o>,
     pub scope: LayoutScope,
@@ -97,4 +92,63 @@ pub(crate) fn plan<'a, 'o>(
         strategy,
         anchored,
     })
+}
+
+/// `layoutDiff`.
+pub(crate) fn layout(input: LayoutInput<'_>, options: &LayoutOptions) -> Result<LayoutResult> {
+    let Plan {
+        options,
+        scope,
+        hidden,
+        graph,
+        known,
+        strategy,
+        anchored,
+        ..
+    } = plan(input, options)?;
+    let (x, y) = if anchored {
+        (known.x, known.y)
+    } else {
+        (vec![0.0; graph.n], vec![0.0; graph.n])
+    };
+    let mut ctx = Context {
+        graph: &graph,
+        options: &options,
+        x,
+        y,
+    };
+    let iterations = if anchored {
+        place_anchored(&mut ctx, &known.fixed)
+    } else {
+        place_free(&mut ctx)
+    };
+
+    let mut positions = Vec::with_capacity(graph.n);
+    let mut radii = Vec::with_capacity(graph.n);
+    for (i, node) in graph.nodes.iter().enumerate() {
+        // Known positions are kept exactly; computed ones are rounded to 0.01.
+        let exact = anchored && known.fixed[i];
+        let p = if exact {
+            Point {
+                x: ctx.x[i],
+                y: ctx.y[i],
+            }
+        } else {
+            Point {
+                x: round2(ctx.x[i]),
+                y: round2(ctx.y[i]),
+            }
+        };
+        positions.push((node.id.clone(), p));
+        radii.push((node.id.clone(), graph.radius[i]));
+    }
+    Ok(assemble(Assemble {
+        graph: &graph,
+        positions,
+        radii,
+        hidden,
+        scope,
+        strategy,
+        iterations,
+    }))
 }
