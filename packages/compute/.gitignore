@@ -1,0 +1,4 @@
+# The WebAssembly build (`pnpm build:wasm`): the module and wasm-bindgen's glue. The glue's
+# types are written by hand and kept.
+wasm/*
+!wasm/kgdiff_compute.d.ts
