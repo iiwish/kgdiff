@@ -22,8 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Every supported Node.js line (engines: >=22) on Linux; the CLI's atomic writes and
-        # (device, inode) checks also run on Windows and macOS file systems.
+        # Every supported Node.js line (engines: >=22) on Linux; the npm launcher of kgdiff, the
+        # Action and the corpus check also run on Windows and macOS.
         os: [ubuntu-latest]
         node: [22, 24, 26]
         include:
@@ -45,10 +45,6 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      # The corpus's CLI runs, recorded with the Rust kgdiff, replayed with the TypeScript CLI as a
-      # real process (pipes, exit codes, clean environment), as another implementation is checked.
-      - name: Replay the conformance corpus's CLI runs with the built kgdiff
-        run: pnpm conformance:replay
       - name: Check the packed packages (README, LICENSE, source maps, publint, attw)
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: pnpm check:packages
@@ -103,19 +99,13 @@ jobs:
           pnpm conformance:replay --bin "target/release/kgdiff${{ runner.os == 'Windows' && '.exe' || '' }}"
       # The Rust kgdiff records what the CLI produces (RFC 0002, §9, "Corpus ownership"): the whole
       # corpus, generated again with it and the TypeScript packages, must be what is committed.
+      # The generator also checks each report's layout against @kgdiff/layout's.
       - name: Regenerate the conformance corpus with the Rust kgdiff
         if: matrix.os == 'ubuntu-latest'
         run: |
           pnpm conformance:update --bin target/release/kgdiff
           git status --porcelain -- conformance
           test -z "$(git status --porcelain -- conformance)"
-      # The reports of every corpus case equal the TypeScript CLI's, the layout's version 2 and
-      # generator aside (conformance/compare-reports.ts).
-      - name: Compare the reports of the Rust kgdiff with the TypeScript CLI's
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          pnpm --filter "@kgdiff/cli..." build
-          pnpm conformance:compare-reports --bin target/release/kgdiff
       - name: Docs
         if: matrix.os == 'ubuntu-latest'
         env:

@@ -71,7 +71,8 @@ npx @kgdiff/cli a.ttl b.ttl --markdown >> "$GITHUB_STEP_SUMMARY"
 npx @kgdiff/cli a.ttl b.ttl --exit-code -q        # exit 1 when the graphs differ
 ```
 
-Requires Node.js ≥ 22.
+`npx` needs Node.js ≥ 22; kgdiff itself is a native program for macOS, Linux and Windows, also
+on crates.io (`cargo install kgdiff`).
 
 <p align="center">
   <img src="docs/images/terminal-en.webp" alt="kgdiff's terminal summary of an OBO ontology release: merges, moves, a split, renames and additions, colored by kind of change" width="720">
@@ -189,7 +190,8 @@ pnpm check                      # lint + typecheck + tests
 pnpm bench                      # performance budgets
 pnpm dev:site                   # landing page and playground
 pnpm dev:docs                   # documentation site (docs/)
-pnpm tsx packages/cli/src/bin.ts examples/datasets/enterprise-kg-en/before.json \
+pnpm build:viewer-assets        # the viewer bundles kgdiff's HTML reports embed
+cargo run -p kgdiff -- examples/datasets/enterprise-kg-en/before.json \
   examples/datasets/enterprise-kg-en/after.json
 ```
 

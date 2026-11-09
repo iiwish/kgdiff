@@ -15,7 +15,20 @@ npm install --global @kgdiff/cli      # or: pnpm add -g @kgdiff/cli
 kgdiff --version
 ```
 
-Node.js ≥ 22. `npx @kgdiff/cli …` works without installing.
+`npx @kgdiff/cli …` works without installing. kgdiff is a native program, written in Rust:
+this package holds only a small launcher (Node.js ≥ 22) that runs the binary of your platform,
+which npm installs with it as an optional dependency, one of
+
+| Platform                                   | Package                                                       |
+| ------------------------------------------ | ------------------------------------------------------------- |
+| macOS, Apple silicon / Intel               | `@kgdiff/cli-darwin-arm64`, `@kgdiff/cli-darwin-x64`          |
+| Linux x64, glibc / musl (Alpine)           | `@kgdiff/cli-linux-x64-gnu`, `@kgdiff/cli-linux-x64-musl`     |
+| Linux Arm64, glibc / musl                  | `@kgdiff/cli-linux-arm64-gnu`, `@kgdiff/cli-linux-arm64-musl` |
+| Windows x64 (and Arm64, through emulation) | `@kgdiff/cli-win32-x64`                                       |
+
+An install without optional dependencies (`--omit=optional`, `--no-optional`) has no binary
+to run, and `kgdiff` says so. `KGDIFF_BINARY=/path/to/kgdiff` makes the launcher run another
+binary. Without Node.js, build the same kgdiff from crates.io: `cargo install kgdiff`.
 
 ## Usage
 
@@ -198,31 +211,30 @@ Run `kgdiff --help` for the full list. The most useful:
 
 ## Programmatic use
 
-```ts
-import { main, nodeIO } from 'kgdiff';
-
-process.exitCode = await main(['a.ttl', 'b.ttl', '--stat'], nodeIO());
-```
-
-`main(argv, io)` never throws and takes every side effect from `io` (streams, files, clock, runtime,
-environment, terminal size), so it runs in-process in tests. The renderers (`renderSummary`,
-`renderStat`, `renderNameStatus`, `renderMarkdown`, `renderReportHtml`) and helpers
-(`stringWidth`, `truncate`, `resolveColorLevel`, `parseCommandLine`) are exported too.
+This package exports no JavaScript API since 0.8.0: it only runs `kgdiff`. In JavaScript, diff
+graphs with [`@kgdiff/core`](https://www.npmjs.com/package/@kgdiff/core) and
+[`@kgdiff/formats`](https://www.npmjs.com/package/@kgdiff/formats), and show them with
+[`@kgdiff/viewer`](https://www.npmjs.com/package/@kgdiff/viewer). In Rust, the crates
+[`kgdiff`](https://crates.io/crates/kgdiff) (the command line as a library, `kgdiff::cli::run`
+behind an I/O trait) and [`kgdiff-report`](https://crates.io/crates/kgdiff-report) (the
+summary, Markdown and HTML reports) are what this binary is built from.
 
 ## Development
 
-From the repository root:
+The command line is `crates/kgdiff`; from the repository root:
 
 ```sh
-pnpm tsx packages/cli/src/bin.ts examples/datasets/ontology-release/before.obo \
+pnpm build:viewer-assets              # the viewer bundles HTML reports embed
+cargo run -p kgdiff -- examples/datasets/ontology-release/before.obo \
   examples/datasets/ontology-release/after.obo --hierarchy is_a
-pnpm vitest run packages/cli          # tests, including golden outputs in test/__snapshots__
-pnpm --filter kgdiff typecheck
+cargo test -p kgdiff                  # tests, including golden outputs in tests/snapshots
+pnpm vitest run --project cli         # the launcher
 ```
 
-HTML reports need the standalone viewer bundle: `pnpm --filter @kgdiff/viewer build`.
 Golden snapshots follow the diff engine; after an intended change run
-`pnpm vitest run packages/cli -u` and review the snapshot diff.
+`KGDIFF_UPDATE_SNAPSHOTS=1 cargo test -p kgdiff --test golden` and review the snapshot diff.
+The release assembles the platform packages from the GitHub release's archives
+(`scripts/npm-platforms.ts`).
 
 ## License
 

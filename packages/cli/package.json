@@ -1,7 +1,7 @@
 {
   "name": "@kgdiff/cli",
   "version": "0.7.0",
-  "description": "git diff for knowledge graphs. Compare two graph files from the terminal, CI, or as a shareable HTML report.",
+  "description": "git diff for knowledge graphs. Compare two graph files from the terminal, CI, or as a shareable HTML report. Runs the native kgdiff of your platform.",
   "keywords": [
     "kgdiff",
     "cli",
@@ -22,20 +22,12 @@
   "license": "MIT",
   "author": "iiwish",
   "type": "module",
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
   "bin": {
-    "kgdiff": "./dist/bin.js"
+    "kgdiff": "./bin/kgdiff.js"
   },
   "files": [
-    "dist",
-    "src",
-    "!src/**/*.test.ts"
+    "bin",
+    "lib"
   ],
   "engines": {
     "node": ">=22"
@@ -45,15 +37,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
-  },
-  "dependencies": {
-    "@kgdiff/core": "workspace:*",
-    "@kgdiff/formats": "workspace:*",
-    "@kgdiff/layout": "workspace:*",
-    "@kgdiff/scene": "workspace:*",
-    "@kgdiff/viewer": "workspace:*"
   }
 }

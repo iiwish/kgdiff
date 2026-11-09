@@ -144,14 +144,14 @@ if (intTabs) {
 
 const snapshots = import.meta.glob<string>(
   [
-    '../../../../packages/cli/test/__snapshots__/*.summary.color.ansi',
-    '../../../../packages/cli/test/__snapshots__/*.markdown.md.snap',
+    '../../../../crates/kgdiff/tests/snapshots/*.summary.color.ansi',
+    '../../../../crates/kgdiff/tests/snapshots/*.markdown.md.snap',
   ],
   { query: '?raw', import: 'default' },
 );
 
 function snapshot(name: string): Promise<string> {
-  const load = snapshots[`../../../../packages/cli/test/__snapshots__/${name}`];
+  const load = snapshots[`../../../../crates/kgdiff/tests/snapshots/${name}`];
   return load ? load() : Promise.reject(new Error(`Missing CLI snapshot ${name}`));
 }
 

@@ -1,19 +1,16 @@
 /**
- * Replays every CLI run the corpus records with the real `kgdiff` process, as another
- * implementation would run them (README, "CLI runs"): `node packages/cli/dist/bin.js` with the
- * run's arguments, the case directory as working directory, the run's environment and only what
- * starting a process needs besides it, stdin piped from the recorded file or empty, stdout and
- * stderr through pipes. The corpus records the runs with the Rust `kgdiff` (corpus.ts); this checks
- * that an implementation prints the same bytes and exits with the same code.
+ * Replays every CLI run the corpus records with a real `kgdiff` process, as another
+ * implementation would run them (README, "CLI runs"): the executable with the run's arguments,
+ * the case directory as working directory, the run's environment and only what starting a
+ * process needs besides it, stdin piped from the recorded file or empty, stdout and stderr
+ * through pipes. The corpus records the runs with the Rust `kgdiff` (corpus.ts); this checks
+ * that an implementation, on this machine, prints the same bytes and exits with the same code.
  *
- *   pnpm build && pnpm conformance:replay
+ *   cargo build --release -p kgdiff && pnpm conformance:replay
  *
- * `--bin <path>` replays the runs with another implementation's executable instead, started
- * directly with the run's arguments (RFC 0002: the Rust `kgdiff`):
- *
- *   cargo build --release -p kgdiff && pnpm conformance:replay --bin target/release/kgdiff
- *
- * It reads only the corpus files and the CLI it runs, not the TypeScript sources.
+ * `--bin <path>` replays the runs with another executable than `target/release/kgdiff`, such as
+ * another implementation's or `@kgdiff/cli`'s launcher. It reads only the corpus files and the
+ * CLI it runs, not the TypeScript sources.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
@@ -23,9 +20,9 @@ import { execute, TIMEOUT_MS } from './process.js';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const REPO = join(ROOT, '..');
-const BIN = join(REPO, 'packages/cli/dist/bin.js');
+const BIN = join(REPO, 'target/release', process.platform === 'win32' ? 'kgdiff.exe' : 'kgdiff');
 
-/** `--bin <path>`: the executable to replay with; the built TypeScript CLI without it. */
+/** `--bin <path>`: the executable to replay with; the release build of the Rust kgdiff without it. */
 function binArgument(argv: readonly string[]): string | undefined {
   const at = argv.indexOf('--bin');
   if (at === -1) return undefined;
@@ -34,11 +31,7 @@ function binArgument(argv: readonly string[]): string | undefined {
     throw new Error('--bin needs the path of an executable');
   return resolve(path);
 }
-const OTHER_BIN = binArgument(process.argv.slice(2));
-/** The command and the arguments before a run's own. */
-const COMMAND: readonly [string, readonly string[]] = OTHER_BIN
-  ? [OTHER_BIN, []]
-  : [process.execPath, [BIN]];
+const COMMAND = binArgument(process.argv.slice(2)) ?? BIN;
 interface Run {
   readonly name: string;
   readonly args: readonly string[];
@@ -67,11 +60,11 @@ function firstDifference(actual: Buffer, expected: Buffer): string {
 }
 
 async function main(): Promise<number> {
-  if (!existsSync(OTHER_BIN ?? BIN)) {
+  if (!existsSync(COMMAND)) {
     console.error(
-      OTHER_BIN
-        ? `conformance: ${OTHER_BIN} is missing.`
-        : `conformance: ${BIN} is missing; run \`pnpm build\` first.`,
+      COMMAND === BIN
+        ? `conformance: ${BIN} is missing; run \`cargo build --release -p kgdiff\` first.`
+        : `conformance: ${COMMAND} is missing.`,
     );
     return 1;
   }
@@ -85,7 +78,13 @@ async function main(): Promise<number> {
     console.error('conformance: manifest.json is not a version 1 kgdiff.conformance manifest.');
     return 1;
   }
-  const { version } = readJson(join(REPO, 'packages/cli/package.json')) as { version: string };
+  // The implementation's own `kgdiff X.Y.Z`, for the runs that print it.
+  const printed = await execute(COMMAND, ['--version'], { cwd: ROOT, env: {} });
+  const version = /^kgdiff (\S+)/.exec(printed.stdout.toString('utf8'))?.[1];
+  if (printed.code !== 0 || version === undefined) {
+    console.error(`conformance: ${COMMAND} --version exited with ${printed.code}.`);
+    return 1;
+  }
 
   const jobs: { id: string; dir: string; run: Run }[] = [];
   for (const { id } of manifest.cases) {
@@ -100,7 +99,7 @@ async function main(): Promise<number> {
     for (let job = jobs[next++]; job !== undefined; job = jobs[next++]) {
       const { id, dir, run } = job;
       const input = run.stdin ? readFileSync(join(dir, run.stdin.file)) : Buffer.alloc(0);
-      const outcome = await execute(COMMAND[0], [...COMMAND[1], ...run.args], {
+      const outcome = await execute(COMMAND, run.args, {
         cwd: dir,
         env: run.env,
         stdin: input,
@@ -134,13 +133,13 @@ async function main(): Promise<number> {
 
   if (failures.length > 0) {
     console.error(
-      `conformance: ${failures.length} of ${jobs.length} recorded runs differ with the real kgdiff process (${OTHER_BIN ?? BIN}):`,
+      `conformance: ${failures.length} of ${jobs.length} recorded runs differ with the real kgdiff process (${COMMAND}):`,
     );
     for (const failure of failures.sort()) console.error(`  ${failure}`);
     return 1;
   }
   console.log(
-    `conformance: ${jobs.length} recorded runs of ${manifest.cases.length} cases replayed with the real kgdiff process (${OTHER_BIN ?? BIN}); all match.`,
+    `conformance: ${jobs.length} recorded runs of ${manifest.cases.length} cases replayed with the real kgdiff process (${COMMAND}); all match.`,
   );
   return 0;
 }

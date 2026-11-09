@@ -1,10 +1,16 @@
-//! `packages/cli/test/golden.test.ts`, ported: the featured datasets' summary, `--stat`,
-//! `--name-status` and Markdown, plain, in colour and in a narrow terminal, compared byte for
-//! byte with the TypeScript suite's own snapshots.
+//! The featured datasets' summary, `--stat`, `--name-status` and Markdown, plain, in colour and
+//! in a narrow terminal, compared byte for byte with the snapshots in `tests/snapshots/` (ported
+//! from the TypeScript CLI's golden test with its snapshots; the landing page shows them too).
+//!
+//! After an intended change of these outputs, write the snapshots again and review their diff:
+//!
+//! ```sh
+//! KGDIFF_UPDATE_SNAPSHOTS=1 cargo test -p kgdiff --test golden
+//! ```
 
 mod common;
 
-use common::{dataset, io, repo, run_with};
+use common::{dataset, io, run_with};
 
 const CASES: [(&str, &str); 4] = [
     ("enterprise-kg", "zh-CN"),
@@ -13,8 +19,18 @@ const CASES: [(&str, &str); 4] = [
     ("llm-extraction", "en"),
 ];
 
-fn snapshot(name: &str) -> String {
-    std::fs::read_to_string(format!("{}/packages/cli/test/__snapshots__/{name}", repo())).unwrap()
+fn snapshot_path(name: &str) -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("tests/snapshots/{name}"))
+}
+
+/// Whether the output equals the snapshot `name`; with `KGDIFF_UPDATE_SNAPSHOTS` set, writes it.
+fn matches(name: &str, output: &str) -> bool {
+    let path = snapshot_path(name);
+    if std::env::var_os("KGDIFF_UPDATE_SNAPSHOTS").is_some() {
+        std::fs::write(&path, output).unwrap();
+        return true;
+    }
+    std::fs::read_to_string(&path).unwrap() == output
 }
 
 #[test]
@@ -36,7 +52,7 @@ fn matches_the_typescript_snapshots() {
             assert_eq!(r.code, 0, "{}", r.stderr);
             assert_eq!(r.stderr, "");
             let out = r.stdout.replace(&version, "kgdiff <version>");
-            if out != snapshot(&format!("{id}.{name}.{ext}")) {
+            if !matches(&format!("{id}.{name}.{ext}"), &out) {
                 failures.push(format!("{id}.{name}"));
             }
         }
@@ -46,7 +62,7 @@ fn matches_the_typescript_snapshots() {
             io().var("COLUMNS", "100").var("COLORTERM", "truecolor"),
         );
         assert_eq!(r.code, 0);
-        if r.stdout != snapshot(&format!("{id}.summary.color.ansi")) {
+        if !matches(&format!("{id}.summary.color.ansi"), &r.stdout) {
             failures.push(format!("{id}.summary.color"));
         }
         // In a narrow terminal (64 columns, colour off).
@@ -54,7 +70,7 @@ fn matches_the_typescript_snapshots() {
         narrow.is_tty = true;
         narrow.columns = Some(64.0);
         let r = run_with(&d.argv(&["--locale", locale]), narrow);
-        if r.stdout != snapshot(&format!("{id}.summary.64.txt")) {
+        if !matches(&format!("{id}.summary.64.txt"), &r.stdout) {
             failures.push(format!("{id}.summary.64"));
         }
     }

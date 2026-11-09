@@ -119,10 +119,9 @@ Exit codes: `0` success (and no differences with `--exit-code`), `1` differences
 `--exit-code`, `2` usage or input error (message on stderr, never a stack trace unless `DEBUG=kgdiff`).
 
 Unexpected errors include a link to the bug-report form, prefilled with the CLI version,
-operating-system platform, architecture and Node.js version. The link never includes the
-error message or input paths; review any diagnostic output before sharing it. Expected usage,
-input and output errors keep their existing hints. The pure `describeError` and `formatError`
-helpers accept an optional bug-report URL; callers that omit it retain the existing hint.
+operating-system platform and architecture. The link never includes the error message or input
+paths; review any diagnostic output before sharing it. Expected usage, input and output errors
+keep their existing hints.
 
 ## Terminal summary
 

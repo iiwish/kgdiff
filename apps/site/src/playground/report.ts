@@ -1,11 +1,11 @@
 /**
  * Self-contained HTML reports written in the browser, in the exact shape `kgdiff -o report.html`
- * produces (packages/cli/src/html.ts): the standalone viewer bundle (IIFE) inlined next to a
+ * produces (crates/kgdiff-report/src/html.rs): the standalone viewer bundle (IIFE) inlined next to a
  * `<script type="application/kgdiff+json">` payload. The bundle is the site's own build of
  * `packages/viewer/src/standalone.ts` (see build/plugins.ts), fetched from the same origin only
  * when a report is requested, so reports open offline and match the site's viewer version.
  *
- * Mirrors the CLI's `renderReportHtml`; the differences are browser-only details: base64 via
+ * Mirrors the CLI's `render_report_html`; the differences are browser-only details: base64 via
  * `btoa` instead of `Buffer`, and gzip via `CompressionStream` (non-deterministic header bytes
  * do not matter here, the report carries a timestamp anyway).
  */

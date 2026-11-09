@@ -99,23 +99,7 @@ importers:
         specifier: 1.6.4
         version: 1.6.4(@algolia/client-search@5.61.0)(@types/node@26.6.6)(@types/react@19.3.0)(lightningcss@1.33.0)(postcss@8.5.32)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(search-insights@2.17.3)(tsx@4.23.15)(typescript@7.0.2)(yaml@2.9.1)
 
-  packages/cli:
-    dependencies:
-      '@kgdiff/core':
-        specifier: workspace:*
-        version: link:../core
-      '@kgdiff/formats':
-        specifier: workspace:*
-        version: link:../formats
-      '@kgdiff/layout':
-        specifier: workspace:*
-        version: link:../layout
-      '@kgdiff/scene':
-        specifier: workspace:*
-        version: link:../scene
-      '@kgdiff/viewer':
-        specifier: workspace:*
-        version: link:../viewer
+  packages/cli: {}
 
   packages/compute:
     dependencies:
