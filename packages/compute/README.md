@@ -53,16 +53,33 @@ fails when the module exceeds its limit. Without a build, the package's tests ar
 
 ## Size and speed
 
-Measured on 2026-11-09 (macOS, Apple M-class, Node 24) from `main`, before
-[#56](https://github.com/iiwish/kgdiff/pull/56):
+Measured on 2026-11-09 (macOS, Apple M-class, Node 24), with
+[#56](https://github.com/iiwish/kgdiff/pull/56). Other builds were running on the machine; the
+load average is given with each figure.
 
-| What                                                             | Measured                                                                                  | RFC 0002 §7                                               |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `kgdiff_compute_bg.wasm` (opt-level `z`, `wasm-opt -Oz`)         | 774.5 KiB, **306.2 KiB gzip**                                                             | full engine with the layout, after phase 5: < 250 kB gzip |
-| glue (`kgdiff_compute.js`)                                       | 18.9 KiB, 2.9 KiB gzip                                                                    |                                                           |
-| `diffJSON`, 10k nodes / 30k edges (parsing and writing included) | median ~214 ms (load average 8); opt-level 3 instead: ~145 ms, 451 KiB gzip               | < 80 ms; < 150 ms including the transport                 |
-| `normalize` 100k / 300k, linear memory                           | 402 MiB high-water mark, holding the input text, the parsed graph and the output together | < 80 MB                                                   |
+| What                                                             | Measured                                                                                  | RFC 0002 §7, a gate of 1.0 (phase 5)       |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `kgdiff_compute_bg.wasm` (opt-level `z`, `wasm-opt -Oz`)         | 771.6 KiB, **306.5 KiB gzip**                                                             | full engine with the layout: < 250 kB gzip |
+| glue (`kgdiff_compute.js`)                                       | 18.9 KiB, 2.9 KiB gzip                                                                    |                                            |
+| `diffJSON`, 10k nodes / 30k edges (parsing and writing included) | median 144 ms (load average 6.7)                                                          | < 80 ms; < 150 ms including the transport  |
+| `diffJSON`, 100k nodes / 300k edges                              | median 1.97 s (load average 6.6)                                                          | < 1 s; < 2 s including the transport       |
+| `normalize` 100k / 300k, linear memory                           | 265 MiB high-water mark, holding the input text, the parsed graph and the output together | < 80 MB                                    |
 
-The preview does not meet §7's WebAssembly targets yet. About 80% of the module is code, much of
-it generic code instantiated many times (sorts and maps in particular). The rest is data: ICU's
-tables and the strings.
+The preview does not meet §7's WebAssembly targets. They are gates of 1.0, not of the 0.7.0
+previews. About 80% of the module is code, much of it generic code instantiated many times (sorts
+and maps in particular). The rest is data: ICU's tables and the strings.
+
+### Why opt-level `z`
+
+The preview is built at cargo opt-level `z` (optimized for size). In one run that alternated the
+two builds (load average 11 to 12), opt-level `3` with the same `wasm-opt -Oz` was faster, but
+44% larger:
+
+| opt-level     | gzip      | `diffJSON` 10k / 30k, median | 100k / 300k, median |
+| ------------- | --------- | ---------------------------- | ------------------- |
+| `z` (shipped) | 306.5 KiB | 143 ms                       | 1.77 s              |
+| `3`           | 441.7 KiB | 93 ms                        | 1.33 s              |
+
+Opt-level `3` would take the module further from its size budget (< 250 kB gzip, for the full
+engine with the layout), which a browser pays for on every load. A large diff's speed is bounded by
+the transport anyway (RFC 0002, §7). Phase 5 measures the trade again for the full engine.
