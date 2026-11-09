@@ -11,9 +11,12 @@ homepage.workspace = true
 readme = "README.md"
 keywords = ["kgdiff", "rdf", "turtle", "obo", "knowledge-graph"]
 categories = ["parser-implementations", "encoding"]
+# Not on crates.io yet: a published crate needs a version requirement on its path dependency
+# (cargo-deny bans the wildcard otherwise), and scripts/sync-versions.ts does not keep such
+# requirements at the shared version yet. Both come with the release of the crates (RFC 0002, §8).
+publish = false
 
 [dependencies]
-# The version requirement for crates.io comes with the release tooling (RFC 0002, §8).
 kgdiff-core = { path = "../kgdiff-core" }
 # RFC 0002, D-9: the Turtle family only; RDF/XML and JSON-LD are kgdiff's own readers.
 oxrdf = { version = "0.3.5", features = ["rdf-12"] }
