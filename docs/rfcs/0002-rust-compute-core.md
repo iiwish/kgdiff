@@ -8,13 +8,21 @@
   [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2's `kgdiff-core` crate is
   merged ([#51](https://github.com/iiwish/kgdiff/pull/51), aafb0e9 to 3e096f2): every corpus case
   and core vector passes, and the nightly differential run is in place. Its performance work is
-  merged too ([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b); the preview
-  `@kgdiff/compute` is in [#63](https://github.com/iiwish/kgdiff/pull/63). The native `normalize`
-  memory target and the WebAssembly targets of [§7](#7-size-and-performance-budgets) are not met
-  yet; they are gates of 1.0 (phase 5) and do not block 0.7.0. Nothing is released yet
-  ([Phase 2 results](#phase-2-results)).
-- **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 results
-  2026-11-09.
+  merged too ([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b), and so is the preview
+  `@kgdiff/compute` ([#63](https://github.com/iiwish/kgdiff/pull/63), 2c54ccf to 2c8a5e0).
+  The native `normalize` memory target and the WebAssembly targets of
+  [§7](#7-size-and-performance-budgets) are not met yet; they are gates of 1.0 (phase 5) and do
+  not block 0.7.0 ([Phase 2 results](#phase-2-results)). Phase 3 is merged
+  ([#53](https://github.com/iiwish/kgdiff/pull/53) and
+  [#64](https://github.com/iiwish/kgdiff/pull/64)–[#67](https://github.com/iiwish/kgdiff/pull/67),
+  cca58f9 to 0c2acd5; D-9 in [#55](https://github.com/iiwish/kgdiff/pull/55), 6c618c8 and
+  e319f6d; [Phase 3 results](#phase-3-results)). Of phase 4, the `kgdiff-layout` crate and layout
+  JSON version 2 are merged ([#62](https://github.com/iiwish/kgdiff/pull/62), f91a5df to 86ecec9),
+  with the TypeScript readers for both ([#52](https://github.com/iiwish/kgdiff/pull/52), e510258;
+  [#54](https://github.com/iiwish/kgdiff/pull/54), 9ebb278); the CLI, launcher and Action work of
+  phase 4 is not started ([Phase 4 progress](#phase-4-progress)). Nothing is released yet.
+- **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
+  results and phase 4 progress 2026-11-09.
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
@@ -890,14 +898,15 @@ Acceptance:
 
 ##### Phase 3 results
 
-Implemented in six pull requests, stacked in this order, none merged yet:
+Merged on 2026-11-09, in six pull requests:
 [#53](https://github.com/iiwish/kgdiff/pull/53) (D-2, D-11),
 [#55](https://github.com/iiwish/kgdiff/pull/55) (D-9),
 [#64](https://github.com/iiwish/kgdiff/pull/64) (`kgdiff-formats`),
 [#65](https://github.com/iiwish/kgdiff/pull/65) (`kgdiff-report`),
 [#66](https://github.com/iiwish/kgdiff/pull/66) (the `kgdiff` binary) and
-[#67](https://github.com/iiwish/kgdiff/pull/67) (release tooling). Against the acceptance above
-(an M-class Mac, load average about 5 from other work):
+[#67](https://github.com/iiwish/kgdiff/pull/67) (release tooling). #53 and #64–#66 went in with
+#67's rebase merge (cca58f9 to 0c2acd5), #55 on its own (6c618c8, e319f6d). Against the
+acceptance above (an M-class Mac, load average about 5 from other work):
 
 - **Corpus**: every case's `parse.*.json` equal as values (357 checks of the harness, now
   computed from the input files) and every `report.json` equal; **all 257 recorded CLI runs**
@@ -941,6 +950,40 @@ Acceptance:
 - The `targets` job: identical layout bytes on every platform and in WebAssembly.
 - Layout targets of §7 met; reports open instantly again and `--no-compute` works as documented.
 - The action workflow (`.github/workflows/action.yml`) passes with the binary.
+
+##### Phase 4 progress
+
+Status as of 2026-11-09: the layout crate and layout JSON version 2 are merged; the Rust CLI
+writing complete reports, the npm launcher and the Action are not started.
+
+- **Merged**: `crates/kgdiff-layout` in [#62](https://github.com/iiwish/kgdiff/pull/62) (f91a5df
+  to 86ecec9; the stacked #58–#61 went in with it): options, scope, union, components and label
+  widths; the simulation, `layout_diff` and `extend_layout`; layout JSON version 2 with
+  `generator: "kgdiff-layout/1"`, version 1 still read; `packages/core/schema/layout.v2.json`.
+  TypeScript's `layoutFromJSON` reads version 2 ([#54](https://github.com/iiwish/kgdiff/pull/54),
+  9ebb278), and the viewer lays out reports that carry no layout
+  ([#52](https://github.com/iiwish/kgdiff/pull/52), e510258).
+- **Against the acceptance**: `layout-contract.json` and `label-width.json` pass for every corpus
+  case; the properties hold for every corpus case and for synthetic graphs up to 10k nodes. The
+  positions are bit-identical to TypeScript's on every corpus case and on synthetic graphs of
+  1k–10k nodes, so the five quality metrics are equal, not just within 10%. The `targets` job
+  finds the same bytes for 102 layouts on x86-64 Linux, AArch64 macOS, x86-64 Windows and wasm32.
+- **Not settled**: the native 2k-node layout took 175–234 ms at load average about 5 against the
+  250 ms of §7, and 250–370 ms under heavy load; a run of `cargo bench -p kgdiff-layout` on an idle
+  machine decides it. The WebAssembly layout budgets of §7 are gates of 1.0 with the other
+  WebAssembly targets.
+- **Accepted differences from TypeScript**: the Rust reader requires the `iterations` and `hidden`
+  counts to be integers (TypeScript accepts any finite number; everything kgdiff writes satisfies
+  both); `extend_layout` on an empty layout keeps the new nodes at the origin, where TypeScript
+  produces NaN positions.
+- **Open**: `kgdiff-layout` stays `publish = false` until the CLI uses it. TypeScript's
+  `layoutToJSON` writes only version 1, so a version 2 layout that TypeScript reads and writes
+  again loses its `generator`, the silent change [D-3](#open-decisions) rules out; before phase 5,
+  either TypeScript writes version 2 or its read path keeps the version it read.
+- **Left**: the Rust CLI writing complete reports with Rust layouts (reports open instantly again,
+  `--no-compute` works), npm's `@kgdiff/cli` as the launcher of the binary, the GitHub Action on
+  the binary, deleting the TypeScript CLI, and moving the corpus's CLI runs, `report.json` and
+  layout contract to the Rust generator.
 
 #### Phase 5 — `@kgdiff/compute` replaces TypeScript compute in the browser (kgdiff 1.0)
 
