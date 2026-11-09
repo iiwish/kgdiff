@@ -1,5 +1,5 @@
-//! The text outputs and HTML reports of [kgdiff](https://github.com/iiwish/kgdiff): a port of the
-//! rendering half of the TypeScript CLI `@kgdiff/cli` (RFC 0002, phase 3). Given a
+//! The text outputs and HTML reports of [kgdiff](https://github.com/iiwish/kgdiff), ported from
+//! the rendering half of the TypeScript CLI (RFC 0002, phase 3), which they replaced. Given a
 //! [`kgdiff_core::DiffResult`], it writes what `kgdiff` prints — the terminal summary, `--stat`,
 //! `--name-status` and the Markdown summary, in English or Simplified Chinese, laid out for a
 //! width in terminal columns — and assembles the single-file HTML report. It does no I/O, so an

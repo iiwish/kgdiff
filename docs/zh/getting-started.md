@@ -6,7 +6,7 @@
 
 ## 安装命令行工具
 
-kgdiff 需要 [Node.js](https://nodejs.org) 22 或更高版本。不安装也能直接运行：
+有 [Node.js](https://nodejs.org) 22 或更高版本时，不安装也能直接运行：
 
 ```sh
 npx @kgdiff/cli before.ttl after.ttl
@@ -18,6 +18,8 @@ npx @kgdiff/cli before.ttl after.ttl
 npm install --global @kgdiff/cli     # 全局可用的 kgdiff 命令
 npm install --save-dev @kgdiff/cli   # 在项目里固定版本，用 npx @kgdiff/cli 运行
 ```
+
+kgdiff 是原生程序，支持 macOS、Linux（glibc 和 musl）和 Windows：npm 会随 `@kgdiff/cli` 一起装上对应平台的二进制文件。没有 Node.js 时，可以从 crates.io 编译安装：`cargo install kgdiff`。
 
 ## 第一次 diff
 

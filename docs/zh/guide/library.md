@@ -11,7 +11,7 @@
 | `@kgdiff/renderer` | Canvas 2D 渲染器：相机、细节层级、标签、拾取、小地图。      |
 | `@kgdiff/viewer`   | [`<kgdiff-viewer>` Web 组件](./viewer.md)。                 |
 | `@kgdiff/g6`       | 在 AntV G6 v5 中绘制 kgdiff 场景。                          |
-| `@kgdiff/cli`      | 命令行工具 `kgdiff`。                                       |
+| `@kgdiff/cli`      | 命令行工具 `kgdiff`：运行原生程序，不导出 JavaScript 接口。 |
 
 它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行。core 和 formats 都是同步的，不做任何 I/O：传入文本和对象，得到对象。
 

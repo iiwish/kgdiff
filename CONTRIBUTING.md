@@ -52,7 +52,7 @@ KGDIFF_DIFFERENTIAL=$PWD/target/differential.jsonl cargo test --release -p kgdif
 - `packages/layout`, `packages/scene`, `packages/renderer`: layout, visual model, Canvas engine.
 - `packages/viewer`: the `<kgdiff-viewer>` web component.
 - `packages/g6`: the AntV G6 adapter.
-- `packages/cli`: the `kgdiff` command.
+- `crates/kgdiff`: the `kgdiff` command; `packages/cli`: its npm launcher (`npx @kgdiff/cli`).
 - `action.yml`, `action/`: the GitHub Action (`uses: iiwish/kgdiff@v0`); its tests run in
   `pnpm test`, and `.github/workflows/action.yml` runs it on the example datasets.
 - `apps/site`: landing page and playground. `examples/datasets`: demo and acceptance data.

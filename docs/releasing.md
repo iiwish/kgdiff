@@ -1,9 +1,12 @@
 # Releasing
 
-kgdiff publishes eight packages from this repository: the CLI `@kgdiff/cli` (command `kgdiff`) and `@kgdiff/core`,
-`formats`, `layout`, `scene`, `renderer`, `viewer` and `g6`. They share one version number (a
-Changesets "fixed" group, `.changeset/config.json`): the CLI embeds the viewer bundle and the
-report payload ties core, layout and scene together, so "kgdiff 0.3.1" names one consistent set.
+kgdiff publishes eight packages from this repository: the CLI `@kgdiff/cli` (command `kgdiff`)
+and `@kgdiff/core`, `formats`, `layout`, `scene`, `renderer`, `viewer` and `g6`. They share one
+version number (a Changesets "fixed" group, `.changeset/config.json`): the CLI embeds the viewer
+bundle and the report payload ties core, layout and scene together, so "kgdiff 0.3.1" names one
+consistent set. The CLI is the native `kgdiff` (`crates/kgdiff`): `@kgdiff/cli` is its launcher,
+and seven platform packages that the release assembles hold the binaries (below), at the same
+version, as do the crates.
 
 ## Day to day
 
@@ -15,9 +18,11 @@ report payload ties core, layout and scene together, so "kgdiff 0.3.1" names one
    updates each `CHANGELOG.md` (`pnpm version-packages`: `changeset version`, then Biome formats
    the changelogs, since a changeset with several paragraphs indents its blank lines, and
    `scripts/sync-citation.ts` sets the version in `CITATION.cff`; a test fails if they differ).
-3. Merging that pull request publishes: the workflow runs `pnpm release` (`pnpm check`,
-   `pnpm build`, `pnpm check:packages`, `changeset publish`), publishes every package whose
-   version is not on npm yet and pushes the `<package>@<version>` tags. It then tags the GitHub
+3. Merging that pull request publishes. The workflow first builds the native `kgdiff` for every
+   target, packages the crates and assembles and tests the platform packages of `@kgdiff/cli`;
+   then it runs `pnpm release` (`pnpm check`, `pnpm build`, `pnpm check:packages`, the platform
+   packages, `changeset publish`), publishes every package whose version is not on npm yet and
+   pushes the `<package>@<version>` tags. It then tags the GitHub
    Action (below) and creates one GitHub release, `v<version>`, for the whole group: its notes
    (`scripts/release-notes.ts`) merge the packages' changelog sections, list each change once
    with the packages it changed, and leave out the "Updated dependencies" entries. Releases up to
@@ -77,6 +82,36 @@ restores no caches, and it runs in the `npm` environment, which can be limited t
 
 npm checks that `repository.url` in each `package.json` matches the GitHub repository exactly.
 
+## @kgdiff/cli and its platform packages
+
+`@kgdiff/cli` holds only a launcher (`packages/cli/bin/kgdiff.js`, `lib/launcher.js`) that runs
+the native `kgdiff` of the machine, from one of seven optional dependencies npm picks by `os`,
+`cpu` and `libc`: `@kgdiff/cli-darwin-arm64`, `-darwin-x64`, `-linux-arm64-gnu`,
+`-linux-x64-gnu`, `-linux-arm64-musl`, `-linux-x64-musl` and `-win32-x64`
+([RFC 0002](rfcs/0002-rust-compute-core.md), §6). The platform packages are not in the
+repository: [`scripts/npm-platforms.ts`](../scripts/npm-platforms.ts) assembles each from the
+dist archive of its target (checked against its `.sha256`), with a `package.json` of the
+release's version, a README and the LICENSE. In `release.yml`, `npm-platforms` packs them,
+`npm-smoke` and `npm-smoke-musl` run `kgdiff` through the launcher on Linux (x64 and Arm64,
+glibc and musl), macOS and Windows, and `pnpm release` publishes them before `@kgdiff/cli`, whose
+`package.json` gets the optional dependencies, at that exact version, only then: the committed one
+has none, so the workspace never asks npm for a version it does not have yet.
+
+Trusted publishing needs a package to exist, so each platform package gets a first version by hand,
+from the archives of a release run (Actions → Release → the run → Artifacts, or `gh run
+download`), once, shortly before the first release that publishes them:
+
+```sh
+gh run download <run id> -R iiwish/kgdiff -p 'native-*' -D dist   # the version in packages/cli
+pnpm tsx scripts/npm-platforms.ts assemble dist target/npm
+npm login --registry=https://registry.npmjs.org/
+for tarball in target/npm/kgdiff-cli-*-*.tgz; do npm publish "$tarball" --access public; done
+```
+
+Then add the trusted publisher of each (owner `iiwish`, repository `kgdiff`, workflow
+`release.yml`, environment `npm`), as for the other packages, and let the release take over.
+`node scripts/npm-smoke.mjs target/npm` runs the same smoke test locally.
+
 ## One-time setup
 
 The repository is `iiwish/kgdiff` (package metadata, `release.yml`, `CITATION.cff`,
@@ -114,23 +149,23 @@ num2048@163.com.
 
 ## Native binaries and crates
 
-The Rust `kgdiff` ([RFC 0002](rfcs/0002-rust-compute-core.md), phase 3) ships on its own channels:
-binaries for macOS, Linux (gnu and musl) and Windows on the GitHub release, with SHA-256
-checksums, build provenance and shell / PowerShell installers; a Homebrew formula in
+The Rust `kgdiff` ([RFC 0002](rfcs/0002-rust-compute-core.md)) ships on npm (the platform
+packages above) and on its own channels: binaries for macOS, Linux (gnu and musl) and Windows
+on the GitHub release, with SHA-256 checksums, build provenance and shell / PowerShell
+installers; a Homebrew formula in
 [`iiwish/homebrew-tap`](https://github.com/iiwish/homebrew-tap) (`brew install iiwish/tap/kgdiff`);
 and the crates `kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`, `kgdiff-report` and `kgdiff` on
-crates.io
-(`cargo install kgdiff`). npm's `@kgdiff/cli` and the GitHub Action stay on the TypeScript CLI
-until phase 4.
+crates.io (`cargo install kgdiff`).
 
 [`dist`](https://opensource.axo.dev/cargo-dist/) builds the binaries (`dist-workspace.toml`, the
 `dist` profile of `Cargo.toml`). Its jobs are part of [`release.yml`](../.github/workflows/release.yml),
-which stays the Changesets workflow (dist does not regenerate it): after a release that published
-a version, `native-build` builds and smoke-tests every target, `native-global` makes the checksums,
-installers and formula, and `crates-dry-run` packages and verifies every crate
-(`cargo publish --workspace --dry-run`). A pull request that changes the workflow or
-`dist-workspace.toml` runs the same jobs, and so does Actions → Release → Run workflow; they never
-publish. The viewer bundles are built once (`pnpm build:viewer-assets`, job `native-viewer`) and
+which stays the Changesets workflow (dist does not regenerate it): before a release publishes,
+`native-build` builds and smoke-tests every target, `native-global` makes the checksums,
+installers and formula, `crates-dry-run` packages and verifies every crate
+(`cargo publish --workspace --dry-run`), and the npm jobs above assemble and test the platform
+packages; a failure in any of them stops the release before anything is published. A pull
+request that changes the workflow, `dist-workspace.toml` or the launcher runs the same jobs, and
+so does Actions → Release → Run workflow; they never publish. The viewer bundles are built once (`pnpm build:viewer-assets`, job `native-viewer`) and
 embedded by every build, so that all binaries carry the same viewer.
 
 Publishing stays off until these are done:
@@ -203,7 +238,9 @@ Choose one as the canonical address: canonical and Open Graph tags point at `KGD
 
 ## What ships
 
-Each package publishes `dist` (JavaScript, declarations and their source maps), `src` (the
+`@kgdiff/cli` publishes its launcher (`bin`, `lib`), `README.md`, `package.json` and `LICENSE`;
+each platform package its binary, `README.md`, `package.json` and `LICENSE`. Every other package
+publishes `dist` (JavaScript, declarations and their source maps), `src` (the
 TypeScript the maps point to), `README.md`, `package.json` and the root `LICENSE`, which pnpm adds
 to every package. Shipping `src` keeps both `.js.map` and `.d.ts.map` resolvable: stack traces,
 debuggers and "Go to Source Definition" land in the TypeScript source. The alternative,

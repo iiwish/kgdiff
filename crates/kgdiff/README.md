@@ -13,10 +13,11 @@ kgdiff a.ttl b.ttl --markdown >> "$GITHUB_STEP_SUMMARY"
 kgdiff a.json b.json --delta patch.json && kgdiff apply a.json patch.json -o b.json
 ```
 
-It is a drop-in for the TypeScript CLI [`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli):
-the same arguments, messages, outputs and exit codes, byte for byte. Every CLI run the
-conformance corpus records is replayed against it (`pnpm conformance:replay --bin
-target/release/kgdiff`), and the CLI's test suites are ported (`cargo test -p kgdiff`).
+It is the binary npm's [`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli) runs, and it
+replaced the TypeScript CLI byte for byte: the same arguments, messages, outputs and exit codes.
+It records every CLI run of the conformance corpus, which is replayed against it on Linux, macOS
+and Windows (`pnpm conformance:replay`), and the TypeScript CLI's test suites are ported
+(`cargo test -p kgdiff`).
 
 Part of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md):
 HTML reports carry the layout of [`kgdiff-layout`](https://crates.io/crates/kgdiff-layout) and

@@ -1,6 +1,6 @@
 [package]
 name = "kgdiff-report"
-description = "The text outputs and HTML reports of kgdiff: terminal summary, --stat, --name-status, Markdown and the report document, byte-compatible with @kgdiff/cli."
+description = "The text outputs and HTML reports of kgdiff: terminal summary, --stat, --name-status, Markdown and the report document, as kgdiff prints them."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

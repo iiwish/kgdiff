@@ -8,7 +8,7 @@ and what the viewer can do.
 
 ## Install the CLI
 
-kgdiff needs [Node.js](https://nodejs.org) 22 or later. Run it without installing anything:
+Run it without installing anything, with [Node.js](https://nodejs.org) 22 or later:
 
 ```sh
 npx @kgdiff/cli before.ttl after.ttl
@@ -20,6 +20,10 @@ or install it:
 npm install --global @kgdiff/cli     # a kgdiff command everywhere
 npm install --save-dev @kgdiff/cli   # a pinned version in one project, run with npx @kgdiff/cli
 ```
+
+kgdiff is a native program for macOS, Linux (glibc and musl) and Windows: npm installs the
+binary of your platform with `@kgdiff/cli`. Without Node.js, build it from crates.io:
+`cargo install kgdiff`.
 
 ## Your first diff
 

@@ -3,8 +3,8 @@
 The text outputs and HTML reports of [kgdiff](https://github.com/iiwish/kgdiff) in Rust: the
 terminal summary, `--stat`, `--name-status` and the Markdown summary of a
 [`kgdiff-core`](https://crates.io/crates/kgdiff-core) diff, in English or Simplified Chinese, and
-the single-file HTML report. They are the bytes the TypeScript CLI
-[`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli) prints. No I/O: an application that
+the single-file HTML report. They are the bytes `kgdiff` (and npm's
+[`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli), which runs it) prints. No I/O: an application that
 embeds the engine renders the same summary as `kgdiff` without its argument parsing and files.
 
 Part of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md).

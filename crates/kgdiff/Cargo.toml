@@ -1,6 +1,6 @@
 [package]
 name = "kgdiff"
-description = "Semantic diff and review for knowledge graphs, byte-compatible with @kgdiff/cli"
+description = "Semantic diff and review for knowledge graphs: the kgdiff command line, which npm's @kgdiff/cli runs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -22,7 +22,6 @@
     "check:packages": "tsx scripts/check-packages.ts",
     "conformance:update": "tsx conformance/update.ts",
     "conformance:replay": "tsx conformance/replay.ts",
-    "conformance:compare-reports": "tsx conformance/compare-reports.ts",
     "dev:site": "pnpm --filter @kgdiff/site dev",
     "dev:docs": "pnpm --filter @kgdiff/docs dev",
     "build:docs": "pnpm --filter @kgdiff/docs build",
@@ -30,7 +29,7 @@
     "build:viewer-assets": "pnpm --filter \"@kgdiff/viewer...\" build && tsx scripts/viewer-assets.ts",
     "changeset": "changeset",
     "version-packages": "changeset version && biome format --write packages && tsx scripts/sync-citation.ts && tsx scripts/sync-versions.ts",
-    "release": "pnpm check && pnpm build && pnpm check:packages && changeset publish"
+    "release": "pnpm check && pnpm build && pnpm check:packages && tsx scripts/npm-platforms.ts publish && changeset publish"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

@@ -57,7 +57,8 @@ npx @kgdiff/cli a.ttl b.ttl --markdown >> "$GITHUB_STEP_SUMMARY"
 npx @kgdiff/cli a.ttl b.ttl --exit-code -q        # 有差异时退出码为 1
 ```
 
-需要 Node.js ≥ 22。
+`npx` 需要 Node.js ≥ 22；kgdiff 本身是原生程序，支持 macOS、Linux 和 Windows，也可以从 crates.io
+安装（`cargo install kgdiff`）。
 
 <p align="center">
   <img src="docs/images/terminal-zh.webp" alt="kgdiff 的终端摘要：企业信用知识图谱本体两个版本之间的删除、合并、迁移、改名和新增，按变化类别着色" width="720">
@@ -164,7 +165,8 @@ pnpm check                      # lint + 类型检查 + 测试
 pnpm bench                      # 性能预算
 pnpm dev:site                   # 官网和在线体验页
 pnpm dev:docs                   # 文档站（docs/）
-pnpm tsx packages/cli/src/bin.ts examples/datasets/enterprise-kg/before.json \
+pnpm build:viewer-assets        # kgdiff 的 HTML 报告内嵌的查看器
+cargo run -p kgdiff -- examples/datasets/enterprise-kg/before.json \
   examples/datasets/enterprise-kg/after.json
 ```
 

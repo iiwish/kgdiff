@@ -26,6 +26,7 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { gunzipSync } from 'node:zlib';
 import {
   type DiffOptions,
@@ -270,6 +271,7 @@ interface EmbeddedPayload {
   readonly format: string;
   readonly version: number;
   readonly diff: unknown;
+  readonly layout?: Readonly<Record<string, unknown>>;
   readonly meta: { readonly generator: string } & Readonly<Record<string, unknown>>;
   readonly view: unknown;
 }
@@ -338,9 +340,18 @@ async function capture(
 /**
  * What `kgdiff <diff arguments> -o report.html --reproducible` embeds in its report besides the
  * packed diff (checked to be `diff.packed.json`) and the layout (not normative): format, version,
- * meta (with the generator's version replaced) and view.
+ * meta (with the generator's version replaced) and view. While `@kgdiff/layout` keeps its engine
+ * (RFC 0002, phase 5), the report's layout must also be what it computes, a version 2 document
+ * with a `generator` where it writes version 1, and the report must inline the compute add-on
+ * exactly when that layout covers only the changes.
  */
-async function reportRecord(def: CaseDefinition, rec: Recorder, work: string, packedText: string) {
+async function reportRecord(
+  def: CaseDefinition,
+  rec: Recorder,
+  work: string,
+  result: DiffResult,
+  packedText: string,
+) {
   const out = mkdtempSync(join(tmpdir(), 'kgdiff-report-'));
   try {
     const report = join(out, 'report.html');
@@ -355,8 +366,21 @@ async function reportRecord(def: CaseDefinition, rec: Recorder, work: string, pa
       },
     );
     if (run.code !== 0) fail(def, `the report run exited with ${run.code}:\n${run.stderr}`);
-    const payload = embeddedPayload(readFileSync(report, 'utf8'));
+    const html = readFileSync(report, 'utf8');
+    const payload = embeddedPayload(html);
     if (!payload) fail(def, 'the report has no payload script');
+    const { generator, version, ...layout } = payload.layout ?? {};
+    const expected = layoutToJSON(layoutDiff(result));
+    if (version !== 2 || typeof generator !== 'string') {
+      fail(def, "the report's layout is not a version 2 document with a generator");
+    }
+    if (!isDeepStrictEqual({ ...layout, version: 1 }, JSON.parse(JSON.stringify(expected)))) {
+      fail(def, "the report's layout differs from layoutToJSON(layoutDiff(diff(…)))");
+    }
+    const scripts = (html.match(/<script\b/g) ?? []).length;
+    if (scripts !== (expected.scope === 'changes' ? 3 : 2)) {
+      fail(def, `the report has ${scripts} scripts with a layout of scope "${expected.scope}"`);
+    }
     if (compact(payload.diff) !== packedText) {
       fail(def, "the report's diff differs from JSON.stringify(packDiffJSON(diffToJSON(diff(…))))");
     }
@@ -459,7 +483,7 @@ export async function generateCase(def: CaseDefinition, rec?: Recorder): Promise
       return readFileSync(absolute);
     };
     if (rec && work !== undefined) {
-      const report = await reportRecord(def, rec, work, packedText);
+      const report = await reportRecord(def, rec, work, result, packedText);
       put('expected/report.json', bytes(pretty(report)));
     } else {
       put('expected/report.json', givenFile('expected/report.json', 'report.json'));

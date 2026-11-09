@@ -167,16 +167,16 @@ and that is what is recorded (`cli-errors`, `obo-clipped-line`). With `versionPl
 replace `kgdiff <version>` by the implementation's `kgdiff X.Y.Z` before comparing.
 
 The generator records the runs exactly this way, with the Rust `kgdiff` as a real process
-(`pnpm conformance:update`), and CI replays every one of them with the Rust `kgdiff` on Linux,
-macOS and Windows (`pnpm conformance:replay --bin target/release/kgdiff`) and with the TypeScript
-CLI (`pnpm conformance:replay`, which runs `node packages/cli/dist/bin.js` after `pnpm build`).
+(`pnpm conformance:update`), and CI replays every one of them with it on Linux, macOS and Windows
+(`pnpm conformance:replay`, after `cargo build --release -p kgdiff`). Another implementation is
+replayed with `pnpm conformance:replay --bin <executable>`.
 
-Another implementation is replayed with `pnpm conformance:replay --bin <executable>`. Its HTML
-reports, which no run records, are compared with the reference's by `pnpm
-conformance:compare-reports --bin <executable>`: for every case both write `-o report.html
---reproducible` with the arguments of the `summary` run, and the payloads must be equal as values
-— a layout document of version 2 with its `generator` counts as the reference's version 1 — and
-inline the same scripts (the compute add-on exactly when the layout covers only the changes).
+The HTML report of every case, which no run records, is written by the generator too, with the
+arguments of the `summary` run and `-o report.html --reproducible`: `report.json` records what its
+payload says besides the diff and the layout; the generator checks that its diff is
+`diff.packed.json`, that its layout (a version 2 document with a `generator`) is the one
+`@kgdiff/layout` computes, version and generator aside, and that it inlines the compute add-on
+exactly when that layout covers only the changes.
 
 Every case has the standard runs `summary` (no output option), `stat` (`--stat`), `name-status`
 (`--name-status`), `markdown` (`--markdown`), `json` (`--json`, stdout = `expected/diff.json`),
@@ -277,7 +277,7 @@ pnpm build:viewer-assets                 # once: the viewer bundles kgdiff's rep
 pnpm conformance:update                  # regenerate everything (builds the Rust kgdiff first)
 pnpm vitest run --project conformance    # check the TypeScript packages (also part of pnpm test)
 cargo test --workspace                   # check the Rust crates against it
-cargo build --release -p kgdiff && pnpm conformance:replay --bin target/release/kgdiff
+cargo build --release -p kgdiff && pnpm conformance:replay
 ```
 
 - The library outputs (everything below `expected/` but `cli/`, `apply.json` and `report.json`)

@@ -31,7 +31,7 @@ Every dataset folder contains:
 | `expected.json`       | the changes kgdiff must report, see below                                                                                                       |
 | `README.md`           | what the data models and a table of its changes                                                                                                 |
 
-Try one with the CLI (`kgdiff <before> <after>`, see `packages/cli`):
+Try one with the CLI (`kgdiff <before> <after>`, see `packages/cli/README.md`):
 
 ```sh
 kgdiff examples/datasets/enterprise-kg-en/before.json examples/datasets/enterprise-kg-en/after.json

@@ -1,11 +1,18 @@
 /**
  * Release housekeeping: the merged GitHub release notes (scripts/release-notes.ts), the version
- * in CITATION.cff (scripts/sync-citation.ts) and the version of the Rust workspace
- * (scripts/sync-versions.ts).
+ * in CITATION.cff (scripts/sync-citation.ts), the version of the Rust workspace
+ * (scripts/sync-versions.ts) and the platform packages of @kgdiff/cli (scripts/npm-platforms.ts).
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import {
+  cliManifest,
+  PLATFORMS,
+  platformId,
+  platformManifest,
+  withOptionalDependencies,
+} from '../scripts/npm-platforms.ts';
 import {
   changelogSection,
   type PackageChangelog,
@@ -223,5 +230,53 @@ describe('release notes', () => {
     const notes = releaseNotes(packagesVersion(), packages);
     expect(notes).toContain(`GitHub Action: \`uses: iiwish/kgdiff@v${packagesVersion()}\`.`);
     expect(notes).not.toMatch(/Updated dependencies|^- @kgdiff\//m);
+  });
+});
+
+describe('the platform packages of @kgdiff/cli', () => {
+  it('cover the targets dist builds, in its order', () => {
+    const toml = readFileSync(join(ROOT, 'dist-workspace.toml'), 'utf8');
+    const targets = /^targets = \[([^\]]*)\]/m.exec(toml)?.[1] ?? '';
+    expect(PLATFORMS.map((p) => p.target)).toEqual(
+      [...targets.matchAll(/"([^"]+)"/g)].map((m) => m[1]),
+    );
+  });
+
+  it('are named after the platform npm selects them on', () => {
+    for (const p of PLATFORMS) {
+      const libc = p.libc === 'glibc' ? '-gnu' : p.libc === 'musl' ? '-musl' : '';
+      expect(platformId(p)).toBe(`${p.os}-${p.cpu}${libc}`);
+      expect(p.libc !== undefined).toBe(p.os === 'linux');
+      expect(p.binary).toBe(p.os === 'win32' ? 'bin/kgdiff.exe' : 'bin/kgdiff');
+    }
+  });
+
+  it('carry the version, os, cpu and libc, and only the binary', () => {
+    const linux = PLATFORMS.find((p) => p.name === '@kgdiff/cli-linux-arm64-musl');
+    if (!linux) throw new Error('no linux-arm64-musl');
+    expect(platformManifest(linux, '1.2.3')).toMatchObject({
+      name: '@kgdiff/cli-linux-arm64-musl',
+      version: '1.2.3',
+      license: 'MIT',
+      os: ['linux'],
+      cpu: ['arm64'],
+      libc: ['musl'],
+      files: ['bin'],
+      publishConfig: { access: 'public' },
+    });
+    const mac = PLATFORMS.find((p) => p.os === 'darwin');
+    if (!mac) throw new Error('no darwin');
+    expect(platformManifest(mac, '1.2.3')).not.toHaveProperty('libc');
+  });
+
+  it('become optional dependencies of @kgdiff/cli at its exact version, only when released', () => {
+    const manifest = cliManifest();
+    expect(manifest.version).toBe(packagesVersion());
+    // Committed without them, so the workspace never installs a version npm does not have yet.
+    expect(manifest).not.toHaveProperty('dependencies');
+    expect(manifest).not.toHaveProperty('optionalDependencies');
+    expect(withOptionalDependencies(manifest).optionalDependencies).toEqual(
+      Object.fromEntries(PLATFORMS.map((p) => [p.name, manifest.version])),
+    );
   });
 });
