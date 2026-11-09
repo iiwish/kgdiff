@@ -420,9 +420,11 @@ dependencies = [
 name = "kgdiff-layout"
 version = "0.6.0"
 dependencies = [
+ "divan",
  "icu_properties",
  "kgdiff-core",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]

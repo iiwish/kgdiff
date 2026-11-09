@@ -21,7 +21,9 @@ icu_properties = "2.4"
 kgdiff-core = { path = "../kgdiff-core" }
 
 [dev-dependencies]
+divan = "0.1"
 serde_json = { workspace = true, features = ["float_roundtrip"] }
+sha2 = "0.11"
 
 # The conformance corpus (conformance/README.md): the layout contract of every case and
 # primitives/label-width.json.
@@ -33,3 +35,7 @@ harness = false
 [lints]
 workspace = true
 
+# The native layout target of RFC 0002 §7 (`cargo bench -p kgdiff-layout`).
+[[bench]]
+name = "layout"
+harness = false

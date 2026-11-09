@@ -28,7 +28,8 @@ counts of union layouts, component membership and order, and the label widths th
 must equal TypeScript's, and the conformance corpus checks it
 (`cargo test -p kgdiff-layout --test conformance`). Positions only have to be good, deterministic
 and identical on every target: results use only `+ − × ÷ √`, comparisons and conversions, and a
-seeded PRNG.
+seeded PRNG, and CI compares layout hashes across x86-64 Linux, AArch64 macOS, x86-64 Windows and
+WebAssembly.
 
 Layout documents are `kgdiff.layout` version 2 (`generator: "kgdiff-layout/1"`), described by
 [`layout.v2.json`](https://github.com/iiwish/kgdiff/blob/main/packages/core/schema/layout.v2.json);
