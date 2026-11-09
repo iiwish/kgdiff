@@ -1,0 +1,48 @@
+[package]
+name = "kgdiff"
+description = "git diff for knowledge graphs: the kgdiff command line, byte-compatible with @kgdiff/cli."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["kgdiff", "diff", "knowledge-graph", "rdf", "cli"]
+categories = ["command-line-utilities"]
+# Not on crates.io yet: a published crate needs a version requirement on its path dependencies
+# (cargo-deny bans the wildcard otherwise), and scripts/sync-versions.ts does not keep such
+# requirements at the shared version yet. Both come with the release of the crates (RFC 0002, §8).
+publish = false
+
+[[bin]]
+name = "kgdiff"
+path = "src/main.rs"
+
+[features]
+default = ["embed-viewer"]
+# Compiles the viewer bundles into the binary (RFC 0002, §8, "Build order"): `pnpm
+# build:viewer-assets` first. Without the assets the binary still builds, with a warning, and
+# `kgdiff -o` names the missing step.
+embed-viewer = ["kgdiff-report/embed-viewer"]
+
+[dependencies]
+flate2 = "1.1"
+kgdiff-core = { path = "../kgdiff-core" }
+kgdiff-formats = { path = "../kgdiff-formats" }
+kgdiff-report = { path = "../kgdiff-report" }
+terminal_size = "0.4"
+
+[target.'cfg(windows)'.dependencies]
+# The (volume, file index) pair of a file, which std does not expose on stable: the identity
+# overwrite checks compare, as Node's `stat` gives `dev` / `ino` on Windows.
+winapi-util = "0.1"
+
+[dev-dependencies]
+base64 = "0.22"
+# The ported TypeScript tests keep their regular expressions.
+regex = "1.12"
+
+[lints]
+workspace = true

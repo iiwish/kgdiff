@@ -8,17 +8,37 @@
  *
  *   pnpm build && pnpm conformance:replay
  *
- * It reads only the corpus files and the built CLI, not the TypeScript sources.
+ * `--bin <path>` replays the runs with another implementation's executable instead, started
+ * directly with the run's arguments (RFC 0002: the Rust `kgdiff`):
+ *
+ *   cargo build --release -p kgdiff && pnpm conformance:replay --bin target/release/kgdiff
+ *
+ * It reads only the corpus files and the CLI it runs, not the TypeScript sources.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const REPO = join(ROOT, '..');
 const BIN = join(REPO, 'packages/cli/dist/bin.js');
+
+/** `--bin <path>`: the executable to replay with; the built TypeScript CLI without it. */
+function binArgument(argv: readonly string[]): string | undefined {
+  const at = argv.indexOf('--bin');
+  if (at === -1) return undefined;
+  const path = argv[at + 1];
+  if (path === undefined || path.startsWith('-'))
+    throw new Error('--bin needs the path of an executable');
+  return resolve(path);
+}
+const OTHER_BIN = binArgument(process.argv.slice(2));
+/** The command and the arguments before a run's own. */
+const COMMAND: readonly [string, readonly string[]] = OTHER_BIN
+  ? [OTHER_BIN, []]
+  : [process.execPath, [BIN]];
 /** A run that takes longer than this is reported as hanging. */
 const TIMEOUT_MS = 60_000;
 
@@ -54,7 +74,7 @@ function processEnv(): Record<string, string> {
 
 function execute(run: Run, cwd: string, input: Buffer): Promise<Outcome> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [BIN, ...run.args], {
+    const child = spawn(COMMAND[0], [...COMMAND[1], ...run.args], {
       cwd,
       env: { ...processEnv(), ...run.env },
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -98,8 +118,12 @@ function firstDifference(actual: Buffer, expected: Buffer): string {
 }
 
 async function main(): Promise<number> {
-  if (!existsSync(BIN)) {
-    console.error(`conformance: ${BIN} is missing; run \`pnpm build\` first.`);
+  if (!existsSync(OTHER_BIN ?? BIN)) {
+    console.error(
+      OTHER_BIN
+        ? `conformance: ${OTHER_BIN} is missing.`
+        : `conformance: ${BIN} is missing; run \`pnpm build\` first.`,
+    );
     return 1;
   }
   const manifest = readJson(join(ROOT, 'manifest.json')) as {
@@ -157,13 +181,13 @@ async function main(): Promise<number> {
 
   if (failures.length > 0) {
     console.error(
-      `conformance: ${failures.length} of ${jobs.length} recorded runs differ with the real kgdiff process:`,
+      `conformance: ${failures.length} of ${jobs.length} recorded runs differ with the real kgdiff process (${OTHER_BIN ?? BIN}):`,
     );
     for (const failure of failures.sort()) console.error(`  ${failure}`);
     return 1;
   }
   console.log(
-    `conformance: ${jobs.length} recorded runs of ${manifest.cases.length} cases replayed with the real kgdiff process; all match.`,
+    `conformance: ${jobs.length} recorded runs of ${manifest.cases.length} cases replayed with the real kgdiff process (${OTHER_BIN ?? BIN}); all match.`,
   );
   return 0;
 }
