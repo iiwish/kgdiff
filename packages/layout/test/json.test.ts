@@ -1,7 +1,15 @@
 import { KgdiffError } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { type LayoutJSON, layoutDiff, layoutFromJSON, layoutToJSON } from '../src/index.js';
+import {
+  extendLayout,
+  type LayoutJSON,
+  type LayoutJSONV1,
+  type LayoutJSONV2,
+  layoutDiff,
+  layoutFromJSON,
+  layoutToJSON,
+} from '../src/index.js';
 import { makeDiff } from './support/diff-builder.js';
 import { changes, components } from './support/fixtures.js';
 
@@ -95,12 +103,96 @@ describe('layoutToJSON / layoutFromJSON', () => {
     };
     expectCode(null, 'invalid-input');
     expectCode({ ...json, format: 'kgdiff.diff' }, 'invalid-input');
-    expectCode({ ...json, version: 2 }, 'unsupported-version');
+    expectCode({ ...json, version: 3 }, 'unsupported-version');
     expectCode({ ...json, strategy: 'random' }, 'invalid-input');
     expectCode({ ...json, positions: { a: [1] } }, 'invalid-input');
     expectCode({ ...json, positions: { a: [1, 'x'] } }, 'invalid-input');
     expectCode({ ...json, radii: { a: null } }, 'invalid-input');
     expectCode({ ...json, bounds: { x: 0 } }, 'invalid-input');
     expectCode({ ...json, components: [{ nodes: [1], bounds: json.bounds }] }, 'invalid-input');
+  });
+});
+
+describe('layout documents, version 2', () => {
+  const diff = makeDiff(changes());
+  const layout = layoutDiff(diff, { scope: 'changes' });
+  const round2 = (n: number): number => Math.round(n * 100) / 100;
+  // Another engine's positions for the same scope (what the Rust layout writes): moved, and still
+  // rounded to 0.01.
+  const v1: LayoutJSONV1 = (() => {
+    const json = layoutToJSON(layout);
+    const positions = Object.fromEntries(
+      Object.entries(json.positions).map(([id, [x, y]]) => [
+        id,
+        [round2(x * 1.25 + 3.17), round2(-y)] as const,
+      ]),
+    );
+    return { ...json, positions };
+  })();
+  const { version: _, ...members } = v1;
+  const v2: LayoutJSONV2 = { ...members, version: 2, generator: 'kgdiff-layout/1' };
+
+  it('reads version 2 like version 1, and keeps its generator', () => {
+    const fromV1 = layoutFromJSON(v1);
+    const fromV2 = layoutFromJSON(JSON.parse(JSON.stringify(v2)) as LayoutJSON);
+    expect(fromV2.generator).toBe('kgdiff-layout/1');
+    expect('generator' in fromV1).toBe(false);
+    const { generator, ...rest } = fromV2;
+    expect(rest).toEqual(fromV1);
+    expect(Object.isFrozen(fromV2)).toBe(true);
+    for (const [id, [x, y]] of Object.entries(v2.positions)) {
+      expect(fromV2.positions.get(id)).toEqual({ x, y });
+    }
+  });
+
+  it('writes what it read from version 2 as version 1, without the generator', () => {
+    const out = layoutToJSON(layoutFromJSON(v2));
+    expect(out.version).toBe(1);
+    expect(JSON.stringify(out)).toBe(JSON.stringify(v1));
+    expect(JSON.stringify(out)).not.toContain('generator');
+  });
+
+  it('ignores a generator in a version 1 document', () => {
+    const stray = { ...v1, generator: 'kgdiff-layout/1' } as LayoutJSON;
+    const back = layoutFromJSON(stray);
+    expect('generator' in back).toBe(false);
+    expect(JSON.stringify(layoutToJSON(back))).toBe(JSON.stringify(v1));
+  });
+
+  it('positions read from version 2 are pins: anchored layouts keep them exactly', () => {
+    const read = layoutFromJSON(v2);
+    const anchored = layoutDiff(diff, { scope: 'changes', pinned: read.positions });
+    expect(anchored.stats.strategy).toBe('anchored');
+    for (const [id, p] of read.positions) expect(anchored.positions.get(id)).toEqual(p);
+    expect(anchored.generator).toBeUndefined();
+  });
+
+  it('extendLayout keeps every position read from version 2, and the generator only when it adds nothing', () => {
+    const read = layoutFromJSON(v2);
+    const outside = diff.nodes.map((n) => n.id).filter((id) => !read.positions.has(id));
+    expect(outside.length).toBeGreaterThan(0);
+    const extended = extendLayout(diff, read, outside.slice(0, 3));
+    for (const [id, p] of read.positions) expect(extended.positions.get(id)).toBe(p);
+    expect(extended.positions.size).toBe(read.positions.size + 3);
+    expect(extended.generator).toBeUndefined();
+    expect(extendLayout(diff, read, [...read.positions.keys()].slice(0, 2))).toBe(read);
+  });
+
+  it('rejects a version 2 document without a generator, and versions other than 1 and 2', () => {
+    for (const generator of [undefined, '', 1, null, ['kgdiff-layout/1']]) {
+      const doc = { ...v2, generator } as unknown as LayoutJSON;
+      expect(() => layoutFromJSON(doc)).toThrow(/generator must be a non-empty string/);
+      expect(() => layoutFromJSON(doc)).toThrow(expect.objectContaining({ code: 'invalid-input' }));
+    }
+    for (const version of [3, 0, '2', 1.5, undefined]) {
+      const doc = { ...v2, version } as unknown as LayoutJSON;
+      expect(() => layoutFromJSON(doc)).toThrow(
+        expect.objectContaining({
+          code: 'unsupported-version',
+          message: `Unsupported kgdiff.layout version ${String(version)}`,
+          details: { version },
+        }),
+      );
+    }
   });
 });
