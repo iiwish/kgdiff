@@ -59,11 +59,13 @@ function packageDirs(): Map<string, string> {
   return dirs;
 }
 
-function pack(): PackResult[] {
+/** Packs the given packages (private ones, such as @kgdiff/compute's preview, are left out). */
+function pack(names: Iterable<string>): PackResult[] {
   rmSync(OUT, { recursive: true, force: true });
+  const filters = [...names].flatMap((name) => ['--filter', name]);
   const json = execFileSync(
     'pnpm',
-    ['-r', '--filter', './packages/**', 'pack', '--json', '--pack-destination', OUT],
+    ['-r', ...filters, 'pack', '--json', '--pack-destination', OUT],
     { cwd: ROOT, encoding: 'utf8', shell: process.platform === 'win32' },
   );
   return JSON.parse(json) as PackResult[];
@@ -128,7 +130,7 @@ function runAttw(name: string, tarball: string, problems: string[]): void {
 
 const dirs = packageDirs();
 const failures: string[] = [];
-for (const result of pack()) {
+for (const result of pack(dirs.keys())) {
   const dir = dirs.get(result.name);
   if (dir === undefined) throw new Error(`Packed ${result.name}, which is not under packages/`);
   const files = new Set(result.files.map((file) => file.path));
