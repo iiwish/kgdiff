@@ -120,22 +120,10 @@ fn reads_report_and_behaviour_options() {
 }
 
 #[test]
-fn no_compute_is_refused_for_a_report_without_a_layout() {
-    // RFC 0002, D-10: the reports of this kgdiff carry no layout, so the add-on cannot be left out.
-    let (message, hint) = usage_error(&["a", "b", "-o", "r.html", "--no-compute"]);
-    assert!(
-        message.starts_with("--no-compute cannot be honoured"),
-        "{message}"
-    );
-    assert!(message.contains("carry no layout"));
-    assert_eq!(hint, "Leave out --no-compute.");
-    assert!(
-        usage_error(&["a", "b", "--open", "--no-compute"])
-            .0
-            .starts_with("--no-compute")
-    );
-    // Without a report there is nothing to honour.
-    assert!(!diff_options(&["a", "b", "--no-compute"]).compute);
+fn no_compute_leaves_the_add_on_out() {
+    let o = diff_options(&["a", "b", "-o", "r.html", "--no-compute"]);
+    assert!(!o.compute);
+    assert!(diff_options(&["a", "b", "-o", "r.html"]).compute);
 }
 
 #[test]

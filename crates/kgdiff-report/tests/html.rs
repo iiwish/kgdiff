@@ -1,16 +1,17 @@
-//! The HTML report document: the payload script (plain, or gzip + base64 above the threshold),
-//! no layout (D-10), the viewer bundle and then the compute add-on, made safe inside `<script>`;
-//! and the bundles feature `embed-viewer` compiles in.
+//! The HTML report document: the payload script (plain, or gzip + base64 above the threshold)
+//! with its layout, the viewer bundle and, when the layout covers only the changes, the compute
+//! add-on after it, made safe inside `<script>`; and the bundles feature `embed-viewer` compiles
+//! in.
 
 use std::io::Read;
 
 use base64::Engine;
 use kgdiff_core::js::{Value, json};
 use kgdiff_core::{DiffResult, Locale};
-use kgdiff_report::html::{PAYLOAD_TYPE, render_report_html, report_payload};
+use kgdiff_report::html::{GZIP_THRESHOLD, PAYLOAD_TYPE, render_report_html, report_payload};
 use kgdiff_report::{
     MISSING_VIEWER_HINT, ReportInfo, ReportSide, ViewerBundles, build_report_html, describe_diff,
-    embedded_viewer,
+    embedded_viewer, needs_compute,
 };
 
 fn diff() -> DiffResult {
@@ -68,10 +69,10 @@ fn embeds_the_payload_and_the_bundles() {
     assert_eq!(attrs, " data-for=\"kgdiff\"");
     let embedded = json::parse(text).unwrap();
     assert_eq!(embedded, report_payload(&diff, &info()));
-    assert!(
-        embedded.get("layout").is_none(),
-        "phase 3 reports carry no layout (D-10)"
-    );
+    let layout = embedded.get("layout").expect("a layout");
+    assert_eq!(layout.get("version").and_then(Value::as_f64), Some(2.0));
+    assert_eq!(layout.get("scope").and_then(Value::as_str), Some("all"));
+    assert!(!needs_compute(&embedded));
     assert_eq!(
         embedded
             .get("view")
@@ -79,16 +80,28 @@ fn embeds_the_payload_and_the_bundles() {
             .and_then(Value::as_str),
         Some("zh-CN")
     );
-    // The title is escaped, the bundles cannot close their script, and the compute add-on
-    // follows the viewer.
+    // The title is escaped, the bundle cannot close its script, and a full layout needs no
+    // compute add-on.
     assert!(html.contains("<title>g 1 → g 2 &lt;i&gt; · kgdiff</title>"));
     let viewer = html
         .find("<script>/* viewer <\\/script> */</script>")
         .unwrap();
-    let compute = html
+    assert!(html.find(PAYLOAD_TYPE).unwrap() < viewer);
+    assert!(!html.contains("/* compute"));
+    // Without a layout, or with a changes-only one, the add-on follows the viewer.
+    let mut bare = embedded.clone();
+    if let Value::Object(o) = &mut bare {
+        o.remove("layout");
+    }
+    assert!(needs_compute(&bare));
+    let bare_html = render_report_html(&bare, STUBS, "d", GZIP_THRESHOLD);
+    let viewer = bare_html
+        .find("<script>/* viewer <\\/script> */</script>")
+        .unwrap();
+    let compute = bare_html
         .find("<script>/* compute \\x3C!-- */</script>")
         .unwrap();
-    assert!(html.find(PAYLOAD_TYPE).unwrap() < viewer && viewer < compute);
+    assert!(viewer < compute);
     assert!(html.contains(&format!(
         "<meta name=\"description\" content=\"{}\">",
         describe_diff(&diff, Locale::ZhCn)

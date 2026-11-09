@@ -519,6 +519,7 @@ dependencies = [
  "flate2",
  "kgdiff-core",
  "kgdiff-formats",
+ "kgdiff-layout",
  "kgdiff-report",
  "regex",
  "terminal_size",
@@ -576,6 +577,7 @@ dependencies = [
  "icu_segmenter",
  "kgdiff-core",
  "kgdiff-formats",
+ "kgdiff-layout",
 ]
 
 [[package]]

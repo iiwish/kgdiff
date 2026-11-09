@@ -18,12 +18,12 @@ the same arguments, messages, outputs and exit codes, byte for byte. Every CLI r
 conformance corpus records is replayed against it (`pnpm conformance:replay --bin
 target/release/kgdiff`), and the CLI's test suites are ported (`cargo test -p kgdiff`).
 
-Phase 3 of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md):
-HTML reports carry no layout (decision D-10). The viewer lays the diff out when the report opens,
-with its compute add-on, which every report inlines; `--no-compute` is therefore refused for a
-report. The viewer bundles are compiled in by the feature `embed-viewer` (on by default) after
-`pnpm build:viewer-assets` in the repository; a build without them works for everything but
-`-o` / `--open`, which then names the missing step.
+Part of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md):
+HTML reports carry the layout of [`kgdiff-layout`](https://crates.io/crates/kgdiff-layout) and
+open instantly; the viewer's compute add-on is inlined only for layouts that cover just the
+changes of a large graph, and `--no-compute` leaves it out. The viewer bundles are compiled in by
+the feature `embed-viewer` (on by default) after `pnpm build:viewer-assets` in the repository; a
+build without them works for everything but `-o` / `--open`, which then names the missing step.
 
 As a library, `kgdiff::cli::run(argv, io)` runs the command line against any
 `kgdiff::io::CliIo`; `kgdiff::testing::MemoryIo` keeps files and streams in memory.

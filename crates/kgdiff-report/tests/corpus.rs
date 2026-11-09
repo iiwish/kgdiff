@@ -7,7 +7,7 @@
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
-use kgdiff_core::js::{Value, json};
+use kgdiff_core::js::{Object, Value, json};
 use kgdiff_core::{DiffResult, Locale};
 use kgdiff_formats::{FormatId, ParseOptions, ParseResult, RdfOptions, parse_graph};
 use kgdiff_report::{
@@ -343,8 +343,9 @@ fn text_outputs_are_byte_identical() {
 }
 
 #[test]
-fn report_payloads_match_report_json() {
+fn report_payloads_match_report_json_and_layouts_their_contract() {
     let mut failures = Vec::new();
+    let mut with_options = Vec::new();
     for id in ids() {
         let case = load(&id);
         let locale = match case.spec.get("locale").and_then(Value::as_str) {
@@ -376,8 +377,41 @@ fn report_payloads_match_report_json() {
             panels: None,
         };
         let mut payload = kgdiff_report::html::report_payload(&case.result, &info);
+        // `report.json` is the payload without its packed diff (`diff.packed.json`) and layout,
+        // which is checked against the case's layout contract below.
+        let mut layout = None;
         if let Value::Object(o) = &mut payload {
             o.remove("diff");
+            layout = o.remove("layout");
+        }
+        let layout = layout.expect("a report with a layout");
+        if layout.get("version").and_then(Value::as_f64) != Some(2.0)
+            || layout.get("generator").and_then(Value::as_str) != Some(kgdiff_layout::GENERATOR)
+        {
+            failures.push(format!(
+                "{id}: not a version 2 layout of {}",
+                kgdiff_layout::GENERATOR
+            ));
+        }
+        // The contract is recorded with the case's layout options; a report lays out with the
+        // defaults, so the cases that set options (synthetic-600: scope `changes`) are compared
+        // with the contract of the default layout's own run instead, by kgdiff-layout's tests.
+        let contract = read_json(&case.dir.join("expected/layout-contract.json"));
+        if contract
+            .get("options")
+            .and_then(Value::as_object)
+            .is_some_and(Object::is_empty)
+        {
+            let actual = layout_contract(&layout);
+            if actual != contract {
+                failures.push(format!(
+                    "{id} layout: {}\n  vs layout-contract.json {}",
+                    json::to_string(&actual),
+                    json::to_string(&contract)
+                ));
+            }
+        } else {
+            with_options.push(id.clone());
         }
         let expected = read_json(&case.dir.join("expected/report.json"));
         if payload != expected {
@@ -389,4 +423,50 @@ fn report_payloads_match_report_json() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+    assert_eq!(
+        with_options,
+        ["synthetic-600"],
+        "the cases whose contract has layout options"
+    );
+}
+
+/// `layoutContract` of `conformance/corpus.ts`, from a layout document: the part of the layout
+/// that does not depend on floating-point simulation (iteration counts of union layouts only).
+fn layout_contract(layout: &Value) -> Value {
+    let mut out = Object::new();
+    out.insert("options", Object::new());
+    for key in ["strategy", "scope"] {
+        out.insert(key, layout.get(key).cloned().unwrap_or(Value::Null));
+    }
+    if layout.get("strategy").and_then(Value::as_str) == Some("union") {
+        out.insert(
+            "iterations",
+            layout.get("iterations").cloned().unwrap_or(Value::Null),
+        );
+    }
+    // `[...positions.keys()].sort()`: UTF-16 code unit order.
+    let mut nodes: Vec<String> = layout
+        .get("positions")
+        .and_then(Value::as_object)
+        .map_or_else(Vec::new, |p| {
+            p.keys().map(|k| k.as_str().to_owned()).collect()
+        });
+    nodes.sort_by(|a, b| a.encode_utf16().cmp(b.encode_utf16()));
+    out.insert(
+        "nodes",
+        Value::Array(nodes.into_iter().map(Value::from).collect()),
+    );
+    for key in ["radii", "hidden"] {
+        out.insert(key, layout.get(key).cloned().unwrap_or(Value::Null));
+    }
+    let components: Vec<Value> = layout
+        .get("components")
+        .and_then(Value::as_array)
+        .map_or_else(Vec::new, |c| {
+            c.iter()
+                .map(|c| c.get("nodes").cloned().unwrap_or(Value::Null))
+                .collect()
+        });
+    out.insert("components", Value::Array(components));
+    Value::Object(out)
 }

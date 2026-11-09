@@ -37,6 +37,7 @@ winapi-util = "0.1"
 
 [dev-dependencies]
 base64 = "0.22"
+kgdiff-layout.workspace = true
 # The ported TypeScript tests keep their regular expressions.
 regex = "1.12"
 

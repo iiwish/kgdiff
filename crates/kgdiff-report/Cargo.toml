@@ -27,6 +27,7 @@ flate2 = "1.1"
 icu_properties = "2.4"
 icu_segmenter = "2.4"
 kgdiff-core.workspace = true
+kgdiff-layout.workspace = true
 
 [dev-dependencies]
 kgdiff-formats = { path = "../kgdiff-formats" }
