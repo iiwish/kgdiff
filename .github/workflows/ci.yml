@@ -101,6 +101,13 @@ jobs:
         run: |
           cargo build --release -p kgdiff --locked
           pnpm conformance:replay --bin "target/release/kgdiff${{ runner.os == 'Windows' && '.exe' || '' }}"
+      # The reports of every corpus case equal the TypeScript CLI's, the layout's version 2 and
+      # generator aside (conformance/compare-reports.ts).
+      - name: Compare the reports of the Rust kgdiff with the TypeScript CLI's
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pnpm --filter "@kgdiff/cli..." build
+          pnpm conformance:compare-reports --bin target/release/kgdiff
       - name: Docs
         if: matrix.os == 'ubuntu-latest'
         env:
