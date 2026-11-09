@@ -235,7 +235,8 @@ one; `\` does nothing there.
 ```
 
 The attributes and the properties they reflect, the other properties (`payload`, a
-precomputed report; `layout`, every region's state and the sizes), the methods and the events
+precomputed report, laid out in the browser when it carries no layout; `layout`, every region's
+state and the sizes), the methods and the events
 (`CustomEvent`s that bubble and are composed) are listed in
 [Viewer elements: reference](viewer-elements.md#kgdiff-viewer), generated from the sources; the
 sections here explain them: [Modes](#modes), [Panels](#panels), [Keyboard map](#keyboard-map),

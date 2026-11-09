@@ -85,7 +85,10 @@ export async function decodePayloadText(
   return assertPayload(value);
 }
 
-/** Validate the envelope of a report payload (the diff and layout are validated when read). */
+/**
+ * Validate the envelope of a report payload (the diff and layout are validated when read). The
+ * layout is optional: left out, the viewer lays the diff out itself.
+ */
 export function assertPayload(value: unknown): ReportPayload {
   if (typeof value !== 'object' || value === null) {
     throw new KgdiffError('invalid-input', 'A kgdiff report payload must be an object.');
@@ -103,8 +106,14 @@ export function assertPayload(value: unknown): ReportPayload {
       `Unsupported kgdiff report version ${JSON.stringify(v.version)} (this viewer reads version 1).`,
     );
   }
-  if (typeof v.diff !== 'object' || v.diff === null || typeof v.layout !== 'object' || !v.layout) {
-    throw new KgdiffError('invalid-input', 'A kgdiff report needs both `diff` and `layout`.');
+  if (typeof v.diff !== 'object' || v.diff === null) {
+    throw new KgdiffError('invalid-input', 'A kgdiff report needs a `diff`.');
+  }
+  if (v.layout !== undefined && (typeof v.layout !== 'object' || v.layout === null)) {
+    throw new KgdiffError(
+      'invalid-input',
+      'The `layout` of a kgdiff report must be a kgdiff.layout document, or be left out.',
+    );
   }
   return value as ReportPayload;
 }

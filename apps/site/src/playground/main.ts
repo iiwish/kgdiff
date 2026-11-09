@@ -620,7 +620,7 @@ downloadBtn.addEventListener('click', async () => {
     };
     const [bundle, computeBundle] = await Promise.all([
       fetchText(viewerUrl),
-      payload.layout.scope === 'changes' ? fetchText(computeUrl) : Promise.resolve(undefined),
+      layout.scope === 'changes' ? fetchText(computeUrl) : Promise.resolve(undefined),
     ]);
     const html = await renderReportHtml({
       payload,

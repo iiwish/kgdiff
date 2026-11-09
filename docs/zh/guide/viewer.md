@@ -356,7 +356,7 @@ $effect(() => {
 
 ## 不用打包工具
 
-`@kgdiff/viewer/standalone`（`dist/standalone/kgdiff-viewer.js`）是一个普通脚本，它定义这个元素并显示预先计算好的 diff，命令行生成的 HTML 报告里嵌的就是它。加上计算插件 `@kgdiff/viewer/standalone/compute`（`kgdiff-viewer-compute.js`）后，它还能用 `load()` 加载图对象（`{ nodes, edges }`）。要在浏览器里解析文本，需要使用 ESM 包并配合打包工具。
+`@kgdiff/viewer/standalone`（`dist/standalone/kgdiff-viewer.js`）是一个普通脚本，它定义这个元素并显示预先计算好的 diff，命令行生成的 HTML 报告里嵌的就是它。加上计算插件 `@kgdiff/viewer/standalone/compute`（`kgdiff-viewer-compute.js`）后，它还能用 `load()` 加载图对象（`{ nodes, edges }`），并显示没有布局的数据，读到时给它布局（没有计算插件时，这样的数据会显示一条说明原因的错误）。要在浏览器里解析文本，需要使用 ESM 包并配合打包工具。
 
 ## 大图
 

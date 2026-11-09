@@ -333,7 +333,7 @@
               "type": {
                 "text": "ReportPayload | null"
               },
-              "description": "Set a precomputed report (no diff / layout work in the browser)."
+              "description": "Set a precomputed report: shown without computing anything when it carries its layout, else laid out with the compute module (see `ReportPayload.layout`)."
             },
             {
               "kind": "method",
@@ -984,7 +984,7 @@
               "type": {
                 "text": "ReportPayload | null"
               },
-              "description": "Set a precomputed report (no diff / layout work in the browser)."
+              "description": "Set a precomputed report: shown without computing anything when it carries its layout, else laid out with the compute module (see `ReportPayload.layout`)."
             },
             {
               "kind": "method",

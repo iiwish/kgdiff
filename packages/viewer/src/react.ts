@@ -130,7 +130,8 @@ declare module 'react' {
          */
         keymap?: Tag<'kgdiff-viewer'>['keymap'] | string;
         /**
-         * Set a precomputed report (no diff / layout work in the browser).
+         * Set a precomputed report: shown without computing anything when it carries its layout,
+         * else laid out with the compute module (see `ReportPayload.layout`).
          */
         payload?: Tag<'kgdiff-viewer'>['payload'];
         /**
@@ -249,7 +250,8 @@ declare module 'react' {
          */
         keymap?: Tag<'kgdiff-root'>['keymap'] | string;
         /**
-         * Set a precomputed report (no diff / layout work in the browser).
+         * Set a precomputed report: shown without computing anything when it carries its layout,
+         * else laid out with the compute module (see `ReportPayload.layout`).
          */
         payload?: Tag<'kgdiff-root'>['payload'];
         /**
