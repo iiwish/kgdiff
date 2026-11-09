@@ -11,14 +11,13 @@ homepage.workspace = true
 readme = "README.md"
 keywords = ["kgdiff", "layout", "force-directed", "graph", "knowledge-graph"]
 categories = ["algorithms", "visualization"]
-# Not on crates.io yet: a published crate needs a version requirement on its path dependency
-# (cargo-deny bans the wildcard otherwise), and scripts/sync-versions.ts does not keep such
-# requirements at the shared version yet. Both come with the release of the crates (RFC 0002, §8).
+# Not on crates.io yet: it ships with phase 4's CLI (RFC 0002, §9), and stays out of the
+# `crates-publish` job of release.yml until then.
 publish = false
 
 [dependencies]
 icu_properties = "2.4"
-kgdiff-core = { path = "../kgdiff-core" }
+kgdiff-core.workspace = true
 
 [dev-dependencies]
 divan = "0.1"
