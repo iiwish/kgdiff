@@ -774,9 +774,9 @@ pub fn expect_readable(q: &Quality) {
     assert_eq!(q.component_overlaps, 0, "components overlap");
 }
 
-/// The layout as text, every double in its shortest round-trip form: equal text, equal layouts.
+/// `layout_to_json` as text.
 pub fn json(layout: &LayoutResult) -> String {
-    format!("{layout:?}")
+    kgdiff_core::js::json::to_string(&kgdiff_layout::layout_to_json(layout))
 }
 
 /// Positions as kgdiff JSON `{ x, y }` points (the shape of `pinned` in options).

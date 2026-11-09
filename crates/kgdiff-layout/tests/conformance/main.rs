@@ -21,7 +21,7 @@ use std::process::ExitCode;
 use kgdiff_core::js::{self, Object, Value, json};
 use kgdiff_core::{DiffResult, resolve_options};
 use kgdiff_layout::{
-    LayoutOptions, LayoutStrategy, estimate_label_width, layout_diff, node_radius,
+    LayoutOptions, LayoutStrategy, estimate_label_width, layout_diff, layout_to_json, node_radius,
 };
 
 use corpus::{Case, Corpus, Mode, compare, read_json};
@@ -59,17 +59,19 @@ fn diffed(case: &Case) -> Result<(DiffResult, Value), String> {
 }
 
 /// `layout-contract.json` as the corpus generator computes it (`conformance/corpus.ts`), from
-/// `layout_diff`: radii rounded to 0.01 as layout documents write them.
+/// `layout_diff` and `layout_to_json`.
 fn contract(case: &Case) -> Result<Vec<u8>, String> {
     let (diff, given) = diffed(case)?;
     let options = LayoutOptions::from_value(&given).map_err(|e| e.message)?;
     let layout = layout_diff(&diff, &options).map_err(|e| e.message)?;
+    let document = layout_to_json(&layout);
+    let field = |name: &str| document.get(name).cloned().unwrap_or_default();
     let mut out = Object::new();
     out.insert("options", given);
-    out.insert("strategy", layout.stats.strategy.as_str());
-    out.insert("scope", layout.scope.as_str());
+    out.insert("strategy", field("strategy"));
+    out.insert("scope", field("scope"));
     if layout.stats.strategy == LayoutStrategy::Union {
-        out.insert("iterations", layout.stats.iterations);
+        out.insert("iterations", field("iterations"));
     }
     let mut nodes: Vec<&js::JsStr> = layout.positions.keys().collect();
     nodes.sort();
@@ -77,17 +79,8 @@ fn contract(case: &Case) -> Result<Vec<u8>, String> {
         "nodes",
         Value::Array(nodes.into_iter().map(Value::from).collect()),
     );
-    let mut radii = Object::new();
-    for (id, r) in &layout.radii {
-        let rounded = js::math::round(r * 100.0) / 100.0;
-        radii.insert(id.clone(), rounded);
-    }
-    out.insert("radii", radii);
-    let mut hidden = Object::new();
-    for (id, count) in &layout.hidden {
-        hidden.insert(id.clone(), *count);
-    }
-    out.insert("hidden", hidden);
+    out.insert("radii", field("radii"));
+    out.insert("hidden", field("hidden"));
     out.insert(
         "components",
         Value::Array(

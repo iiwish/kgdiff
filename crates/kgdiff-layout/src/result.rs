@@ -1,6 +1,6 @@
 //! The result model (`LayoutResult` of `@kgdiff/layout`).
 
-use kgdiff_core::js::IndexMap;
+use kgdiff_core::js::{IndexMap, JsStr};
 use kgdiff_core::model::{Point, UnionId};
 
 use crate::components::connected_components;
@@ -65,6 +65,10 @@ pub struct LayoutResult {
     /// Connected components after packing, largest first.
     pub components: Vec<LayoutComponent>,
     pub stats: LayoutStats,
+    /// The engine generation the positions come from: [`GENERATOR`](crate::GENERATOR) for
+    /// layouts this crate computes or extends, the document's `generator` for a version 2
+    /// document read back, `None` for a version 1 document (TypeScript's engine).
+    pub generator: Option<JsStr>,
 }
 
 /// What [`assemble`] builds a result from.
@@ -120,5 +124,6 @@ pub(crate) fn assemble(input: Assemble<'_, '_>) -> LayoutResult {
             iterations: input.iterations,
             nodes,
         },
+        generator: Some(JsStr::from(crate::GENERATOR)),
     }
 }
