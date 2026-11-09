@@ -3,11 +3,13 @@
  * in CITATION.cff (scripts/sync-citation.ts), the version of the Rust workspace
  * (scripts/sync-versions.ts) and the platform packages of @kgdiff/cli (scripts/npm-platforms.ts).
  */
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   cliManifest,
+  distVersion,
   PLATFORMS,
   platformId,
   platformManifest,
@@ -278,5 +280,29 @@ describe('the platform packages of @kgdiff/cli', () => {
     expect(withOptionalDependencies(manifest).optionalDependencies).toEqual(
       Object.fromEntries(PLATFORMS.map((p) => [p.name, manifest.version])),
     );
+  });
+
+  it('come from the archives of the version they are published at', () => {
+    const manifest = (version: string) => {
+      const dir = mkdtempSync(join(tmpdir(), 'kgdiff-dist-'));
+      const path = join(dir, `${version}-dist-manifest.json`);
+      writeFileSync(
+        path,
+        JSON.stringify({ releases: [{ app_name: 'kgdiff', app_version: version }] }),
+      );
+      return path;
+    };
+    const a = manifest('0.8.0');
+    expect(distVersion(new Map([['a-dist-manifest.json', a]]))).toBe('0.8.0');
+    const b = manifest('0.7.0');
+    expect(() =>
+      distVersion(
+        new Map([
+          ['a-dist-manifest.json', a],
+          ['b-dist-manifest.json', b],
+        ]),
+      ),
+    ).toThrow(/the versions 0.8.0, 0.7.0/);
+    expect(() => distVersion(new Map())).toThrow(/no kgdiff version/);
   });
 });
