@@ -808,6 +808,36 @@ Acceptance:
 - A spike decides `oxrdfxml` / `oxjsonld` versus porting kgdiff's readers (§5), by the corpus.
 - Start-up and end-to-end targets of §7 met; binary size within budget.
 
+##### Phase 3 results
+
+Implemented in six pull requests, stacked in this order, none merged yet:
+[#53](https://github.com/iiwish/kgdiff/pull/53) (D-2, D-11),
+[#55](https://github.com/iiwish/kgdiff/pull/55) (D-9),
+[#64](https://github.com/iiwish/kgdiff/pull/64) (`kgdiff-formats`),
+[#65](https://github.com/iiwish/kgdiff/pull/65) (`kgdiff-report`),
+[#66](https://github.com/iiwish/kgdiff/pull/66) (the `kgdiff` binary) and
+[#67](https://github.com/iiwish/kgdiff/pull/67) (release tooling). Against the acceptance above
+(an M-class Mac, load average about 5 from other work):
+
+- **Corpus**: every case's `parse.*.json` equal as values (357 checks of the harness, now
+  computed from the input files) and every `report.json` equal; **all 257 recorded CLI runs**
+  replay with identical stdout, stderr and exit code (`conformance/replay.ts --bin`), in CI on
+  Linux, macOS and Windows.
+- **CLI tests**: every suite of `packages/cli/test` ported and passing; the golden test compares
+  the TypeScript suite's own snapshots byte for byte.
+- **Reports**: the six datasets open with a laid-out graph in 0.52–0.72 s (TypeScript reports
+  with an embedded layout: 0.41–0.47 s) and grow by 89–98 KB, less than the add-on (99.9 KB).
+  They need the viewer's layout-less payloads ([#52](https://github.com/iiwish/kgdiff/pull/52)).
+- **§7**: `kgdiff --version` 2.1 ms, the enterprise-kg summary end to end 4.0 ms (Node: 59 and
+  100 ms), the binary 4.1 MB stripped with both viewer bundles; 50k Turtle triples parsed in
+  60–80 ms including process start.
+- **Implementation choices**: Node's `util.parseArgs` token rules are ported instead of using
+  `lexopt` (§5); std replaces `tempfile`, `same-file` and `opener`; `kgdiff apply` words the
+  `JSON.parse` errors of a delta as V8 does (J-54 keeps that wording a non-contract).
+- **Release**: `dist` builds the seven targets with checksums, installers and the Homebrew
+  formula, and `cargo publish --workspace --dry-run` runs with every release; publishing waits
+  for the steps of [docs/releasing.md](../releasing.md#native-binaries-and-crates).
+
 #### Phase 4 — `kgdiff-layout`
 
 Deliverables: the layout crate, layout JSON version 2 and its schema, the Rust CLI writing
