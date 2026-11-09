@@ -1,0 +1,31 @@
+[package]
+name = "kgdiff-wasm"
+description = "WebAssembly bindings of kgdiff-core, published on npm as @kgdiff/compute (RFC 0002, §1)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+# Bindings for npm, not a crate for crates.io (RFC 0002, §1).
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+kgdiff-core.workspace = true
+# Exactly the version of the wasm-bindgen CLI that generates the JavaScript glue
+# (packages/compute/scripts/build-wasm.ts, the `compute` job of ci.yml): the two must match.
+wasm-bindgen = "=0.2.129"
+
+# The workspace's lints but `unsafe_code`: wasm-bindgen's generated exports are `unsafe` and
+# `#[unsafe(no_mangle)]`. This crate's own code has none.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+cast_possible_truncation = "deny"
+cast_sign_loss = "deny"
+cast_possible_wrap = "deny"

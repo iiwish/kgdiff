@@ -117,6 +117,12 @@ importers:
         specifier: workspace:*
         version: link:../viewer
 
+  packages/compute:
+    dependencies:
+      '@kgdiff/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/core: {}
 
   packages/formats:

@@ -1,0 +1,49 @@
+{
+  "name": "@kgdiff/compute",
+  "version": "0.7.0-preview.0",
+  "private": true,
+  "description": "kgdiff's Rust diff engine compiled to WebAssembly: the same bytes as the kgdiff CLI, in every JavaScript engine. A preview (RFC 0002, phase 2).",
+  "keywords": [
+    "kgdiff",
+    "diff",
+    "knowledge-graph",
+    "webassembly"
+  ],
+  "homepage": "https://github.com/iiwish/kgdiff/tree/main/packages/compute#readme",
+  "bugs": {
+    "url": "https://github.com/iiwish/kgdiff/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iiwish/kgdiff.git",
+    "directory": "packages/compute"
+  },
+  "license": "MIT",
+  "author": "iiwish",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./kgdiff_compute_bg.wasm": "./wasm/kgdiff_compute_bg.wasm"
+  },
+  "files": [
+    "dist",
+    "src",
+    "wasm"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:wasm": "tsx scripts/build-wasm.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kgdiff/core": "workspace:*"
+  }
+}

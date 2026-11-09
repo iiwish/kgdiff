@@ -219,12 +219,56 @@ jobs:
           test "$(ls -d layout-hashes-*/ | wc -l)" -eq 4
           exit $status
 
+  # The preview @kgdiff/compute (RFC 0002, §8, the `wasm` job): kgdiff-core built for
+  # WebAssembly with wasm-bindgen and `wasm-opt -Oz`, its size against a limit (in the job
+  # summary), and the conformance corpus run in Node against the build.
+  compute:
+    name: "@kgdiff/compute: WebAssembly build, size, corpus (Node ${{ matrix.node }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    env:
+      CARGO_TERM_COLOR: always
+      # The compute tests fail without the build instead of being skipped.
+      KGDIFF_COMPUTE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install the toolchain of rust-toolchain.toml
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      # The exact version crates/kgdiff-wasm pins (wasm-bindgen = "=…").
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - name: Install wasm-opt (binaryen version_133, checksum verified)
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/binaryen.tar.gz" \
+            https://github.com/WebAssembly/binaryen/releases/download/version_133/binaryen-version_133-x86_64-linux.tar.gz
+          echo "2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  $RUNNER_TEMP/binaryen.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/binaryen.tar.gz" -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/binaryen-version_133/bin" >> "$GITHUB_PATH"
+      - name: Build the WebAssembly engine (sizes in the job summary)
+        run: pnpm --filter @kgdiff/compute build:wasm
+      - name: The corpus and the API against the build, in Node ${{ matrix.node }}
+        run: pnpm vitest run --project compute
+
   # The one check the main branch ruleset requires: it passes only when every job of every
   # matrix passed, so the jobs can change without touching the ruleset.
   passed:
     name: CI passed
     if: always()
-    needs: [check, rust, cargo-deny, targets, targets-equal]
+    needs: [check, rust, cargo-deny, targets, targets-equal, compute]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
