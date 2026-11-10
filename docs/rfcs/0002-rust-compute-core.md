@@ -1115,11 +1115,18 @@ Acceptance:
   characters per Unicode release), already possible today, and more likely once Rust pins its own
   Unicode version; see the risk in §10. Fixed in the TypeScript release
   [before phase 2](#before-phase-2-a-typescript-0x-release), which phase 2 waits for.
-- **Fit view on high-density displays.** Opening a CLI-generated HTML report in Playwright's
-  Chromium with `deviceScaleFactor: 2` frames only one corner of the graph, both on the initial
-  view and after "Fit view (F)"; with `deviceScaleFactor: 1` it is correct. Not yet confirmed on a
-  real Retina display. The cause is likely a CSS-pixel / device-pixel mix-up in the viewer's
-  framing or the renderer's camera; it is unrelated to this RFC and gets an issue of its own.
+- **Fit view on high-density displays.** Fixed in [#PRNUM](https://github.com/iiwish/kgdiff/pull/PRNUM)
+  (2026-11-10). Opening a CLI-generated HTML report in Playwright's Chromium with
+  `deviceScaleFactor: 2` framed only one corner of the graph, both on the initial view and after
+  "Fit view (F)"; with `deviceScaleFactor: 1` it was correct. Reproduced with Chromium 156 and
+  Chrome 157 at scale factors 2 and 3, and only under an emulated scale factor. The framing and the
+  camera were right (the same camera at every scale factor); the canvas was not: Chromium's device
+  emulation leaves the canvas's `devicePixelContentBoxSize` in CSS pixels, the renderer sized the
+  backing store by that box and painted at `devicePixelRatio`, so the canvas held the top-left
+  corner of the frame, enlarged. With a real scale factor (`--force-device-scale-factor=2` and
+  `3`, where the box is in device pixels, as on a Retina display) the view was correct before the
+  fix and is unchanged by it; a physical display was not looked at. The renderer now takes the box
+  only when it is the CSS size times the pixel ratio. It was unrelated to this RFC.
 
 ## Open decisions
 

@@ -1,0 +1,6 @@
+---
+"@kgdiff/renderer": patch
+"@kgdiff/viewer": patch
+---
+
+The canvas shows the whole frame under an emulated device scale factor. With Chromium's device emulation at a scale factor other than 1 (Playwright's `deviceScaleFactor`, as used for screenshots and browser tests), the graph was drawn enlarged and blurred with only its top-left corner on the canvas, on the first view and after "Fit view": a CLI report, the viewer and any page with `createRenderer` alike. The renderer sized the canvas's backing store by the browser's device-pixel box (`devicePixelContentBoxSize`), which stays in CSS pixels under that emulation, and painted at `devicePixelRatio`. It now takes that box only when it is the canvas's CSS size times the pixel ratio, within the snapping to whole device pixels, and sizes the backing store by the pixel ratio otherwise, as it always has in browsers without the box. A real high-density display (the box is in device pixels there) was drawn correctly before and is drawn exactly as before. The same check keeps the backing store and the painting in step under a CSS `zoom` on an ancestor, which the box includes and `devicePixelRatio` does not; the viewer's fits under a CSS `zoom` are still off.

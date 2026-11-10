@@ -54,6 +54,11 @@ export const internals = new WeakMap<Renderer, RendererInternals>();
 type Listeners = { [K in keyof RendererEvents]: Set<(event: RendererEvents[K]) => void> };
 
 const MAX_PIXEL_RATIO = 3;
+/**
+ * How far the device-pixel box of the canvas may be from its CSS size times the pixel ratio and
+ * still be that size snapped to device pixels (under one pixel, plus the rounding of layout).
+ */
+const DEVICE_BOX_SLACK = 1.5;
 
 function samePick(a: PickResult | null, b: PickResult | null): boolean {
   return a === b || (a !== null && b !== null && a.type === b.type && a.index === b.index);
@@ -497,8 +502,18 @@ class CanvasRenderer implements Renderer {
 
   private applySize(width: number, height: number, device: readonly [number, number] | null): void {
     const dpr = this.pixelRatio();
+    // The painter scales by `dpr`, so the backing store has to be the CSS size times `dpr`. The
+    // browser's device-pixel box is that size snapped to whole device pixels, and is taken when
+    // it is. It is not under Chromium's device emulation (Playwright's `deviceScaleFactor`),
+    // where the box stays in CSS pixels while `devicePixelRatio` changes, nor under a CSS
+    // `zoom`, which the box includes and `devicePixelRatio` does not: a backing store of that
+    // size would hold one corner of the frame, or the frame in one of its corners.
     const exact =
-      device !== null && this.fixedRatio === undefined && windowRatio() <= MAX_PIXEL_RATIO;
+      device !== null &&
+      this.fixedRatio === undefined &&
+      windowRatio() <= MAX_PIXEL_RATIO &&
+      Math.abs(device[0] - width * dpr) <= DEVICE_BOX_SLACK &&
+      Math.abs(device[1] - height * dpr) <= DEVICE_BOX_SLACK;
     const bw = Math.max(1, exact ? device[0] : Math.round(width * dpr));
     const bh = Math.max(1, exact ? device[1] : Math.round(height * dpr));
     if (this.canvas.width !== bw) this.canvas.width = bw;
