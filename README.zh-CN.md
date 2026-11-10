@@ -133,6 +133,18 @@ for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'zh-CN').t
 
 ## 包
 
+**装哪个。** 多数人只需要一个包，按你想做的事来选：
+
+| 你想要……                       | 安装                                                               |
+| ------------------------------ | ------------------------------------------------------------------ |
+| 在终端或 CI 里比较图谱文件     | `@kgdiff/cli`（`npx @kgdiff/cli a.ttl b.ttl`），或者 GitHub Action |
+| 在网页里展示差异，不写渲染代码 | `@kgdiff/viewer`（`<kgdiff-viewer>` Web 组件）                     |
+| 在代码里计算差异，自己画       | `@kgdiff/core`，再按需加 `formats`、`layout`、`scene` 或 `g6`      |
+
+`@kgdiff/cli` 运行的是原生程序：npm 会随它一起装上适合本机的那一个（`@kgdiff/cli-darwin-arm64`、`@kgdiff/cli-linux-x64-gnu` 等），不需要自己安装这些平台包。
+
+全部包：
+
 | 包                                      | 说明                                                                   |
 | --------------------------------------- | ---------------------------------------------------------------------- |
 | [`@kgdiff/core`](packages/core)         | 差异引擎：规范化 → 匹配 → 分类 → 变更组 → 可逆补丁。零依赖。           |

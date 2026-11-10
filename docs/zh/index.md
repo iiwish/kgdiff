@@ -44,6 +44,18 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
 | 在自己的应用里展示差异         | [`<kgdiff-viewer>` Web 组件](./guide/viewer.md)                        |
 | 在代码里比较图                 | [各个库](./guide/library.md)                                           |
 
+### 装哪个包
+
+多数人只需要一个包，按你想做的事来选：
+
+| 你想要……                       | 安装                                                               |
+| ------------------------------ | ------------------------------------------------------------------ |
+| 在终端或 CI 里比较图谱文件     | `@kgdiff/cli`（`npx @kgdiff/cli a.ttl b.ttl`），或者 GitHub Action |
+| 在网页里展示差异，不写渲染代码 | `@kgdiff/viewer`（`<kgdiff-viewer>` Web 组件）                     |
+| 在代码里计算差异，自己画       | `@kgdiff/core`，再按需加 `formats`、`layout`、`scene` 或 `g6`      |
+
+`@kgdiff/cli` 运行的是原生程序：npm 会随它一起装上适合本机的那一个（`@kgdiff/cli-darwin-arm64`、`@kgdiff/cli-linux-x64-gnu` 等），不需要自己安装这些平台包。各个库包的作用见[库](./guide/library.md)。
+
 kgdiff 读取 RDF（Turtle、N-Triples、N-Quads、TriG、RDF/XML、JSON-LD）、OBO 和常见的 JSON 图格式（[格式](./formats.md)）。一切都在本地运行：命令行在你的机器上，Playground 和查看器在你的浏览器里，不会上传任何数据。
 
 ## 下一步
