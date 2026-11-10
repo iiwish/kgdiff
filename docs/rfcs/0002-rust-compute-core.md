@@ -1115,7 +1115,7 @@ Acceptance:
   characters per Unicode release), already possible today, and more likely once Rust pins its own
   Unicode version; see the risk in §10. Fixed in the TypeScript release
   [before phase 2](#before-phase-2-a-typescript-0x-release), which phase 2 waits for.
-- **Fit view on high-density displays.** Fixed in [#PRNUM](https://github.com/iiwish/kgdiff/pull/PRNUM)
+- **Fit view on high-density displays.** Fixed in [#83](https://github.com/iiwish/kgdiff/pull/83)
   (2026-11-10). Opening a CLI-generated HTML report in Playwright's Chromium with
   `deviceScaleFactor: 2` framed only one corner of the graph, both on the initial view and after
   "Fit view (F)"; with `deviceScaleFactor: 1` it was correct. Reproduced with Chromium 156 and
