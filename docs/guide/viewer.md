@@ -293,6 +293,10 @@ viewer.addEventListener('kgdiff-ready', async () => {
 });
 ```
 
+The ids are hunk ids, and they belong to one pair of versions. Save them under that pair, or
+read [Hunk ids](../algorithms.md#hunk-ids) before carrying them over to a newer version: the
+same id is the same place in the graph, not the same content.
+
 ## Editor support
 
 `@kgdiff/viewer` ships a
