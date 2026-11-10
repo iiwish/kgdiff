@@ -16,6 +16,11 @@ The CLI and the viewer are built from packages you can use directly:
 All of them are ESM only and run in Node.js 22 or later and in evergreen browsers. Core and
 formats are synchronous and do no I/O: you pass text and objects in and get objects out.
 
+This page is about the TypeScript packages. The engine itself is written in Rust, and an
+application in Rust uses its crates directly:
+[Embed kgdiff in a Rust application](./embedding.md) goes from a graph to a report with your own
+layout, and on to the browser.
+
 ## Diff two graphs
 
 ```sh

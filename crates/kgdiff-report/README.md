@@ -46,6 +46,14 @@ must place every union node. (The viewer skips a node without a position, so suc
 open with nodes missing and say nothing.) The layout document rounds coordinates to 0.01:
 positions read back from a layout document are on that grid and appear in the report unchanged.
 
+The guide
+[Embed kgdiff in a Rust application](https://github.com/iiwish/kgdiff/blob/main/docs/guide/embedding.md)
+shows where that layout comes from, so that a graph, its next version and their diff share one
+map, and what the browser does with the payload. Its code is
+[`examples/embedding.rs`](https://github.com/iiwish/kgdiff/blob/main/crates/kgdiff-report/examples/embedding.rs)
+(`cargo run -p kgdiff-report --example embedding`), which `tests/mental_map.rs` runs over the
+conformance corpus.
+
 The payload is a `kgdiff.report` document of version 1, described by
 [`report.v1.json`](https://github.com/iiwish/kgdiff/blob/main/packages/core/schema/report.v1.json)
 (published with `@kgdiff/core`); `cargo test -p kgdiff-report` validates every payload the crate
