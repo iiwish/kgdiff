@@ -15,6 +15,8 @@
 
 它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行。core 和 formats 都是同步的，不做任何 I/O：传入文本和对象，得到对象。
 
+本页讲的是 TypeScript 包。引擎本身用 Rust 写成，Rust 应用可以直接使用它的 crate：[在 Rust 应用中嵌入 kgdiff](./embedding.md) 从一张图讲到带着你自己布局的报告，再讲到浏览器一侧。
+
 ## 比较两张图
 
 ```sh

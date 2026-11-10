@@ -74,6 +74,12 @@ Computed positions are on that grid already, so positions read back from a layou
 as they are through any number of versions; a position from elsewhere (`300.125`) is kept exactly
 in the `LayoutResult` and written as `300.13`.
 
+A node that continues under another id is the same node only to the diff, so an application
+whose ids can change carries the positions through the diff instead of by id. The guide
+[Embed kgdiff in a Rust application](https://github.com/iiwish/kgdiff/blob/main/docs/guide/embedding.md)
+walks through it, from the first layout to a report and the browser, with code that is tested
+on the conformance corpus.
+
 `layout_graph` is new in 0.9 ([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), part 1) and
 experimental for one minor release. The TypeScript package `@kgdiff/layout` has no counterpart;
 `@kgdiff/compute` will export it with the rest of the layout (RFC 0002, phase 5).

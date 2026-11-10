@@ -13,7 +13,15 @@ keywords = ["kgdiff", "diff", "knowledge-graph", "report", "markdown"]
 categories = ["command-line-interface", "text-processing"]
 # `assets/` is git-ignored (the viewer build writes it) but packaged: listing the files here
 # makes `cargo package` take them regardless of `.gitignore` (RFC 0002, §8, "Build order").
-include = ["/Cargo.toml", "/README.md", "/build.rs", "/src/**", "/tests/**", "/assets/*.js"]
+include = [
+  "/Cargo.toml",
+  "/README.md",
+  "/build.rs",
+  "/src/**",
+  "/tests/**",
+  "/examples/**",
+  "/assets/*.js",
+]
 
 [features]
 # Embeds the viewer bundles (`assets/`, copied there by `pnpm build:viewer-assets`) for HTML
