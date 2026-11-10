@@ -485,3 +485,83 @@ describe('theme, export and teardown', () => {
     expect(h.renderer.camera.viewport().width).toBeCloseTo(400 / h.renderer.camera.get().k, 9);
   });
 });
+
+describe('backing store and the device-pixel box', () => {
+  type Box = readonly [number, number];
+  let observed: ((entries: ResizeObserverEntry[]) => void) | null;
+
+  beforeEach(() => {
+    observed = null;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(cb: (entries: ResizeObserverEntry[]) => void) {
+          observed = cb;
+        }
+        observe(): void {}
+        disconnect(): void {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  /** A renderer at the window's pixel ratio, told its size by the ResizeObserver. */
+  function observedAt(ratio: number, css: Box, device: Box | null): Harness {
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(ratio);
+    [sizeSpy.w, sizeSpy.h] = css;
+    const h = harness({ pixelRatio: undefined });
+    h.renderer.setFrame(frameOf([node(0, 0), node(1000, 500)]));
+    h.settle();
+    h.ctx.clear();
+    const size = (box: Box) => [{ inlineSize: box[0], blockSize: box[1] }];
+    observed?.([
+      {
+        contentBoxSize: size(css),
+        ...(device ? { devicePixelContentBoxSize: size(device) } : {}),
+      } as unknown as ResizeObserverEntry,
+    ]);
+    return h;
+  }
+
+  /** The scale of the frame's first transform: what the painter multiplies CSS pixels by. */
+  const paintScale = (h: Harness): unknown => h.ctx.calls('setTransform')[0]?.args[0];
+
+  // Chromium leaves the box in CSS pixels under an emulated device scale factor (Playwright's
+  // `deviceScaleFactor`): a backing store of that size held only the top-left corner of a frame
+  // painted at the window's ratio (RFC 0002, section 11).
+  it.each([2, 3])('holds the whole frame under an emulated scale factor of %d', (ratio) => {
+    const h = observedAt(ratio, [800, 600], [800, 600]);
+    expect(paintScale(h)).toBe(ratio);
+    expect(h.renderer.canvas.width).toBe(800 * ratio);
+    expect(h.renderer.canvas.height).toBe(600 * ratio);
+    // The canvas centre is the camera's centre, on screen and in the backing store.
+    const { x, y } = h.renderer.camera.get();
+    const centre = h.renderer.camera.worldToScreen({ x, y });
+    expect(centre.x * ratio).toBeCloseTo(h.renderer.canvas.width / 2, 9);
+    expect(centre.y * ratio).toBeCloseTo(h.renderer.canvas.height / 2, 9);
+  });
+
+  it('holds the whole frame under a CSS zoom, which the box includes', () => {
+    const h = observedAt(1, [800, 600], [1600, 1200]);
+    expect(paintScale(h)).toBe(1);
+    expect(h.renderer.canvas.width).toBe(800);
+    expect(h.renderer.canvas.height).toBe(600);
+  });
+
+  it('takes the box when it is the CSS size snapped to device pixels', () => {
+    // 800.4 × 2 = 1600.8 rounds to 1601; the browser snapped the box to 1600.
+    const h = observedAt(2, [800.4, 600], [1600, 1200]);
+    expect(paintScale(h)).toBe(2);
+    expect(h.renderer.canvas.width).toBe(1600);
+    expect(h.renderer.canvas.height).toBe(1200);
+  });
+
+  it('sizes by the pixel ratio where the box is not reported', () => {
+    const h = observedAt(2, [800.4, 600], null);
+    expect(h.renderer.canvas.width).toBe(1601);
+    expect(h.renderer.canvas.height).toBe(1200);
+  });
+});
