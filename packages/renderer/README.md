@@ -99,9 +99,10 @@ removeBackground(); // `addLayer` returns the function that removes the layer
   outline over a tinted `under` area. Soft tints, such as the theme's `soft` colors (about 10%
   alpha), keep it unnoticeable.
 
-`addLayer` is experimental in 0.9 (RFC 0003, part 4a): it may change in a minor release before
-it is stable. `<kgdiff-stage>` of [`@kgdiff/viewer`](../viewer) has the same method for the
-graph inside the viewer.
+`addLayer` is experimental in 0.9
+([RFC 0003](../../docs/rfcs/0003-embedding-hosts.md#4a-renderer-layers-09), part 4a): it may
+change in a minor release before it is stable. `<kgdiff-stage>` of
+[`@kgdiff/viewer`](../viewer) has the same method for the graph inside the viewer.
 
 ## Learn more
 
