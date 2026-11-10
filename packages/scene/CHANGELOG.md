@@ -1,5 +1,13 @@
 # @kgdiff/scene
 
+## 0.8.0
+
+### Patch Changes
+
+- Updated dependencies [3fe4030]
+  - @kgdiff/layout@0.8.0
+  - @kgdiff/core@0.8.0
+
 ## 0.7.0
 
 ### Patch Changes
