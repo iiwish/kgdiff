@@ -311,19 +311,23 @@ gives a host and what it does not, each case tested in both engines
 - The same two graphs, the same options and the same version of kgdiff give the same ids, in
   both engines, in whatever order the inputs list their nodes and edges. A later version that
   matches or groups a pair of graphs differently gives it other hunks, named by the same rule.
-- A hunk keeps its id while its kind and anchor stay, whatever else changes in it. When the
-  head of a review moves on, `modify:x` is still `modify:x` after `x` gets another attribute or
-  an edge, `add:x` after its group gets another node, and `relations:x` after `x` gets another
-  edge.
-- It makes no difference which side moves. When the base takes some of the changes, a hunk
-  that is left keeps its id as long as it keeps its kind and anchor.
+- The id follows the kind and the anchor, not the content. While the changes at a node are
+  still grouped as a hunk of that kind at that anchor, the id is the same: `modify:x` after `x`
+  gets another attribute or an edge, `add:x` after its group gets another node, `relations:x`
+  after `x` gets another edge. It makes no difference which side moves: the same is true when
+  the base takes some of the changes.
 - A new node that is connected to nothing and resembles no other node adds `add:<id>` and
   changes no other id.
-- With `match.strategy: 'id'`, where no edit changes how another node is matched: a changed
-  attribute of a node `x` adds at most `modify:x`, which then replaces `relations:x`; a new edge
-  from `s` to `t`, both in both versions, adds at most `relations:s`.
+- With `match.strategy` `auto` or `id`, a changed attribute of a node `x` that both versions
+  have changes no id but that of the hunk `x` is in and of the hunk that held the edge changes
+  of `x`. Most often `modify:x` appears and replaces `relations:x`.
+- With `match.strategy: 'id'`, a new edge that pairs with no other edge change (§5) changes no
+  id but that of the hunk that takes it, most often `relations:s` for an edge from `s`. An edge
+  pairs with nothing when no other edge has its predicate and no edge went from its source to
+  its target before.
 
-**What does not hold.** An id changes when the kind or the anchor does:
+**What does not hold.** Which changes are one hunk, of which kind and at which anchor, is
+decided over both versions as a whole, so an edit in one place can regroup changes in another:
 
 - `relations:x` becomes `modify:x` once `x` itself changes, and the reverse.
 - The anchor of an `add` or `remove` hunk moves when another node of the group gets more edges,
@@ -337,8 +341,20 @@ gives a host and what it does not, each case tested in both engines
   it, can change the reading: a renamed node that changes further becomes a removal and an
   addition, a modified node becomes part of a merge. With `similarity` this is true of every
   node.
+- Edge changes are paired with each other, with every `match.strategy` (§5): a removed and an
+  added edge between the same two nodes are one edge with another predicate, and with the same
+  predicate at one node they are one edge with another target or source. A new edge can take
+  the removed edge of such a pair, and the edge that is left pairs with another one. Before:
+  `s → t` and `u → v`; after: `s → v`. The hunks are `relations:s` (the edge of `s` has another
+  target) and `relations:u` (its edge is gone). Add `s → t` with another predicate: it is now
+  the old edge of `s`, the edge to `v` is the edge of `u` with another source, and
+  `relations:u` is gone with nothing new in its place.
 - Hunks that come to require each other are merged into one, under the id of the best-ranked
-  one; the other ids are gone.
+  one (earliest phase, then largest, §7); the other ids are gone. Another change to one of
+  them can make another member the best-ranked one, and then the merged hunk has another id
+  although it holds the same changes and more. Two hunks require each other when a node of one
+  gets a new id and edges go both ways between them, or when they change two copies of one
+  statement.
 - Other options (`match`, `edgeIdentity`, `detectMerges`, `detectSplits`, `ignoreAttrs`,
   `hierarchyPredicates`) give another diff, with its own hunks.
 

@@ -819,10 +819,11 @@ impl HunkSummary {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Hunk {
     /// `${kind}:${anchor}`, unique in a diff. It depends on the kind and the anchor only: the
-    /// same two graphs and options give the same ids, and a hunk keeps its id when its content
-    /// changes and loses it when its kind or anchor does. A contract from 0.9: docs/algorithms.md
-    /// §7, "Hunk ids", says what holds, what does not, and how to store review progress under
-    /// it. Read `kind` and `anchor` instead of parsing the id, since node ids may contain `:`.
+    /// same two graphs and options give the same ids, and the id says where the hunk is, not
+    /// what it holds. A contract from 0.9: docs/algorithms.md §7, "Hunk ids", says which edits
+    /// leave ids alone, which ones group the changes again under other ids, and how to store
+    /// review progress under an id. Read `kind` and `anchor` instead of parsing the id, since
+    /// node ids may contain `:`.
     pub id: JsStr,
     pub kind: HunkKind,
     pub phase: ReplayPhase,

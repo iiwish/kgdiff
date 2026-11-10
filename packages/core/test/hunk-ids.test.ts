@@ -5,6 +5,7 @@
  */
 import {
   type DiffOptions,
+  type DiffResult,
   diff,
   type EdgeInput,
   type GraphInput,
@@ -37,6 +38,12 @@ const ID_VARIANTS: readonly [string, DiffOptions][] = [
   ['id matching without restructuring', VARIANTS[3]?.[1] as DiffOptions],
 ];
 
+/** Where equal ids are one node: `auto` and `id`. */
+const SAME_ID_VARIANTS: readonly [string, DiffOptions][] = [
+  ...VARIANTS.filter(([, options]) => options.match?.strategy !== 'similarity'),
+  ['id matching', BY_ID],
+];
+
 function graph(text: string): GraphInput {
   return JSON.parse(text) as GraphInput;
 }
@@ -58,6 +65,21 @@ function changes(from: readonly string[], to: readonly string[]): string[] {
     ...from.filter((id) => !to.includes(id)).map((id) => `-${id}`),
     ...to.filter((id) => !from.includes(id)).map((id) => `+${id}`),
   ];
+}
+
+/** The ids of `from` that `to` has not, and the ids of `to` that `from` has not. */
+function moved(from: DiffResult, to: DiffResult): { gone: string[]; fresh: string[] } {
+  const before = from.hunks.map((h) => h.id);
+  const after = to.hunks.map((h) => h.id);
+  return {
+    gone: before.filter((id) => !after.includes(id)),
+    fresh: after.filter((id) => !before.includes(id)),
+  };
+}
+
+/** The ids of the nodes that both versions have. */
+function inBoth(a: GraphInput, b: GraphInput): string[] {
+  return b.nodes.filter((node) => a.nodes.some((m) => m.id === node.id)).map((node) => node.id);
 }
 
 // One hunk of each kind: `m-curie` merges into `curie`, `physics` splits off `nuclear`, `lab`
@@ -250,41 +272,67 @@ describe('hunk ids: what leaves them alone', () => {
     });
   });
 
-  describe.each(ID_VARIANTS)('on random version pairs (%s)', (_name, options) => {
-    it('a changed attribute: at most modify:x appears, and relations:x goes with it', () => {
+  // Not "at most modify:x appears": the hunk of `x` may be one that a dependency cycle merged,
+  // and such a hunk has the id of its best-ranked member, which this change can make another.
+  describe.each(SAME_ID_VARIANTS)('on random version pairs (%s)', (_name, options) => {
+    it('a changed attribute of a node of both versions: every hunk without that node or its edges', () => {
       fc.assert(
         fc.property(versionPairArb(), fc.nat(), ([a, b], n) => {
-          fc.pre(b.nodes.length > 0);
-          const x = (b.nodes[n % b.nodes.length] as { id: string }).id;
+          const both = inBoth(a, b);
+          fc.pre(both.length > 0);
+          const x = both[n % both.length] as string;
           const more = {
             nodes: b.nodes.map((node) =>
               node.id === x ? { ...node, attrs: { ...node.attrs, 'fresh-key': 1 } } : node,
             ),
             edges: b.edges,
           };
-          const changed = changes(ids(a, b, options), ids(a, more, options));
-          expect(changed.filter((c) => c !== `+modify:${x}` && c !== `-relations:${x}`)).toEqual(
-            [],
-          );
-          if (changed.includes(`-relations:${x}`)) expect(changed).toContain(`+modify:${x}`);
+          const d1 = diff(a, b, options);
+          const d2 = diff(a, more, options);
+          // The hunks that held `x` or an edge change of `x`, and the hunk that holds `x` now.
+          const held = [
+            d1.index.node(x)?.hunk,
+            ...d1.edges.filter((e) => e.source === x).map((e) => e.hunk),
+          ];
+          const holds = d2.index.node(x)?.hunk;
+          expect(holds).toBeDefined();
+          const { gone, fresh } = moved(d1, d2);
+          expect(gone.filter((id) => !held.includes(id))).toEqual([]);
+          expect(fresh.filter((id) => id !== holds)).toEqual([]);
         }),
         { numRuns: RUNS },
       );
     });
+  });
 
-    it('a new edge between two nodes of both versions: at most relations:source appears', () => {
+  describe.each(ID_VARIANTS)('on random version pairs (%s)', (_name, options) => {
+    // An edge with a predicate of its own, between two nodes that no edge went from and to
+    // before, is no predicate change and no retarget of another edge (docs/algorithms.md §5).
+    it('a new edge that pairs with no other edge change: every hunk but the one that takes it', () => {
       fc.assert(
         fc.property(versionPairArb(), fc.nat(), fc.nat(), ([a, b], s, t) => {
-          const both = b.nodes.filter((node) => a.nodes.some((m) => m.id === node.id));
+          const both = inBoth(a, b);
           fc.pre(both.length > 0);
-          const source = (both[s % both.length] as { id: string }).id;
-          const target = (both[t % both.length] as { id: string }).id;
+          const source = both[s % both.length] as string;
+          const target = both[t % both.length] as string;
+          fc.pre(!a.edges.some((e) => e.source === source && e.target === target));
           const more = {
             nodes: b.nodes,
             edges: [...b.edges, edge(source, target, 'fresh-predicate')],
           };
-          const changed = changes(ids(a, b, options), ids(a, more, options));
-          expect(changed.filter((c) => c !== `+relations:${source}`)).toEqual([]);
+          const d1 = diff(a, b, options);
+          const d2 = diff(a, more, options);
+          // The hunk that takes the edge, and the hunks that held what it holds.
+          const takes = d2.edges.find((e) => e.predicate === 'fresh-predicate')?.hunk;
+          const hunk = d2.hunks.find((h) => h.id === takes);
+          expect(hunk).toBeDefined();
+          const held = [
+            ...(hunk?.nodes ?? []).map((id) => d1.index.node(id)?.hunk),
+            ...(hunk?.edges ?? []).map((id) => d1.index.edge(id)?.hunk),
+          ];
+          const { gone, fresh } = moved(d1, d2);
+          expect(gone.filter((id) => !held.includes(id))).toEqual([]);
+          expect(fresh.filter((id) => id !== takes)).toEqual([]);
         }),
         { numRuns: RUNS },
       );
@@ -324,6 +372,40 @@ describe('hunk ids: what moves them', () => {
     "edges":[]}`;
     expect(idsOf(CURIE, curie('a9'))).toEqual(['modify:a9']);
     expect(idsOf(CURIE, rewritten)).toEqual(['add:a9', 'remove:a']);
+  });
+
+  it('an edge change that pairs with another one: the changes are grouped again', () => {
+    // `s` points at `v` instead of `t`, and `u` no longer points at `v`.
+    const nodes = ['s', 't', 'u', 'v'].map((id) => ({ id }));
+    const before = { nodes, edges: [edge('s', 't'), edge('u', 'v')] };
+    const after = { nodes, edges: [edge('s', 'v')] };
+    // A new edge from `s` to `t` is now the old one with another predicate. So the edge to `v`
+    // is no longer that old edge with another target: it is the edge of `u` with another
+    // source, and nothing is left under `u`. Found by CI with fast-check, seed -1797998617.
+    const more = { nodes, edges: [edge('s', 'v'), edge('s', 't', 'q')] };
+    for (const [, options] of VARIANTS) {
+      expect(ids(before, after, options)).toEqual(['relations:s', 'relations:u']);
+      expect(ids(before, more, options)).toEqual(['relations:s']);
+    }
+  });
+
+  it('hunks merged for a cycle: another change makes another member the best-ranked one', () => {
+    // Two copies of one statement: one gets another label, the other goes from `n` to `q`. The
+    // hunks of `n` and of `q` change the same triple, so they require each other and are one.
+    const nodes = [{ id: 'n' }, { id: 'q' }, { id: 'z' }];
+    const cites = (source: string, label: string) => ({ ...edge(source, 'z', 'cites'), label });
+    const before = { nodes, edges: [cites('n', 'first'), cites('n', 'second')] };
+    const edges = [cites('n', 'first, revised'), cites('q', 'second')];
+    for (const options of [{}, BY_ID]) {
+      expect(ids(before, { nodes, edges }, options)).toEqual(['relations:n']);
+      // One more edge under `q` makes its hunk the larger one.
+      const larger = { nodes, edges: [...edges, edge('q', 'n', 'fresh-predicate')] };
+      expect(ids(before, larger, options)).toEqual(['relations:q']);
+      // An attribute on `n` puts `n` into the hunk, which is not `modify:n`.
+      const changedNode = { nodes: [{ id: 'n', attrs: { k: 1 } }, nodes[1], nodes[2]], edges };
+      const d = diff(before, changedNode as GraphInput, options);
+      expect(d.hunks.map((h) => [h.id, h.nodes])).toEqual([['relations:q', ['n']]]);
+    }
   });
 
   it('hunks that come to require each other: one takes the other in', () => {

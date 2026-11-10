@@ -5,7 +5,7 @@
 mod support;
 
 use kgdiff_core::js::{JsStr, Object, Value, json};
-use kgdiff_core::{DiffOptions, EdgeIdentity, MatchStrategy, diff};
+use kgdiff_core::{DiffOptions, DiffResult, EdgeIdentity, MatchStrategy, diff};
 use proptest::prelude::*;
 use support::{EdgeIn, GraphIn, NodeIn};
 
@@ -34,23 +34,40 @@ fn plain() -> DiffOptions {
     }
 }
 
-/// The variants of `diff_properties.rs`.
-fn variant() -> impl Strategy<Value = DiffOptions> {
-    let edge_id = DiffOptions {
+fn edge_id() -> DiffOptions {
+    DiffOptions {
         edge_identity: EdgeIdentity::Id,
         ..DiffOptions::default()
-    };
-    prop::sample::select(vec![
+    }
+}
+
+/// The variants of `diff_properties.rs`.
+fn variants() -> Vec<DiffOptions> {
+    vec![
         DiffOptions::default(),
         matching(MatchStrategy::Similarity),
-        edge_id,
+        edge_id(),
         plain(),
-    ])
+    ]
+}
+
+fn variant() -> impl Strategy<Value = DiffOptions> {
+    prop::sample::select(variants())
 }
 
 /// Matching by id: no edit changes how another node is matched.
 fn id_variant() -> impl Strategy<Value = DiffOptions> {
     prop::sample::select(vec![matching(MatchStrategy::Id), plain()])
+}
+
+/// Where equal ids are one node: `auto` and `id`.
+fn same_id_variant() -> impl Strategy<Value = DiffOptions> {
+    prop::sample::select(vec![
+        DiffOptions::default(),
+        edge_id(),
+        plain(),
+        matching(MatchStrategy::Id),
+    ])
 }
 
 fn graph(text: &str) -> Value {
@@ -80,6 +97,27 @@ fn changes(from: &[String], to: &[String]) -> Vec<String> {
         .filter(|id| !from.contains(id))
         .map(|id| format!("+{id}"));
     gone.chain(new).collect()
+}
+
+/// The ids of `from` that `to` has not, and the ids of `to` that `from` has not.
+fn moved(from: &DiffResult, to: &DiffResult) -> (Vec<JsStr>, Vec<JsStr>) {
+    let only = |x: &DiffResult, y: &DiffResult| -> Vec<JsStr> {
+        x.hunks
+            .iter()
+            .filter(|h| y.hunk(&h.id).is_none())
+            .map(|h| h.id.clone())
+            .collect()
+    };
+    (only(from, to), only(to, from))
+}
+
+/// The ids of the nodes that both versions have.
+fn in_both(a: &GraphIn, b: &GraphIn) -> Vec<String> {
+    b.nodes
+        .iter()
+        .filter(|n| a.nodes.iter().any(|m| m.id == n.id))
+        .map(|n| n.id.clone())
+        .collect()
 }
 
 /// `list` with `from` replaced by `to`, sorted.
@@ -389,52 +427,82 @@ proptest! {
         );
     }
 
-    /// At most `modify:x` appears, and `relations:x` goes with it.
+    /// A changed attribute of a node of both versions leaves alone every hunk without that node
+    /// or its edges. Not "at most `modify:x` appears": the hunk of `x` may be one that a
+    /// dependency cycle merged, and such a hunk has the id of its best-ranked member, which this
+    /// change can make another.
     #[test]
-    fn a_changed_attribute(
+    fn a_changed_attribute_of_a_node_of_both_versions(
         (a, b) in support::version_pair(10, 16),
         n in any::<usize>(),
-        options in id_variant(),
+        options in same_id_variant(),
     ) {
-        if b.nodes.is_empty() {
+        let both = in_both(&a, &b);
+        if both.is_empty() {
             return Ok(());
         }
+        let x = &both[n % both.len()];
         let mut more = b.clone();
-        let at = n % more.nodes.len();
-        let x = more.nodes[at].id.clone();
-        more.nodes[at].attrs.get_or_insert_with(Object::new).insert("fresh-key", 1);
+        for node in more.nodes.iter_mut().filter(|node| node.id == *x) {
+            node.attrs.get_or_insert_with(Object::new).insert("fresh-key", 1);
+        }
         let a = a.to_value();
-        let changed = changes(&ids(&a, &b.to_value(), &options), &ids(&a, &more.to_value(), &options));
-        let (modify, relations) = (format!("+modify:{x}"), format!("-relations:{x}"));
-        prop_assert!(changed.iter().all(|c| *c == modify || *c == relations), "{:?}", changed);
-        prop_assert!(!changed.contains(&relations) || changed.contains(&modify));
+        let d1 = diff(&a, &b.to_value(), &options).unwrap();
+        let d2 = diff(&a, &more.to_value(), &options).unwrap();
+        // The hunks that held `x` or an edge change of `x`, and the hunk that holds `x` now.
+        let mut held: Vec<Option<&JsStr>> = vec![d1.node(x).and_then(|n| n.hunk.as_ref())];
+        held.extend(d1.edges.iter().filter(|e| e.source == x.as_str()).map(|e| e.hunk.as_ref()));
+        let holds = d2.node(x).and_then(|n| n.hunk.as_ref());
+        prop_assert!(holds.is_some());
+        let (gone, fresh) = moved(&d1, &d2);
+        prop_assert!(gone.iter().all(|id| held.contains(&Some(id))), "gone {:?}", gone);
+        prop_assert!(fresh.iter().all(|id| Some(id) == holds), "new {:?}", fresh);
     }
 
-    /// At most `relations:source` appears.
+    /// A new edge that pairs with no other edge change leaves alone every hunk but the one that
+    /// takes it. An edge with a predicate of its own, between two nodes that no edge went from
+    /// and to before, is no predicate change and no retarget of another edge
+    /// (docs/algorithms.md §5).
     #[test]
-    fn a_new_edge_between_two_nodes_of_both_versions(
+    fn a_new_edge_that_pairs_with_no_other_edge_change(
         (a, b) in support::version_pair(10, 16),
         (s, t) in (any::<usize>(), any::<usize>()),
         options in id_variant(),
     ) {
-        let both: Vec<&NodeIn> =
-            b.nodes.iter().filter(|n| a.nodes.iter().any(|m| m.id == n.id)).collect();
+        let both = in_both(&a, &b);
         if both.is_empty() {
             return Ok(());
         }
-        let source = both[s % both.len()].id.clone();
-        let target = both[t % both.len()].id.clone();
+        let (source, target) = (&both[s % both.len()], &both[t % both.len()]);
+        if a.edges.iter().any(|e| e.source == *source && e.target == *target) {
+            return Ok(());
+        }
         let mut more: GraphIn = b.clone();
         more.edges.push(EdgeIn {
             source: source.clone(),
-            target,
+            target: target.clone(),
             predicate: Some("fresh-predicate".to_owned()),
             ..EdgeIn::default()
         });
         let a = a.to_value();
-        let changed = changes(&ids(&a, &b.to_value(), &options), &ids(&a, &more.to_value(), &options));
-        let relations = format!("+relations:{source}");
-        prop_assert!(changed.iter().all(|c| *c == relations), "{:?}", changed);
+        let d1 = diff(&a, &b.to_value(), &options).unwrap();
+        let d2 = diff(&a, &more.to_value(), &options).unwrap();
+        // The hunk that takes the edge, and the hunks that held what it holds.
+        let takes = d2
+            .edges
+            .iter()
+            .find(|e| e.predicate == "fresh-predicate")
+            .and_then(|e| e.hunk.as_ref());
+        let hunk = takes.and_then(|id| d2.hunk(id));
+        prop_assert!(hunk.is_some());
+        let mut held: Vec<Option<&JsStr>> = Vec::new();
+        if let Some(h) = hunk {
+            held.extend(h.nodes.iter().map(|id| d1.node(id).and_then(|n| n.hunk.as_ref())));
+            held.extend(h.edges.iter().map(|id| d1.edge(id).and_then(|e| e.hunk.as_ref())));
+        }
+        let (gone, fresh) = moved(&d1, &d2);
+        prop_assert!(gone.iter().all(|id| held.contains(&Some(id))), "gone {:?}", gone);
+        prop_assert!(fresh.iter().all(|id| Some(id) == takes), "new {:?}", fresh);
     }
 }
 
@@ -500,6 +568,70 @@ fn a_pair_of_nodes_that_is_matched_differently_after_another_edit() {
     "edges":[]}"#;
     assert_eq!(ids_of(CURIE, &curie("a9", ""), &options), ["modify:a9"]);
     assert_eq!(ids_of(CURIE, rewritten, &options), ["add:a9", "remove:a"]);
+}
+
+#[test]
+fn an_edge_change_that_pairs_with_another_one() {
+    // `s` points at `v` instead of `t`, and `u` no longer points at `v`.
+    let nodes = || ["s", "t", "u", "v"].map(|id| graph(&node(id))).to_vec();
+    let of = |edges: &[String]| graph_of(nodes(), edges.iter().map(|e| graph(e)).collect());
+    let before = of(&[edge("s", "t", "p"), edge("u", "v", "p")]);
+    let after = of(&[edge("s", "v", "p")]);
+    // A new edge from `s` to `t` is now the old one with another predicate. So the edge to `v`
+    // is no longer that old edge with another target: it is the edge of `u` with another
+    // source, and nothing is left under `u`. Found by CI with fast-check, seed -1797998617.
+    let more = of(&[edge("s", "v", "p"), edge("s", "t", "q")]);
+    for options in variants() {
+        assert_eq!(
+            ids(&before, &after, &options),
+            ["relations:s", "relations:u"]
+        );
+        assert_eq!(ids(&before, &more, &options), ["relations:s"]);
+    }
+}
+
+#[test]
+fn hunks_merged_for_a_cycle_take_the_id_of_another_member() {
+    // Two copies of one statement: one gets another label, the other goes from `n` to `q`. The
+    // hunks of `n` and of `q` change the same triple, so they require each other and are one.
+    let cites = |source: &str, label: &str| {
+        format!(r#"{{"source":"{source}","target":"z","predicate":"cites","label":"{label}"}}"#)
+    };
+    let of = |n: &str, edges: &[String]| {
+        graph_of(
+            vec![graph(n), graph(&node("q")), graph(&node("z"))],
+            edges.iter().map(|e| graph(e)).collect(),
+        )
+    };
+    let before = of(&node("n"), &[cites("n", "first"), cites("n", "second")]);
+    let edges = [cites("n", "first, revised"), cites("q", "second")];
+    for options in [DiffOptions::default(), matching(MatchStrategy::Id)] {
+        assert_eq!(
+            ids(&before, &of(&node("n"), &edges), &options),
+            ["relations:n"]
+        );
+        // One more edge under `q` makes its hunk the larger one.
+        let mut larger = edges.to_vec();
+        larger.push(edge("q", "n", "fresh-predicate"));
+        assert_eq!(
+            ids(&before, &of(&node("n"), &larger), &options),
+            ["relations:q"]
+        );
+        // An attribute on `n` puts `n` into the hunk, which is not `modify:n`.
+        let changed_node = of(r#"{"id":"n","attrs":{"k":1}}"#, &edges);
+        let d = diff(&before, &changed_node, &options).unwrap();
+        let hunks: Vec<(String, Vec<String>)> = d
+            .hunks
+            .iter()
+            .map(|h| {
+                (
+                    h.id.to_string(),
+                    h.nodes.iter().map(ToString::to_string).collect(),
+                )
+            })
+            .collect();
+        assert_eq!(hunks, [("relations:q".to_owned(), vec!["n".to_owned()])]);
+    }
 }
 
 #[test]
