@@ -3,7 +3,8 @@
  * file, every primitive vector and the manifest are generated again in memory and compared with
  * the files on disk, and nothing else lives under `cases/` or `primitives/`.
  *
- * Every recorded document also validates against its JSON Schema in `packages/core/schema/`.
+ * Every recorded document also validates against its JSON Schema in `packages/core/schema/`,
+ * and so does the report payload: `report.json` with the packed diff it was recorded without.
  *
  * When this fails after an intended behaviour change, run `pnpm conformance:update` and review
  * the diff: the corpus is what every other implementation is checked against.
@@ -28,9 +29,16 @@ const decoder = new TextDecoder();
 
 const SCHEMA_BASE = 'https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/';
 const ajv = new Ajv2020({ allErrors: true, strict: true, strictTypes: true });
-for (const name of ['graph', 'delta', 'diff', 'diff-packed']) {
+for (const file of [
+  'graph.v1',
+  'delta.v1',
+  'diff.v1',
+  'diff-packed.v1',
+  'layout.v2',
+  'report.v1',
+]) {
   ajv.addSchema(
-    JSON.parse(readFileSync(join(REPO, 'packages/core/schema', `${name}.v1.json`), 'utf8')),
+    JSON.parse(readFileSync(join(REPO, 'packages/core/schema', `${file}.json`), 'utf8')),
   );
 }
 /** The JSON Schema of each recorded document, by path below `expected/`. */
@@ -109,6 +117,17 @@ describe('conformance corpus', () => {
       if (!validate) throw new Error(`${schema}.v1.json is not registered`);
       if (!validate(JSON.parse(readFileSync(path, 'utf8')))) {
         errors.push(`${file}: ${ajv.errorsText(validate.errors)}`);
+      }
+    }
+    // `report.json` is the payload without its diff and layout: with the packed diff put back
+    // it is a report without a layout, which `report.v1.json` describes too.
+    const expected = join(ROOT, 'cases', id, 'expected');
+    if (existsSync(join(expected, 'report.json'))) {
+      const validate = ajv.getSchema(`${SCHEMA_BASE}report.v1.json`);
+      if (!validate) throw new Error('report.v1.json is not registered');
+      const read = (file: string) => JSON.parse(readFileSync(join(expected, file), 'utf8'));
+      if (!validate({ ...read('report.json'), diff: read('diff.packed.json') })) {
+        errors.push(`report.json: ${ajv.errorsText(validate.errors)}`);
       }
     }
     expect(errors).toEqual([]);

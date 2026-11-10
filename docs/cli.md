@@ -244,7 +244,8 @@ The viewer element carries `mode` and `scope` when they were given; theme, langu
 states travel only in the payload's `view` (an attribute would outrank what the reader chose
 before), and the viewer applies them as soon as the payload is read.
 
-The payload (`ReportPayload`, `format: "kgdiff.report"`, `version: 1`) holds the packed diff, the
+The payload (`ReportPayload`, `format: "kgdiff.report"`, `version: 1`; JSON Schema
+[`report.v1.json`](../packages/core/schema/report.v1.json)) holds the packed diff, the
 layout, `meta` (title, generator, timestamp, the two sides' names and formats) and `view`: `mode`,
 `scope`, `theme`, `locale` and, from kgdiff 0.6, `panels` (an object of region → state, e.g.
 `{ "detail": "collapsed" }`). Every `view` field is optional; a viewer ignores the ones it does

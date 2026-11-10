@@ -2,6 +2,11 @@
  * The JSON Schemas in schema/ describe what kgdiff writes: graphs (`graphToJSON`), diffs
  * (`diffToJSON`) and deltas. Everything kgdiff writes must validate, and the schemas must
  * reject what it would not write.
+ *
+ * Layouts (`layout.v2.json`) and report payloads (`report.v1.json`) are written by the Rust
+ * crates, whose tests validate them (kgdiff-layout, kgdiff-report); here, the two schemas are
+ * compiled in strict mode with the others, and the report schema is checked against payloads
+ * put together by hand.
  */
 import { readFileSync } from 'node:fs';
 import {
@@ -14,6 +19,7 @@ import {
   packDiffJSON,
 } from '@kgdiff/core';
 import { parseGraph } from '@kgdiff/formats';
+import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
@@ -30,25 +36,35 @@ import {
 } from './support/fixtures.js';
 
 const BASE = 'https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/';
-const NAMES = ['graph', 'delta', 'diff', 'diff-packed'] as const;
+const NAMES = [
+  'graph.v1',
+  'delta.v1',
+  'diff.v1',
+  'diff-packed.v1',
+  'layout.v2',
+  'report.v1',
+] as const;
 const schemas = NAMES.map(
   (name) =>
-    JSON.parse(
-      readFileSync(new URL(`../schema/${name}.v1.json`, import.meta.url), 'utf8'),
-    ) as Record<string, unknown>,
+    JSON.parse(readFileSync(new URL(`../schema/${name}.json`, import.meta.url), 'utf8')) as Record<
+      string,
+      unknown
+    >,
 );
 
 const ajv = new Ajv2020({ allErrors: true, strict: true, strictTypes: true });
 ajv.addSchema(schemas);
 function validator(name: (typeof NAMES)[number]): ValidateFunction {
-  const validate = ajv.getSchema(`${BASE}${name}.v1.json`);
-  if (validate === undefined) throw new Error(`${name}.v1.json is not registered`);
+  const validate = ajv.getSchema(`${BASE}${name}.json`);
+  if (validate === undefined) throw new Error(`${name}.json is not registered`);
   return validate;
 }
-const graph = validator('graph');
-const delta = validator('delta');
-const diffSchema = validator('diff');
-const packedSchema = validator('diff-packed');
+const graph = validator('graph.v1');
+const delta = validator('delta.v1');
+const diffSchema = validator('diff.v1');
+const packedSchema = validator('diff-packed.v1');
+const layoutSchema = validator('layout.v2');
+const report = validator('report.v1');
 
 /** Asserts validity, listing the schema errors on failure. */
 function expectValid(validate: ValidateFunction, value: unknown): void {
@@ -68,7 +84,7 @@ function expectAllValid(before: GraphInput, after: GraphInput, options?: DiffOpt
 
 describe('JSON Schemas', () => {
   it('have the $id their file name gives them', () => {
-    expect(schemas.map((schema) => schema.$id)).toEqual(NAMES.map((n) => `${BASE}${n}.v1.json`));
+    expect(schemas.map((schema) => schema.$id)).toEqual(NAMES.map((n) => `${BASE}${n}.json`));
   });
 
   it('accept the graphs, diffs and deltas of random version pairs', () => {
@@ -262,5 +278,82 @@ describe('the delta and diff schemas', () => {
   it('accept an identical pair', () => {
     const g = { nodes: [{ id: 'a' }], edges: [] };
     expectAllValid(g, g);
+  });
+});
+
+describe('the report schema', () => {
+  const result = diff(enterpriseBefore, enterpriseAfter('hint'));
+  // Version 1, as this repository's TypeScript engine writes it; the Rust engine writes 2.
+  const layoutV1 = layoutToJSON(layoutDiff(result));
+  const layoutV2 = { ...layoutV1, version: 2, generator: 'kgdiff-layout/1' };
+  const payload = {
+    format: 'kgdiff.report',
+    version: 1,
+    diff: packDiffJSON(diffToJSON(result)),
+    layout: layoutV2,
+    meta: {
+      title: 'v12 → v13',
+      generator: 'kgdiff 0.0.0',
+      generatedAt: '2026-11-10T00:00:00.000Z',
+      before: { name: 'v12', format: 'json' },
+      after: { name: 'v13' },
+    },
+    view: {
+      mode: 'swipe',
+      scope: 'all',
+      theme: 'dark',
+      palette: 'colorblind',
+      locale: 'zh-CN',
+      panels: { detail: 'collapsed', minimap: 'hidden' },
+    },
+  };
+  const { layout: _layout, ...withoutLayout } = payload;
+  const { view: _view, ...withoutView } = payload;
+
+  it('accepts a layout of either version, and none', () => {
+    expect(layoutV1.version).toBe(1);
+    expectValid(layoutSchema, layoutV2);
+    expectValid(report, payload);
+    expectValid(report, { ...payload, layout: layoutV1 });
+    expectValid(report, withoutLayout);
+  });
+
+  it('accepts a diff that is not packed, and a payload without view or title', () => {
+    expectValid(report, { ...payload, diff: diffToJSON(result) });
+    expectValid(report, withoutView);
+    const { title: _title, ...meta } = payload.meta;
+    expectValid(report, { ...payload, meta });
+  });
+
+  it('accepts members of view it does not know, which later versions add', () => {
+    expectValid(report, {
+      ...payload,
+      view: { ...payload.view, shapes: { Class: 'square' }, plain: true },
+    });
+  });
+
+  it.each([
+    ['another format', { format: 'kgdiff.diff' }],
+    ['a newer version', { version: 2 }],
+    ['no diff', { diff: undefined }],
+    ['a delta for a diff', { diff: result.delta }],
+    ['a null layout', { layout: null }],
+    ['a layout of version 3', { layout: { ...layoutV2, version: 3 } }],
+    ['a version 1 layout with a generator', { layout: { ...layoutV2, version: 1 } }],
+    ['a version 2 layout without a generator', { layout: { ...layoutV1, version: 2 } }],
+    ['no meta', { meta: undefined }],
+    ['no generator', { meta: { ...payload.meta, generator: undefined } }],
+    ['a side without a name', { meta: { ...payload.meta, after: { format: 'json' } } }],
+    ['a misspelt member of meta', { meta: { ...payload.meta, generatedat: 'now' } }],
+    ['a member at the top level', { title: 'v12 → v13' }],
+    ['an unknown mode', { view: { mode: 'sideways' } }],
+    ['an unknown scope', { view: { scope: 'context' } }],
+    ['an unknown theme', { view: { theme: 'sepia' } }],
+    ['an unknown palette', { view: { palette: 'neon' } }],
+    ['an unknown locale', { view: { locale: 'fr' } }],
+    ['an unknown region', { view: { panels: { sidebar: 'open' } } }],
+    ['an unknown panel state', { view: { panels: { list: 'closed' } } }],
+  ])('rejects %s', (_case, spoiled) => {
+    expect(report(JSON.parse(JSON.stringify({ ...payload, ...spoiled })))).toBe(false);
   });
 });
