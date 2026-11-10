@@ -18,12 +18,13 @@ import type {
   PickResult,
   Renderer,
   RendererEvents,
+  RendererLayer,
   RendererOptions,
   SplitFrame,
 } from './index.js';
 import { attachInput } from './input.js';
 import { clamp } from './math.js';
-import { isSplit, LABEL_RASTER_BUDGET, Painter, Resources, splitX } from './paint.js';
+import { isSplit, LABEL_RASTER_BUDGET, NO_LAYERS, Painter, Resources, splitX } from './paint.js';
 import { pickAt } from './pick.js';
 
 /** Test seams and platform overrides (not part of the public API). */
@@ -289,6 +290,31 @@ class CanvasRenderer implements Renderer {
     return pickAt(frame, cache, view, x, y, this.res.fonts, this.res.measurer);
   }
 
+  addLayer(layer: RendererLayer): () => void {
+    const order = layer?.order;
+    if ((order !== 'under' && order !== 'over') || typeof layer.draw !== 'function') {
+      throw new KgdiffError(
+        'invalid-input',
+        "addLayer: expected { order: 'under' | 'over', draw(ctx, view) }",
+      );
+    }
+    if (this.destroyed) return () => undefined;
+    // The painter's lists are replaced, not mutated: a layer may add or remove while it draws.
+    const p = this.painter;
+    p[order] = [...p[order], layer];
+    this.requestRender();
+    let added = true;
+    return () => {
+      if (!added) return;
+      added = false;
+      const at = p[order].lastIndexOf(layer);
+      if (at < 0) return; // the renderer was destroyed
+      const rest = p[order].filter((_, i) => i !== at);
+      p[order] = rest.length > 0 ? rest : NO_LAYERS;
+      this.requestRender();
+    };
+  }
+
   on<K extends keyof RendererEvents>(
     type: K,
     listener: (event: RendererEvents[K]) => void,
@@ -352,6 +378,8 @@ class CanvasRenderer implements Renderer {
     for (const fn of this.cleanup.splice(0)) fn();
     for (const set of Object.values(this.listeners)) set.clear();
     this.themeListeners.clear();
+    this.painter.under = NO_LAYERS;
+    this.painter.over = NO_LAYERS;
     this.canvas.remove();
     internals.delete(this);
   }

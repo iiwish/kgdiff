@@ -1,13 +1,14 @@
 /**
  * Paints one frame (or a swipe pair) into a `Ctx2D`. Pass order (docs/visual-language.md):
- * background + grid → collapsed pills → edges → glyph arcs → halos → nodes (+ rings, pulses)
- * → pivots → badges → labels. Swipe draws the background once, then each side clipped to its
- * half with its own label placement.
+ * background + grid → the host's `under` layers → collapsed pills → edges → glyph arcs → halos
+ * → nodes (+ rings, pulses) → pivots → badges → labels → the host's `over` layers. Swipe draws
+ * the background once, then each side clipped to its half with its own label placement and its
+ * own call of every layer.
  */
 
 import type { FrameVisuals, Theme } from '@kgdiff/scene';
 import { LabelAtlas } from './atlas.js';
-import type { Ctx2D, SurfaceFactory } from './ctx.js';
+import { type Ctx2D, NO_DASH, type SurfaceFactory } from './ctx.js';
 import { drawBackground, GridTiles } from './draw/background.js';
 import { BadgePass } from './draw/badges.js';
 import { drawCollapsed } from './draw/collapsed.js';
@@ -18,7 +19,7 @@ import { LabelPass } from './draw/labels.js';
 import { drawNodes } from './draw/nodes.js';
 import type { View } from './draw/view.js';
 import { type FrameCache, Interner } from './frame-cache.js';
-import type { CameraState, SplitFrame } from './index.js';
+import type { CameraState, LayerView, RendererLayer, SplitFrame } from './index.js';
 import { CollisionGrid } from './labels.js';
 import { clamp, snap } from './math.js';
 import { createStats, type PaintStats, resetStats } from './paint-stats.js';
@@ -97,6 +98,35 @@ export interface PaintCaches {
   readonly after: FrameCache;
 }
 
+/** No host layers: the paint path without them (shared, so adding none allocates nothing). */
+export const NO_LAYERS: readonly RendererLayer[] = Object.freeze([]);
+
+/** What the layers of one side (or of the whole canvas) are told: a snapshot of this frame. */
+function layerView(cam: CameraState, v: View, side: 'before' | 'after' | null): LayerView {
+  const { k, ox, oy } = v;
+  const view = {
+    camera: { x: cam.x, y: cam.y, k: cam.k },
+    viewport: {
+      x: (v.x0 - ox) / k,
+      y: (v.y0 - oy) / k,
+      width: (v.x1 - v.x0) / k,
+      height: (v.y1 - v.y0) / k,
+    },
+    pixelRatio: v.dpr,
+    worldToScreen: (p: { readonly x: number; readonly y: number }) => ({
+      x: p.x * k + ox,
+      y: p.y * k + oy,
+    }),
+  };
+  return side === null ? view : { ...view, side };
+}
+
+/** A layer that throws must not take the frame with it: report as an uncaught error would be. */
+function reportLayerError(error: unknown): void {
+  if (typeof reportError === 'function') reportError(error);
+  else console.error('[kgdiff] a renderer layer threw:', error);
+}
+
 /** New label rasterizations per frame (≈ 3–5 ms of text rendering on mid-range hardware). */
 export const LABEL_RASTER_BUDGET = 160;
 
@@ -106,6 +136,12 @@ export class Painter {
   rasterBudget = LABEL_RASTER_BUDGET;
   /** Labels never cross the canvas edges (one without room inside is left out). */
   labelsInside = false;
+  /**
+   * The host's layers (`Renderer.addLayer`), in the order added. Replaced, never mutated, so a
+   * layer may add or remove layers while it draws.
+   */
+  under: readonly RendererLayer[] = NO_LAYERS;
+  over: readonly RendererLayer[] = NO_LAYERS;
   private readonly labels = new LabelPass();
   private readonly badges = new BadgePass();
   private readonly grid = new CollisionGrid();
@@ -165,11 +201,19 @@ export class Painter {
           : frame.spotlight;
     drawBackground(ctx, v, theme, grid ? this.res.tiles : null, spotlight);
     this.stats.phases.push('background');
-    if (frame === null) return this.stats;
+    if (frame === null) {
+      // Layers are the host's picture, drawn from its own positions: a frame is not needed.
+      if (this.under.length + this.over.length > 0) {
+        const lv = layerView(cam, v, null);
+        this.hostLayers(ctx, this.under, lv, 'under');
+        this.hostLayers(ctx, this.over, lv, 'over');
+      }
+      return this.stats;
+    }
 
     if (!split) {
       caches.main.sync(frame, version, this.res.interner);
-      this.layers(ctx, frame, caches.main, theme);
+      this.passes(ctx, frame, caches.main, theme, cam, null);
       return this.stats;
     }
 
@@ -184,7 +228,7 @@ export class Painter {
       ctx.beginPath();
       ctx.rect(0, 0, sx, height);
       ctx.clip();
-      this.layers(ctx, frame.before, caches.before, theme);
+      this.passes(ctx, frame.before, caches.before, theme, cam, 'before');
       ctx.restore();
     }
     if (sx < width) {
@@ -195,7 +239,7 @@ export class Painter {
       ctx.beginPath();
       ctx.rect(sx, 0, width - sx, height);
       ctx.clip();
-      this.layers(ctx, frame.after, caches.after, theme);
+      this.passes(ctx, frame.after, caches.after, theme, cam, 'after');
       ctx.restore();
     }
     if (sx > 0 && sx < width) {
@@ -209,10 +253,48 @@ export class Painter {
     return this.stats;
   }
 
-  private layers(ctx: Ctx2D, frame: FrameVisuals, cache: FrameCache, theme: Theme): void {
+  /**
+   * The host's layers of one order, each between a `save` and a `restore`: whatever a layer
+   * leaves on the context (styles, alpha, dash, transform, clip) ends with it.
+   */
+  private hostLayers(
+    ctx: Ctx2D,
+    layers: readonly RendererLayer[],
+    lv: LayerView,
+    phase: 'under' | 'over',
+  ): void {
+    if (layers.length === 0) return;
+    for (let i = 0; i < layers.length; i++) {
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.setLineDash(NO_DASH);
+      try {
+        // `Ctx2D` is the slice of the context the renderer's passes use; a layer gets the
+        // context itself, which in a browser is the canvas's `CanvasRenderingContext2D`.
+        layers[i]!.draw(ctx as unknown as CanvasRenderingContext2D, lv);
+      } catch (error) {
+        reportLayerError(error);
+      } finally {
+        ctx.restore();
+      }
+    }
+    this.stats.phases.push(phase);
+  }
+
+  /** One side (or the whole canvas): every pass, in the region `view` holds. */
+  private passes(
+    ctx: Ctx2D,
+    frame: FrameVisuals,
+    cache: FrameCache,
+    theme: Theme,
+    cam: CameraState,
+    side: 'before' | 'after' | null,
+  ): void {
     const v = this.view;
     const res = this.res;
     const phases = this.stats.phases;
+    const lv = this.under.length + this.over.length > 0 ? layerView(cam, v, side) : null;
+    if (lv) this.hostLayers(ctx, this.under, lv, 'under');
     // Screen-space layout first: node discs and badges are obstacles; labels and pills compete
     // for the rest by priority. Drawing then follows the documented pass order.
     this.labels.begin(frame, cache, v, this.grid);
@@ -235,5 +317,6 @@ export class Painter {
     this.stats.labels += this.labels.draw(ctx, v, theme, res);
     this.stats.deferredLabels = res.atlas?.deferred ?? 0;
     phases.push('labels');
+    if (lv) this.hostLayers(ctx, this.over, lv, 'over');
   }
 }

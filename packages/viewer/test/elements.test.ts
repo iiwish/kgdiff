@@ -3,6 +3,7 @@
  * obstacles, the root's keyboard map (forwarding, `shortcuts`, `keymap`), the `search` focus
  * target and the change list stepping aside, tokens for elements outside the root.
  */
+import { KgdiffError } from '@kgdiff/core';
 import { getTheme } from '@kgdiff/scene';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestContext } from '../src/context.js';
@@ -11,7 +12,7 @@ import type { ChromeLayout } from '../src/framing.js';
 import { DiffSession } from '../src/session.js';
 import { StageView } from '../src/view.js';
 import '../src/index.js';
-import type { KgdiffRootElement, KgdiffStageElement } from '../src/index.js';
+import type { KgdiffRootElement, KgdiffStageElement, RendererLayer } from '../src/index.js';
 import { LAYOUT_KEY } from '../src/layout-store.js';
 import { setRenderBackend } from '../src/renderer-port.js';
 import { tokenSheet } from '../src/theme.js';
@@ -247,6 +248,70 @@ describe('<kgdiff-stage>', () => {
     off();
     viaContext?.();
     expect(chrome().obstacles).toEqual([]);
+  });
+
+  it('draws the page’s layers on its renderer, added before or after there is one', async () => {
+    const under: RendererLayer = { order: 'under', draw: () => undefined };
+    const over: RendererLayer = { order: 'over', draw: () => undefined };
+    const root = place<Root>('<kgdiff-root></kgdiff-root>');
+    const stage = document.createElement('kgdiff-stage') as KgdiffStageElement;
+    // Before the stage is in the document: no root, no renderer.
+    const offUnder = stage.addLayer(under);
+    expect(backend.renderers).toHaveLength(0);
+    root.append(stage);
+    await loaded(root);
+    const renderer = backend.last();
+    expect(renderer.layers).toEqual([under]);
+    // With a renderer: at once.
+    const offOver = stage.addLayer(over);
+    expect(renderer.layers).toEqual([under, over]);
+    offUnder();
+    offUnder();
+    expect(renderer.layers).toEqual([over]);
+    offOver();
+    expect(renderer.layers).toEqual([]);
+  });
+
+  it('lets go of the layers with its renderer, and draws them again on the next one', async () => {
+    const kept: RendererLayer = { order: 'under', draw: () => undefined };
+    const dropped: RendererLayer = { order: 'over', draw: () => undefined };
+    const root = place<Root>('<kgdiff-root><kgdiff-stage></kgdiff-stage></kgdiff-root>');
+    const stage = root.querySelector('kgdiff-stage') as KgdiffStageElement;
+    await loaded(root);
+    stage.addLayer(kept);
+    const off = stage.addLayer(dropped);
+    const first = backend.last();
+    expect(first.layers).toEqual([kept, dropped]);
+    stage.remove();
+    expect(first.destroyed).toBe(true);
+    expect(first.layers).toEqual([]);
+    // Removed while disconnected: gone for good, and nothing is left to call on the old renderer.
+    off();
+    root.append(stage);
+    const second = backend.last();
+    expect(second).not.toBe(first);
+    expect(second.layers).toEqual([kept]);
+    // Bound to another root: the same layers, on that root's canvas.
+    const other = place<Root>('<kgdiff-root id="other"></kgdiff-root>', '#other');
+    stage.htmlFor = 'other';
+    await loaded(other);
+    expect(second.destroyed).toBe(true);
+    expect(backend.last()).not.toBe(second);
+    expect(backend.last().layers).toEqual([kept]);
+  });
+
+  it('rejects what is not a layer, with or without a renderer', async () => {
+    const stage = document.createElement('kgdiff-stage') as KgdiffStageElement;
+    const bad = { order: 'middle', draw: () => undefined } as unknown as RendererLayer;
+    expect(() => stage.addLayer(bad)).toThrow(KgdiffError);
+    expect(() => stage.addLayer({ order: 'over' } as unknown as RendererLayer)).toThrow(
+      KgdiffError,
+    );
+    const root = place<Root>('<kgdiff-root></kgdiff-root>');
+    root.append(stage);
+    await loaded(root);
+    expect(() => stage.addLayer(bad)).toThrow(KgdiffError);
+    expect(backend.last().layers).toEqual([]);
   });
 
   it('releases what it added to the canvas when it unbinds', async () => {

@@ -11,6 +11,7 @@ import type {
   PickResult,
   Renderer,
   RendererEvents,
+  RendererLayer,
   RendererOptions,
   SplitFrame,
 } from '@kgdiff/renderer';
@@ -98,6 +99,7 @@ export class MockRenderer implements Renderer {
   safeArea: { top: number; right: number; bottom: number; left: number } | null = null;
   labelsInside: boolean;
   destroyed = false;
+  readonly layers: RendererLayer[] = [];
   private readonly listeners: Listeners = {
     hover: new Set(),
     click: new Set(),
@@ -129,6 +131,13 @@ export class MockRenderer implements Renderer {
   pick(): PickResult | null {
     return null;
   }
+  addLayer(layer: RendererLayer): () => void {
+    this.layers.push(layer);
+    return () => {
+      const at = this.layers.indexOf(layer);
+      if (at >= 0) this.layers.splice(at, 1);
+    };
+  }
   on<K extends keyof RendererEvents>(
     type: K,
     listener: (e: RendererEvents[K]) => void,
@@ -150,6 +159,7 @@ export class MockRenderer implements Renderer {
   }
   destroy(): void {
     this.destroyed = true;
+    this.layers.length = 0;
     this.canvas.remove();
   }
 }

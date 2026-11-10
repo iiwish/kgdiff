@@ -17,6 +17,10 @@ export interface Style {
   lineDashOffset: number;
   lineCap: CanvasLineCap;
   font: string;
+  /** The current transform, as `setTransform`'s arguments. */
+  transform: readonly number[];
+  /** How many `clip()` regions are in force (saved and restored with the rest). */
+  clips: number;
 }
 
 export interface Op {
@@ -41,6 +45,8 @@ export class RecordingContext implements Ctx2D {
   textBaseline: CanvasTextBaseline = 'alphabetic';
   imageSmoothingEnabled = true;
   private dash: number[] = [];
+  private transform: readonly number[] = [1, 0, 0, 1, 0, 0];
+  private clips = 0;
   private readonly stack: Style[] = [];
 
   style(): Style {
@@ -53,7 +59,14 @@ export class RecordingContext implements Ctx2D {
       lineDashOffset: this.lineDashOffset,
       lineCap: this.lineCap,
       font: this.font,
+      transform: this.transform,
+      clips: this.clips,
     };
+  }
+
+  /** `save()` calls not yet matched by a `restore()`. */
+  get depth(): number {
+    return this.stack.length;
   }
 
   private rec(name: string, args: readonly unknown[]): void {
@@ -81,13 +94,21 @@ export class RecordingContext implements Ctx2D {
   restore(): void {
     const s = this.stack.pop();
     if (s) {
+      this.fillStyle = s.fillStyle as string;
+      this.strokeStyle = s.strokeStyle as string;
       this.globalAlpha = s.globalAlpha;
       this.lineWidth = s.lineWidth;
       this.dash = s.dash;
+      this.lineDashOffset = s.lineDashOffset;
+      this.lineCap = s.lineCap;
+      this.font = s.font;
+      this.transform = s.transform;
+      this.clips = s.clips;
     }
     this.rec('restore', []);
   }
   setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void {
+    this.transform = [a, b, c, d, e, f];
     this.rec('setTransform', [a, b, c, d, e, f]);
   }
   setLineDash(segments: readonly number[]): void {
@@ -122,6 +143,7 @@ export class RecordingContext implements Ctx2D {
     this.rec('stroke', []);
   }
   clip(): void {
+    this.clips++;
     this.rec('clip', []);
   }
   fillRect(x: number, y: number, w: number, h: number): void {

@@ -88,6 +88,76 @@ export interface RendererEvents {
   frame: { readonly ms: number };
 }
 
+/**
+ * What a layer is told about the frame it draws into.
+ *
+ * @experimental New in 0.9 (RFC 0003, part 4a); may change in a minor release before it is
+ * stable.
+ */
+export interface LayerView {
+  /** The camera of this frame (a copy: it does not follow later camera moves). */
+  readonly camera: CameraState;
+  /**
+   * The world rectangle this call draws into: what the canvas shows (`camera.viewport()`), or,
+   * in swipe comparison, the part of it on this call's side of the divider. Nothing drawn
+   * outside it is visible, so it is what to cull by.
+   */
+  readonly viewport: Rect;
+  /**
+   * Device pixels per CSS pixel of the surface drawn into: the renderer's pixel ratio, or the
+   * scale of the export in `toDataURL(scale)`. The context is already scaled by it.
+   */
+  readonly pixelRatio: number;
+  /** Which version this call draws over. Set in swipe comparison only. */
+  readonly side?: 'before' | 'after';
+  /** World → CSS pixels of this frame, the mapping the renderer's own passes use. */
+  worldToScreen(p: Point): Point;
+}
+
+/**
+ * Something the host draws on the renderer's canvas, under or over the graph: what only the
+ * host knows about (group backgrounds, certification marks, counts). Added with
+ * `Renderer.addLayer`.
+ *
+ * - **Where.** `under`: after the background and the dot grid, before everything else.
+ *   `over`: after the labels (the swipe divider is drawn above both). Layers of one order draw
+ *   in the order they were added.
+ * - **When.** Once per painted frame, whether or not a frame was set; in swipe comparison once
+ *   per side, clipped to that side, with `view.side`. A layer whose own data changed calls
+ *   `requestRender`.
+ * - **Coordinates.** CSS pixels, as the renderer's own passes: convert world positions with
+ *   `view.worldToScreen` and multiply sizes that should scale with the zoom by `view.camera.k`.
+ *   Strokes and text then keep their width at every zoom.
+ * - **Context state.** The renderer saves the context before `draw` and restores it after, so
+ *   nothing a layer sets (styles, alpha, dash, transform, clip) leaks into later passes. On
+ *   entry the transform is the pixel ratio, `globalAlpha` is 1 and the line dash is empty;
+ *   every other property is whatever the passes before left: set what you use.
+ * - **Part of the frame.** `toDataURL` includes layers, and their time is in the `frame`
+ *   event's `ms`: a slow layer is a slow frame. With no layers the renderer paints exactly as
+ *   it does without this API.
+ * - **Not part of the scene.** Layers are not picked and their text takes no part in label
+ *   placement. Hit-test your own marks with `camera.screenToWorld` and the `click` event's
+ *   `world`.
+ * - **Errors.** A `draw` that throws is reported (`reportError`, else `console.error`) and the
+ *   rest of the frame is painted.
+ *
+ * `ctx` is the canvas's own context (or the export canvas's in `toDataURL(scale)`), not a copy
+ * or a recording. Where the canvas has no 2D context (happy-dom, jsdom without `canvas`)
+ * nothing is painted and layers are not called.
+ *
+ * Known limit: labels carry a halo in the canvas background color. Over a tinted area drawn by
+ * an `under` layer that halo shows as a faint outline around the text; soft tints, such as the
+ * theme's `soft` colors (about 10% alpha), keep it unnoticeable.
+ *
+ * @experimental New in 0.9 (RFC 0003, part 4a); may change in a minor release before it is
+ * stable.
+ */
+export interface RendererLayer {
+  /** Read when the layer is added. */
+  readonly order: 'under' | 'over';
+  draw(ctx: CanvasRenderingContext2D, view: LayerView): void;
+}
+
 export interface RendererOptions {
   readonly theme: Theme;
   /** Default `window.devicePixelRatio`, capped at 3. */
@@ -121,6 +191,16 @@ export interface Renderer {
   setLabelsInside(inside: boolean): void;
   /** Topmost element under a screen point (px, relative to the canvas). */
   pick(x: number, y: number): PickResult | null;
+  /**
+   * Draw `layer` under or over the graph in every frame from the next one on (see
+   * `RendererLayer` for the rules). Returns the function that removes it; both schedule a
+   * frame. Adding a layer twice draws it twice. Throws `KgdiffError('invalid-input')` for a
+   * layer without a `draw` function or with another `order`.
+   *
+   * @experimental New in 0.9 (RFC 0003, part 4a); may change in a minor release before it is
+   * stable.
+   */
+  addLayer(layer: RendererLayer): () => void;
   on<K extends keyof RendererEvents>(
     type: K,
     listener: (event: RendererEvents[K]) => void,
