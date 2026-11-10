@@ -30,6 +30,8 @@ const UNTYPED_ENTRYPOINTS: Readonly<Record<string, readonly string[]>> = {
     './schema/diff.v1.json',
     './schema/diff-packed.v1.json',
     './schema/delta.v1.json',
+    './schema/layout.v2.json',
+    './schema/report.v1.json',
   ],
   '@kgdiff/viewer': ['./standalone', './standalone/compute'],
 };

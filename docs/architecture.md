@@ -104,17 +104,24 @@ hashes in the delta check it, so a report opens the same way in every browser.
 The full, documented signatures live in each package's `src/index.ts` (and `src/types.ts`).
 
 The JSON documents kgdiff writes are contracts too: graphs (`kgdiff.graph`), diffs
-(`kgdiff.diff`), packed diffs (`kgdiff.diff.packed`, in reports) and deltas (`kgdiff.delta`) each
-carry their `format` and `version`, and each has a JSON Schema in `packages/core/schema/`
-(`graph.v1.json`, `diff.v1.json`, `diff-packed.v1.json`, `delta.v1.json`, published with
+(`kgdiff.diff`), packed diffs (`kgdiff.diff.packed`, in reports), deltas (`kgdiff.delta`), layouts
+(`kgdiff.layout`) and report payloads (`kgdiff.report`) each carry their `format` and `version`,
+and each has a JSON Schema in `packages/core/schema/` (`graph.v1.json`, `diff.v1.json`,
+`diff-packed.v1.json`, `delta.v1.json`, `layout.v2.json`, `report.v1.json`, published with
 `@kgdiff/core`). Tests validate everything kgdiff writes against them, so a
 change to these formats changes its schema in the same commit; an incompatible change bumps the
 version.
-Layouts (`kgdiff.layout`) carry them too. `layoutToJSON` writes version 1. `layoutFromJSON` also
-reads version 2, which kgdiff's Rust layout engine will write: version 1's members plus
-`generator`, a non-empty string such as `"kgdiff-layout/1"` that names the engine generation that
-computed the positions. Positions from either version are valid pins. Their schemas come with
-the Rust layout (RFC 0002).
+Layouts have two versions. kgdiff's Rust layout engine (crate `kgdiff-layout`) writes version 2,
+which `layout.v2.json` describes: version 1's members plus `generator`, a non-empty string such
+as `"kgdiff-layout/1"` that names the engine generation that computed the positions.
+`layoutToJSON` of `@kgdiff/layout` writes version 1 for the layouts it computes, and
+`layoutFromJSON` reads both. Positions from either version are valid pins.
+A report payload holds a diff (packed or not), its layout of either version or none, `meta` and
+`view` (`report.v1.json`). The crate `kgdiff-report` writes it, with the layout of the default
+options (`report_payload`) or the one the application gives it (`report_payload_with`,
+[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md)), and
+`<kgdiff-viewer>` reads it. Later minor versions add optional members to `view`, which older
+viewers ignore, so the schema allows members of `view` it does not name.
 
 ## Formats: mapping conventions
 

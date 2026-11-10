@@ -48,7 +48,8 @@ recursively (object key order does not matter, arrays are ordered, numbers are c
 (an empty `--name-status` listing is an empty file); inputs are just bytes. The recorded graphs,
 diffs, packed diffs and deltas also validate against their JSON Schemas in
 [`packages/core/schema/`](../packages/core/schema/) (`graph.v1`, `diff.v1`, `diff-packed.v1`,
-`delta.v1`); the check verifies that too.
+`delta.v1`), and `report.json` with `diff.packed.json` as its `diff` validates against
+`report.v1`; the check verifies that too.
 
 ## manifest.json
 

@@ -70,7 +70,9 @@ import graphSchema from '@kgdiff/core/schema/graph.v1.json' with { type: 'json' 
 ```
 
 They are also served at `https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/graph.v1.json`
-(`diff.v1.json`, `diff-packed.v1.json`, `delta.v1.json`).
+(`diff.v1.json`, `diff-packed.v1.json`, `delta.v1.json`). `report.v1.json` and `layout.v2.json`
+next to them describe the payload of an HTML report (`kgdiff.report`) and the layout in it
+(`kgdiff.layout` version 2), which kgdiff's Rust crates write.
 
 `diffFromJSON(json)` checks that a document is consistent (every element has the versions its
 status implies and lies in the hunk it names, edges join union nodes, the delta goes from the

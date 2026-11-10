@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cdn.jsdelivr.net/npm/@kgdiff/core/schema/report.v1.json",
+  "title": "kgdiff report, version 1",
+  "description": "The payload of an HTML report, as the crate kgdiff-report (`report_payload`, `report_payload_with`) writes it and `<kgdiff-viewer>` reads it (its `payload` property, or a `<script type=\"application/kgdiff+json\">` element): a diff, its layout or none, what the report says about itself and how the viewer starts. See https://github.com/iiwish/kgdiff/blob/main/docs/cli.md#html-report",
+  "type": "object",
+  "properties": {
+    "format": { "const": "kgdiff.report" },
+    "version": {
+      "const": 1,
+      "description": "Readers reject versions they do not support."
+    },
+    "diff": {
+      "oneOf": [{ "$ref": "diff-packed.v1.json" }, { "$ref": "diff.v1.json" }],
+      "description": "The diff: packed (what kgdiff writes), or not."
+    },
+    "layout": {
+      "oneOf": [{ "$ref": "layout.v2.json" }, { "$ref": "#/$defs/layoutV1" }],
+      "description": "The layout of the diff: every position belongs to a union node of `diff`. With it, the report opens without computing anything. Left out, the viewer lays the diff out when it reads the payload, which needs its compute module."
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the report. Without it, the names of the two versions."
+        },
+        "generator": {
+          "type": "string",
+          "description": "What made the report, e.g. `kgdiff 0.9.0`."
+        },
+        "generatedAt": {
+          "type": "string",
+          "description": "An ISO 8601 timestamp; left out of reproducible reports."
+        },
+        "before": { "$ref": "#/$defs/side" },
+        "after": { "$ref": "#/$defs/side" }
+      },
+      "required": ["generator", "before", "after"],
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "description": "How the viewer starts; an attribute or a property set on the viewer wins. Later minor versions add optional members, so readers ignore the members they do not know and this schema allows them.",
+      "properties": {
+        "mode": {
+          "enum": ["overlay", "swipe", "replay", "changes"],
+          "description": "`changes` (from reports made before scopes existed) means `overlay` with scope `changes`."
+        },
+        "scope": {
+          "enum": ["all", "changes"],
+          "description": "What is drawn: the whole graph, or the changes with some context."
+        },
+        "theme": { "enum": ["auto", "light", "dark"] },
+        "palette": { "enum": ["default", "colorblind"] },
+        "locale": { "enum": ["en", "zh-CN"] },
+        "panels": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "list",
+              "detail",
+              "search",
+              "filters",
+              "dock",
+              "transport",
+              "legend",
+              "zoom",
+              "minimap",
+              "title",
+              "actions"
+            ]
+          },
+          "additionalProperties": { "enum": ["open", "collapsed", "hidden"] },
+          "description": "The initial state of regions of the default layout; the others keep theirs."
+        }
+      }
+    }
+  },
+  "required": ["format", "version", "diff", "meta"],
+  "additionalProperties": false,
+  "$defs": {
+    "side": {
+      "type": "object",
+      "description": "One version of the graph.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name shown for this version."
+        },
+        "format": {
+          "type": "string",
+          "description": "The format the graph was read from, e.g. `turtle`."
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "layoutV1": {
+      "type": "object",
+      "description": "A layout of version 1, as `layoutToJSON` of @kgdiff/layout writes the layouts it computes: the members of version 2 (layout.v2.json) without `generator`.",
+      "properties": {
+        "format": { "const": "kgdiff.layout" },
+        "version": { "const": 1 },
+        "strategy": { "$ref": "layout.v2.json#/properties/strategy" },
+        "scope": { "$ref": "layout.v2.json#/properties/scope" },
+        "iterations": { "$ref": "layout.v2.json#/properties/iterations" },
+        "positions": { "$ref": "layout.v2.json#/properties/positions" },
+        "radii": { "$ref": "layout.v2.json#/properties/radii" },
+        "hidden": { "$ref": "layout.v2.json#/properties/hidden" },
+        "bounds": { "$ref": "layout.v2.json#/properties/bounds" },
+        "components": { "$ref": "layout.v2.json#/properties/components" }
+      },
+      "required": [
+        "format",
+        "version",
+        "strategy",
+        "scope",
+        "iterations",
+        "positions",
+        "radii",
+        "hidden",
+        "bounds",
+        "components"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

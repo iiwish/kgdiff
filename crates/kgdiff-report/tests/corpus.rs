@@ -1,8 +1,13 @@
 //! The text outputs of the corpus's CLI runs (`conformance/README.md`, "CLI runs"): every summary,
 //! `--stat`, `--name-status` and `--markdown` run whose stdout is recorded, rendered from the
 //! case's inputs and options and compared byte for byte, and `report.json`, the payload's
-//! format, version, meta and view. Only what these runs need of the CLI is reproduced here: the
-//! text flags, the width from `COLUMNS`, the default title; kgdiff's own binary runs all of them.
+//! format, version, meta and view; every case's payload also validates against
+//! `packages/core/schema/report.v1.json`. Only what these runs need of the CLI is reproduced
+//! here: the text flags, the width from `COLUMNS`, the default title; kgdiff's own binary runs
+//! all of them.
+
+#[path = "support/schema.rs"]
+mod schema;
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -344,6 +349,7 @@ fn text_outputs_are_byte_identical() {
 
 #[test]
 fn report_payloads_match_report_json_and_layouts_their_contract() {
+    let schemas = schema::Schemas::load();
     let mut failures = Vec::new();
     let mut with_options = Vec::new();
     for id in ids() {
@@ -377,6 +383,13 @@ fn report_payloads_match_report_json_and_layouts_their_contract() {
             panels: None,
         };
         let mut payload = kgdiff_report::html::report_payload(&case.result, &info);
+        let errors = schemas.errors("report.v1.json", &payload);
+        if !errors.is_empty() {
+            failures.push(format!(
+                "{id}: not a report.v1.json\n  {}",
+                errors.join("\n  ")
+            ));
+        }
         // `report.json` is the payload without its packed diff (`diff.packed.json`) and layout,
         // which is checked against the case's layout contract below.
         let mut layout = None;

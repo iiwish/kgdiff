@@ -1,21 +1,24 @@
 //! The single-file HTML report (`html.ts`, `report.ts`): the standalone viewer bundle and the
 //! report payload inlined in one accessible document that works offline.
 //!
-//! The payload carries the diff and its layout from kgdiff-layout, a layout document of version
-//! 2 (RFC 0002, phase 4), so the report opens without laying anything out. The viewer's compute
-//! add-on is inlined only where the browser may still have to lay out: when the layout covers
-//! just the changes (large graphs), whose collapsed groups the reader can expand
-//! ([`needs_compute`]). Deterministic apart from `generatedAt`; the gzip stream of a large
-//! payload is this encoder's (reports are not byte-identical to the TypeScript CLI's, a non-goal
-//! of the RFC).
+//! The payload (`kgdiff.report` version 1, `packages/core/schema/report.v1.json`) carries the
+//! diff and its layout from kgdiff-layout, a layout document of version 2 (RFC 0002, phase 4), so
+//! the report opens without laying anything out. [`report_payload`] and [`build_report_html`]
+//! compute that layout with the default options; [`report_payload_with`] and
+//! [`build_report_html_with`] take a [`ReportLayout`] instead: the default one, the caller's, or
+//! none (RFC 0003, part 2). The viewer's compute add-on is inlined only where the browser may
+//! still have to lay out: when the layout covers just the changes (large graphs), whose collapsed
+//! groups the reader can expand, or when there is no layout ([`needs_compute`]). Deterministic
+//! apart from `generatedAt`; the gzip stream of a large payload is this encoder's (reports are
+//! not byte-identical to the TypeScript CLI's, a non-goal of RFC 0002).
 
 use std::io::Write as _;
 
 use base64::Engine as _;
 use flate2::{Compression, GzBuilder};
 use kgdiff_core::js::{Object, Value, json};
-use kgdiff_core::{DiffResult, Locale};
-use kgdiff_layout::{LayoutOptions, layout_diff, layout_to_json};
+use kgdiff_core::{DiffResult, KgdiffError, Locale, Result};
+use kgdiff_layout::{LayoutOptions, LayoutResult, LayoutScope, layout_diff, layout_to_json};
 
 use crate::locale::messages;
 use crate::model::overview;
@@ -127,10 +130,65 @@ fn side_value(side: &ReportSide) -> Value {
     Value::Object(out)
 }
 
-/// The report payload (`buildReportPayload`, `ReportPayload` version 1): format, version, the
-/// packed diff, the layout (`layout_diff` with the default options, as a version 2 layout
-/// document), meta and view.
-pub fn report_payload(diff: &DiffResult, info: &ReportInfo) -> Value {
+/// What the layout of a report is ([`report_payload_with`], [`build_report_html_with`]).
+#[derive(Clone, Copy, Debug)]
+pub enum ReportLayout<'a> {
+    /// `layout_diff` with the default options: what [`report_payload`] and
+    /// [`build_report_html`] do.
+    Default,
+    /// The caller's layout of this diff: one it has already (cached, read from a layout
+    /// document) or computed with other options. It is checked against the diff.
+    Given(&'a LayoutResult),
+    /// No layout: the payload has no `layout` member, and the viewer lays the diff out when the
+    /// report opens, with its compute add-on (RFC 0002, D-5).
+    None,
+}
+
+/// The layout document of the default layout, `None` if it fails. The default options cannot be
+/// invalid; were the layout to fail anyway, the report would still open, laid out by the viewer.
+fn default_layout(diff: &DiffResult) -> Option<Value> {
+    layout_diff(diff, &LayoutOptions::default())
+        .ok()
+        .map(|layout| layout_to_json(&layout))
+}
+
+/// Whether `layout` is a layout of `diff`: every position belongs to a union node, and with
+/// scope `all` every union node has a position. The scene skips a node without a position, so
+/// the layout of another diff would open as a graph with holes and say nothing.
+fn check_layout(diff: &DiffResult, layout: &LayoutResult) -> Result<()> {
+    let fail = |id: &kgdiff_core::model::UnionId, message: String| {
+        let mut details = Object::new();
+        details.insert("node", id.clone());
+        Err(KgdiffError::invalid_input(message).with_details(details))
+    };
+    for id in layout.positions.keys() {
+        if diff.node(id.as_str()).is_none() {
+            return fail(
+                id,
+                format!(
+                    "The report's layout has a position for \"{id}\", which is not a node of the diff."
+                ),
+            );
+        }
+    }
+    if layout.scope == LayoutScope::All {
+        for node in &diff.nodes {
+            if !layout.positions.contains_key(node.id.as_str()) {
+                return fail(
+                    &node.id,
+                    format!(
+                        "The report's layout has scope \"all\" but no position for node \"{}\" of the diff.",
+                        node.id
+                    ),
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+/// The payload of a diff, a layout document (or none) and what the report says about itself.
+fn payload(diff: &DiffResult, layout: Option<Value>, info: &ReportInfo) -> Value {
     let mut meta = Object::new();
     meta.insert("title", info.title.as_str());
     meta.insert("generator", info.generator.as_str());
@@ -164,14 +222,46 @@ pub fn report_payload(diff: &DiffResult, info: &ReportInfo) -> Value {
         "diff",
         kgdiff_core::pack_diff_json(&kgdiff_core::diff_to_json(diff)),
     );
-    // The default options cannot be invalid; were the layout to fail anyway, the report would
-    // still open, laid out by the viewer.
-    if let Ok(layout) = layout_diff(diff, &LayoutOptions::default()) {
-        payload.insert("layout", layout_to_json(&layout));
+    if let Some(layout) = layout {
+        payload.insert("layout", layout);
     }
     payload.insert("meta", Value::Object(meta));
     payload.insert("view", Value::Object(view));
     Value::Object(payload)
+}
+
+/// The report payload (`buildReportPayload`, `ReportPayload` version 1): format, version, the
+/// packed diff, the layout (`layout_diff` with the default options, as a version 2 layout
+/// document), meta and view. [`report_payload_with`] with [`ReportLayout::Default`].
+pub fn report_payload(diff: &DiffResult, info: &ReportInfo) -> Value {
+    payload(diff, default_layout(diff), info)
+}
+
+/// The report payload with the layout the caller chooses: [`report_payload`]'s
+/// ([`ReportLayout::Default`]), the caller's own, written with `layout_to_json`
+/// ([`ReportLayout::Given`]), or none ([`ReportLayout::None`]).
+///
+/// A layout computed with `layout_diff` keeps a known position exactly; the layout document
+/// rounds coordinates to 0.01, so the payload carries the given positions on that grid.
+///
+/// # Errors
+///
+/// `invalid-input` when a given layout is not a layout of `diff`: it has a position for an id
+/// that is no union node, or its scope is `all` and a union node has no position.
+pub fn report_payload_with(
+    diff: &DiffResult,
+    layout: ReportLayout<'_>,
+    info: &ReportInfo,
+) -> Result<Value> {
+    let layout = match layout {
+        ReportLayout::Default => default_layout(diff),
+        ReportLayout::Given(layout) => {
+            check_layout(diff, layout)?;
+            Some(layout_to_json(layout))
+        }
+        ReportLayout::None => None,
+    };
+    Ok(payload(diff, layout, info))
 }
 
 /// Deterministic gzip (level 9), with the header's OS byte 255 ("unknown").
@@ -353,24 +443,51 @@ pub fn needs_compute(payload: &Value) -> bool {
     }
 }
 
-/// The whole report document for a diff (`buildReportHtml`): the compute add-on of `bundles` is
-/// inlined only when [`needs_compute`].
+/// The report document of a payload of `diff`: the compute add-on of `bundles` is inlined only
+/// when [`needs_compute`].
+fn report_html(
+    diff: &DiffResult,
+    payload: &Value,
+    info: &ReportInfo,
+    bundles: ViewerBundles<'_>,
+) -> String {
+    let bundles = ViewerBundles {
+        compute: bundles.compute.filter(|_| needs_compute(payload)),
+        ..bundles
+    };
+    render_report_html(
+        payload,
+        bundles,
+        &describe_diff(diff, info.locale),
+        GZIP_THRESHOLD,
+    )
+}
+
+/// The whole report document for a diff (`buildReportHtml`), with the default layout
+/// ([`report_payload`]): the compute add-on of `bundles` is inlined only when [`needs_compute`].
 pub fn build_report_html(
     diff: &DiffResult,
     info: &ReportInfo,
     bundles: ViewerBundles<'_>,
 ) -> String {
-    let payload = report_payload(diff, info);
-    let bundles = ViewerBundles {
-        compute: bundles.compute.filter(|_| needs_compute(&payload)),
-        ..bundles
-    };
-    render_report_html(
-        &payload,
-        bundles,
-        &describe_diff(diff, info.locale),
-        GZIP_THRESHOLD,
-    )
+    report_html(diff, &report_payload(diff, info), info, bundles)
+}
+
+/// The whole report document for a diff with the layout the caller chooses
+/// ([`report_payload_with`]). The compute add-on of `bundles` is inlined only when
+/// [`needs_compute`]: for a layout of scope `changes`, and for [`ReportLayout::None`].
+///
+/// # Errors
+///
+/// `invalid-input` when a given layout is not a layout of `diff` ([`report_payload_with`]).
+pub fn build_report_html_with(
+    diff: &DiffResult,
+    layout: ReportLayout<'_>,
+    info: &ReportInfo,
+    bundles: ViewerBundles<'_>,
+) -> Result<String> {
+    let payload = report_payload_with(diff, layout, info)?;
+    Ok(report_html(diff, &payload, info, bundles))
 }
 
 #[cfg(test)]
