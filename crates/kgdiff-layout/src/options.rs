@@ -225,6 +225,26 @@ impl LayoutOptions {
         })
     }
 
+    /// The options [`layout_graph`](crate::layout_graph) hands `layout_diff`: these, with every
+    /// node in scope.
+    ///
+    /// # Errors
+    ///
+    /// `invalid-input` for scope `Changes`: one graph has no changes to select.
+    pub(crate) fn for_graph(&self) -> Result<LayoutOptions> {
+        if self.scope == Some(LayoutScope::Changes) {
+            return Err(invalid(
+                "scope",
+                Value::from(LayoutScope::Changes.as_str()),
+                "'all' (the layout of one graph has no changes to select)",
+            ));
+        }
+        Ok(LayoutOptions {
+            scope: Some(LayoutScope::All),
+            ..self.clone()
+        })
+    }
+
     /// The options of a JSON object, as `@kgdiff/layout` reads a `LayoutOptions` object
     /// (`layoutOptions` of the conformance corpus): the same names, checks and messages.
     /// Absent members take their defaults and unknown members are ignored; `labelAware` is
