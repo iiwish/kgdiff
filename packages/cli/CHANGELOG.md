@@ -1,5 +1,15 @@
 # @kgdiff/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- c3e8a63: `@kgdiff/cli` runs the native kgdiff, written in Rust (RFC 0002, phase 4), instead of the TypeScript CLI, which is removed. It prints the same bytes for the same arguments (every run of the conformance corpus is checked on Linux, macOS and Windows). The package is now a small launcher: npm installs the binary of your platform with it as an optional dependency (`@kgdiff/cli-darwin-arm64`, `-darwin-x64`, `-linux-x64-gnu`, `-linux-x64-musl`, `-linux-arm64-gnu`, `-linux-arm64-musl` or `-win32-x64`; Windows on Arm runs the x64 build), so an install with `--omit=optional` has no binary to run and says so, and `KGDIFF_BINARY` points the launcher at another one. The same kgdiff is on crates.io (`cargo install kgdiff`). Breaking: the package no longer exports a JavaScript API (`main`, `renderSummary`, `renderMarkdown`, `buildReportHtml`, …); diff in JavaScript with `@kgdiff/core` and `@kgdiff/formats`, and in Rust with the `kgdiff` and `kgdiff-report` crates. The bug report link of an unexpected error names the platform and architecture, no longer a Node.js version.
+
+### Patch Changes
+
+- 1182f6a: The GitHub Action runs the native kgdiff directly. From 0.8.0 on, it resolves its `version` input on npm, downloads the platform package of that version for the runner with `npm pack`, checks it against the integrity the npm registry publishes, and runs its binary for every file, with no npm process per comparison. Versions before 0.8.0 still run with `npx`. `KGDIFF_BINARY` in the step's environment runs another binary instead.
+
 ## 0.7.0
 
 ### Minor Changes
