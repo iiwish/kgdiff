@@ -20,6 +20,7 @@ import {
   type Minimap,
   type PickResult,
   type Renderer,
+  type RendererLayer,
 } from '@kgdiff/renderer';
 import {
   createViewState,
@@ -100,6 +101,8 @@ export class StageView implements SessionView {
   #renderer: Renderer | null = null;
   /** Minimap hosts, with their minimap while the renderer is attached. */
   readonly #minimaps = new Map<HTMLElement, Minimap | null>();
+  /** The host's layers (`addLayer`), with their removal from the renderer while one is attached. */
+  readonly #layers = new Set<{ readonly layer: RendererLayer; remove: (() => void) | null }>();
   readonly #unbind: (() => void)[] = [];
   readonly #frames: Frames = { main: null, before: null, after: null };
   #minimapDirty = true;
@@ -142,6 +145,7 @@ export class StageView implements SessionView {
     for (const host of this.#minimaps.keys()) {
       this.#minimaps.set(host, backend.createMinimap(host, renderer));
     }
+    for (const entry of this.#layers) entry.remove = renderer.addLayer(entry.layer);
     this.#unbind.push(
       renderer.on('hover', (pick) => this.#onHover(pick)),
       renderer.on('click', ({ pick }) => this.#onCanvasClick(pick)),
@@ -165,8 +169,24 @@ export class StageView implements SessionView {
       minimap?.destroy();
       this.#minimaps.set(host, null);
     }
+    // The renderer takes its layers with it; they are added again to the next one.
+    for (const entry of this.#layers) entry.remove = null;
     this.#renderer?.destroy();
     this.#renderer = null;
+  }
+
+  /**
+   * Draw `layer` under or over this view's graph (`Renderer.addLayer`): now if the renderer is
+   * attached, and on every renderer attached later, until the returned function removes it.
+   */
+  addLayer(layer: RendererLayer): () => void {
+    const entry = { layer, remove: this.#renderer?.addLayer(layer) ?? null };
+    this.#layers.add(entry);
+    return () => {
+      if (!this.#layers.delete(entry)) return;
+      entry.remove?.();
+      entry.remove = null;
+    };
   }
 
   /**

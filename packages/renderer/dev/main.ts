@@ -6,6 +6,7 @@
  *   playback with camera follow, hover and click-to-select-hunk. The end-to-end visual check.
  * - Synthetic mode: a generated frame exercising every primitive at 2k / 10k nodes, with
  *   animation, stress and benchmarks (`?source=synthetic`, `?n=5000`).
+ * - "Host layers" (`?layers=1`): example layers under and over the graph (`dev/layers.ts`).
  */
 import type { Locale } from '@kgdiff/core';
 import { createMinimap, createRenderer, type PickResult } from '@kgdiff/renderer';
@@ -21,6 +22,7 @@ import type { Surface, SurfaceFactory } from '../src/ctx.js';
 import { FrameCache } from '../src/frame-cache.js';
 import { Painter, Resources } from '../src/paint.js';
 import { type Dataset, datasetIds, loadDataset, type SceneBundle, sceneFor } from './dataset.js';
+import { exampleLayers } from './layers.js';
 import { createSynthetic, type Synthetic } from './synthetic.js';
 import { darkTheme, lightTheme } from './theme.js';
 
@@ -362,6 +364,25 @@ $<HTMLInputElement>('split').addEventListener('input', (e) => {
   split = Number((e.target as HTMLInputElement).value) / 100;
   if (swipe) pushFrame();
 });
+
+// Host layers: what `Renderer.addLayer` draws under and over the graph.
+const layerOffs: (() => void)[] = [];
+function setLayers(on: boolean): void {
+  for (const off of layerOffs.splice(0)) off();
+  if (!on) return;
+  const frameOf = (side: 'before' | 'after' | undefined): FrameVisuals | null => {
+    if (side !== 'before') return currentFrame();
+    return mode === 'synthetic' ? (syn?.before ?? null) : (outs.before ?? null);
+  };
+  const theme = (): Theme => (mode === 'dataset' && bundle ? bundle.scene.theme : fixtureTheme());
+  for (const layer of exampleLayers(frameOf, theme)) layerOffs.push(renderer.addLayer(layer));
+}
+const layersBox = $<HTMLInputElement>('layers');
+layersBox.addEventListener('change', () => setLayers(layersBox.checked));
+if (params.get('layers') === '1') {
+  layersBox.checked = true;
+  setLayers(true);
+}
 
 function animateLoop(t: number): void {
   if (!animating || mode !== 'synthetic') return;

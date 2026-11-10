@@ -1487,6 +1487,25 @@
               }
             },
             {
+              "kind": "method",
+              "name": "addLayer",
+              "description": "Draw `layer` on this stage's canvas, under the graph (`order: 'under'`: after the background and the grid, before everything else) or over it (`order: 'over'`: after the labels): what only the page knows about, such as group backgrounds or marks on nodes. `draw(ctx, view)` is called once per painted frame (once per side in swipe, clipped to it, with `view.side`), in CSS pixels, with `view.worldToScreen` for the positions of the layout; the context is saved before and restored after. Layers are in the PNG export, are not picked, and their text takes no part in label placement; the rules in full are `RendererLayer`'s (`@kgdiff/renderer`). Returns the function that removes the layer. Until then it stays with the stage: added before the stage has a canvas it is drawn once there is one, and it follows the stage to another root and back into the document; while the stage is disconnected nothing is drawn. Throws `KgdiffError('invalid-input')` for a layer without a `draw` function or with another `order`. `<kgdiff-viewer>`'s built-in stage has no such method.",
+              "parameters": [
+                {
+                  "name": "layer",
+                  "type": {
+                    "text": "RendererLayer"
+                  }
+                }
+              ],
+              "return": {
+                "type": {
+                  "text": "() => void"
+                }
+              },
+              "experimental": "New in 0.9 (RFC 0003, part 4a); may change in a minor release before it is stable."
+            },
+            {
               "kind": "field",
               "name": "htmlFor",
               "type": {

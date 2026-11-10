@@ -197,6 +197,7 @@ Five named slots take the page's content over the canvas. The stage positions it
 | Method | Description |
 | --- | --- |
 | `registerObstacle(element: Element): () => void` | Keep `element` (content over the canvas the stage does not place) clear of fits and flights; returns the function that stops it. Also on the stage context descendants can request (`Symbol.for('kgdiff.stage/1')`). |
+| `addLayer(layer: RendererLayer): () => void` | Draw `layer` on this stage's canvas, under the graph (`order: 'under'`: after the background and the grid, before everything else) or over it (`order: 'over'`: after the labels): what only the page knows about, such as group backgrounds or marks on nodes. `draw(ctx, view)` is called once per painted frame (once per side in swipe, clipped to it, with `view.side`), in CSS pixels, with `view.worldToScreen` for the positions of the layout; the context is saved before and restored after. Layers are in the PNG export, are not picked, and their text takes no part in label placement; the rules in full are `RendererLayer`'s (`@kgdiff/renderer`). Returns the function that removes the layer. Until then it stays with the stage: added before the stage has a canvas it is drawn once there is one, and it follows the stage to another root and back into the document; while the stage is disconnected nothing is drawn. Throws `KgdiffError('invalid-input')` for a layer without a `draw` function or with another `order`. `<kgdiff-viewer>`'s built-in stage has no such method. (experimental) |
 
 ### Slots
 

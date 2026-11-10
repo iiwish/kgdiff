@@ -199,6 +199,13 @@ the page with `for="<root id>"`.
   stage's own, and the stage's `panels` keeps applying to the rest.
 - Anywhere else, over the canvas or not, an element is not kept clear of fits and flights
   unless you register it: `stage.registerObstacle(element)`.
+- To draw on the canvas itself, under or over the graph (a background behind a group of nodes,
+  your own marks on them), give the stage a layer:
+  `stage.addLayer({ order: 'under', draw(ctx, view) { … } })`. It is drawn with every frame, in
+  CSS pixels (`view.worldToScreen` converts the layout's positions), and is in the PNG export;
+  the rules are in the
+  [renderer's README](../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph).
+  Experimental in 0.9.
 - `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one stage: the nearest one around them, or the
   one `stage="<id>"` names anywhere on the page (`zoom.stage`, and `zoom.stageElement` for
   the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements

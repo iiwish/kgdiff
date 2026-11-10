@@ -1,6 +1,8 @@
 /**
  * `<kgdiff-stage>` (RFC 0001 §3), documented on its class. Importing this module defines it.
  */
+import { KgdiffError } from '@kgdiff/core';
+import type { RendererLayer } from '@kgdiff/renderer';
 import type { Region, ViewerContext } from '../bind.js';
 import { provideContext } from '../context.js';
 import type {
@@ -97,6 +99,8 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   readonly #viewListeners = new Set<(view: StageView | null) => void>();
   /** Registered obstacles, kept across rebinding (the stage is rebuilt then). */
   readonly #obstacles = new Map<Element, () => void>();
+  /** The page's layers, kept like the obstacles, with their removal from the current view. */
+  readonly #layers = new Set<{ readonly layer: RendererLayer; remove: (() => void) | null }>();
 
   get panels(): StagePanels {
     return { ...this.#declared };
@@ -186,6 +190,24 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     };
   }
 
+  addLayer(layer: RendererLayer): () => void {
+    const order = (layer as RendererLayer | null)?.order;
+    if ((order !== 'under' && order !== 'over') || typeof layer.draw !== 'function') {
+      // What the renderer would answer, also while there is none.
+      throw new KgdiffError(
+        'invalid-input',
+        "addLayer: expected { order: 'under' | 'over', draw(ctx, view) }",
+      );
+    }
+    const entry = { layer, remove: this.#view?.addLayer(layer) ?? null };
+    this.#layers.add(entry);
+    return () => {
+      if (!this.#layers.delete(entry)) return;
+      entry.remove?.();
+      entry.remove = null;
+    };
+  }
+
   protected build(ui: UiContext, ctx: ViewerContext, release: (fn: () => void) => void): Region {
     release(
       provideContext(this, stageContext, (): StageViewContext => {
@@ -243,9 +265,13 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     view.attach(stage.canvasHost, null);
     view.setChrome(() => stage.chromeLayout());
     this.#setView(view);
+    // Layers added before there was a renderer, or to the one before this binding.
+    for (const entry of this.#layers) entry.remove = view.addLayer(entry.layer);
     release(() => {
       this.#setView(null);
       view.setChrome(null);
+      // The view's renderer goes, and its layers with it.
+      for (const entry of this.#layers) entry.remove = null;
       view.detach();
     });
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.
