@@ -121,6 +121,15 @@ jobs:
           # One GitHub release per version (below), not one per package: the <package>@<version>
           # git tags are still pushed.
           create-github-releases: false
+      # `pnpm release` wrote the platform packages into @kgdiff/cli's optionalDependencies for
+      # changeset publish; the committed manifest has none. Restore it, or the next pnpm command
+      # would install them first (pnpm checks the manifests before it runs anything) and fail on
+      # the frozen lockfile, as the release notes of 0.8.0 did.
+      - name: Restore the committed package manifests
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          git checkout -- packages/cli/package.json
+          test -z "$(git status --porcelain -- packages)"
       # The GitHub Action (action.yml) runs the @kgdiff/cli version of its commit: tag the release
       # commit v<version> for `uses: iiwish/kgdiff@v0.2.0` (and Dependabot), and move v<major>
       # there for `uses: iiwish/kgdiff@v0`. Prereleases only get their own tag.
@@ -158,7 +167,9 @@ jobs:
             echo "$tag already has a release (an earlier attempt of this run)"
             exit 0
           fi
-          pnpm tsx scripts/release-notes.ts "$VERSION" > "$RUNNER_TEMP/notes.md"
+          # tsx itself, not `pnpm tsx`: pnpm may print to stdout, which is the notes.
+          node_modules/.bin/tsx scripts/release-notes.ts "$VERSION" > "$RUNNER_TEMP/notes.md"
+          test -s "$RUNNER_TEMP/notes.md"
           prerelease=""
           case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
           gh release create "$tag" -R "$GITHUB_REPOSITORY" --verify-tag --title "$tag" \
