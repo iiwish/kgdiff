@@ -1,8 +1,13 @@
 # RFC 0003: Embedding hosts and the plain view
 
-- **Status:** Draft, proposed. Nothing in it is implemented or decided; the
-  [open decisions](#open-decisions) are the maintainer's.
-- **Date:** 2026-11-10
+- **Status:** Draft, proposed. The parts planned for 0.9 are merged, for release as 0.9.0:
+  part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d); part 2,
+  reports with the caller's layout and `report.v1.json`
+  ([#79](https://github.com/iiwish/kgdiff/pull/79), 6c3a764); part 4a, renderer layers
+  ([#80](https://github.com/iiwish/kgdiff/pull/80), d3e1dac). See [0.9 results](#09-results).
+  Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges; the
+  others, and parts 3 and 4b to 4d, are not decided or started.
+- **Date:** 2026-11-10; 0.9 results the same day.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
   `docs/visual-language.md` (two new rules), the report payload (a schema, optional members).
@@ -426,17 +431,68 @@ see, and the host deletes the matching piece of its own layer code.
 
 ## Open decisions
 
-| ID  | Decision                                                     | Recommendation                                                                                                                                       |
-| --- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D-1 | Is the plain view in scope for kgdiff at all?                | Yes, under the four rules of [Positioning](#positioning). Without it every host that embeds the diff builds the graph view beside it, on another map |
-| D-2 | Names: `layout_graph`, `report_payload_with`, `ReportLayout` | As written; `ReportOptions` instead of a third function if more report options are expected before 1.0                                               |
-| D-3 | A hollow shape for a kind of node                            | No: hollow means "not in this version" in every view                                                                                                 |
-| D-4 | The shape set, and whether a type change animates the shape  | `circle`, `square`, `diamond`, `hexagon`; no animation, the type change already has its badge and detail                                             |
-| D-5 | 4c in 0.10, or after 1.0                                     | Decide when 4b merges, by where phase 5 stands. Default: after 1.0, with hosts coloring through an `over` layer until then                           |
-| D-6 | A thin typed input before 1.0                                | No, unless a second host asks; the first one exports JSON anyway                                                                                     |
-| D-7 | `<kgdiff-viewer>`'s default layout for a plain view          | Not in this RFC: composed elements only. The default layout keeps its "No differences" card until a host asks for more                               |
-| D-8 | `addLayer` on `<kgdiff-stage>`                               | Yes, experimental, with 4a: otherwise the change graph inside the viewer cannot carry what the host draws on its own graph                           |
-| D-9 | `layoutGraph` in TypeScript                                  | Only through `@kgdiff/compute` in phase 5; not in the engine phase 5 deletes                                                                         |
+| ID  | Decision                                                     | Recommendation                                                                                                                                                                 |
+| --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D-1 | Is the plain view in scope for kgdiff at all?                | Yes, under the four rules of [Positioning](#positioning). Without it every host that embeds the diff builds the graph view beside it, on another map                           |
+| D-2 | Names: `layout_graph`, `report_payload_with`, `ReportLayout` | **Taken**, as written ([#78](https://github.com/iiwish/kgdiff/pull/78), [#79](https://github.com/iiwish/kgdiff/pull/79))                                                       |
+| D-3 | A hollow shape for a kind of node                            | No: hollow means "not in this version" in every view                                                                                                                           |
+| D-4 | The shape set, and whether a type change animates the shape  | `circle`, `square`, `diamond`, `hexagon`; no animation, the type change already has its badge and detail                                                                       |
+| D-5 | 4c in 0.10, or after 1.0                                     | Decide when 4b merges, by where phase 5 stands. Default: after 1.0, with hosts coloring through an `over` layer until then                                                     |
+| D-6 | A thin typed input before 1.0                                | No, unless a second host asks; the first one exports JSON anyway                                                                                                               |
+| D-7 | `<kgdiff-viewer>`'s default layout for a plain view          | Not in this RFC: composed elements only. The default layout keeps its "No differences" card until a host asks for more                                                         |
+| D-8 | `addLayer` on `<kgdiff-stage>`                               | **Taken:** yes, experimental ([#80](https://github.com/iiwish/kgdiff/pull/80)); otherwise the change graph inside the viewer cannot carry what the host draws on its own graph |
+| D-9 | `layoutGraph` in TypeScript                                  | **Taken:** only through `@kgdiff/compute` in phase 5 ([#78](https://github.com/iiwish/kgdiff/pull/78) adds none); not in the engine phase 5 deletes                            |
+
+## 0.9 results
+
+Merged on 2026-11-10, in three pull requests that touch no file in common:
+[#78](https://github.com/iiwish/kgdiff/pull/78) (part 1, 0a52a4d),
+[#79](https://github.com/iiwish/kgdiff/pull/79) (part 2, 6c3a764) and
+[#80](https://github.com/iiwish/kgdiff/pull/80) (part 4a, d3e1dac). No corpus file, layout byte
+or CLI report changed. Each is checked by its own tests; no test yet takes one graph through
+all three (a layout, the next version, a diff, a report with that layout).
+
+- **Part 1, `layout_graph`.** Implemented as the definition, literally: the graph is diffed
+  with itself and the result laid out with scope `All`; `LayoutInput` is untouched. The
+  contract holds byte for byte on both graphs of all 29 corpus cases (with default options,
+  the case's own, and a third set with pins off the grid), on 96 seeded random graphs and on
+  the fixture graphs; the same graph in another order gives the same bytes. A 3,500-node
+  graph, above the default threshold, is laid out whole. The crate's documentation has the
+  tested example and states the 0.01 grid.
+- **Part 2, reports.** `ReportLayout`, `report_payload_with` and `build_report_html_with` as
+  written; `Default` equals `report_payload` byte for byte. A given layout is refused with
+  `invalid-input` (details: `node`) by the two rules of the design. `report.v1.json` is in
+  `packages/core/schema/`, exported by `@kgdiff/core` with `layout.v2.json`; the payload of
+  every corpus case validates against it, in Rust and with ajv.
+- **Part 4a, layers.** `addLayer`, `RendererLayer` and `LayerView` as written, marked
+  experimental, on the renderer and on `<kgdiff-stage>`. The frame's ops with a layer that
+  leaves the context dirty equal the frame's ops without layers; without layers the paint path
+  issues the same ops as before. The standalone viewer is 117.4 kB gzip.
+
+**Where the implementation differs from this RFC's text, or decides what it left open:**
+
+- Part 1: the property over random graphs is a seeded test, not `proptest`, which
+  `kgdiff-layout` does not depend on. The three options that are "not read" do not affect the
+  result, but a value `layout_diff` rejects (`hub_degree: -1`) is still rejected, so that one
+  `LayoutOptions` is not valid for one function and invalid for the other.
+- Part 2: the schema accepts a layout document of version 1 as well as 2, as the viewer's
+  `ReportPayload` does, and a given layout read from a version 1 document is written back as
+  version 1. Only `positions` is checked against the diff, not the keys of `radii`, `hidden`
+  or `components`. `view` allows members the schema does not name, for parts 4b and 4c. The
+  Rust additions carry no experimental mark: they follow the crates' semver
+  ([Compatibility](#compatibility)).
+- Part 4a: in swipe, `LayerView.viewport` is the side's part of the visible world, which is
+  what a layer culls by and how it learns where the divider is. Layers are drawn when no frame
+  is set yet. A `draw` that throws is caught and reported, and the rest of the frame is
+  painted. Before each layer `globalAlpha` is set to 1 and the dash cleared, besides the save
+  and restore. `addLayer` rejects a layer without `draw` or with another `order`. A layer gets
+  the canvas's own `CanvasRenderingContext2D`, not the renderer's narrower `Ctx2D`, so where a
+  canvas has no 2D context (happy-dom, jsdom without `canvas`) layers are not called. The stage
+  keeps its layers across rebinding and reconnection.
+- The version bump: Changesets knows no crate, so part 1's changeset is on `@kgdiff/cli`,
+  whose changelog is where the crates have been mentioned so far, and part 2's on
+  `@kgdiff/core`, which ships the schema. The eight npm packages share one version, and the
+  crates take it.
 
 ## References
 
