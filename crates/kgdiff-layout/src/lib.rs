@@ -35,6 +35,61 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
+//! # Laying out one graph
+//!
+//! [`layout_graph`] gives one graph the positions [`layout_diff`] gives the diff of that graph
+//! with itself, with every node in scope, so that going from a graph to a diff of it moves
+//! nothing. The next version of a graph keeps the map of the previous one when it is laid out
+//! with the previous positions: the nodes that have one stay exactly where they are, and only
+//! the new nodes are placed.
+//!
+//! ```
+//! use kgdiff_core::js::json;
+//! use kgdiff_core::model::Point;
+//! use kgdiff_core::{NormalizeOptions, normalize};
+//! use kgdiff_layout::{
+//!     LayoutOptions, LayoutStrategy, layout_from_json, layout_graph, layout_to_json,
+//! };
+//!
+//! let first = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"}],
+//!     "edges":[{"source":"a","target":"b","predicate":"p"}]}"#)?;
+//! let first = normalize(&first, NormalizeOptions::default())?;
+//! let layout = layout_graph(&first, &LayoutOptions::default())?;
+//! assert_eq!(layout.stats.strategy, LayoutStrategy::Union);
+//!
+//! // Stored as a layout document, and read back when the next version arrives.
+//! let stored = json::to_string(&layout_to_json(&layout));
+//! let previous = layout_from_json(&json::parse(&stored)?)?;
+//! assert_eq!(previous.positions, layout.positions);
+//!
+//! // The next version has a new node: a and b do not move, c is placed beside them.
+//! let next = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"},{"id":"c"}],
+//!     "edges":[{"source":"a","target":"b","predicate":"p"},
+//!              {"source":"b","target":"c","predicate":"p"}]}"#)?;
+//! let next = normalize(&next, NormalizeOptions::default())?;
+//! let pinned = LayoutOptions { pinned: previous.positions.clone(), ..LayoutOptions::default() };
+//! let grown = layout_graph(&next, &pinned)?;
+//! assert_eq!(grown.stats.strategy, LayoutStrategy::Anchored);
+//! assert_eq!(grown.positions["a"], previous.positions["a"]);
+//! assert_eq!(grown.positions["b"], previous.positions["b"]);
+//! assert!(grown.positions.contains_key("c"));
+//!
+//! // A layout keeps a known position exactly, but a layout document rounds to 0.01.
+//! let mut off_grid = pinned.clone();
+//! off_grid.pinned.insert("a".into(), Point { x: 300.125, y: 0.0 });
+//! let exact = layout_graph(&next, &off_grid)?;
+//! assert_eq!(exact.positions["a"].x, 300.125);
+//! let written = layout_from_json(&layout_to_json(&exact))?;
+//! assert_eq!(written.positions["a"].x, 300.13);
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! A `position` on a node of the graph is a known position as well (a pin wins over it). The
+//! positions a layout computes are rounded to 0.01, the grid of the layout document, so the
+//! positions read back from a layout document are kept as they are, through any number of
+//! versions. A position from elsewhere is kept exactly in the [`LayoutResult`] and rounded when
+//! the document is written, so it is not the same number after a round trip.
+//!
 //! # Expanding a changes-only layout
 //!
 //! [`extend_layout`] adds nodes without moving any node already placed:
@@ -83,7 +138,7 @@ mod text_metrics;
 mod union;
 
 use kgdiff_core::model::{UnionEdge, UnionId, UnionNode};
-use kgdiff_core::{DiffResult, Result, js::Value};
+use kgdiff_core::{DiffOptions, DiffResult, KGraph, Result, diff_graphs, js::Value};
 
 pub use json::FORMAT;
 pub use options::{LayoutOptions, LayoutScope, LayoutStrategy};
@@ -162,6 +217,46 @@ pub fn layout_diff<'a>(
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
     pipeline::layout(input.into(), options)
+}
+
+/// The layout of one graph: the positions [`layout_diff`] gives the diff of `graph` with itself,
+/// with every node in scope. Positions and radii are keyed by node id.
+///
+/// That is the definition, and what a viewer relies on when it goes from a graph to a diff of it
+/// without moving a node: for every graph `g` and options `o`,
+/// `layout_to_json(&layout_graph(&g, &o)?)` is byte for byte
+/// `layout_to_json(&layout_diff(&diff_graphs(g.clone(), g.clone(), d)?, &o_all)?)`, where `d` is
+/// [`DiffOptions::default`] with `g`'s edge identity and `o_all` is `o` with scope
+/// [`LayoutScope::All`].
+///
+/// - The scope is always `All`, whatever the size of the graph: `large_graph_threshold`,
+///   `context_hops` and `hub_degree` have no effect on the result (a value [`layout_diff`]
+///   rejects is still rejected).
+/// - Known positions work as in [`layout_diff`]: a pin in `options.pinned`, or a `position` on a
+///   node of the graph, makes the layout `Anchored`. Those nodes stay exactly where they are and
+///   only the others are placed, which is how the next version of a graph keeps the previous
+///   version's map (see the [crate documentation](crate#laying-out-one-graph)).
+///
+/// The graph is diffed with itself to build the union, which costs about 30 ms for 10k nodes and
+/// 30k edges.
+///
+/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+///
+/// # Errors
+///
+/// `invalid-input` for scope `Changes` (one graph has no changes to select) and for the options
+/// [`layout_diff`] rejects.
+pub fn layout_graph(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutResult> {
+    let options = options.for_graph()?;
+    let identical = diff_graphs(
+        graph.clone(),
+        graph.clone(),
+        DiffOptions {
+            edge_identity: graph.edge_identity,
+            ..DiffOptions::default()
+        },
+    )?;
+    pipeline::layout(LayoutInput::from(&identical), &options)
 }
 
 /// Adds `nodes` (currently outside the layout) next to their placed neighbours without moving

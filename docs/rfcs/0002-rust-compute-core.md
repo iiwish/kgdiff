@@ -158,7 +158,7 @@ Cargo's `target/` is git-ignored; pnpm ignores the Rust crates and Cargo ignores
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | `kgdiff-core`    | `normalize`, `diff`, `match_nodes`, `apply_delta`, `invert_delta`, `hash_graph`, JSON transports, `format_hunk`, `text_similarity` | indexmap, ryu-js, ICU4X; serde (optional) |
 | `kgdiff-formats` | `parse_graph`, `detect_format`, `compact_iri`                                                                                      | core, oxttl (D-9)                         |
-| `kgdiff-layout`  | `layout_diff`, `extend_layout`, `node_radius`, `estimate_label_width`, layout JSON                                                 | core                                      |
+| `kgdiff-layout`  | `layout_diff`, `layout_graph`, `extend_layout`, `node_radius`, `estimate_label_width`, layout JSON                                 | core                                      |
 | `kgdiff-report`  | the text outputs of the CLI and the HTML report (payload, escaping, inlining), no I/O                                              | core, layout                              |
 | `kgdiff`         | argument parsing, inputs (gzip, UTF-16, size limits), atomic outputs, overwrite checks, colors, `apply`                            | all of the above                          |
 
