@@ -272,7 +272,91 @@ the preamble and then each hunk's ops in this order succeeds strictly and yields
 graph (property-tested). Phases are a preference, not a guarantee: a removal that waits for a
 relation retargeted to a new node comes after that addition.
 
-Hunk ids: `${kind}:${anchor}`; collisions get `#2`, `#3`.
+### Hunk ids
+
+`Hunk.id` is `${kind}:${anchor}`: the kind of the hunk, a colon and the union id (§6) of its
+anchor node, as in `modify:Q42`, `add:lab` or `remove:x@before`. `requires`, the `hunk` of every
+changed element, the viewer's deep links and `setReviewed()` name a hunk by its id, and hosts
+store review progress under it. From 0.9 the rule is a contract: deriving the id in another way
+is a breaking change
+([Releasing](https://github.com/iiwish/kgdiff/blob/main/docs/releasing.md#day-to-day)).
+
+| Kind        | Anchor                                                                                                                             |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `merge`     | The node the sources merge into.                                                                                                   |
+| `split`     | The node that splits. When it is also a merge target, its split belongs to that `merge` hunk.                                      |
+| `add`       | In a group of connected new nodes, the node with the most edges in the after version; on a tie, the smallest id (code unit order). |
+| `remove`    | In a group of connected removed nodes, the node with the most edges in the before version; on a tie, the smallest id.              |
+| `modify`    | The modified node.                                                                                                                 |
+| `relations` | The source node of the edges.                                                                                                      |
+
+The anchor is a union id. A node of the after version has its id there, so a node whose id
+changed is named by the new one. A removed node has its id in the before version, followed by
+`@before` when another node has that id in the after version (repeated until the id is free);
+this needs `match.strategy: 'similarity'`, since otherwise equal ids are one node.
+
+Two hunks of one kind never have the same anchor, so the ids of a diff are unique. The
+engines would number a second hunk of the same kind and anchor (`#2`, `#3`), and no input gets
+there: the tests check `id === kind + ':' + anchor` on random version pairs. Read the kind and
+the anchor from `Hunk.kind` and `Hunk.anchor` instead of parsing the id, because a node id may
+contain `:`, `#` and `@`.
+
+The id depends on the kind and the anchor and on nothing else: not on the other hunks, on the
+order of the hunks or of the input, or on what the hunk contains. What follows is what that
+gives a host and what it does not, each case tested in both engines
+(`crates/kgdiff-core/tests/hunk_ids.rs`, `packages/core/test/hunk-ids.test.ts`).
+
+**What holds.**
+
+- The same two graphs, the same options and the same version of kgdiff give the same ids, in
+  both engines, in whatever order the inputs list their nodes and edges. A later version that
+  matches or groups a pair of graphs differently gives it other hunks, named by the same rule.
+- A hunk keeps its id while its kind and anchor stay, whatever else changes in it. When the
+  head of a review moves on, `modify:x` is still `modify:x` after `x` gets another attribute or
+  an edge, `add:x` after its group gets another node, and `relations:x` after `x` gets another
+  edge.
+- It makes no difference which side moves. When the base takes some of the changes, a hunk
+  that is left keeps its id as long as it keeps its kind and anchor.
+- A new node that is connected to nothing and resembles no other node adds `add:<id>` and
+  changes no other id.
+- With `match.strategy: 'id'`, where no edit changes how another node is matched: a changed
+  attribute of a node `x` adds at most `modify:x`, which then replaces `relations:x`; a new edge
+  from `s` to `t`, both in both versions, adds at most `relations:s`.
+
+**What does not hold.** An id changes when the kind or the anchor does:
+
+- `relations:x` becomes `modify:x` once `x` itself changes, and the reverse.
+- The anchor of an `add` or `remove` hunk moves when another node of the group gets more edges,
+  and two groups that an edge connects become one hunk under one of the two ids.
+- The anchor is named by its id in the after version: a node whose id changes again is
+  `modify:` plus the newest id.
+- A removed node `x` becomes `x@before` when the after version reuses its id (`similarity`).
+- Matching reads both versions as a whole. With `auto`, the default, nodes whose id is in one
+  version only are paired by their names, types, attributes and neighbours (§2), and merges and
+  splits are found from names, hints and edges (§3). Another edit to such a node, or next to
+  it, can change the reading: a renamed node that changes further becomes a removal and an
+  addition, a modified node becomes part of a merge. With `similarity` this is true of every
+  node.
+- Hunks that come to require each other are merged into one, under the id of the best-ranked
+  one; the other ids are gone.
+- Other options (`match`, `edgeIdentity`, `detectMerges`, `detectSplits`, `ignoreAttrs`,
+  `hierarchyPredicates`) give another diff, with its own hunks.
+
+The same id is the same place, not the same content. `modify:x` reviewed yesterday and
+`modify:x` today may hold different changes.
+
+**Storing review progress by id.**
+
+- Store it per pair of versions, under `delta.base.hash` and `delta.target.hash`, as the viewer
+  does (`kgdiff:review:<base>→<target>`). For the same pair and options every stored id is
+  found again.
+- To carry progress to a new head or base, compare the stored ids with the new `hunks`. A hunk
+  whose id is not stored is unreviewed. A stored id that no hunk has is a change that is gone or
+  that is read differently now: drop it or keep it aside, and never count it (`setReviewed()`
+  ignores it). A stored id that a hunk has is the same place: when every change must be seen
+  before approval, also store what was seen, such as a hash of the hunk's nodes and edges as
+  `diffToJSON` writes them (the entries of `nodes` and `edges` that `hunk.nodes` and
+  `hunk.edges` name), and count the hunk as reviewed only when both agree.
 
 ## 8. Delta
 

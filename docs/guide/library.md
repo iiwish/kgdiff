@@ -77,6 +77,10 @@ They are the CLI's `--match`, `--threshold`, `--hierarchy`, `--ignore-attr`, `--
 | `delta`                  | The invertible patch from before to after                                                                        |
 | `before`, `after`        | The two graphs, normalized                                                                                       |
 
+Each hunk has an `id` made of its kind and its anchor node, such as `modify:Q42`. To store
+something per hunk, such as review progress, read [Hunk ids](../algorithms.md#hunk-ids) first:
+it says when an id stays the same and when it does not.
+
 ## Apply, invert and verify deltas
 
 ```ts

@@ -71,6 +71,8 @@ diff(before.graph, after.graph, {
 | `delta`                  | 从变化前到变化后的可反向补丁                                                                          |
 | `before`、`after`        | 规范化后的两张图                                                                                      |
 
+每个变更组都有一个 `id`，由它的类型和锚点节点组成，例如 `modify:Q42`。要按变更组保存数据（比如审阅进度），请先读 [Hunk ids](../../algorithms.md#hunk-ids)（英文）：那里写明了 id 在什么情况下不变、什么情况下会变。
+
 ## 应用、反向与校验增量
 
 ```ts

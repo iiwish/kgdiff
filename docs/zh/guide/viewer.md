@@ -216,6 +216,8 @@ viewer.addEventListener('kgdiff-ready', async () => {
 });
 ```
 
+这些 id 是变更组的 id，只对一对版本有效。请按这一对版本保存；要把进度带到更新的版本上，先读 [Hunk ids](../../algorithms.md#hunk-ids)（英文）：同一个 id 表示图中的同一处，不表示内容相同。
+
 ## 编辑器支持
 
 `@kgdiff/viewer` 附带一份

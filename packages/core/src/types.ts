@@ -492,7 +492,13 @@ export interface HunkSummary {
 }
 
 export interface Hunk {
-  /** Deterministic: `${kind}:${anchor}` (plus `#n` on the rare collision). */
+  /**
+   * `${kind}:${anchor}`, unique in a diff. It depends on the kind and the anchor only: the same
+   * two graphs and options give the same ids, and a hunk keeps its id when its content changes
+   * and loses it when its kind or anchor does. A contract from 0.9: docs/algorithms.md §7,
+   * "Hunk ids", says what holds, what does not, and how to store review progress under it. Read
+   * `kind` and `anchor` instead of parsing the id, since node ids may contain `:`.
+   */
   readonly id: string;
   readonly kind: HunkKind;
   readonly phase: ReplayPhase;
