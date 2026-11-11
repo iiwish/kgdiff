@@ -1,5 +1,13 @@
 # @kgdiff/g6
 
+## 0.9.0
+
+### Patch Changes
+
+- Updated dependencies [6c3a764]
+  - @kgdiff/core@0.9.0
+  - @kgdiff/scene@0.9.0
+
 ## 0.8.0
 
 ### Patch Changes
