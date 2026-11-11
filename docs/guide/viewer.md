@@ -59,8 +59,9 @@ changes, in any mode), `theme`, `locale`, `panels` ([below](#arrange-the-layout)
 (`none` for [small embeds](#embed-a-small-looping-replay)). Events bubble out of the viewer and
 are typed on every element, the document and the window (`KgdiffEventMap`).
 
-`mode="changes"`, from before scopes existed, still works: it means `overlay` with
-`scope="changes"`, and the attributes are rewritten to say so.
+`changes` is a scope, not a mode. `mode="changes"`, which meant "only the changes" before scopes
+existed, is an unknown value now: it reads as the default (`overlay`). Write
+`mode="overlay" scope="changes"` instead.
 
 ## Arrange the layout
 

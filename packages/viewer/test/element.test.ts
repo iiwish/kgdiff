@@ -85,7 +85,7 @@ describe('registration', () => {
 });
 
 describe('attributes and properties', () => {
-  it('combines any mode with the changes scope, and maps the legacy changes mode', async () => {
+  it('combines any mode with the changes scope, and ignores the removed changes mode', async () => {
     const el = await loaded();
     el.mode = 'swipe';
     el.scope = 'changes';
@@ -96,11 +96,11 @@ describe('attributes and properties', () => {
     expect(el.controller.focus).toBeNull();
     el.setAttribute('scope', 'bogus');
     expect(el.scope).toBe('all');
-    // `changes` used to be a mode: it now means overlay + the changes scope.
+    // `changes` used to be a mode; now it is an unknown one: the default, and the scope stays.
+    el.scope = 'changes';
     el.setAttribute('mode', 'changes');
     expect([el.mode, el.scope]).toEqual(['overlay', 'changes']);
-    expect(el.getAttribute('mode')).toBe('overlay');
-    expect(el.getAttribute('scope')).toBe('changes');
+    expect(el.getAttribute('mode')).toBe('changes'); // left as written, like any invalid value
     el.mode = 'replay';
     expect([el.mode, el.scope]).toEqual(['replay', 'changes']);
   });
@@ -437,8 +437,7 @@ describe('keyboard', () => {
 
 describe('sync-hash', () => {
   it('writes and reads #kgdiff deep links', async () => {
-    // Links from before scopes existed keep working.
-    history.replaceState(null, '', '#kgdiff=hunk:add%3AG;mode:changes');
+    history.replaceState(null, '', '#kgdiff=hunk:add%3AG;mode:overlay;scope:changes');
     const el = await loaded({ 'sync-hash': '' });
     expect([el.mode, el.scope]).toEqual(['overlay', 'changes']);
     expect(el.controller.scene?.hunks[el.controller.selectedHunk]?.id).toBe('add:G');

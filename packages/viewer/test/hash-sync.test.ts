@@ -16,14 +16,9 @@ describe('hash sync', () => {
     expect(parseHash('#kgdiff=scope:all')).toEqual({ scope: 'all' });
   });
 
-  it('reads the legacy changes mode as overlay + the changes scope', () => {
-    expect(parseHash('#kgdiff=hunk:a;mode:changes')).toEqual({
-      hunk: 'a',
-      mode: 'overlay',
-      scope: 'changes',
-    });
-    // An explicit scope wins over the one the legacy mode implies.
-    expect(parseHash('#kgdiff=mode:changes;scope:all')).toEqual({ mode: 'overlay', scope: 'all' });
+  it('ignores the removed changes mode, keeping the other fields', () => {
+    expect(parseHash('#kgdiff=hunk:a;mode:changes')).toEqual({ hunk: 'a' });
+    expect(parseHash('#kgdiff=mode:changes;scope:all')).toEqual({ scope: 'all' });
   });
 
   it('ignores foreign hashes, unknown fields, bad modes and bad encodings', () => {

@@ -45,7 +45,7 @@
       "properties": {
         "mode": {
           "enum": ["overlay", "swipe", "replay", "changes"],
-          "description": "`changes` (from reports made before scopes existed) means `overlay` with scope `changes`."
+          "description": "`changes` appears only in reports made before scopes existed; the viewer no longer reads it as a mode, ignores it and uses `overlay`. Write `mode: overlay` with `scope: changes` instead."
         },
         "scope": {
           "enum": ["all", "changes"],

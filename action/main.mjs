@@ -10,8 +10,8 @@
  *
  * Inputs arrive as INPUT_* environment variables that action.yml sets from `${{ inputs.* }}`,
  * never expanded into a script; branch names are read from the event payload. kgdiff runs as
- * the native binary of its npm platform package for the runner, or through npx for versions
- * before 0.8.0 (kgdiff.mjs), without the token in its environment.
+ * the native binary of its npm platform package for the runner (kgdiff.mjs), without the token
+ * in its environment.
  */
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';

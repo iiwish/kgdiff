@@ -1,13 +1,12 @@
 /**
- * Deep links for `sync-hash`: `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`. The legacy
- * `mode:changes` reads as overlay + the `changes` scope.
+ * Deep links for `sync-hash`: `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`.
  *
  * Values are percent-encoded (hunk ids embed union ids, which may be IRIs containing `;`, `#`
  * or `:`), so parsing splits on the first `:` of each `;`-separated field. Unknown fields are
  * ignored; a malformed value drops just that field.
  */
 import type { ViewerMode, ViewerScope } from './index.js';
-import { LEGACY_CHANGES_MODE, toMode, toScope } from './prefs.js';
+import { toMode, toScope } from './prefs.js';
 
 export interface HashState {
   readonly hunk?: string;
@@ -36,7 +35,6 @@ export function parseHash(hash: string): HashState | null {
   let hunk: string | undefined;
   let mode: ViewerMode | undefined;
   let scope: ViewerScope | undefined;
-  let legacy = false;
   for (const field of raw.slice(PREFIX.length).split(';')) {
     const colon = field.indexOf(':');
     if (colon <= 0) continue;
@@ -44,13 +42,9 @@ export function parseHash(hash: string): HashState | null {
     const value = decode(field.slice(colon + 1));
     if (value === undefined || value === '') continue;
     if (key === 'hunk') hunk = value;
-    else if (key === 'mode' && value === LEGACY_CHANGES_MODE) {
-      mode = 'overlay';
-      legacy = true;
-    } else if (key === 'mode') mode = toMode(value) ?? mode;
+    else if (key === 'mode') mode = toMode(value) ?? mode;
     else if (key === 'scope') scope = toScope(value) ?? scope;
   }
-  if (legacy) scope ??= 'changes';
   return {
     ...(hunk !== undefined ? { hunk } : {}),
     ...(mode !== undefined ? { mode } : {}),

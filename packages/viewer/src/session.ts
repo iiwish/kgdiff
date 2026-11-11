@@ -46,7 +46,7 @@ import type {
 } from './index.js';
 import { buildList, EMPTY_LIST, type ListModel, stepHunk } from './list-model.js';
 import { type LoadedDiff, type LoadStep, readPayload, runLoad } from './pipeline.js';
-import { LEGACY_CHANGES_MODE, toLocale, toMode, toPalette, toScope, toTheme } from './prefs.js';
+import { toLocale, toMode, toPalette, toScope, toTheme } from './prefs.js';
 import { ReplayClock } from './replay.js';
 import { ReviewStore, reviewKey, type StorageLike } from './review-store.js';
 import { type SearchHit, SearchIndex } from './search.js';
@@ -620,12 +620,8 @@ export class DiffSession {
     return this.layout?.scope === 'changes';
   }
 
-  /** Switch how the versions are compared. The legacy `changes` means overlay + `changes` scope. */
-  setMode(value: ViewerMode | typeof LEGACY_CHANGES_MODE): void {
-    if (value === LEGACY_CHANGES_MODE) {
-      this.setView('overlay', 'changes');
-      return;
-    }
+  /** Switch how the versions are compared; the scope stays. */
+  setMode(value: ViewerMode): void {
     const mode = toMode(value);
     if (mode !== null) this.setView(mode, this.scope);
   }

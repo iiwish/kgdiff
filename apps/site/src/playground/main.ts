@@ -132,9 +132,8 @@ function isStrategy(v: string | null): v is Strategy {
   return v === 'id' || v === 'auto' || v === 'similarity';
 }
 
-/** `changes` (the viewer's legacy mode) stays valid in old links: overlay + the changes scope. */
-function isMode(v: string | null): v is ViewerMode | 'changes' {
-  return v === 'overlay' || v === 'swipe' || v === 'replay' || v === 'changes';
+function isMode(v: string | null): v is ViewerMode {
+  return v === 'overlay' || v === 'swipe' || v === 'replay';
 }
 
 function isScope(v: string | null): v is ViewerScope {

@@ -1,7 +1,7 @@
 /**
  * How the action gets kgdiff (kgdiff.mjs): the version npm names, the platform package's tarball
- * checked against its integrity and unpacked, the candidates tried in order, npx for versions
- * without platform packages. npm itself is a stand-in here.
+ * checked against its integrity and unpacked, the candidates tried in order, the refusal of
+ * versions without platform packages. npm itself is a stand-in here.
  */
 import { createHash } from 'node:crypto';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,7 +9,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { afterEach, describe, expect, it } from 'vitest';
-import { extractFile, hasIntegrity, nativeKgdiff, viewedVersion } from '../kgdiff.mjs';
+import {
+  extractFile,
+  hasIntegrity,
+  nativeKgdiff,
+  supportsNative,
+  viewedVersion,
+} from '../kgdiff.mjs';
 import { ActionError } from '../lib.mjs';
 
 /** A gzip-compressed tar archive of `files` (name → content), as npm packs a package. */
@@ -31,6 +37,15 @@ function tgz(files: Readonly<Record<string, string>>): Buffer {
 }
 
 const integrity = (data: Buffer) => `sha512-${createHash('sha512').update(data).digest('base64')}`;
+
+describe('supportsNative', () => {
+  it('accepts 0.8.0 and later, and refuses what came before', () => {
+    for (const v of ['0.8.0', '0.8.1', '0.10.0', '1.0.0', '0.8.0-rc.1']) {
+      expect(supportsNative(v)).toBe(true);
+    }
+    for (const v of ['0.7.9', '0.2.0', '0.0.1']) expect(supportsNative(v)).toBe(false);
+  });
+});
 
 describe('viewedVersion', () => {
   it('takes the version, or the highest of a range', () => {
@@ -154,24 +169,25 @@ describe('nativeKgdiff', () => {
     ]);
   });
 
-  it('falls back to npx for a version without platform packages', async () => {
+  it('refuses a version before 0.8.0, without trying to fetch it', async () => {
     const work = workDir();
-    const { npm } = fakeNpm('0.7.0', {});
-    const ran: string[] = [];
-    const fallback = (spec: string) => ({
-      version: async () => {
-        ran.push(`version ${spec}`);
-        return spec;
-      },
-      run: async (args: readonly string[]) => {
-        ran.push(`run ${args.join(' ')}`);
-        return { code: 0, stderr: '' };
-      },
-    });
-    const kgdiff = nativeKgdiff('0.7', work, { ...linux, npm, fallback });
-    expect(await kgdiff.version()).toBe('0.7.0');
-    await kgdiff.run(['a', 'b'], work);
-    expect(ran).toEqual(['version 0.7.0', 'run a b']);
+    const { npm, calls } = fakeNpm('0.7.0', {});
+    const kgdiff = nativeKgdiff('0.7', work, { ...linux, npm });
+    const error = await kgdiff.version().catch((e) => e);
+    expect(error).toBeInstanceOf(ActionError);
+    expect(error.message).toContain('0.7.0 is older than 0.8.0');
+    expect(error.hint).toContain('pin an earlier release');
+    expect(calls.every((c) => c[0] === 'view')).toBe(true);
+  });
+
+  it('fails with a clear error when no platform package fits the runner', async () => {
+    const work = workDir();
+    const { npm } = fakeNpm('0.8.0', {});
+    const error = await nativeKgdiff('0.8.0', work, { ...linux, npm })
+      .version()
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(ActionError);
+    expect(error.message).toContain('no native build for this runner');
   });
 
   it('refuses a tarball that does not match its integrity', async () => {

@@ -255,8 +255,7 @@ export interface FitOptions {
 export interface KgdiffRootElement extends HTMLElement {
   /** Reflected to the `mode` attribute. Default `overlay`. */
   get mode(): ViewerMode;
-  /** The legacy `changes` mode sets `overlay` + scope `changes`. */
-  set mode(value: ViewerMode | 'changes');
+  set mode(value: ViewerMode);
   /**
    * Reflected to the `scope` attribute. Default `all` (`changes` for large graphs). Fixed to
    * `changes` when the layout covers only the changes.
