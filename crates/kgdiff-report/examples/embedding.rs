@@ -123,6 +123,7 @@ pub fn report_info(title: &str, before: &str, after: &str) -> ReportInfo {
         theme: None,
         locale: Locale::En,
         panels: None,
+        shapes: None,
     }
 }
 

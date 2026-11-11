@@ -66,6 +66,7 @@ fn info() -> ReportInfo {
             ("detail".to_owned(), "collapsed".to_owned()),
             ("minimap".to_owned(), "hidden".to_owned()),
         ]),
+        shapes: None,
     }
 }
 
@@ -268,6 +269,43 @@ fn a_layout_of_another_diff_is_rejected() {
 }
 
 #[test]
+fn shapes_go_into_the_view_in_their_order_and_only_when_given() {
+    let diff = chain("n", 6, 7);
+    let plain = report_payload(&diff, &info());
+    assert_eq!(member(&plain, "view").unwrap().get("shapes"), None);
+
+    let with_shapes = ReportInfo {
+        shapes: Some(vec![
+            ("Rule".to_owned(), "diamond".to_owned()),
+            ("Concept".to_owned(), "hexagon".to_owned()),
+            ("Metric".to_owned(), "square".to_owned()),
+        ]),
+        ..info()
+    };
+    let payload = report_payload(&diff, &with_shapes);
+    let shapes = member(&payload, "view").unwrap().get("shapes").unwrap();
+    assert_eq!(
+        json::to_string(shapes),
+        r#"{"Rule":"diamond","Concept":"hexagon","Metric":"square"}"#
+    );
+    assert!(Schemas::load().errors(REPORT, &payload).is_empty());
+
+    // Only `view` changes: everything else is byte for byte the payload without shapes.
+    let mut without = payload.as_object().unwrap().clone();
+    let mut view = member(&payload, "view")
+        .unwrap()
+        .as_object()
+        .unwrap()
+        .clone();
+    view.remove("shapes");
+    without.insert("view", Value::Object(view));
+    assert_eq!(
+        json::to_string(&Value::Object(without)),
+        json::to_string(&plain)
+    );
+}
+
+#[test]
 fn every_payload_validates_against_the_schema() {
     let schemas = Schemas::load();
     let bare = ReportInfo {
@@ -429,6 +467,11 @@ fn the_schema_describes_the_payload_and_nothing_else() {
             "an unknown panel state",
             &["view", "panels", "list"],
             Some("closed".into()),
+        ),
+        (
+            "an unknown shape",
+            &["view", "shapes"],
+            Some(object(&[("Class", "triangle".into())])),
         ),
     ] {
         assert!(

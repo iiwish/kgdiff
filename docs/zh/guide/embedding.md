@@ -201,6 +201,7 @@ pub fn report_info(title: &str, before: &str, after: &str) -> ReportInfo {
         theme: None,
         locale: Locale::En,
         panels: None,
+        shapes: None,
     }
 }
 ```
@@ -259,6 +260,18 @@ pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -
 ```
 
 带完整布局的载荷打开时什么都不用计算：diff 引擎和布局都不会进入页面。元素本身、它的面板、事件以及组成它的各个元素，见[嵌入查看器](./viewer.md)。
+
+要区分节点的种类，在 `ReportInfo` 里设置 `shapes`：类型和形状，按顺序给出。
+
+```text
+shapes: Some(vec![
+    ("Concept".to_owned(), "hexagon".to_owned()),
+    ("Metric".to_owned(), "diamond".to_owned()),
+    ("Table".to_owned(), "square".to_owned()),
+]),
+```
+
+一个节点取第一个它拥有的类型对应的形状，没有命中就是圆。形状有 `circle`、`square`、`diamond` 和 `hexagon`，差异视图和没有变化的图都一样，已存的布局仍然有效：每种形状都落在布局预留的盒子内。这个字段在载荷里是 `view.shapes`，在 1.0 之前是实验性的。
 
 ### 或者自己画
 
@@ -329,12 +342,11 @@ const removeMarks = renderer.addLayer({
 
 ## 还没有的东西
 
-[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md)（英文）还规划了四个部分。它们在 0.9 中都不存在，而且这份 RFC 还是草案：版本和细节都可能变化。
+[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md)（英文）还规划了三个部分。它们现在都不存在，而且这份 RFC 还是草案：版本和细节都可能变化。
 
 | 部分 | 内容                                                           | 计划版本          | 在此之前                                                                                      |
 | ---- | -------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------- |
 | 3    | 带类型的图输入：用 Rust 的值构造 `KGraph`（`normalize_input`） | 1.0               | 写出 kgdiff JSON 再调用 `normalize`                                                           |
-| 4b   | 按类型区分节点形状（圆、方、菱形、六边形）                     | 0.10              | 所有节点都是圆盘；在 `over` 图层上画自己的形状或标记                                          |
 | 4c   | 朴素视图：在查看器里看单张图，按你的类别着色                   | 0.10，或 1.0 之后 | 场景和渲染器用中性色画没有变化的 diff；`<kgdiff-viewer>` 显示“没有差异”卡片；着色通过图层完成 |
 | 4d   | 分组：每组一块背景，以及让同组节点靠在一起的布局               | 1.0 之后          | 根据位置在 `under` 图层上画背景；布局不知道分组                                               |
 

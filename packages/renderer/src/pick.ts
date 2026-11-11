@@ -1,10 +1,10 @@
 /**
- * Hit testing at a screen point, topmost first: nodes (grid lookup; a point inside a disc beats
- * the tolerance ring, then higher z), then edges (distance to the segment / curve / loop, higher
+ * Hit testing at a screen point, topmost first: nodes (grid lookup; a point inside the node's
+ * outline beats the tolerance band around it, then higher z), then edges (distance to the segment / curve / loop, higher
  * z first), then collapsed pills. Invisible and fully transparent elements, and pills hidden by
  * label collision, are never picked.
  */
-import type { FrameVisuals } from '@kgdiff/scene';
+import { type FrameVisuals, shapeApothem, shapeGauge } from '@kgdiff/scene';
 import { pillRect } from './draw/collapsed.js';
 import { isLoop } from './draw/edges.js';
 import { loopCenterY, loopRadius } from './draw/link.js';
@@ -14,7 +14,7 @@ import type { PickResult } from './index.js';
 import { distToQuadSq, distToSegmentSq } from './math.js';
 import type { Fonts, TextMeasurer } from './text.js';
 
-/** Extra reach (px) around node discs. */
+/** Extra reach (px) around node outlines. */
 export const NODE_PICK_TOLERANCE = 3;
 /** Extra reach (px) beyond half an edge's width. */
 export const EDGE_PICK_TOLERANCE = 4;
@@ -41,7 +41,8 @@ function pickNode(
   const wx = (sx - v.ox) / k;
   const wy = (sy - v.oy) / k;
   const grid = cache.nodeGrid();
-  const reach = Math.max(grid.maxR, NODE_MIN_R / k) + NODE_PICK_TOLERANCE / k;
+  // Every shape fits the box of half side r; a band of width t reaches t·√2 past a diamond's tip.
+  const reach = Math.max(grid.maxR, NODE_MIN_R / k) + (NODE_PICK_TOLERANCE * Math.SQRT2) / k;
   grid.query(wx - reach, wy - reach, wx + reach, wy + reach, candidates);
   let best = -1;
   let bestInside = false;
@@ -51,8 +52,12 @@ function pickNode(
     const n = frame.nodes[i]!;
     const r = Math.max(n.r, NODE_MIN_R / k);
     const d = Math.hypot(n.x - wx, n.y - wy);
-    if (d > r + NODE_PICK_TOLERANCE / k) continue;
-    const inside = d <= r;
+    // Circles measure by distance; polygons by the same test against their apothem.
+    const circle = n.shape === undefined;
+    const g = circle ? d : shapeGauge(n.shape, n.x - wx, n.y - wy);
+    const a = circle ? r : shapeApothem(n.shape, r);
+    if (g > a + NODE_PICK_TOLERANCE / k) continue;
+    const inside = g <= a;
     const better =
       best < 0 ||
       (inside && !bestInside) ||

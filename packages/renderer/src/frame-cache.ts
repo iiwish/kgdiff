@@ -12,7 +12,7 @@
  * allocates nothing per element in steady state.
  */
 import type { Rect } from '@kgdiff/core';
-import type { FrameVisuals } from '@kgdiff/scene';
+import type { FrameVisuals, NodeShape } from '@kgdiff/scene';
 import { clamp } from './math.js';
 import { PointGrid } from './spatial.js';
 
@@ -76,6 +76,20 @@ export function zLevel(z: number): number {
   return Number.isFinite(z) ? clamp(Math.round(z), -512, 511) : 0;
 }
 
+/** Bucket id of a shape: 0 for a circle, a missing or an unknown shape (drawn as a circle). */
+function shapeId(shape: NodeShape | undefined): number {
+  switch (shape) {
+    case 'square':
+      return 1;
+    case 'diamond':
+      return 2;
+    case 'hexagon':
+      return 3;
+    default:
+      return 0;
+  }
+}
+
 function quantizeWidth(w: number): number {
   return Number.isFinite(w) ? Math.round(clamp(w, 0, 15.75) * 4) : 0;
 }
@@ -113,6 +127,8 @@ export interface NodeBucket {
   strokeWidth: number;
   dash: readonly number[] | null;
   alpha: number;
+  /** undefined = circle. */
+  shape: NodeShape | undefined;
   readonly members: number[];
 }
 
@@ -239,13 +255,17 @@ export class FrameCache {
       const zq = quantizeZ(n.z);
       const stroke = n.stroke !== null && n.strokeWidth > 0 ? n.stroke : null;
       const dash = stroke !== null && n.dash !== null && n.dash.length > 0 ? n.dash : null;
+      const sid = shapeId(n.shape);
+      // Below 2^53: z (2^10) · fill, stroke (2^11 each) · width, dash (2^6 each) · alpha (65) · 4.
       const key =
-        ((((zq * 2048 + interner.color(n.fill)) * 2048 + interner.color(stroke)) * 64 +
+        (((((zq * 2048 + interner.color(n.fill)) * 2048 + interner.color(stroke)) * 64 +
           (stroke ? quantizeWidth(n.strokeWidth) : 0)) *
           64 +
           interner.dash(dash)) *
           65 +
-        aq;
+          aq) *
+          4 +
+        sid;
       let b = this.nodeMap.get(key);
       if (!b) {
         b = this.nodePool[this.nodeBuckets.length];
@@ -259,6 +279,7 @@ export class FrameCache {
             strokeWidth: 0,
             dash: null,
             alpha: 0,
+            shape: undefined,
             members: [],
           };
           this.nodePool.push(b);
@@ -271,6 +292,7 @@ export class FrameCache {
         b.strokeWidth = stroke ? quantizeWidth(n.strokeWidth) / 4 : 0;
         b.dash = dash;
         b.alpha = aq / 64;
+        b.shape = sid === 0 ? undefined : n.shape;
         b.members.length = 0;
         this.nodeMap.set(key, b);
         this.nodeBuckets.push(b);

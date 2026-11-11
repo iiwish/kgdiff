@@ -1,4 +1,5 @@
 /** Small numeric helpers for the mapping (pure, allocation-light). */
+import { type NodeShape, shapeVertexRadius, shapeVertices } from '@kgdiff/scene';
 
 /** `v` clamped to [0, 1]; NaN → 0. */
 export function unit(v: number): number {
@@ -28,6 +29,31 @@ export function evenCircleDash(dash: readonly number[], r: number): number[] {
   const count = Math.max(1, Math.round(circumference / period));
   const s = period > 0 ? circumference / (count * period) : 1;
   return dash.map((d) => d * s);
+}
+
+/**
+ * The points of a polygon outline at size `r` grown by `grow`, centered on the origin, starting
+ * in the middle of the last side (`evenShapeDash` expects that); null for a circle.
+ */
+export function outlinePoints(
+  shape: NodeShape | undefined,
+  r: number,
+  grow: number,
+): [number, number][] | null {
+  const v = shapeVertices(shape);
+  const n = v.length;
+  if (n === 0) return null;
+  const radius = shapeVertexRadius(shape, r, grow);
+  const points: [number, number][] = [
+    [
+      (((v[n - 2] as number) + (v[0] as number)) / 2) * radius,
+      (((v[n - 1] as number) + (v[1] as number)) / 2) * radius,
+    ],
+  ];
+  for (let i = 0; i < n; i += 2) {
+    points.push([(v[i] as number) * radius, (v[i + 1] as number) * radius]);
+  }
+  return points;
 }
 
 /**

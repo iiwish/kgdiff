@@ -7,6 +7,7 @@
  * - Synthetic mode: a generated frame exercising every primitive at 2k / 10k nodes, with
  *   animation, stress and benchmarks (`?source=synthetic`, `?n=5000`).
  * - "Host layers" (`?layers=1`): example layers under and over the graph (`dev/layers.ts`).
+ * - Node shapes (`?shapes=1`): the dataset's nodes in all four shapes, assigned round-robin.
  */
 import type { Locale } from '@kgdiff/core';
 import { createMinimap, createRenderer, type PickResult } from '@kgdiff/renderer';
@@ -114,7 +115,7 @@ for (const id of datasetIds()) {
 
 function rebuildScene(): void {
   if (!data) return;
-  bundle = sceneFor(data, themeName, locale);
+  bundle = sceneFor(data, themeName, locale, params.get('shapes') === '1');
   delete outs.main;
   delete outs.before;
   delete outs.after;

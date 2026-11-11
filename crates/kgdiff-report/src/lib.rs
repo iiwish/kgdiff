@@ -64,6 +64,7 @@
 //!     theme: None,
 //!     locale: Locale::En,
 //!     panels: None,
+//!     shapes: None,
 //! };
 //! let payload = report_payload_with(&result, ReportLayout::Given(&layout), &info)?;
 //! assert_eq!(payload.get("layout"), Some(&layout_to_json(&layout)));

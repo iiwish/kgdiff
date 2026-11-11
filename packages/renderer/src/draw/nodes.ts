@@ -1,12 +1,21 @@
 /**
  * Node pass, per z level: style buckets (one path, one fill, one stroke each), then the
  * level's rings and replay pulses. Hollow ghosts are filled with the canvas background so
- * edges do not show through; their dashes are stretched to tile the circumference evenly.
+ * edges do not show through; their dashes are stretched to tile the outline evenly. A bucket
+ * holds one shape, so polygons batch like discs; rings and pulses are the outline grown.
  */
-import type { FrameVisuals, NodeVisual, Theme } from '@kgdiff/scene';
+import {
+  evenShapeDash,
+  type FrameVisuals,
+  type NodeVisual,
+  shapeVertexRadius,
+  shapeVertices,
+  type Theme,
+} from '@kgdiff/scene';
 import { type Ctx2D, NO_DASH } from '../ctx.js';
 import { type FrameCache, type NodeBucket, zLevel } from '../frame-cache.js';
 import { TAU } from '../math.js';
+import { polygonPath } from './shapes.js';
 import { CULL_MARGIN, NODE_DASH_MIN_R, NODE_MIN_R, NODE_TINY_R, type View } from './view.js';
 
 const evenDash: number[] = [];
@@ -43,7 +52,11 @@ function drawBucket(
   const { k, ox, oy } = v;
   const members = b.members;
   const fill = b.fill ?? bg;
+  const shape = b.shape;
+  const vertices = shapeVertices(shape);
+  const polygon = vertices.length > 0;
   ctx.globalAlpha = b.alpha;
+  if (polygon) ctx.lineJoin = 'round';
 
   if (b.dash !== null && b.stroke !== null) {
     // Dashed outlines (ghosts) are few: draw one by one with evenly spaced dashes.
@@ -62,12 +75,18 @@ function drawBucket(
       }
       v.stats.nodes++;
       ctx.beginPath();
-      ctx.arc(x, y, r, 0, TAU);
+      if (polygon) polygonPath(ctx, vertices, x, y, shapeVertexRadius(shape, r, 0));
+      else ctx.arc(x, y, r, 0, TAU);
       ctx.fill();
-      ctx.setLineDash(r < NODE_DASH_MIN_R ? NO_DASH : evenCircleDash(b.dash, r, evenDash));
+      if (r < NODE_DASH_MIN_R) ctx.setLineDash(NO_DASH);
+      else if (polygon) {
+        ctx.lineDashOffset = evenShapeDash(shape, b.dash, r, evenDash);
+        ctx.setLineDash(evenDash);
+      } else ctx.setLineDash(evenCircleDash(b.dash, r, evenDash));
       ctx.stroke();
     }
     ctx.setLineDash(NO_DASH);
+    if (polygon) ctx.lineDashOffset = 0;
     return;
   }
 
@@ -91,8 +110,11 @@ function drawBucket(
       ctx.beginPath();
       started = true;
     }
-    ctx.moveTo(x + r, y);
-    ctx.arc(x, y, r, 0, TAU);
+    if (polygon) polygonPath(ctx, vertices, x, y, shapeVertexRadius(shape, r, 0));
+    else {
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, TAU);
+    }
   }
   if (started) {
     ctx.fillStyle = fill;
@@ -128,6 +150,9 @@ function drawDecor(ctx: Ctx2D, n: NodeVisual, v: View, theme: Theme): void {
   const ring = n.ring;
   const reach = r + (ring ? ring.gap + ring.width : 0) + 24;
   if (!visibleAt(v, x, y, reach)) return;
+  const vertices = shapeVertices(n.shape);
+  const polygon = vertices.length > 0;
+  if (polygon) ctx.lineJoin = 'round';
   if (ring !== null && ring.width > 0) {
     const a = ring.alpha * n.alpha;
     if (a >= 0.01) {
@@ -136,7 +161,8 @@ function drawDecor(ctx: Ctx2D, n: NodeVisual, v: View, theme: Theme): void {
       ctx.lineWidth = ring.width;
       ctx.setLineDash(NO_DASH);
       ctx.beginPath();
-      ctx.arc(x, y, r + ring.gap, 0, TAU);
+      if (polygon) polygonPath(ctx, vertices, x, y, shapeVertexRadius(n.shape, r, ring.gap));
+      else ctx.arc(x, y, r + ring.gap, 0, TAU);
       ctx.stroke();
     }
   }
@@ -151,7 +177,9 @@ function drawDecor(ctx: Ctx2D, n: NodeVisual, v: View, theme: Theme): void {
       ctx.lineWidth = 0.75 + 1.75 * fade;
       ctx.setLineDash(NO_DASH);
       ctx.beginPath();
-      ctx.arc(x, y, r + 3 + p * (12 + r * 0.6), 0, TAU);
+      const grow = 3 + p * (12 + r * 0.6);
+      if (polygon) polygonPath(ctx, vertices, x, y, shapeVertexRadius(n.shape, r, grow));
+      else ctx.arc(x, y, r + grow, 0, TAU);
       ctx.stroke();
     }
   }

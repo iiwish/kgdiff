@@ -83,10 +83,27 @@ export async function loadDataset(id: string): Promise<Dataset> {
   };
 }
 
-/** Scene + resolver for a theme and locale. */
-export function sceneFor(data: Dataset, theme: ThemeName, locale: Locale): SceneBundle {
+const DEMO_SHAPES = { K0: 'circle', K1: 'square', K2: 'diamond', K3: 'hexagon' } as const;
+
+/** The diff with its nodes typed round-robin, so every state occurs in every shape. */
+function demoTyped(result: DiffResult): DiffResult {
+  return {
+    ...result,
+    nodes: result.nodes.map((n, i) => ({ ...n, types: [`K${i % 4}`] })),
+  } as DiffResult;
+}
+
+/** Scene + resolver for a theme and locale; `shapes` mixes all four shapes (`?shapes=1`). */
+export function sceneFor(
+  data: Dataset,
+  theme: ThemeName,
+  locale: Locale,
+  shapes = false,
+): SceneBundle {
   const t0 = performance.now();
-  const scene = buildScene(data.diff, data.layout, { theme, locale });
+  const scene = shapes
+    ? buildScene(demoTyped(data.diff), data.layout, { theme, locale, shapes: DEMO_SHAPES })
+    : buildScene(data.diff, data.layout, { theme, locale });
   const resolver = createVisualResolver(scene);
   return { scene, resolver, ms: performance.now() - t0 };
 }

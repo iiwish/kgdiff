@@ -265,6 +265,7 @@ pub fn report_info(title: &str, before: &str, after: &str) -> ReportInfo {
         theme: None,
         locale: Locale::En,
         panels: None,
+        shapes: None,
     }
 }
 ```
@@ -334,10 +335,25 @@ A payload with a full layout opens without computing anything: the diff engine a
 stay out of the page. [Embed the viewer](./viewer.md) covers the element, its panels, its events
 and the elements it is made of.
 
+To tell kinds of nodes apart, set `shapes` in `ReportInfo`: type and shape, in order.
+
+```text
+shapes: Some(vec![
+    ("Concept".to_owned(), "hexagon".to_owned()),
+    ("Metric".to_owned(), "diamond".to_owned()),
+    ("Table".to_owned(), "square".to_owned()),
+]),
+```
+
+A node takes the shape of the first entry among its types; with none, a circle. The shapes are
+`circle`, `square`, `diamond` and `hexagon`, in the diff and on an unchanged graph alike, and the
+stored layouts stay valid: every shape fits the box the layout reserves. The field is
+`view.shapes` in the payload, and experimental until 1.0.
+
 ### Or draw it yourself
 
 For an interface of your own, read the diff and the layout out of the payload, build a scene and
-give its frames to the renderer:
+give its frames to the renderer (`buildScene` takes the same map as its `shapes` option):
 
 ```ts
 import { diffFromJSON, unpackDiffJSON } from '@kgdiff/core';
@@ -419,13 +435,12 @@ The rules in full are in the
 ## What is not there yet
 
 [RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) plans
-four more parts. None of them exists in 0.9, and the RFC is a draft: releases and details may
+three more parts. None of them exists yet, and the RFC is a draft: releases and details may
 change.
 
 | Part | What                                                                     | Planned for        | Until then                                                                                                                   |
 | ---- | ------------------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
 | 3    | Typed graph input: build a `KGraph` from Rust values (`normalize_input`) | 1.0                | write kgdiff JSON and call `normalize`                                                                                       |
-| 4b   | Node shapes by type (circle, square, diamond, hexagon)                   | 0.10               | every node is a disc; draw your own shapes or marks on an `over` layer                                                       |
 | 4c   | The plain view: one graph in the viewer, colored by your categories      | 0.10, or after 1.0 | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
 | 4d   | Groups: a background per group, and a layout that keeps a group together | after 1.0          | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
 

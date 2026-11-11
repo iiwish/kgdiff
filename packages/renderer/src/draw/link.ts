@@ -2,6 +2,7 @@
  * Geometry of one link (edge or glyph arc) in screen space: straight or quadratic, trimmed at
  * the endpoint radii, partially drawn (`progress`), optionally ending in an arrowhead.
  */
+import { type NodeShape, shapeDistance, shapeVertices } from '@kgdiff/scene';
 import type { Ctx2D } from '../ctx.js';
 import { quadAt, quadSlope, quadTrim, TAU } from '../math.js';
 import { ARROW_LEN } from './view.js';
@@ -112,6 +113,47 @@ export function linkPath(
     quadAt(y1, cy, y2, tEnd),
   );
   return withArrow ? LINK_ARROW : LINK_DRAWN;
+}
+
+/**
+ * px to cut from one end of the link (x1, y1) → (x2, y2) so it stops at the outline of a node
+ * of screen size `r` there (the end at (x2, y2) with `fromEnd`). A disc needs `r` whatever the
+ * direction; on a polygon the distance depends on where the line crosses, found on a curve by
+ * two refinements from the disc's crossing.
+ */
+export function outlineTrim(
+  shape: NodeShape | undefined,
+  r: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  curvature: number,
+  fromEnd: boolean,
+): number {
+  if (shapeVertices(shape).length === 0) return r;
+  const ox = fromEnd ? x2 : x1;
+  const oy = fromEnd ? y2 : y1;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  if (curvature === 0 || !Number.isFinite(curvature)) {
+    const len = Math.hypot(dx, dy);
+    if (!(len > 1e-6)) return r;
+    const s = fromEnd ? -1 : 1;
+    return shapeDistance(shape, r, 0, (s * dx) / len, (s * dy) / len);
+  }
+  const cx = (x1 + x2) / 2 - dy * curvature;
+  const cy = (y1 + y2) / 2 + dx * curvature;
+  let d = r;
+  for (let i = 0; i < 2; i++) {
+    const t = quadTrim(x1, y1, cx, cy, x2, y2, d, fromEnd);
+    const px = quadAt(x1, cx, x2, t) - ox;
+    const py = quadAt(y1, cy, y2, t) - oy;
+    const at = Math.hypot(px, py);
+    if (!(at > 1e-6)) return d;
+    d = shapeDistance(shape, r, 0, px / at, py / at);
+  }
+  return d;
 }
 
 /** Self-loop circle radius (px) for a node of screen radius `r`; |curvature| enlarges it. */

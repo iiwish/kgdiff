@@ -12,7 +12,7 @@ import { type Ctx2D, NO_DASH } from '../ctx.js';
 import type { FrameCache } from '../frame-cache.js';
 import { TAU } from '../math.js';
 import type { Fonts } from '../text.js';
-import { LINK_ARROW, linkMidpoint, linkPath } from './link.js';
+import { LINK_ARROW, linkMidpoint, linkPath, outlineTrim } from './link.js';
 import { arrowPath } from './shapes.js';
 import { ARROW_GAP, CULL_MARGIN, NODE_MIN_R, type View } from './view.js';
 
@@ -90,8 +90,10 @@ export function drawGlyphArcs(
     const style = glyphStyle(g.kind);
     const own = (g as GlyphVisual & { readonly arrow?: boolean }).arrow;
     const arrow = typeof own === 'boolean' ? own : style.arrow;
-    const t1 = trim(g.r1, k);
-    const t2 = trim(g.r2, k);
+    const r1 = trim(g.r1, k);
+    const r2 = trim(g.r2, k);
+    const t1 = g.shape1 && r1 > 0 ? outlineTrim(g.shape1, r1, x1, y1, x2, y2, c, false) : r1;
+    const t2 = g.shape2 && r2 > 0 ? outlineTrim(g.shape2, r2, x1, y1, x2, y2, c, true) : r2;
     const dash = g.dash !== null && g.dash.length > 0 ? g.dash : style.dash;
     ctx.globalAlpha = g.alpha;
     ctx.strokeStyle = g.color;

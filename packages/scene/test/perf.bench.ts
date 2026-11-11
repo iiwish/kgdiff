@@ -25,6 +25,28 @@ test('buildScene, 10k nodes / 30k edges (budget 50 ms)', async ({ bench }) => {
   expect(result.latency.p50).toBeLessThan(150);
 });
 
+test('resolve per frame with all four shapes, 5k nodes / 10k edges (budget 4 ms)', async ({
+  bench,
+}) => {
+  const { diff, layout } = synthetic(5000, 10_000);
+  const typed = {
+    ...diff,
+    nodes: diff.nodes.map((n, i) => ({ ...n, types: [`T${i % 4}`] })),
+  } as typeof diff;
+  const shapes = { T0: 'circle', T1: 'square', T2: 'diamond', T3: 'hexagon' } as const;
+  const scene = buildScene(typed, layout, { shapes });
+  const resolver = createVisualResolver(scene);
+  const out = resolver.resolve(createViewState());
+  const views = Array.from({ length: 120 }, (_, k) =>
+    createViewState({ layer: 'replay', t: (k / 120) * scene.timeline.duration }),
+  );
+  let k = 0;
+  const result = await bench('replay, mixed shapes', () => {
+    resolver.resolve(views[k++ % 120] as ViewState, out);
+  }).run();
+  expect(result.latency.p50).toBeLessThan(16);
+});
+
 test('resolve per frame, 5k nodes / 10k edges (budget 4 ms)', async ({ bench }) => {
   const { diff, layout } = synthetic(5000, 10_000);
   const scene = buildScene(diff, layout);

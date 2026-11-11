@@ -1,8 +1,9 @@
 /**
  * Family swatches: the node cue of each family (docs/visual-language.md §Meaning families), drawn
  * the same in the legend and on the sidebar's filter chips so the chips double as a legend.
+ * Shape swatches: a neutral mark of a node shape, for the legend's list of node types.
  */
-import type { Family } from '@kgdiff/scene';
+import { type Family, type NodeShape, shapeVertexRadius, shapeVertices } from '@kgdiff/scene';
 
 export function swatch(family: Family): SVGSVGElement {
   const v = (name: string) => `var(--kgdiff-${name})`;
@@ -25,7 +26,27 @@ export function swatch(family: Family): SVGSVGElement {
     default:
       body = `<circle cx="11" cy="11" r="3.5" fill="${c}"/>`;
   }
+  return svg(body);
+}
+
+function svg(body: string): SVGSVGElement {
   const tpl = document.createElement('template');
   tpl.innerHTML = `<svg class="swatch" viewBox="0 0 22 22" aria-hidden="true" focusable="false">${body}</svg>`;
   return tpl.content.firstElementChild as SVGSVGElement;
+}
+
+/** A node shape in the neutral color, the same geometry the canvas draws. */
+export function shapeSwatch(shape: NodeShape): SVGSVGElement {
+  const r = 6.5;
+  const fill = 'var(--kgdiff-neutral)';
+  const v = shapeVertices(shape);
+  if (v.length === 0) return svg(`<circle cx="11" cy="11" r="${r}" fill="${fill}"/>`);
+  const radius = shapeVertexRadius(shape, r, 0);
+  const points: string[] = [];
+  for (let i = 0; i < v.length; i += 2) {
+    const x = 11 + (v[i] as number) * radius;
+    const y = 11 + (v[i + 1] as number) * radius;
+    points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+  }
+  return svg(`<polygon points="${points.join(' ')}" fill="${fill}"/>`);
 }

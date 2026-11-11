@@ -197,6 +197,7 @@ ${familyRules}
 }
 .mini-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .mini-item .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--fam-base); }
+.mini-item .swatch { width: 14px; height: 14px; flex: none; }
 .mini-item[data-family="removed"] .dot { background: none; box-shadow: inset 0 0 0 1.5px var(--fam-base); }
 .stage-wrap[data-legend="mini"] .legend, .stage-wrap[data-legend="none"] .legend { display: none; }
 

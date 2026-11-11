@@ -458,7 +458,12 @@ export class DiffSession {
     const keepHunk = old && this.selectedHunk >= 0 ? old.hunks[this.selectedHunk]?.id : undefined;
     const keepNode = old && this.selectedNode >= 0 ? old.nodes[this.selectedNode]?.id : undefined;
     const keepEdge = old && this.pinnedEdge >= 0 ? old.edges[this.pinnedEdge]?.id : undefined;
-    const scene = buildScene(data.diff, layout, { theme: this.theme, locale: this.locale });
+    const shapes = data.view?.shapes;
+    const scene = buildScene(data.diff, layout, {
+      theme: this.theme,
+      locale: this.locale,
+      ...(shapes ? { shapes } : {}),
+    });
     this.scene = scene;
     this.resolver = createVisualResolver(scene);
     const prevClock = this.clock;

@@ -1,5 +1,5 @@
 /** Badge pass: compact change summaries (`+2 −1 ~1`, `⊕ 3`) as pills at a node's upper right. */
-import type { FrameVisuals, Theme } from '@kgdiff/scene';
+import { type FrameVisuals, shapeDistance, shapeVertices, type Theme } from '@kgdiff/scene';
 import type { Ctx2D } from '../ctx.js';
 import type { FrameCache } from '../frame-cache.js';
 import type { CollisionGrid } from '../labels.js';
@@ -43,11 +43,17 @@ export class BadgePass {
       if (k < badge.minZoom || n.alpha < 0.02) continue;
       // Anchor on the outermost outline (ring included) so the pill never covers it.
       const ring = n.ring;
-      const r = Math.max(n.r * k, NODE_MIN_R) + (ring ? ring.gap + ring.width / 2 : 0);
+      const nodeR = Math.max(n.r * k, NODE_MIN_R);
+      const grow = ring ? ring.gap + ring.width / 2 : 0;
+      // Where the outline meets the diagonal to the upper right, per axis (0.7 · r on a disc).
+      const reach =
+        shapeVertices(n.shape).length > 0
+          ? shapeDistance(n.shape, nodeR, grow, Math.SQRT1_2, -Math.SQRT1_2) * Math.SQRT1_2
+          : (nodeR + grow) * 0.7;
       const w = Math.ceil(measurer.width(font, badge.text)) + 2 * BADGE_PAD_X;
       const h = BADGE_HEIGHT;
-      const bx = snap(n.x * k + ox + r * 0.7 - 2, dpr);
-      const by = snap(n.y * k + oy - r * 0.7 - h + 2, dpr);
+      const bx = snap(n.x * k + ox + reach - 2, dpr);
+      const by = snap(n.y * k + oy - reach - h + 2, dpr);
       if (bx + w < v.x0 || bx > v.x1 || by + h < v.y0 || by > v.y1) continue;
       obstacles.insert(bx - 1, by - 1, w + 2, h + 2);
       if (this.boxes.length < (this.count + 1) * 5) {

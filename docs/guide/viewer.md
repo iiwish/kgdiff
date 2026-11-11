@@ -261,6 +261,26 @@ it; it shows in replay mode only. Slotted into the stage instead,
 `<kgdiff-transport slot="bottom-center">` replaces the stage's own and floats over the canvas,
 kept clear of the graph (keep `dock:hidden`).
 
+## Draw kinds of nodes as shapes
+
+A report can say what shape each type of node takes, in `view.shapes` of its payload:
+
+```js
+viewer.payload = {
+  ...report,
+  view: { ...report.view, shapes: { Concept: 'hexagon', Metric: 'diamond', Table: 'square' } },
+};
+```
+
+The shapes are `circle`, `square`, `diamond` and `hexagon`. A node takes the shape of the first
+entry, in this order, among its types (the after version's; the before version's for a removed
+node), and without one it is a circle. Shape says what kind of thing a node is, color still says
+what changed: added, removed and modified nodes look as they always do, in their own outline. The
+layout does not change. The legend lists the shapes in use with their type names, as given (keep
+them short). A type name that looks like a whole number sorts first in a JavaScript object, so
+such a key does not keep its place. `view.shapes` is only read from a payload; `load()` has no
+option for it. Experimental until 1.0.
+
 ## Theme it with CSS
 
 Colors and fonts are CSS custom properties, set on `<kgdiff-viewer>` (or `<kgdiff-root>`) and

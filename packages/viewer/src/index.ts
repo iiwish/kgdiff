@@ -28,7 +28,7 @@ import type {
 import type { ParseOptions } from '@kgdiff/formats';
 import type { LayoutJSON, LayoutOptions } from '@kgdiff/layout';
 import type { RendererLayer } from '@kgdiff/renderer';
-import type { PaletteName } from '@kgdiff/scene';
+import type { NodeShape, PaletteName } from '@kgdiff/scene';
 import { KgdiffViewer } from './element.js';
 import type { Keymap } from './keyboard.js';
 import type { ShortcutScope } from './root-element.js';
@@ -64,6 +64,7 @@ export type ViewerLegend = 'auto' | 'full' | 'mini' | 'none';
  * @experimental New in 0.9 (RFC 0003, part 4a); stable in 1.0.
  */
 export type { LayerView, RendererLayer } from '@kgdiff/renderer';
+export type { NodeShape } from '@kgdiff/scene';
 export type { Keymap, ShortcutName } from './keyboard.js';
 export type { ShortcutScope } from './root-element.js';
 
@@ -168,6 +169,14 @@ export interface ReportPayload {
      * viewer before, or a `panels` attribute the page sets, wins over these.
      */
     readonly panels?: ViewerPanels;
+    /**
+     * Node type → shape (`SceneOptions.shapes`): a node takes the shape of the first entry, in
+     * this order, among its types; the legend lists those in use. Entries with a shape this
+     * viewer does not know are left out, with a warning.
+     *
+     * @experimental Becomes stable in 1.0.
+     */
+    readonly shapes?: Readonly<Record<string, NodeShape>>;
   };
 }
 

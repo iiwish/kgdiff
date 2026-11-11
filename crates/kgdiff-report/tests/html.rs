@@ -43,6 +43,7 @@ fn info() -> ReportInfo {
         theme: Some("dark".to_owned()),
         locale: Locale::ZhCn,
         panels: None,
+        shapes: None,
     }
 }
 

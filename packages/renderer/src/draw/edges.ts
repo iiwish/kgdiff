@@ -1,12 +1,20 @@
 /**
  * Edge pass: one path + one stroke per style bucket (and one fill for its arrowheads),
- * buckets in z order. Endpoints are trimmed at node radii; culled against the region.
+ * buckets in z order. Endpoints are trimmed at node outlines; culled against the region.
  */
 import type { FrameVisuals } from '@kgdiff/scene';
 import { type Ctx2D, NO_DASH } from '../ctx.js';
 import type { EdgeBucket, FrameCache } from '../frame-cache.js';
 import { segmentHitsRect } from '../math.js';
-import { LINK_ARROW, LINK_NONE, linkPath, loopCenterY, loopPath, loopRadius } from './link.js';
+import {
+  LINK_ARROW,
+  LINK_NONE,
+  linkPath,
+  loopCenterY,
+  loopPath,
+  loopRadius,
+  outlineTrim,
+} from './link.js';
 import { arrowPath } from './shapes.js';
 import { ARROW_GAP, CULL_MARGIN, NODE_MIN_R, type View } from './view.js';
 
@@ -100,7 +108,10 @@ export function drawEdges(ctx: Ctx2D, frame: FrameVisuals, cache: FrameCache, v:
         res = loopPath(ctx, x1, y1, r1, e.curvature, e.progress);
       } else {
         const arrow = showsArrow(e.arrow, e.arrowMinZoom, k);
-        const r2 = Math.max(e.r2 * k, NODE_MIN_R) + (arrow ? ARROW_GAP : 0);
+        const r2 = Math.max(e.r2 * k, NODE_MIN_R);
+        const c = e.curvature;
+        const trim1 = e.shape1 ? outlineTrim(e.shape1, r1, x1, y1, x2, y2, c, false) : r1;
+        const trim2 = e.shape2 ? outlineTrim(e.shape2, r2, x1, y1, x2, y2, c, true) : r2;
         res = linkPath(
           ctx,
           x1,
@@ -108,8 +119,8 @@ export function drawEdges(ctx: Ctx2D, frame: FrameVisuals, cache: FrameCache, v:
           x2,
           y2,
           e.curvature,
-          r1,
-          r2,
+          trim1,
+          trim2 + (arrow ? ARROW_GAP : 0),
           e.progress,
           e.fromTarget,
           arrow,

@@ -134,6 +134,15 @@ export type NodeRole =
   | 'split-source'
   | 'split-target';
 
+/**
+ * What a node is drawn as: what kind of thing it is, never what changed about it
+ * (docs/visual-language.md §Shape says what kind). Every shape fits the square of half side `r`
+ * around the node's center, so the layout does not depend on it.
+ *
+ * @experimental Becomes stable in 1.0.
+ */
+export type NodeShape = 'circle' | 'square' | 'diamond' | 'hexagon';
+
 export type EdgeRole =
   | 'unchanged'
   | 'added'
@@ -167,6 +176,12 @@ export interface SceneNode {
   readonly labelBefore?: string;
   /** Compact change summary for badges, e.g. `+2 −1 ~1`. */
   readonly badge?: string;
+  /**
+   * From `SceneOptions.shapes`; absent means a circle.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
+  readonly shape?: NodeShape;
   /**
    * merge-source / split-target: index of the node it flows into / out of during replay;
    * deprecated: index of its replacement (`replacedBy`), when in the scene.
@@ -265,6 +280,12 @@ export interface Timeline {
   readonly mode: 'hunks' | 'chapters';
 }
 
+/** A type of `SceneOptions.shapes` that decided the shape of at least one node of the scene. */
+export interface SceneShape {
+  readonly type: string;
+  readonly shape: NodeShape;
+}
+
 export interface Scene {
   readonly nodes: readonly SceneNode[];
   readonly edges: readonly SceneEdge[];
@@ -282,6 +303,13 @@ export interface Scene {
   readonly nodeIndex: ReadonlyMap<UnionId, number>;
   readonly edgeIndex: ReadonlyMap<UnionId, number>;
   readonly hunkIndex: ReadonlyMap<string, number>;
+  /**
+   * The entries of `SceneOptions.shapes` in use, in their order, for legends. Absent without
+   * `shapes` or when no node has one of its types.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
+  readonly shapes?: readonly SceneShape[];
 }
 
 export interface SceneOptions {
@@ -297,6 +325,14 @@ export interface SceneOptions {
     /** Above this many hunks the timeline switches to chapter mode. Default 40. */
     readonly chapterThreshold?: number;
   };
+  /**
+   * Node type → shape. A node takes the shape of the first entry, in this order, that is among
+   * its types (the after version's; the before version's for a removed node); with none, a
+   * circle. A change of type does not animate the shape.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
+  readonly shapes?: Readonly<Record<string, NodeShape>>;
 }
 
 // ─── View state ─────────────────────────────────────────────────────────────
@@ -433,6 +469,13 @@ export interface NodeVisual {
   pulse: number;
   /** Draw order inside its pass; higher = later. */
   z: number;
+  /**
+   * Absent means `circle`; a renderer that does not read it draws circles. The ring, the light
+   * halo, the pulse and the ghost's dashes follow the outline; the dark glow stays radial.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
+  shape?: NodeShape;
 }
 
 export interface EdgeVisual {
@@ -444,6 +487,14 @@ export interface EdgeVisual {
   /** Radii of the endpoints so the line stops at the node boundary (world units). */
   r1: number;
   r2: number;
+  /**
+   * Shapes of the endpoints, whose outlines at size `r1` / `r2` the line stops at. Absent means
+   * `circle`.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
+  shape1?: NodeShape;
+  shape2?: NodeShape;
   /** See the curve convention above. */
   curvature: number;
   color: string;
@@ -503,6 +554,13 @@ export interface GlyphVisual {
    */
   r1: number;
   r2: number;
+  /**
+   * Shapes of the endpoints, like `EdgeVisual.shape1` / `shape2`.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
+  shape1?: NodeShape;
+  shape2?: NodeShape;
   color: string;
   /** Absolute; the label's alpha is relative to it. */
   alpha: number;

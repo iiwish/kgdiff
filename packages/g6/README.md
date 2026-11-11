@@ -84,8 +84,9 @@ await graph.draw();
 ```
 
 `toG6Data` is pure. Nodes have no `type` and render as G6 circles. The ring, glow, replay pulse,
-struck-through labels and old names are drawn by the `kgdiff-node` type, which only
-`createDiffGraph` registers, so a plain circle shows a simpler G6 halo instead. Level of detail
+node shapes (`buildScene`'s `shapes`), struck-through labels and old names are drawn by the
+`kgdiff-node` type, which only `createDiffGraph` registers, so a plain circle ignores the shape
+and shows a simpler G6 halo instead. Level of detail
 is evaluated at zoom 1. Every element's `data` is a `KgdiffDatumData`:
 `{ kgdiff: 'node' | 'edge' | 'glyph' | 'anchor' | 'collapsed', index, hunk, family, changed,
 label, glyph }`. `index` is the scene index, so your handlers can map a G6 id back to the diff.
