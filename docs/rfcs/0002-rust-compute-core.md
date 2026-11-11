@@ -772,7 +772,7 @@ copy. One TypeScript 0.x release, each change with its corpus update in the same
 4. **Additive reader changes:** the viewer's layout-less payloads ([D-5](#open-decisions)) and
    `layoutFromJSON` reading layout version 2 ([§2](#2-contract-boundary)), so that every viewer
    released from then on reads what phases 3 and 4 write.
-5. The `ignoreAttrs` / `kgdiff apply` decision of §11, if it is made by then.
+5. The `ignoreAttrs` / `kgdiff apply` decision of §11 (made and fixed for 0.10.0, [#94](https://github.com/iiwish/kgdiff/pull/94)).
 
 Phase 2 may start once items 1 and 2 are merged on `main` (they are: [#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0, and [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808); they
 are released together with phase 2, as kgdiff 0.7.0. The others may come in a later 0.x release:
@@ -1082,15 +1082,14 @@ the compute code, and where the lists above and in §1 differ from it, the code-
 
 ### 11. Known issues outside this RFC
 
-- **`ignoreAttrs` and `kgdiff apply`.** Found while building the corpus: with `--ignore-attr`,
-  the delta leaves the changes of ignored attributes out, but `hashGraph` covers every attribute
-  and the delta's `target.hash` is the after graph's. Applying the delta to the before graph
-  therefore cannot reach the target hash, and `kgdiff apply` warns "The result … differs from the
-  delta's target" (`options-ignore-watch` records it). The documented round-trip invariant
-  (`hashGraph(applyDelta(A, diff(A, B).delta)) === hashGraph(B)`) silently assumes no ignored
-  attributes. Either the delta should carry ignored attributes' changes, or `target.hash` should
-  exclude them; a decision for the TypeScript implementation first, then the corpus. The Rust
-  port reproduces today's behaviour until then.
+- **`ignoreAttrs` and `kgdiff apply`** (fixed in
+  [#94](https://github.com/iiwish/kgdiff/pull/94), for 0.10.0). Found while building the corpus:
+  with `--ignore-attr`, the delta left the changes of ignored attributes out, but `hashGraph`
+  covers every attribute and the delta's `target.hash` is the after graph's. Applying the delta
+  to the before graph therefore could not reach the target hash, and `kgdiff apply` warned "The
+  result … differs from the delta's target". The delta now carries those changes, in no hunk and
+  at its head ([delta format](../delta-format.md#ignored-attributes)); ignoring only affects
+  matching and display, and the round-trip invariant holds with any `ignoreAttrs`.
 - **Numbers beyond the double range vanished** (fixed by [D-11](#open-decisions)). kgdiff JSON
   may write `1e400`; `JSON.parse` makes it `Infinity`, and the JSON reader dropped non-finite
   numbers without a warning (an attribute or `meta` member disappeared, an array item became
