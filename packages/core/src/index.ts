@@ -33,7 +33,8 @@ import { log2 as exactLog2 } from './math.js';
 import { isKGraph as isGraph, normalize as normalizeGraph } from './normalize.js';
 import { resolveOptions as resolve } from './options.js';
 import { packDiffJSON as pack, unpackDiffJSON as unpack } from './packed.js';
-import { predicateLabel as labelOfPredicate, textSimilarity as similarity } from './text.js';
+import { textSimilarity as similarity } from './similarity.js';
+import { predicateLabel as labelOfPredicate } from './text.js';
 import type {
   ApplyOptions,
   Delta,

@@ -3,7 +3,7 @@
  */
 import type { DiffResult, UnionId } from '@kgdiff/core';
 import type { LayoutResult } from '../../src/index.js';
-import { LABEL_GAP, labelBox } from '../../src/text-metrics.js';
+import { LABEL_GAP, labelBox } from '../../src/label-box.js';
 
 interface Box {
   readonly x0: number;

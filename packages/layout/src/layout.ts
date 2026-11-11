@@ -5,9 +5,9 @@ import type { DiffResult, Point, UnionId } from '@kgdiff/core';
 import { type EngineContext, placeAnchored, placeFree } from './engine.js';
 import { buildLayoutGraph, type LayoutGraph } from './graph.js';
 import type { LayoutOptions, LayoutResult } from './index.js';
-import { round2 } from './math.js';
 import { type ResolvedLayoutOptions, resolveLayoutOptions } from './options.js';
 import { assemble, now } from './result.js';
+import { round2 } from './round.js';
 import { selectScope } from './scope.js';
 import { buildUnionGraph } from './union.js';
 

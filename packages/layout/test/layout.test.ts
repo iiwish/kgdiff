@@ -1,7 +1,7 @@
 import { KgdiffError } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
 import { type LayoutResult, layoutDiff, layoutToJSON, nodeRadius } from '../src/index.js';
-import { LABEL_GAP, labelBox } from '../src/text-metrics.js';
+import { LABEL_GAP, labelBox } from '../src/label-box.js';
 import { deepFreeze, type GraphSpec, makeDiff } from './support/diff-builder.js';
 import { changes, components, shuffled, tree } from './support/fixtures.js';
 

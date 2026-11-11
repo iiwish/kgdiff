@@ -4,7 +4,7 @@
  */
 import type { UnionId, UnionNode } from '@kgdiff/core';
 import { BOX_PADDING } from './geometry.js';
-import { LABEL_GAP, labelBox } from './text-metrics.js';
+import { LABEL_GAP, labelBox } from './label-box.js';
 import { buildAdjacency, type Partner, type UnionGraph } from './union.js';
 
 export interface LayoutGraph {

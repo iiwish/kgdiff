@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { DiffResult, Point, UnionId } from '@kgdiff/core';
 import { extendLayout, type LayoutResult, layoutDiff } from '../src/index.js';
-import { LABEL_GAP, labelBox } from '../src/text-metrics.js';
+import { LABEL_GAP, labelBox } from '../src/label-box.js';
 import { makeDiff } from '../test/support/diff-builder.js';
 import { FIXTURES, scaleFree } from '../test/support/fixtures.js';
 import { quality } from '../test/support/metrics.js';

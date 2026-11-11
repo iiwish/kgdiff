@@ -3,20 +3,11 @@
  *
  * Seeding order, first claim wins: merge → split → add → remove → modify → relations.
  */
-import type { EdgeRecord, NodeRecord, PipelineContext } from './model.js';
-import { FACET_ORDER } from './model.js';
-import type {
-  ChangeStatus,
-  CountTriplet,
-  FacetKind,
-  Hunk,
-  HunkKind,
-  HunkSummary,
-  Id,
-  KGraph,
-  ReplayPhase,
-  UnionId,
-} from './types.js';
+
+import { hunkSummary } from './hunk-summary.js';
+import type { EdgeRecord, NodeRecord } from './model.js';
+import type { PipelineContext } from './pipeline.js';
+import type { Hunk, HunkKind, HunkSummary, Id, KGraph, ReplayPhase, UnionId } from './types.js';
 import { compareStrings, degree, pushTo } from './util.js';
 
 interface Draft {
@@ -277,24 +268,4 @@ function summarize(
     d.nodes.map((id) => nodeById.get(id) as NodeRecord),
     d.edges.map((id) => edgeById.get(id) as EdgeRecord),
   );
-}
-
-type Counted = { readonly status: ChangeStatus; readonly facets: readonly { kind: FacetKind }[] };
-
-/** The summary of a hunk owning `nodes` and `edges` (also used to check diffs read from JSON). */
-export function hunkSummary(nodes: readonly Counted[], edges: readonly Counted[]): HunkSummary {
-  const kinds = new Set<FacetKind>();
-  const count = (elements: readonly Counted[]): CountTriplet => {
-    const c = { added: 0, removed: 0, modified: 0 };
-    for (const e of elements) {
-      if (e.status !== 'unchanged') c[e.status]++;
-      for (const f of e.facets) kinds.add(f.kind);
-    }
-    return c;
-  };
-  return {
-    nodes: count(nodes),
-    edges: count(edges),
-    facets: FACET_ORDER.filter((k) => kinds.has(k)),
-  };
 }

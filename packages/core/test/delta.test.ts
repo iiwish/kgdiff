@@ -10,7 +10,7 @@ import {
   normalize,
 } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { planRenames } from '../src/delta.js';
+import { planRenames } from '../src/delta-emit.js';
 
 const before: GraphInput = {
   meta: { name: 'demo', version: 'v1' },

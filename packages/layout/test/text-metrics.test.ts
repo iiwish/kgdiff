@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { estimateLabelWidth, nodeRadius } from '../src/index.js';
-import { labelBox, MAX_LABEL_EM } from '../src/text-metrics.js';
+import { labelBox, MAX_LABEL_EM } from '../src/label-box.js';
 
 const em = (text: string): number => estimateLabelWidth(text, 1);
 
