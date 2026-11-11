@@ -1,5 +1,12 @@
 # @kgdiff/cli
 
+## 0.9.0
+
+### Minor Changes
+
+- 3ae8f98: The Rust crate `kgdiff-layout` carries a layout from one version of a graph to the next through their diff: `layout_diff_on(&diff, &previous, &options)` lays the diff out on the previous version's map, and `layout_after(&diff, &layout, &options)` gives the after version the positions of its diff without computing any (RFC 0003, part 1). Every node the previous layout places stays exactly where it is, whether it continues or was removed and under whatever id it has now, and only the new nodes are placed, clear of the removed ones; going from a version to the next one, and from either to their diff, moves no node. Laying the next version out with `layout_graph` and the previous positions as pins gives that only when no id changes: a node that continues under another id is placed again, and an id given to another node pins that node where the old one was. Both functions are held to the `kgdiff.layout` bytes of the same pins written by hand on every case of the conformance corpus. A pin of the caller wins over the previous layout; scope `Changes` and strategy `Union` are `invalid-input`, and so is, for `layout_after`, a layout that does not place every node of the after version. The functions are experimental for one minor release, and `@kgdiff/layout` has no counterpart. The embedding guide and its example (`crates/kgdiff-report/examples/embedding.rs`) now use them.
+- 0a52a4d: The Rust crate `kgdiff-layout` lays out one graph: `layout_graph(&graph, &options)` gives the positions `layout_diff` gives the diff of that graph with itself, with every node in scope whatever the size of the graph, so an application that shows a graph and then a diff of it moves no node between the two (RFC 0003, part 1). The two are held to the same `kgdiff.layout` bytes on both graphs of every case of the conformance corpus. Known positions, as pins or as `position` on the nodes, are kept exactly and only the other nodes are placed, which is how the next version of a graph keeps the previous version's map; scope `Changes` is `invalid-input`. The function is experimental for one minor release. `@kgdiff/layout` has no counterpart: `@kgdiff/compute` will export it with the rest of the layout (RFC 0002, phase 5).
+
 ## 0.8.0
 
 ### Minor Changes

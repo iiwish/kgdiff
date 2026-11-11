@@ -1,5 +1,23 @@
 # @kgdiff/viewer
 
+## 0.9.0
+
+### Minor Changes
+
+- d3e1dac: Layers: an application draws its own marks on the renderer's canvas, under and over the graph (RFC 0003, part 4a; experimental). `renderer.addLayer({ order, draw(ctx, view) })` returns the function that removes the layer. An `under` layer is drawn after the background and the dot grid and before everything else, an `over` layer after the labels: a background behind a group of nodes, a certification mark or a count on a node, without a second canvas that follows the `camera` event. `draw` is called once per painted frame (once per side in a swipe view, clipped to it, with `view.side`), in CSS pixels, with `view.worldToScreen`, `view.camera`, `view.viewport` and `view.pixelRatio`; the renderer saves the context before each layer and restores it after. Layers are in `toDataURL` and in the `frame` event's `ms`, are not picked, and their text takes no part in label placement; a layer that throws is reported and the rest of the frame is painted. Without layers the renderer paints exactly as before. `<kgdiff-stage>` gains the same `addLayer` method (experimental) for the graph inside the viewer: layers added before the stage has a canvas are drawn once it has one, and they stay with the stage when it is bound to another root or moved in the document. `@kgdiff/viewer` exports the `RendererLayer` and `LayerView` types. Known limit: labels carry a halo in the canvas background color, which shows as a faint outline over a tinted `under` area; soft tints (the theme's `soft` colors, about 10% alpha) keep it unnoticeable.
+
+### Patch Changes
+
+- 9669b75: The canvas shows the whole frame under an emulated device scale factor. With Chromium's device emulation at a scale factor other than 1 (Playwright's `deviceScaleFactor`, as used for screenshots and browser tests), the graph was drawn enlarged and blurred with only its top-left corner on the canvas, on the first view and after "Fit view": a CLI report, the viewer and any page with `createRenderer` alike. The renderer sized the canvas's backing store by the browser's device-pixel box (`devicePixelContentBoxSize`), which stays in CSS pixels under that emulation, and painted at `devicePixelRatio`. It now takes that box only when it is the canvas's CSS size times the pixel ratio, within the snapping to whole device pixels, and sizes the backing store by the pixel ratio otherwise, as it always has in browsers without the box. A real high-density display (the box is in device pixels there) was drawn correctly before and is drawn exactly as before. The same check keeps the backing store and the painting in step under a CSS `zoom` on an ancestor, which the box includes and `devicePixelRatio` does not; the viewer's fits under a CSS `zoom` are still off.
+- Updated dependencies [9669b75]
+- Updated dependencies [d3e1dac]
+- Updated dependencies [6c3a764]
+  - @kgdiff/renderer@0.9.0
+  - @kgdiff/core@0.9.0
+  - @kgdiff/formats@0.9.0
+  - @kgdiff/layout@0.9.0
+  - @kgdiff/scene@0.9.0
+
 ## 0.8.0
 
 ### Patch Changes
