@@ -92,8 +92,8 @@ pub fn union_edge_to_json(e: &UnionEdge) -> Value {
 /// produces the same bytes under `js::json::to_string`.
 pub fn diff_to_json(result: &DiffResult) -> Value {
     let mut meta = Object::new();
-    meta.insert("before", result.before.meta.clone());
-    meta.insert("after", result.after.meta.clone());
+    meta.insert("before", result.before.meta().clone());
+    meta.insert("after", result.after.meta().clone());
     let mut out = Object::new();
     out.insert("format", "kgdiff.diff");
     out.insert("version", 1.0);

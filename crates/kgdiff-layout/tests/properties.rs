@@ -92,8 +92,8 @@ fn known(diff: &DiffResult) -> Vec<(JsStr, Point)> {
             let p = n
                 .before
                 .as_ref()
-                .and_then(|b| b.position)
-                .or_else(|| n.after.as_ref().and_then(|a| a.position))?;
+                .and_then(|b| b.position())
+                .or_else(|| n.after.as_ref().and_then(|a| a.position()))?;
             (p.x.is_finite() && p.y.is_finite()).then(|| (n.id.clone(), p))
         })
         .collect()

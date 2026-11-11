@@ -8,6 +8,7 @@ use crate::js::IndexMap;
 use crate::canonical::{attr_value_equals, attrs_equal, canonical_json, triple_key};
 use crate::classify::ignored_attr_changes;
 use crate::error::{ErrorCode, KgdiffError, Result};
+use crate::graph::NodeParts;
 use crate::graph_json::{edge_to_json, hash_graph, node_content_equals, node_to_json};
 use crate::js::{self, JsStr, Lookup, Object, OrderedMap, Value, json};
 use crate::model::{
@@ -63,10 +64,10 @@ impl NodeField {
         match self {
             NodeField::Label => Value::from(&node.label),
             NodeField::Types => strings(&node.types),
-            NodeField::Aliases => strings(&node.aliases),
+            NodeField::Aliases => strings(node.aliases()),
             NodeField::Deprecated => Value::Bool(node.deprecated),
-            NodeField::Replaces => strings(&node.replaces),
-            NodeField::ReplacedBy => strings(&node.replaced_by),
+            NodeField::Replaces => strings(node.replaces()),
+            NodeField::ReplacedBy => strings(node.replaced_by()),
         }
     }
 }
@@ -232,15 +233,15 @@ impl Delta {
 /// content hash and the sizes (`graphRef`).
 pub(crate) fn graph_ref(graph: &KGraph) -> Object {
     let mut out = Object::new();
-    if let Some(name) = graph.meta.get("name").filter(|v| v.as_str().is_some()) {
+    if let Some(name) = graph.meta().get("name").filter(|v| v.as_str().is_some()) {
         out.insert("name", name.clone());
     }
-    if let Some(version) = graph.meta.get("version").filter(|v| v.as_str().is_some()) {
+    if let Some(version) = graph.meta().get("version").filter(|v| v.as_str().is_some()) {
         out.insert("version", version.clone());
     }
     out.insert("hash", hash_graph(graph));
-    out.insert("nodes", graph.nodes.len());
-    out.insert("edges", graph.edges.len());
+    out.insert("nodes", graph.node_count());
+    out.insert("edges", graph.edge_count());
     out
 }
 
@@ -1054,7 +1055,7 @@ fn node_from_json(json: &Object) -> KGNode {
         .into_iter()
         .filter(|a| *a != label)
         .collect();
-    KGNode {
+    KGNode::from_parts(NodeParts {
         types: sorted_unique(&strings_of(json.get("types"))),
         aliases,
         attrs: object_of(json.get("attrs")),
@@ -1071,7 +1072,7 @@ fn node_from_json(json: &Object) -> KGNode {
         position: None,
         label,
         id,
-    }
+    })
 }
 
 /// An edge snapshot as an edge, defaults applied; its key is not meaningful (`edgeFromJSON`).
@@ -1133,8 +1134,8 @@ impl WorkingGraph {
         for node in graph.nodes.values() {
             working.nodes.insert(node.id.clone(), node.clone());
         }
-        for edge in graph.edges.values() {
-            working.attach(edge.clone());
+        for edge in graph.shared_edges() {
+            working.attach(edge);
         }
         working
     }
@@ -1347,7 +1348,7 @@ impl WorkingGraph {
                         field.as_str()
                     ));
                 }
-                let mut next = (**node).clone();
+                let mut next = node.to_parts();
                 match field {
                     NodeField::Label => next.label = to.as_js_str().cloned().unwrap_or_default(),
                     NodeField::Deprecated => next.deprecated = to.as_bool().unwrap_or(false),
@@ -1356,7 +1357,8 @@ impl WorkingGraph {
                     NodeField::Replaces => next.replaces = strings_of(Some(to)),
                     NodeField::ReplacedBy => next.replaced_by = strings_of(Some(to)),
                 }
-                self.nodes.insert(id.clone(), Arc::new(next));
+                self.nodes
+                    .insert(id.clone(), Arc::new(KGNode::from_parts(next)));
                 None
             }
             DeltaOp::NodeAttr { id, key, from, to } => {
@@ -1481,13 +1483,13 @@ pub(crate) fn node_input(node: &KGNode) -> Value {
     out.insert("id", &node.id);
     out.insert("label", &node.label);
     out.insert("types", strings(&node.types));
-    out.insert("aliases", strings(&node.aliases));
+    out.insert("aliases", strings(node.aliases()));
     out.insert("attrs", node.attrs.clone());
     out.insert("deprecated", node.deprecated);
-    out.insert("replaces", strings(&node.replaces));
-    out.insert("replacedBy", strings(&node.replaced_by));
+    out.insert("replaces", strings(node.replaces()));
+    out.insert("replacedBy", strings(node.replaced_by()));
     out.insert("implicit", node.implicit);
-    if let Some(p) = node.position {
+    if let Some(p) = node.position() {
         let mut position = Object::new();
         position.insert("x", p.x);
         position.insert("y", p.y);
@@ -1516,18 +1518,18 @@ fn edge_input(edge: &KGEdge) -> Value {
 ///
 /// None in practice: the graph is normalized already.
 pub fn with_edge_identity(graph: &KGraph, edge_identity: EdgeIdentity) -> Result<KGraph> {
-    if graph.edge_identity == edge_identity {
+    if graph.edge_identity() == edge_identity {
         return Ok(graph.clone());
     }
     let mut input = Object::new();
-    input.insert("meta", graph.meta.clone());
+    input.insert("meta", graph.meta().clone());
     input.insert(
         "nodes",
         Value::Array(graph.nodes.values().map(|n| node_input(n)).collect()),
     );
     input.insert(
         "edges",
-        Value::Array(graph.edges.values().map(|e| edge_input(e)).collect()),
+        Value::Array(graph.edges().map(|e| edge_input(&e.to_edge())).collect()),
     );
     normalize(
         &Value::Object(input),
@@ -1613,7 +1615,7 @@ pub fn apply_delta(
         )
         .with_details(details));
     }
-    let mut meta = base.meta.clone();
+    let mut meta = base.meta().clone();
     if let Some(target) = &delta.target {
         if let Some(name) = target.get("name") {
             meta.insert("name", name.clone());

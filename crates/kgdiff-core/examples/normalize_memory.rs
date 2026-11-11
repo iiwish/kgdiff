@@ -36,8 +36,8 @@ fn main() {
     println!(
         "normalize, {} nodes / {} edges: resident {before:.1} MiB → {after:.1} MiB, +{:.1} MiB \
          (RFC 0002 §7 target: < 50 MB)",
-        graph.nodes.len(),
-        graph.edges.len(),
+        graph.node_count(),
+        graph.edge_count(),
         after - before
     );
 }

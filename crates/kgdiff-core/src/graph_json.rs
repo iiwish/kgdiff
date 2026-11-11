@@ -2,7 +2,7 @@
 
 use crate::canonical::{Cyrb53, attrs_equal, canonical_attrs};
 use crate::js::{JsStr, Object, Value};
-use crate::model::{EdgeIdentity, KGEdge, KGNode, KGraph};
+use crate::model::{EdgeIdentity, EdgeRef, KGEdge, KGNode, KGraph};
 use crate::text::raw_predicate_label;
 
 fn strings(list: &[JsStr]) -> Value {
@@ -21,8 +21,8 @@ pub fn node_to_json(node: &KGNode, id: Option<&JsStr>) -> Object {
     if !node.types.is_empty() {
         out.insert("types", strings(&node.types));
     }
-    if !node.aliases.is_empty() {
-        out.insert("aliases", strings(&node.aliases));
+    if !node.aliases().is_empty() {
+        out.insert("aliases", strings(node.aliases()));
     }
     if !node.attrs.is_empty() {
         out.insert("attrs", canonical_attrs(&node.attrs));
@@ -30,11 +30,11 @@ pub fn node_to_json(node: &KGNode, id: Option<&JsStr>) -> Object {
     if node.deprecated {
         out.insert("deprecated", true);
     }
-    if !node.replaces.is_empty() {
-        out.insert("replaces", strings(&node.replaces));
+    if !node.replaces().is_empty() {
+        out.insert("replaces", strings(node.replaces()));
     }
-    if !node.replaced_by.is_empty() {
-        out.insert("replacedBy", strings(&node.replaced_by));
+    if !node.replaced_by().is_empty() {
+        out.insert("replacedBy", strings(node.replaced_by()));
     }
     if node.implicit {
         out.insert("implicit", true);
@@ -68,13 +68,13 @@ pub fn edge_to_json(edge: &KGEdge, source: Option<&JsStr>, target: Option<&JsStr
 pub fn graph_to_json(graph: &KGraph) -> Value {
     let mut nodes: Vec<&KGNode> = graph.nodes.values().map(AsRef::as_ref).collect();
     nodes.sort_by(|a, b| a.id.cmp(&b.id));
-    let mut edges: Vec<&KGEdge> = graph.edges.values().map(AsRef::as_ref).collect();
+    let mut edges: Vec<KGEdge> = graph.edges().map(|e| e.to_edge()).collect();
     edges.sort_by(|a, b| a.key.cmp(&b.key));
     let mut out = Object::new();
     out.insert("format", "kgdiff.graph");
     out.insert("version", 1.0);
-    if !graph.meta.is_empty() {
-        out.insert("meta", graph.meta.clone());
+    if !graph.meta().is_empty() {
+        out.insert("meta", graph.meta().clone());
     }
     out.insert(
         "nodes",
@@ -89,7 +89,7 @@ pub fn graph_to_json(graph: &KGraph) -> Value {
         "edges",
         Value::Array(
             edges
-                .into_iter()
+                .iter()
                 .map(|e| Value::Object(edge_to_json(e, None, None)))
                 .collect(),
         ),
@@ -102,9 +102,9 @@ pub fn node_content_equals(a: &KGNode, b: &KGNode) -> bool {
     a.label == b.label
         && a.deprecated == b.deprecated
         && a.types == b.types
-        && a.aliases == b.aliases
-        && a.replaces == b.replaces
-        && a.replaced_by == b.replaced_by
+        && a.aliases() == b.aliases()
+        && a.replaces() == b.replaces()
+        && a.replaced_by() == b.replaced_by()
         && attrs_equal(&a.attrs, &b.attrs, None)
 }
 
@@ -118,23 +118,23 @@ fn feed_strings(h: &mut Cyrb53, list: &[JsStr]) {
 fn feed_node(h: &mut Cyrb53, node: &KGNode) {
     h.code(0x4e).string(&node.id).string(&node.label); // N
     feed_strings(h, &node.types);
-    feed_strings(h, &node.aliases);
+    feed_strings(h, node.aliases());
     h.attrs(&node.attrs).code(u32::from(node.deprecated));
-    feed_strings(h, &node.replaces);
-    feed_strings(h, &node.replaced_by);
+    feed_strings(h, node.replaces());
+    feed_strings(h, node.replaced_by());
 }
 
-fn feed_edge(h: &mut Cyrb53, edge: &KGEdge, with_id: bool) {
+fn feed_edge(h: &mut Cyrb53, edge: EdgeRef<'_>, with_id: bool) {
     h.code(0x45); // E
-    match (&edge.id, with_id) {
+    match (edge.id(), with_id) {
         (Some(id), true) => h.code(1).string(id),
         _ => h.code(0),
     };
-    h.string(&edge.source)
-        .string(&edge.predicate)
-        .string(&edge.target)
-        .string(&edge.label);
-    h.attrs(&edge.attrs);
+    h.string(edge.source())
+        .string(edge.predicate())
+        .string(edge.target())
+        .string(edge.label());
+    h.attrs(edge.attrs());
 }
 
 /// Stable content hash of a normalized graph, `c53:` + 14 hex digits (`hashGraph`): node and
@@ -151,9 +151,9 @@ pub fn hash_graph(graph: &KGraph) -> &str {
             n1 = n1.wrapping_add(a);
             n2 = n2.wrapping_add(b);
         }
-        let with_ids = graph.edge_identity == EdgeIdentity::Id;
+        let with_ids = graph.edge_identity() == EdgeIdentity::Id;
         let (mut e1, mut e2) = (0u32, 0u32);
-        for edge in graph.edges.values() {
+        for edge in graph.edges() {
             feed_edge(h.reset(), edge, with_ids);
             let (a, b) = h.digest_pair();
             e1 = e1.wrapping_add(a);
@@ -161,8 +161,8 @@ pub fn hash_graph(graph: &KGraph) -> &str {
         }
         let summary = format!(
             "kgdiff.graph.v1|{}|{n1}|{n2}|{}|{e1}|{e2}",
-            graph.nodes.len(),
-            graph.edges.len()
+            graph.node_count(),
+            graph.edge_count()
         );
         let digest = Cyrb53::default().update(&summary).digest();
         format!("c53:{digest:014x}")

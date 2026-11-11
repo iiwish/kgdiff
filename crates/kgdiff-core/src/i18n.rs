@@ -407,10 +407,7 @@ fn link_notes(p: Book, diff: &DiffResult, node: &UnionNode) -> Vec<String> {
         )
     };
     let mut notes = Vec::new();
-    let current = node
-        .after
-        .as_ref()
-        .map_or(&[][..], |a| a.replaced_by.as_slice());
+    let current = node.after.as_ref().map_or(&[][..], |a| a.replaced_by());
     if !replaced_by.is_empty() {
         notes.push(if current.is_empty() {
             no_longer_replaced(p)

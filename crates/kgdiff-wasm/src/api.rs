@@ -149,7 +149,11 @@ pub fn graph_issues_json(graph: &str, options_text: &str) -> Result<String> {
         &parse(graph, "the graph")?,
         normalize_options(options_text)?,
     )?;
-    let issues = graph.issues.iter().map(|issue| issue.to_value()).collect();
+    let issues = graph
+        .issues()
+        .iter()
+        .map(|issue| issue.to_value())
+        .collect();
     Ok(json::to_string(&Value::Array(issues)))
 }
 

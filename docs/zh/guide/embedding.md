@@ -37,7 +37,8 @@ use std::error::Error;
 
 use kgdiff_core::js::{Value, json};
 use kgdiff_core::{
-    DiffOptions, DiffResult, KGraph, Locale, NormalizeOptions, Result, diff_graphs, normalize,
+    DiffOptions, DiffResult, EdgeInput, GraphInput, KGraph, Locale, NodeInput, NormalizeOptions,
+    Result, diff_graphs, graph_to_json, normalize, normalize_input,
 };
 use kgdiff_layout::{
     LayoutOptions, LayoutResult, layout_after, layout_diff_on, layout_from_json, layout_graph,
@@ -61,8 +62,41 @@ pub fn read_graph(export: &str) -> std::result::Result<KGraph, Box<dyn Error>> {
 }
 ```
 
-- `normalize` 做校验和索引：标签默认取 id，重复的节点会合并，边上不存在的端点会补成隐式节点。它修补了什么，记在 `graph.issues` 里。
-- 目前还不能用带类型的值直接构造 `KGraph`，那是 [RFC 0003 的第 3 部分](#还没有的东西)。在此之前，导出要经过 JSON。
+- `normalize` 做校验和索引：标签默认取 id，重复的节点会合并，边上不存在的端点会补成隐式节点。它修补了什么，记在 `graph.issues()` 里。
+- `normalize_json` 直接接受文本，逐个元素读入，不会把整个文档先变成一棵值树：导出很大时，它用的内存少得多。
+- `KGraph` 通过方法读取：`nodes()`、`node(id)`、`edges()`、`edge(key)`、`outgoing(id)`、`incoming(id)`、`meta()`、`issues()`。节点是 `&KGNode`，边是 `EdgeRef`，字段都用方法读（`label()`、`types()`、`source()` 等）。
+
+如果应用里的图本来就是一组值，可以不写 JSON，直接构造同一张图：`normalize_input` 接受一个 `GraphInput`，成员与 kgdiff JSON 相同，给出的图与 `normalize` 对 `input.to_value()` 给出的相同，`graph_to_json` 的字节、指纹和 issues 都一样（一致性语料在每一张图上检查这一点）。属性值仍是 `kgdiff_core::js::Value`。下面的例子里，应用有一些概念和指标，每个指标记着它度量的是哪个概念：
+
+```rust
+pub fn build_graph(
+    name: &str,
+    concepts: &[(&str, &str)],
+    metrics: &[(&str, &str, &str)],
+) -> Result<KGraph> {
+    let mut input = GraphInput::default();
+    input.meta.insert("name", name);
+    for &(id, label) in concepts {
+        input.nodes.push(NodeInput {
+            label: Some(label.into()),
+            types: vec!["concept".into()],
+            ..NodeInput::new(id)
+        });
+    }
+    for &(id, label, measured_on) in metrics {
+        input.nodes.push(NodeInput {
+            label: Some(label.into()),
+            types: vec!["metric".into()],
+            ..NodeInput::new(id)
+        });
+        input
+            .edges
+            .push(EdgeInput::new(id, "measured_on", measured_on));
+    }
+    normalize_input(input, NormalizeOptions::default())
+}
+```
+
 - 其他格式的文件（Turtle、OBO、JSON-LD 等）用 [`kgdiff-formats`](../../../crates/kgdiff-formats/README.md) 的 `parse_graph` 读，结果里是同样的 JSON。
 
 ## 给第一个版本布局
@@ -236,7 +270,7 @@ pub fn report_page(
 ```rust
 pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -> Result<Value> {
     let options = DiffOptions {
-        edge_identity: graph.edge_identity,
+        edge_identity: graph.edge_identity(),
         ..DiffOptions::default()
     };
     let unchanged = diff_graphs(graph.clone(), graph.clone(), options)?;
@@ -252,10 +286,10 @@ pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -
 <kgdiff-viewer theme="auto" style="height: 640px"></kgdiff-viewer>
 
 <script type="module">
-  import '@kgdiff/viewer';
+  import "@kgdiff/viewer";
 
-  const viewer = document.querySelector('kgdiff-viewer');
-  viewer.payload = await (await fetch('/changes/42/report.json')).json();
+  const viewer = document.querySelector("kgdiff-viewer");
+  viewer.payload = await (await fetch("/changes/42/report.json")).json();
 </script>
 ```
 
@@ -342,12 +376,11 @@ const removeMarks = renderer.addLayer({
 
 ## 还没有的东西
 
-[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md)（英文）还规划了三个部分。它们现在都不存在，而且这份 RFC 还是草案：版本和细节都可能变化。
+[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md)（英文）还规划了两个部分。它们现在都不存在，而且这份 RFC 还是草案：版本和细节都可能变化。
 
-| 部分 | 内容                                                           | 计划版本          | 在此之前                                                                                      |
-| ---- | -------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------- |
-| 3    | 带类型的图输入：用 Rust 的值构造 `KGraph`（`normalize_input`） | 0.11              | 写出 kgdiff JSON 再调用 `normalize`                                                           |
-| 4c   | 朴素视图：在查看器里看单张图，按你的类别着色                   | 0.10，或 1.0 之后 | 场景和渲染器用中性色画没有变化的 diff；`<kgdiff-viewer>` 显示“没有差异”卡片；着色通过图层完成 |
-| 4d   | 分组：每组一块背景，以及让同组节点靠在一起的布局               | 1.0 之后          | 根据位置在 `under` 图层上画背景；布局不知道分组                                               |
+| 部分 | 内容                                             | 计划版本          | 在此之前                                                                                      |
+| ---- | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------------------------- |
+| 4c   | 朴素视图：在查看器里看单张图，按你的类别着色     | 0.10，或 1.0 之后 | 场景和渲染器用中性色画没有变化的 diff；`<kgdiff-viewer>` 显示“没有差异”卡片；着色通过图层完成 |
+| 4d   | 分组：每组一块背景，以及让同组节点靠在一起的布局 | 1.0 之后          | 根据位置在 `under` 图层上画背景；布局不知道分组                                               |
 
 同样还没有的：TypeScript 里的 `layout_graph`、`layout_diff_on` 和 `layout_after`。`@kgdiff/layout` 没有与它们对应的函数；`layoutGraph` 计划随布局的其余部分一起放进 `@kgdiff/compute`。在浏览器里可以给一张图与它自己的 diff 布局；更好的做法是像上面那样在服务端计算布局。

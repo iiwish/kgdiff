@@ -69,6 +69,19 @@ pub fn parts() -> Vec<Part> {
             Bytes,
             library::graph_after,
         ),
+        // The same graphs from Rust values and from JSON text (RFC 0003, part 3).
+        ported(
+            "input.before",
+            "expected/graph.before.json",
+            Bytes,
+            library::input_before,
+        ),
+        ported(
+            "input.after",
+            "expected/graph.after.json",
+            Bytes,
+            library::input_after,
+        ),
         ported("issues", "expected/issues.json", Value, library::issues),
         ported("hashes", "expected/hashes.json", Value, library::hashes),
         ported("diff", "expected/diff.json", Bytes, library::diff),

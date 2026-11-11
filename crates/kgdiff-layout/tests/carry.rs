@@ -367,7 +367,7 @@ fn walk(pair: &Pair, previous: &LayoutResult, options: &LayoutOptions) -> (Maps,
     assert!(next.hidden.is_empty(), "{what}");
     assert_eq!(
         sorted(next.positions.keys()),
-        sorted(pair.after.nodes.keys()),
+        sorted(pair.after.nodes().map(|n| n.id())),
         "{what}: every after node has a position"
     );
     for node in &diff.nodes {
@@ -391,7 +391,7 @@ fn walk(pair: &Pair, previous: &LayoutResult, options: &LayoutOptions) -> (Maps,
     assert_eq!(next.stats.iterations, 0, "{what}: nothing was simulated");
     assert_eq!(
         next.stats.strategy,
-        strategy(!pair.after.nodes.is_empty()),
+        strategy(pair.after.node_count() != 0),
         "{what}"
     );
     (Maps { diff, both, next }, seen)
@@ -633,7 +633,7 @@ fn the_after_version_is_keyed_by_after_id_whatever_the_union_id() {
     assert_eq!(next, expected);
     assert_eq!(
         sorted(next.positions.keys()),
-        sorted(pair.after.nodes.keys())
+        sorted(pair.after.nodes().map(|n| n.id()))
     );
 }
 
@@ -783,7 +783,7 @@ fn every_node_is_in_scope_whatever_the_threshold() {
     assert_eq!(support::json(&both), support::json(&reference));
     let next = layout_after(&diff, &both, &small_threshold).unwrap();
     assert_eq!(next.scope, LayoutScope::All);
-    assert_eq!(next.positions.len(), pair.after.nodes.len());
+    assert_eq!(next.positions.len(), pair.after.node_count());
 }
 
 /// Above the default threshold of 3,000 nodes. Slow in a debug build: the `targets` CI job runs
@@ -1006,7 +1006,7 @@ fn empty_versions() {
         options: DiffOptions::default(),
     };
     let (maps, seen) = walk(&first, &first_map(&empty), &options);
-    assert_eq!(seen.added, pair.after.nodes.len());
+    assert_eq!(seen.added, pair.after.node_count());
     assert_eq!(maps.both.stats.strategy, LayoutStrategy::Union);
     assert_eq!(
         support::json(&maps.both),
@@ -1022,7 +1022,7 @@ fn empty_versions() {
     };
     let previous = stored(&maps.next);
     let (maps, seen) = walk(&last, &previous, &options);
-    assert_eq!(seen.removed, pair.after.nodes.len());
+    assert_eq!(seen.removed, pair.after.node_count());
     assert_eq!(maps.both.positions, previous.positions);
     assert!(maps.next.positions.is_empty());
     assert_eq!(maps.next.stats.strategy, LayoutStrategy::Union);

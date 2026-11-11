@@ -36,8 +36,8 @@ fn known_positions(graph: &LayoutGraph<'_>, options: &Resolved<'_>) -> Known {
     };
     for (i, node) in graph.nodes.iter().enumerate() {
         let p = finite(options.pinned.get(node.id.as_str()))
-            .or_else(|| finite(node.before.as_ref().and_then(|n| n.position.as_ref())))
-            .or_else(|| finite(node.after.as_ref().and_then(|n| n.position.as_ref())));
+            .or_else(|| finite(node.before.as_ref().and_then(|n| n.position()).as_ref()))
+            .or_else(|| finite(node.after.as_ref().and_then(|n| n.position()).as_ref()));
         if let Some(p) = p {
             known.fixed[i] = true;
             known.x[i] = p.x;

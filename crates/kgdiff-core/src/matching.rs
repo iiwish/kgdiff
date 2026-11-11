@@ -41,7 +41,7 @@ pub(crate) struct Alignment {
 pub(crate) type StringSet = Lookup<JsStr, ()>;
 
 fn node_texts(node: &KGNode) -> impl Iterator<Item = &JsStr> {
-    std::iter::once(&node.label).chain(node.aliases.iter())
+    std::iter::once(&node.label).chain(node.aliases().iter())
 }
 
 /// `label` evidence: max similarity of each label against the other node's label ∪ aliases.
@@ -49,13 +49,13 @@ fn label_evidence(a: &KGNode, b: &KGNode, profiles: &mut ProfileCache) -> f64 {
     let la = profiles.get(&a.label);
     let lb = profiles.get(&b.label);
     let mut best = profile_similarity(&la, &lb);
-    for alias in &b.aliases {
+    for alias in b.aliases() {
         if best == 1.0 {
             return 1.0;
         }
         best = js::math::max(best, profile_similarity(&la, &profiles.get(alias)));
     }
-    for alias in &a.aliases {
+    for alias in a.aliases() {
         if best == 1.0 {
             return 1.0;
         }
@@ -161,14 +161,17 @@ fn build_signature(
     let mut acc: IndexMap<JsStr, f64> = IndexMap::default();
     let mut visit = |outgoing: bool| {
         for edge in graph.adjacent(id, outgoing) {
-            let Some(other) = counterpart(if outgoing { &edge.target } else { &edge.source })
-            else {
+            let Some(other) = counterpart(if outgoing {
+                edge.target()
+            } else {
+                edge.source()
+            }) else {
                 continue;
             };
             let sig = JsStr::from(format!(
                 "{}{}\u{0}{}",
                 if outgoing { '>' } else { '<' },
-                edge.predicate,
+                edge.predicate(),
                 other
             ));
             let weight = counterpart_weight(after, &other);
@@ -225,7 +228,7 @@ fn neighbor_evidence(a: &Signature, b: &Signature) -> Option<f64> {
 
 /// Whether `id` has an edge to another node (`hasNeighbour`).
 fn has_neighbour(graph: &KGraph, id: &str) -> bool {
-    graph.outgoing(id).any(|e| e.target != *id) || graph.incoming(id).any(|e| e.source != *id)
+    graph.outgoing(id).any(|e| e.target() != id) || graph.incoming(id).any(|e| e.source() != id)
 }
 
 // ─── Candidate generation ────────────────────────────────────────────────────
@@ -429,14 +432,14 @@ fn match_replacements(before: &KGraph, after: &KGraph, alignment: &mut Alignment
         sources_of.entry(y.clone()).or_default().insert(x.clone());
     };
     for x in before.nodes.values() {
-        for y in &x.replaced_by {
+        for y in x.replaced_by() {
             if after.nodes.contains_key(y) {
                 link(&x.id, y);
             }
         }
     }
     for y in after.nodes.values() {
-        for x in &y.replaces {
+        for x in y.replaces() {
             if before.nodes.contains_key(x) {
                 link(x, &y.id);
             }
