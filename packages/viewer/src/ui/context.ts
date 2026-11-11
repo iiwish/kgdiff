@@ -56,7 +56,7 @@ export interface UiContext extends UiActions {
 }
 
 /** One-character glyph of a hunk (docs/interaction.md §Change list): `+ − ~ ⇄ ⊕ ⑂`. */
-export function hunkGlyph(kind: HunkKind, family: ChangeFamily): string {
+function hunkGlyph(kind: HunkKind, family: ChangeFamily): string {
   switch (kind) {
     case 'add':
       return '+';

@@ -123,7 +123,7 @@ export function formatColor(c: Rgba): string {
 }
 
 /** Interpolate in sRGB with premultiplied alpha (no dark fringes when fading to transparent). */
-export function mixRgba(a: Rgba, b: Rgba, t: number): Rgba {
+function mixRgba(a: Rgba, b: Rgba, t: number): Rgba {
   const u = clamp(t, 0, 1);
   const alpha = a.a + (b.a - a.a) * u;
   if (alpha === 0) return { r: 0, g: 0, b: 0, a: 0 };

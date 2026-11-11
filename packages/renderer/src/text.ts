@@ -44,7 +44,7 @@ export class Fonts {
 const CJK = /[ᄀ-ᇿ⺀-鿿가-힯豈-﫿＀-￯]/;
 
 /** Width estimate when no 2D context exists (tests, workers without OffscreenCanvas). */
-export function estimateWidth(font: string, text: string): number {
+function estimateWidth(font: string, text: string): number {
   const m = /(\d+(?:\.\d+)?)px/.exec(font);
   const size = m ? Number(m[1]) : 12;
   let w = 0;

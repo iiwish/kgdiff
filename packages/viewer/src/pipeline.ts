@@ -104,7 +104,7 @@ function str(value: unknown): string | undefined {
 }
 
 /** Display name of a version: explicit name, graph name, file name, else the side. */
-export function versionName(
+function versionName(
   meta: GraphMeta,
   side: 'before' | 'after',
   explicit?: string,

@@ -42,7 +42,7 @@ export function isLoop(x1: number, y1: number, x2: number, y2: number): boolean 
 }
 
 /** Arrowhead LOD: shown from `arrowMinZoom` on (a missing / NaN threshold shows it). */
-export function showsArrow(arrow: boolean, minZoom: number, k: number): boolean {
+function showsArrow(arrow: boolean, minZoom: number, k: number): boolean {
   return arrow && !(k < minZoom);
 }
 

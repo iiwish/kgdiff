@@ -29,7 +29,7 @@ export interface PickView {
 const candidates: number[] = [];
 const rect = new Float64Array(4);
 
-export function pickNode(
+function pickNode(
   frame: FrameVisuals,
   cache: FrameCache,
   v: PickView,
@@ -68,7 +68,7 @@ export function pickNode(
   return best;
 }
 
-export function pickEdge(
+function pickEdge(
   frame: FrameVisuals,
   cache: FrameCache,
   v: PickView,
@@ -127,7 +127,7 @@ export function pickEdge(
   return best;
 }
 
-export function pickCollapsed(
+function pickCollapsed(
   frame: FrameVisuals,
   cache: FrameCache,
   v: PickView,

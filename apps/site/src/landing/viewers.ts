@@ -200,7 +200,7 @@ export function whenNear(el: Element, fn: () => void, margin = '600px'): void {
   io.observe(el);
 }
 
-export const MODES_DATASET = 'data-lineage';
+const MODES_DATASET = 'data-lineage';
 
 export function modesDataset(): Dataset {
   const d = datasetById(MODES_DATASET);
