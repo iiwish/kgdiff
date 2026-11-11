@@ -40,9 +40,7 @@ export const DIVIDER_STEP_LARGE = 0.1;
 /**
  * The shortcuts a key can be bound to (`keymap`). `left` / `right` step the replay, or move the
  * swipe divider (further with Shift); `play-pause` acts in replay, `expand` with the `changes`
- * scope.
- *
- * @experimental New in 0.6: the list may grow as the canvas chrome becomes elements.
+ * scope. The list may grow as the canvas chrome becomes elements.
  */
 export type ShortcutName =
   | 'overlay'
@@ -72,8 +70,6 @@ export type ShortcutName =
  * Keys (as `KeyboardEvent.key`) bound to a shortcut, or to `null` to leave the key unbound. A
  * letter stands for both its cases (`x` also binds Shift+x, `X`) unless the other case is named
  * too.
- *
- * @experimental New in 0.6, with `ShortcutName`.
  */
 export type Keymap = Readonly<Record<string, ShortcutName | null>>;
 

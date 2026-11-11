@@ -110,7 +110,7 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 
 ## 自己组合布局
 
-查看器由一些元素组成，这些元素你也可以自己摆放（在 0.6 中是实验性的，0.7 起稳定：在此之前可能在次版本中变化）。`<kgdiff-root>` 持有 diff 会话，本身不显示任何东西；其他元素无论放在哪里都显示它的一部分：放在它里面，或者用 `for="<根元素 id>"` 放在页面任意位置。
+查看器由一些元素组成，这些元素你也可以自己摆放（0.10 起稳定，遵循语义化版本）。`<kgdiff-root>` 持有 diff 会话，本身不显示任何东西；其他元素无论放在哪里都显示它的一部分：放在它里面，或者用 `for="<根元素 id>"` 放在页面任意位置。
 
 | 元素                     | 显示                                                          |
 | ------------------------ | ------------------------------------------------------------- |
@@ -153,7 +153,7 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 - 用你自己的 CSS 布局这些元素；给画布和列表一个高度。`<kgdiff-root>` 以 `display: contents` 渲染，它的子元素直接参与你的布局。
 - 画布的插槽（`top-start`、`top-end`、`bottom-start`、`bottom-center`、`bottom-end`）把你的内容放在画布上，图会避开它来取景。放进插槽的界面元素（视图坞、控制条、图例、缩放按钮或小地图）替换画布自己的那个，画布的 `panels` 对其余区域照常生效。
 - 放在其他任何地方的元素，无论是否盖在画布上，适应视图和飞行定位都不会避开它，除非你登记它：`stage.registerObstacle(element)`。
-- 要在画布本身上画东西，画在图的下面或上面（一组节点背后的底色、节点上你自己的标记），给画布加一个图层：`stage.addLayer({ order: 'under', draw(ctx, view) { … } })`。它随每一帧绘制，用 CSS 像素（`view.worldToScreen` 换算布局里的位置），也会出现在导出的 PNG 里；规则见[渲染器的 README](../../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph)。0.9 中为实验性。
+- 要在画布本身上画东西，画在图的下面或上面（一组节点背后的底色、节点上你自己的标记），给画布加一个图层：`stage.addLayer({ order: 'under', draw(ctx, view) { … } })`。它随每一帧绘制，用 CSS 像素（`view.worldToScreen` 换算布局里的位置），也会出现在导出的 PNG 里；规则见[渲染器的 README](../../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph)。在 1.0 之前为实验性。
 - `<kgdiff-zoom>` 和 `<kgdiff-minimap>` 作用于一块画布：离它最近的外层画布，或者 `stage="<id>"` 指定的页面上任意一块（`zoom.stage`，找到的画布是 `zoom.stageElement`）。放在 `<kgdiff-viewer>` 里时，它们作用于查看器的画布。其他元素和变更列表一样显示根元素的会话。
 - 你自己放置的小地图在整张图都在视野内时仍然显示，你的布局不会跳动；用 `kgdiff-minimap:state(overview) { visibility: hidden }` 让它原地隐藏。放进画布的插槽时，它会像画布自己的小地图一样在这时隐藏。
 - 键盘映射属于根元素：`j` / `k`、`x`、`/` 等在绑定到它的每个元素里都有效，`/` 聚焦搜索，`?` 打开 `<kgdiff-actions>` 的快捷键对话框，对话框列出 `keymap` 生效后实际绑定的按键。`shortcuts` 和 `keymap` 设在根元素上。`+`、`−` 和 `f` 键缩放、适应根元素的每一块画布。
@@ -205,6 +205,8 @@ kgdiff-viewer {
 
 [令牌列表](../../visual-language.md#css-tokens)（英文）从 0.6 起是公开 API。浅色、深色和色盲友好配色仍在底层可用（`theme`、`palette`）；你的值优先于它们，保证可读性由你负责。令牌以查看器无法察觉的方式变化时（祖先元素上的类、之后加载的样式表），调用 `viewer.refreshTheme()`，让画布跟着变。
 
+没有 `::part()` 名称：1.0 不提供，主题化走上面的 `--kgdiff-*` 变量，它们能进入每个元素的 shadow root。以后再加 `::part()` 名称只是纯增量。
+
 ## 保存审阅进度
 
 查看器会在浏览器里记住哪些变化已标记为已审阅。要把进度存到别处，比如你的后端，可以监听 `kgdiff-review`，再用 `setReviewed()` 恢复：
@@ -229,7 +231,7 @@ viewer.addEventListener('kgdiff-ready', async () => {
   { "html.customData": ["./node_modules/@kgdiff/viewer/vscode.html-custom-data.json"] }
   ```
 
-- **React 19 + TypeScript** 可以在 JSX 中为这些元素、它们的属性和事件提供类型（与元素一样是实验性的）：在项目中任意位置导入一次类型即可。
+- **React 19 + TypeScript** 可以在 JSX 中为这些元素、它们的属性和事件提供类型（与元素一样是稳定的）：在项目中任意位置导入一次类型即可。
 
   ```ts
   import type {} from '@kgdiff/viewer/react';

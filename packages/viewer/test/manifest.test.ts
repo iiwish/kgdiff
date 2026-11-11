@@ -68,13 +68,14 @@ describe('the Custom Elements Manifest', () => {
     ]);
   });
 
-  it('carries the experimental status, the events, slots, tokens and states', () => {
-    expect(byTag('kgdiff-viewer').experimental).toBeUndefined();
-    for (const e of elements.filter((x) => x.tagName !== 'kgdiff-viewer')) {
-      expect(e.experimental, e.tagName).toBeTruthy();
+  it('carries the events, slots, tokens and states; only the 0.9 additions are experimental', () => {
+    for (const e of elements) {
+      expect(e.experimental, e.tagName).toBeUndefined();
     }
     const keymap = byTag('kgdiff-viewer').members.find((m) => m.name === 'keymap');
-    expect(keymap?.experimental).toBeTruthy();
+    expect(keymap?.experimental).toBeUndefined();
+    const addLayer = byTag('kgdiff-stage').members.find((m) => m.name === 'addLayer');
+    expect(addLayer?.experimental).toBeTruthy();
     // `kgdiff-layout` is the default layout's.
     expect(byTag('kgdiff-viewer').events.map((e) => e.name)).toContain('kgdiff-layout');
     expect(byTag('kgdiff-root').events.map((e) => e.name)).not.toContain('kgdiff-layout');

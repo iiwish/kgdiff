@@ -16,7 +16,6 @@ import { ViewBoundElement } from './view-bound.js';
  * zoom buttons; placed anywhere else it is not kept clear of fits and flights unless registered.
  *
  * @tagname kgdiff-zoom
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffZoom extends ViewBoundElement implements KgdiffStageBoundElement {
   protected readonly name = 'zoom';
@@ -32,7 +31,6 @@ define('kgdiff-zoom', KgdiffZoom);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-zoom': KgdiffStageBoundElement;
   }
 }

@@ -15,7 +15,6 @@ import { BoundElement, define } from './bound.js';
  * `list` focus target (choosing a search result moves focus here).
  *
  * @tagname kgdiff-change-list
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffChangeList extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'change-list';
@@ -45,7 +44,6 @@ define('kgdiff-change-list', KgdiffChangeList);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-change-list': KgdiffBoundElement;
   }
 }

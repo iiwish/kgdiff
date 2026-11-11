@@ -49,7 +49,7 @@ The canvas has the slots of `<kgdiff-stage>` (`top-start`, `top-end`, `bottom-st
 | `loop-delay` | `loopDelay` | `number` | Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200. |
 | `pause-on-hover` | `pauseOnHover` | `boolean` | With `loop`, the replay pauses while the pointer is over the graph and continues when it leaves (a mouse or pen; not touch). Reflected as `pause-on-hover="false"` when off. Default true. |
 | `shortcuts` | `shortcuts` | `'scoped' \| 'global' \| 'none'` | Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root, or in an element bound to it with `for` (those forward their keys). `global`: also when nothing on the page has focus (for full-page viewers such as HTML reports), for the first such root, except the keys pages scroll with (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and Enter). |
-| `keymap` | `keymap` | `string` | Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning. (experimental) |
+| `keymap` | `keymap` | `string` | Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning. |
 | `sidebar` |  | `'open' \| 'closed'` | A preset: `closed` starts with the sidebar folded (`\` and the sidebar button open it), `open` with its four regions open. Reflects the sidebar's state once the user toggles it. |
 | `header` |  | `'compact'` | A preset: `compact` leaves the brand and the compared names out of the canvas, for hosts that show their own (`panels="title:hidden"`). |
 | `chrome` | `chrome` | `'full' \| 'none'` | Reflected to the `chrome` attribute. `none` shows the graph alone: no title, actions, view dock (with the step caption and playback bar), change list, zoom buttons, minimap or legend card; the hover tooltip and a one-line legend stay. Clicks and keyboard shortcuts do nothing, the minimum height drops from 420px to 120px, and the view stays fitted: when the canvas is resized (unless the user panned or zoomed since) and at the start of every loop. Labels are never cut at the edge: one pushed from its spot by a neighbour moves inside or is left out. Default `full`. |
@@ -108,8 +108,6 @@ The canvas has the slots of `<kgdiff-stage>` (`top-start`, `top-end`, `bottom-st
 
 ## `<kgdiff-root>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 A root without visuals. It owns the session and provides it to the elements inside it (`<kgdiff-stage>`, `<kgdiff-change-list>`, …) or naming it with `for`, and owns what they share: the keyboard map, the live region announcing navigation, the events and the theme tokens. It has the attributes, properties, methods and events of `<kgdiff-viewer>` except the layout's (`panels`, `sidebar`, `header`, `chrome`, `legend`, `persist`): the page lays the elements out, and nothing is remembered.
 
 It renders as `display: contents`, so its children are laid out by the page as if it were not there.
@@ -130,7 +128,7 @@ It renders as `display: contents`, so its children are laid out by the page as i
 | `loop-delay` | `loopDelay` | `number` | Reflected to `loop-delay`: ms between the end of a looping replay and its restart. Default 1200. |
 | `pause-on-hover` | `pauseOnHover` | `boolean` | With `loop`, the replay pauses while the pointer is over the graph and continues when it leaves (a mouse or pen; not touch). Reflected as `pause-on-hover="false"` when off. Default true. |
 | `shortcuts` | `shortcuts` | `'scoped' \| 'global' \| 'none'` | Reflected to the `shortcuts` attribute: where the keyboard shortcuts apply. `scoped` (the default): while focus is inside the root, or in an element bound to it with `for` (those forward their keys). `global`: also when nothing on the page has focus (for full-page viewers such as HTML reports), for the first such root, except the keys pages scroll with (arrows, Home / End, Page Up / Down, Space); the boolean `global-shortcuts` attribute is an alias. `none`: no shortcuts (a focused change list keeps its arrow keys, Home / End and Enter). |
-| `keymap` | `keymap` | `string` | Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning. (experimental) |
+| `keymap` | `keymap` | `string` | Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning. |
 | `global-shortcuts` |  | `boolean` | The same as `shortcuts="global"`. |
 
 ### Properties
@@ -169,8 +167,6 @@ It renders as `display: contents`, so its children are laid out by the page as i
 <a id="kgdiff-stage"></a>
 
 ## `<kgdiff-stage>`
-
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
 
 The canvas of the root it is bound to: the graph, the hover tooltip, the swipe divider, the replay caption and the canvas chrome (view dock, replay transport, legend, zoom buttons and minimap). Each stage is a view of its own: a root draws every stage bound to it, each with its own camera, sharing the selection, the hover, the filters and the search; `version` pins one to a version.
 
@@ -213,8 +209,6 @@ Five named slots take the page's content over the canvas. The stage positions it
 
 ## `<kgdiff-change-list>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 The "Changes" title with the count and review progress, and the changes grouped by phase (a virtualized listbox; `j` / `k` / `x`, Enter, Home / End). A labelled region. While a search is active (the session's query is not blank) its rows step aside. Registers itself as the root's `list` focus target (choosing a search result moves focus here).
 
 `import '@kgdiff/viewer/elements/change-list'` defines `<kgdiff-change-list>` alone; `import '@kgdiff/viewer'` defines every element.
@@ -234,8 +228,6 @@ The "Changes" title with the count and review progress, and the changes grouped 
 <a id="kgdiff-change-detail"></a>
 
 ## `<kgdiff-change-detail>`
-
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
 
 The selected change, or the selected node: what changed first, then the unchanged rest; prev / next and the reviewed toggle. A labelled region.
 
@@ -257,8 +249,6 @@ The selected change, or the selected node: what changed first, then the unchange
 
 ## `<kgdiff-search>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 Node search, a combobox and the results list it owns (its `aria-controls` and `aria-activedescendant` stay inside the element). The results open below the box while the query is not blank; ↑ / ↓ move through them, Enter chooses one (its node and change are selected, and focus moves to the change list), Esc clears. The query lives in the session, so a change list bound to the same root steps aside meanwhile. Registers itself as the root's `search` focus target: `/` focuses the one registered last that is shown.
 
 `import '@kgdiff/viewer/elements/search'` defines `<kgdiff-search>` alone; `import '@kgdiff/viewer'` defines every element.
@@ -278,8 +268,6 @@ Node search, a combobox and the results list it owns (its `aria-controls` and `a
 <a id="kgdiff-filters"></a>
 
 ## `<kgdiff-filters>`
-
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
 
 One chip per kind of change the diff has, with its count and the legend's swatch, toggling the session's family filter, and "Show all" while a filter is on.
 
@@ -301,8 +289,6 @@ One chip per kind of change the diff has, with its count and the legend's swatch
 
 ## `<kgdiff-view-dock>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 How the root's diff is viewed. The mode (overlay, swipe, replay; keys `1`–`3`) and "Changes only" (key `4`) with its context hops and the nearest "+N" expansion. Binds to a root like the other elements (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's built-in dock; placed anywhere else it is not kept clear of fits and flights unless registered (`stage.registerObstacle`).
 
 `import '@kgdiff/viewer/elements/view-dock'` defines `<kgdiff-view-dock>` alone; `import '@kgdiff/viewer'` defines every element.
@@ -323,8 +309,6 @@ How the root's diff is viewed. The mode (overlay, swipe, replay; keys `1`–`3`)
 
 ## `<kgdiff-transport>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 The replay transport of the root's diff. Previous, play / pause, next, the scrubber with one tick per change, the position and the speed; at the end, "Replay finished · Restart" above it. Shown in replay mode only. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` (`slot="bottom-center"`, say) it replaces the stage's built-in transport; placed anywhere else it is not kept clear of fits and flights unless registered. Importing this module defines it.
 
 `import '@kgdiff/viewer/elements/transport'` defines `<kgdiff-transport>` alone; `import '@kgdiff/viewer'` defines every element.
@@ -344,8 +328,6 @@ The replay transport of the root's diff. Previous, play / pause, next, the scrub
 <a id="kgdiff-legend"></a>
 
 ## `<kgdiff-legend>`
-
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
 
 What the colors mean. `variant="full"` (the default): a card of every family's swatch and name, folded to its head until opened; `open` reflects whether it is (the user's toggle included, as on `<details>`). `variant="mini"`: one line of dots for the families the root's diff has, then the unchanged context. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's built-in legend; placed anywhere else it is not kept clear of fits and flights unless registered.
 
@@ -369,8 +351,6 @@ What the colors mean. `variant="full"` (the default): a card of every family's s
 
 ## `<kgdiff-zoom>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 Zoom in, zoom out and fit, for one stage's view (the `+` / `−` / `f` keys act on every stage of the root). Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage="<id>"` names (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in zoom buttons; placed anywhere else it is not kept clear of fits and flights unless registered.
 
 `import '@kgdiff/viewer/elements/zoom'` defines `<kgdiff-zoom>` alone; `import '@kgdiff/viewer'` defines every element.
@@ -391,8 +371,6 @@ Zoom in, zoom out and fit, for one stage's view (the `+` / `−` / `f` keys act 
 <a id="kgdiff-minimap"></a>
 
 ## `<kgdiff-minimap>`
-
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
 
 An overview of one stage's view, with the part in view outlined. While the whole graph is in view it has nothing to add: it is in the custom state `overview` then (`:state(overview)`, and the read-only `overview` property). A minimap the page places stays shown (`kgdiff-minimap:state(overview) { visibility: hidden }` hides it without moving the layout); one slotted into a stage replaces the stage's own and hides as it did. Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage="<id>"` names (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in minimap; placed anywhere else it is not kept clear of fits and flights unless registered.
 
@@ -422,8 +400,6 @@ An overview of one stage's view, with the part in view outlined. While the whole
 
 ## `<kgdiff-title>`
 
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
-
 The kgdiff mark and the root's compared names and versions. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-viewer>` it replaces the title over its canvas.
 
 `import '@kgdiff/viewer/elements/title'` defines `<kgdiff-title>` alone; `import '@kgdiff/viewer'` defines every element.
@@ -443,8 +419,6 @@ The kgdiff mark and the root's compared names and versions. Binds to a root (`fo
 <a id="kgdiff-actions"></a>
 
 ## `<kgdiff-actions>`
-
-**Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7).
 
 The appearance menu (theme, color palette, language: the root's `theme`, `palette` and `locale`) and the keyboard shortcuts dialog, which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); bound to a `<kgdiff-viewer>` it has the sidebar toggle too (a composed root has no sidebar). Slotted into a viewer it replaces the actions over its canvas.
 

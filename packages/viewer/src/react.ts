@@ -10,8 +10,6 @@
  * Props are the elements' properties (React 19 sets a prop as the property the element has,
  * and as an attribute otherwise), their attributes without a property, and the roots' events
  * as React 19 listens to them: `onkgdiff-select`. Methods go through a `ref`.
- *
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7), as the elements it describes.
  */
 import type { HTMLAttributes, Ref } from 'react';
 import type { KgdiffEventMap } from './index.js';
@@ -121,12 +119,11 @@ declare module 'react' {
          */
         shortcuts?: Tag<'kgdiff-viewer'>['shortcuts'];
         /**
-         * **Experimental:** The shortcut names (`ShortcutName`) are new in 0.6. Single keys of the
-         * keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review'
-         * }`. The `keymap` attribute takes the same as text, `"x:none r:review"` (`Space` names the
-         * space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases
-         * unless the other case is named too; keys not named keep the default map; entries naming
-         * no shortcut are ignored with a warning.
+         * Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x:
+         * null, r: 'review' }`. The `keymap` attribute takes the same as text, `"x:none r:review"`
+         * (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for
+         * both its cases unless the other case is named too; keys not named keep the default map;
+         * entries naming no shortcut are ignored with a warning.
          */
         keymap?: Tag<'kgdiff-viewer'>['keymap'] | string;
         /**
@@ -188,7 +185,7 @@ declare module 'react' {
         'onkgdiff-layout'?: (event: KgdiffEventMap['kgdiff-layout']) => void;
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-root>`:
+       * `<kgdiff-root>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-root
        */
       'kgdiff-root': Props<'kgdiff-root'> & {
@@ -241,12 +238,11 @@ declare module 'react' {
          */
         shortcuts?: Tag<'kgdiff-root'>['shortcuts'];
         /**
-         * **Experimental:** The shortcut names (`ShortcutName`) are new in 0.6. Single keys of the
-         * keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review'
-         * }`. The `keymap` attribute takes the same as text, `"x:none r:review"` (`Space` names the
-         * space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases
-         * unless the other case is named too; keys not named keep the default map; entries naming
-         * no shortcut are ignored with a warning.
+         * Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x:
+         * null, r: 'review' }`. The `keymap` attribute takes the same as text, `"x:none r:review"`
+         * (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for
+         * both its cases unless the other case is named too; keys not named keep the default map;
+         * entries naming no shortcut are ignored with a warning.
          */
         keymap?: Tag<'kgdiff-root'>['keymap'] | string;
         /**
@@ -292,7 +288,7 @@ declare module 'react' {
         'onkgdiff-replay-end'?: (event: KgdiffEventMap['kgdiff-replay-end']) => void;
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-stage>`:
+       * `<kgdiff-stage>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-stage
        */
       'kgdiff-stage': Props<'kgdiff-stage'> & {
@@ -319,7 +315,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-stage'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-change-list>`:
+       * `<kgdiff-change-list>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-change-list
        */
       'kgdiff-change-list': Props<'kgdiff-change-list'> & {
@@ -331,7 +327,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-change-list'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-change-detail>`:
+       * `<kgdiff-change-detail>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-change-detail
        */
       'kgdiff-change-detail': Props<'kgdiff-change-detail'> & {
@@ -343,7 +339,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-change-detail'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-search>`:
+       * `<kgdiff-search>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-search
        */
       'kgdiff-search': Props<'kgdiff-search'> & {
@@ -355,7 +351,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-search'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-filters>`:
+       * `<kgdiff-filters>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-filters
        */
       'kgdiff-filters': Props<'kgdiff-filters'> & {
@@ -367,7 +363,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-filters'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-view-dock>`:
+       * `<kgdiff-view-dock>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-view-dock
        */
       'kgdiff-view-dock': Props<'kgdiff-view-dock'> & {
@@ -379,7 +375,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-view-dock'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-transport>`:
+       * `<kgdiff-transport>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-transport
        */
       'kgdiff-transport': Props<'kgdiff-transport'> & {
@@ -391,7 +387,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-transport'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-legend>`:
+       * `<kgdiff-legend>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-legend
        */
       'kgdiff-legend': Props<'kgdiff-legend'> & {
@@ -411,7 +407,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-legend'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-zoom>`:
+       * `<kgdiff-zoom>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-zoom
        */
       'kgdiff-zoom': Props<'kgdiff-zoom'> & {
@@ -422,7 +418,7 @@ declare module 'react' {
         stage?: Tag<'kgdiff-zoom'>['stage'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-minimap>`:
+       * `<kgdiff-minimap>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-minimap
        */
       'kgdiff-minimap': Props<'kgdiff-minimap'> & {
@@ -433,7 +429,7 @@ declare module 'react' {
         stage?: Tag<'kgdiff-minimap'>['stage'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-title>`:
+       * `<kgdiff-title>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-title
        */
       'kgdiff-title': Props<'kgdiff-title'> & {
@@ -445,7 +441,7 @@ declare module 'react' {
         htmlFor?: Tag<'kgdiff-title'>['htmlFor'];
       };
       /**
-       * **Experimental:** In 0.6; stable from 0.7 (RFC 0001, decision 7). `<kgdiff-actions>`:
+       * `<kgdiff-actions>`:
        * https://github.com/iiwish/kgdiff/blob/main/docs/viewer-elements.md#kgdiff-actions
        */
       'kgdiff-actions': Props<'kgdiff-actions'> & {

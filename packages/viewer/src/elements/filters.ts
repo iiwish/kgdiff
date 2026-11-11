@@ -12,7 +12,6 @@ import { BoundElement, define } from './bound.js';
  * session's family filter, and "Show all" while a filter is on.
  *
  * @tagname kgdiff-filters
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffFilters extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'filters';
@@ -28,7 +27,6 @@ define('kgdiff-filters', KgdiffFilters);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-filters': KgdiffBoundElement;
   }
 }

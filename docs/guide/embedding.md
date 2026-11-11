@@ -13,7 +13,7 @@ of every case of the [conformance corpus](../../conformance/README.md) and check
 this page makes about them ([`tests/mental_map.rs`](../../crates/kgdiff-report/tests/mental_map.rs)).
 
 `layout_graph`, `layout_diff_on`, `layout_after`, `report_payload_with` and the renderer's
-`addLayer` are new in 0.9 and experimental for one minor release
+`addLayer` are new in 0.9 and experimental until 1.0, when they become stable
 ([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), parts
 1, 2 and 4a). [What is not there yet](#what-is-not-there-yet) lists the rest of that RFC.
 

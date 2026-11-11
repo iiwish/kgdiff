@@ -143,9 +143,9 @@ HTML 属性和它们对应的 JavaScript 属性、其他 JavaScript 属性（`pa
 
 <a id="elements"></a>
 
-## 元素（实验性）
+## 元素
 
-`<kgdiff-viewer>` 是由若干元素组成的默认布局，这些元素也可以单独摆放。它们在 0.6 中是实验性的，0.7 起稳定（[RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md#decisions) 决定 7）：在此之前，名称、属性和结构可能在次版本中变化。每个元素的 HTML 属性、JavaScript 属性、事件、插槽和状态见[参考页](viewer-elements.md)；本节解释它们如何配合。
+`<kgdiff-viewer>` 是由若干元素组成的默认布局，这些元素也可以单独摆放。它们自 0.10 起稳定（[RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md#decisions) 决定 7）：名称、属性和事件遵循语义化版本。每个元素的 HTML 属性、JavaScript 属性、事件、插槽和状态见[参考页](viewer-elements.md)；本节解释它们如何配合。
 
 | 元素                     | 显示的内容                                                   |
 | ------------------------ | ------------------------------------------------------------ |

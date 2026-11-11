@@ -410,8 +410,9 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
   discs; a test pins that before 4b ships.
 - `FrameVisuals` gains an optional member per node (4b). A renderer that does not read it
   draws circles.
-- The new APIs are marked experimental for one minor, as RFC 0001's elements were, and the
-  Rust additions follow the crates' semver from their first release.
+- The new APIs are marked experimental for one minor, as RFC 0001's elements were, and become
+  stable in 1.0 (0.10 is that minor); the Rust additions follow the crates' semver from their
+  first release.
 
 ## Testing
 

@@ -24,8 +24,6 @@ export { stageContext } from './stage-context.js';
 
 /**
  * The regions of the built-in chrome a stage has.
- *
- * @experimental Like the stage, in 0.6.
  */
 export const STAGE_REGIONS: readonly StageRegion[] = [
   'dock',
@@ -81,7 +79,6 @@ function stagePanels(value: unknown): StagePanels {
  * @slot bottom-start - The page's content in the bottom left corner, above the legend.
  * @slot bottom-center - The page's content above the view dock and the transport.
  * @slot bottom-end - The page's content in the bottom right corner, above the zoom buttons and the minimap.
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffStage extends BoundElement implements KgdiffStageElement {
   static override get observedAttributes(): readonly string[] {
@@ -305,7 +302,6 @@ define('kgdiff-stage', KgdiffStage);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-stage': KgdiffStageElement;
   }
 }

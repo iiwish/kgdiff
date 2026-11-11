@@ -148,9 +148,8 @@ and the view stays fitted, labels included: no name is cut at the edge. `loop` r
 
 ## Compose your own layout
 
-The viewer is made of elements you can also place yourself (experimental in 0.6, stable from
-0.7: until then they may
-change in a minor release before they are stable). `<kgdiff-root>` holds the diff session and
+The viewer is made of elements you can also place yourself (stable since 0.10: they follow
+semantic versioning). `<kgdiff-root>` holds the diff session and
 shows nothing; the other elements show its parts wherever they are: inside it, or anywhere on
 the page with `for="<root id>"`.
 
@@ -206,7 +205,7 @@ the page with `for="<root id>"`.
   CSS pixels (`view.worldToScreen` converts the layout's positions), and is in the PNG export;
   the rules are in the
   [renderer's README](../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph).
-  Experimental in 0.9.
+  Experimental until 1.0.
 - `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one stage: the nearest one around them, or the
   one `stage="<id>"` names anywhere on the page (`zoom.stage`, and `zoom.stageElement` for
   the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements
@@ -281,6 +280,10 @@ and keeping them readable is up to you. When tokens change in a way the viewer c
 class on an ancestor, a stylesheet loaded later), call `viewer.refreshTheme()` so the canvas
 follows.
 
+There are no `::part()` names: 1.0 does not offer them, and theming goes through the `--kgdiff-*`
+variables above, which reach inside every element's shadow root. Adding `::part()` names later
+would be purely additive.
+
 ## Keep review progress
 
 The viewer remembers in the browser which changes were marked reviewed. To keep that progress
@@ -313,7 +316,7 @@ files generated from it, like the [reference](../viewer-elements.md):
   ```
 
 - **React 19 with TypeScript** types the elements in JSX, their properties and their events
-  (experimental, with the elements): import the types once, anywhere in the project.
+  (stable, like the elements): import the types once, anywhere in the project.
 
   ```ts
   import type {} from '@kgdiff/viewer/react';

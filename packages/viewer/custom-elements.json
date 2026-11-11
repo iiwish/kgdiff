@@ -98,8 +98,7 @@
               "type": {
                 "text": "string"
               },
-              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
-              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6."
+              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning."
             },
             {
               "name": "sidebar",
@@ -324,7 +323,6 @@
                 "text": "Keymap | null"
               },
               "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
-              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6.",
               "attribute": "keymap"
             },
             {
@@ -788,7 +786,6 @@
           "name": "KgdiffRoot",
           "tagName": "kgdiff-root",
           "description": "A root without visuals. It owns the session and provides it to the elements inside it (`<kgdiff-stage>`, `<kgdiff-change-list>`, …) or naming it with `for`, and owns what they share: the keyboard map, the live region announcing navigation, the events and the theme tokens. It has the attributes, properties, methods and events of `<kgdiff-viewer>` except the layout's (`panels`, `sidebar`, `header`, `chrome`, `legend`, `persist`): the page lays the elements out, and nothing is remembered.\n\nIt renders as `display: contents`, so its children are laid out by the page as if it were not there.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "mode",
@@ -875,8 +872,7 @@
               "type": {
                 "text": "string"
               },
-              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
-              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6."
+              "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning."
             },
             {
               "name": "global-shortcuts",
@@ -975,7 +971,6 @@
                 "text": "Keymap | null"
               },
               "description": "Single keys of the keyboard map bound to another shortcut, or unbound with `null`: `{ x: null, r: 'review' }`. The `keymap` attribute takes the same as text, `\"x:none r:review\"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a letter stands for both its cases unless the other case is named too; keys not named keep the default map; entries naming no shortcut are ignored with a warning.",
-              "experimental": "The shortcut names (`ShortcutName`) are new in 0.6.",
               "attribute": "keymap"
             },
             {
@@ -1422,7 +1417,6 @@
           "name": "KgdiffStage",
           "tagName": "kgdiff-stage",
           "description": "The canvas of the root it is bound to: the graph, the hover tooltip, the swipe divider, the replay caption and the canvas chrome (view dock, replay transport, legend, zoom buttons and minimap). Each stage is a view of its own: a root draws every stage bound to it, each with its own camera, sharing the selection, the hover, the filters and the search; `version` pins one to a version.\n\nFive named slots take the page's content over the canvas. The stage positions it (12–16 px from the edges, stacked further from the corner than the chrome there), and every slotted element is an obstacle: fits and flights frame the graph in the free part of the canvas. A chrome element slotted in replaces the built-in region of its kind; `panels` keeps applying to the rest. Content positioned some other way registers itself with `registerObstacle`, on the element or on the stage context (`kgdiff.stage/1`) it provides to its descendants.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1503,7 +1497,7 @@
                   "text": "() => void"
                 }
               },
-              "experimental": "New in 0.9 (RFC 0003, part 4a); may change in a minor release before it is stable."
+              "experimental": "New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes stable."
             },
             {
               "kind": "field",
@@ -1580,7 +1574,6 @@
           "name": "KgdiffChangeList",
           "tagName": "kgdiff-change-list",
           "description": "The \"Changes\" title with the count and review progress, and the changes grouped by phase (a virtualized listbox; `j` / `k` / `x`, Enter, Home / End). A labelled region. While a search is active (the session's query is not blank) its rows step aside. Registers itself as the root's `list` focus target (choosing a search result moves focus here).",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1646,7 +1639,6 @@
           "name": "KgdiffChangeDetail",
           "tagName": "kgdiff-change-detail",
           "description": "The selected change, or the selected node: what changed first, then the unchanged rest; prev / next and the reviewed toggle. A labelled region.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1712,7 +1704,6 @@
           "name": "KgdiffSearch",
           "tagName": "kgdiff-search",
           "description": "Node search, a combobox and the results list it owns (its `aria-controls` and `aria-activedescendant` stay inside the element). The results open below the box while the query is not blank; ↑ / ↓ move through them, Enter chooses one (its node and change are selected, and focus moves to the change list), Esc clears. The query lives in the session, so a change list bound to the same root steps aside meanwhile. Registers itself as the root's `search` focus target: `/` focuses the one registered last that is shown.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1778,7 +1769,6 @@
           "name": "KgdiffFilters",
           "tagName": "kgdiff-filters",
           "description": "One chip per kind of change the diff has, with its count and the legend's swatch, toggling the session's family filter, and \"Show all\" while a filter is on.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1844,7 +1834,6 @@
           "name": "KgdiffViewDock",
           "tagName": "kgdiff-view-dock",
           "description": "How the root's diff is viewed. The mode (overlay, swipe, replay; keys `1`–`3`) and \"Changes only\" (key `4`) with its context hops and the nearest \"+N\" expansion. Binds to a root like the other elements (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's built-in dock; placed anywhere else it is not kept clear of fits and flights unless registered (`stage.registerObstacle`).",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1910,7 +1899,6 @@
           "name": "KgdiffTransport",
           "tagName": "kgdiff-transport",
           "description": "The replay transport of the root's diff. Previous, play / pause, next, the scrubber with one tick per change, the position and the speed; at the end, \"Replay finished · Restart\" above it. Shown in replay mode only. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` (`slot=\"bottom-center\"`, say) it replaces the stage's built-in transport; placed anywhere else it is not kept clear of fits and flights unless registered. Importing this module defines it.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -1976,7 +1964,6 @@
           "name": "KgdiffLegend",
           "tagName": "kgdiff-legend",
           "description": "What the colors mean. `variant=\"full\"` (the default): a card of every family's swatch and name, folded to its head until opened; `open` reflects whether it is (the user's toggle included, as on `<details>`). `variant=\"mini\"`: one line of dots for the families the root's diff has, then the unchanged context. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-stage>` it replaces the stage's built-in legend; placed anywhere else it is not kept clear of fits and flights unless registered.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -2076,7 +2063,6 @@
           "name": "KgdiffZoom",
           "tagName": "kgdiff-zoom",
           "description": "Zoom in, zoom out and fit, for one stage's view (the `+` / `−` / `f` keys act on every stage of the root). Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage=\"<id>\"` names (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in zoom buttons; placed anywhere else it is not kept clear of fits and flights unless registered.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "stage",
@@ -2151,7 +2137,6 @@
           "name": "KgdiffMinimap",
           "tagName": "kgdiff-minimap",
           "description": "An overview of one stage's view, with the part in view outlined. While the whole graph is in view it has nothing to add: it is in the custom state `overview` then (`:state(overview)`, and the read-only `overview` property). A minimap the page places stays shown (`kgdiff-minimap:state(overview) { visibility: hidden }` hides it without moving the layout); one slotted into a stage replaces the stage's own and hides as it did. Binds to the nearest `<kgdiff-stage>` around it, or to the one `stage=\"<id>\"` names (`stage`, `stageElement`, `rootElement`). Slotted into a stage it replaces the stage's built-in minimap; placed anywhere else it is not kept clear of fits and flights unless registered.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "stage",
@@ -2240,7 +2225,6 @@
           "name": "KgdiffTitle",
           "tagName": "kgdiff-title",
           "description": "The kgdiff mark and the root's compared names and versions. Binds to a root (`for`, `htmlFor`, `rootElement`). Slotted into a `<kgdiff-viewer>` it replaces the title over its canvas.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",
@@ -2306,7 +2290,6 @@
           "name": "KgdiffActions",
           "tagName": "kgdiff-actions",
           "description": "The appearance menu (theme, color palette, language: the root's `theme`, `palette` and `locale`) and the keyboard shortcuts dialog, which `?` opens too. Binds to a root (`for`, `htmlFor`, `rootElement`); bound to a `<kgdiff-viewer>` it has the sidebar toggle too (a composed root has no sidebar). Slotted into a viewer it replaces the actions over its canvas.",
-          "experimental": "In 0.6; stable from 0.7 (RFC 0001, decision 7).",
           "attributes": [
             {
               "name": "for",

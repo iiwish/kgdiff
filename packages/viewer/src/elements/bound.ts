@@ -149,7 +149,7 @@ export function mount(
   }
 }
 
-/** @experimental The base of the bound elements (`KgdiffBoundElement`), in 0.6. */
+/** The base of the bound elements (`KgdiffBoundElement`). */
 export abstract class BoundElement extends HTMLElement implements KgdiffBoundElement {
   static get observedAttributes(): readonly string[] {
     return ['for'];

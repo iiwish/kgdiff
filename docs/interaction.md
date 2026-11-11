@@ -56,7 +56,7 @@ the elements is [RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/
   `bottom-center` or `bottom-end` of `<kgdiff-viewer>` goes over the canvas (the top ones under
   the title and the actions while those show, the bottom ones above the chrome of their corner)
   and is kept clear of fits and flights. A chrome element slotted there replaces the built-in
-  region, the title and the actions included ([Elements](#elements-experimental)). In the compact layout the zoom buttons move under the
+  region, the title and the actions included ([Elements](#elements)). In the compact layout the zoom buttons move under the
   actions, the top-end content under them, and the bottom content above the full-width dock.
 
 ## Panels
@@ -243,11 +243,11 @@ sections here explain them: [Modes](#modes), [Panels](#panels), [Keyboard map](#
 [Theming](#theming). `changes` is a scope, not a mode: `mode="changes"` is
 an unknown value, and reads as the default, `overlay`.
 
-## Elements (experimental)
+## Elements
 
 `<kgdiff-viewer>` is a default layout of elements that can also be placed one by one. They are
-experimental in 0.6 and stable from 0.7 ([RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md#decisions),
-decision 7): names, attributes and markup may change in a minor release until then. Each one's
+stable since 0.10 ([RFC 0001](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0001-viewer-components.md#decisions),
+decision 7): names, attributes and events follow semantic versioning. Each one's
 attributes, properties, events, slots and states are in the
 [reference](viewer-elements.md); this section explains how they work together.
 

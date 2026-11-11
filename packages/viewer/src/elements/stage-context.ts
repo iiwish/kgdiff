@@ -10,8 +10,6 @@ import type { StageView } from '../view.js';
 
 /**
  * What a stage provides to its descendants (the view-level context).
- *
- * @experimental Like the stage, in 0.6.
  */
 export interface StageContext {
   /** Keep `element` clear of fits and flights; returns the function that stops it. */
@@ -30,5 +28,5 @@ export interface StageViewContext extends StageContext {
   watchView(listener: (view: StageView | null) => void): () => void;
 }
 
-/** @experimental The stage context's key (`Symbol.for('kgdiff.stage/1')`). */
+/** The stage context's key (`Symbol.for('kgdiff.stage/1')`). */
 export const stageContext = createContext<StageContext>('kgdiff.stage/1');

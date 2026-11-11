@@ -15,7 +15,7 @@ import type { StageView } from '../view.js';
 import { bindContext, mount } from './bound.js';
 import { type StageViewContext, stageContext } from './stage-context.js';
 
-/** @experimental The base of the chrome elements that act on a stage's view, in 0.6. */
+/** The base of the chrome elements that act on a stage's view. */
 export abstract class ViewBoundElement extends HTMLElement {
   static get observedAttributes(): readonly string[] {
     return ['stage'];

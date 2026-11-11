@@ -944,8 +944,6 @@ function reactTypes(manifest: Manifest): string {
  * Props are the elements' properties (React 19 sets a prop as the property the element has,
  * and as an attribute otherwise), their attributes without a property, and the roots' events
  * as React 19 listens to them: \`onkgdiff-select\`. Methods go through a \`ref\`.
- *
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7), as the elements it describes.
  */
 import type { HTMLAttributes, Ref } from 'react';
 import type { ${imports.join(', ')} } from './index.js';
