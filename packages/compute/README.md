@@ -123,41 +123,46 @@ tests are skipped (CI's `compute` job sets `KGDIFF_COMPUTE`, so that they fail i
 
 Sizes are gzip level 9, in KiB (1,024 bytes), module and glue together; the glue of `layout` is
 `@kgdiff/compute/layout` bundled and minified, as a report inlines it. Every module is built at
-cargo opt-level `z` on the stable toolchain.
+cargo opt-level `z` on the stable toolchain, except kgdiff-core in `compute.wasm`, at `2`.
 
-| Module         | `.wasm`   | gzip, with glue | Budget (1.0)          | CI limit |
-| -------------- | --------- | --------------- | --------------------- | -------- |
-| `layout.wasm`  | 216.4 KiB | 90.9 KiB        | 45 KiB, being raised  | 91 KiB   |
-| `compute.wasm` | 791.6 KiB | 303.9 KiB       | 350 KiB               | 350 KiB  |
-| `formats.wasm` | 621.8 KiB | 253.3 KiB       | 200 KiB, being raised | 254 KiB  |
+| Module         | `.wasm`    | gzip, with glue | RFC 0002 §7 (0.11) | CI limit |
+| -------------- | ---------- | --------------- | ------------------ | -------- |
+| `layout.wasm`  | 216.4 KiB  | 90.9 KiB        | measured only      | 95 KiB   |
+| `compute.wasm` | 1053.0 KiB | 389.4 KiB       | < 400 KiB          | 400 KiB  |
+| `formats.wasm` | 621.6 KiB  | 253.1 KiB       | measured only      | 266 KiB  |
 
-A CI limit at a module's measured size makes a regression fail the build.
+The CI limits guard against a module growing by accident; they are not targets. Making the
+modules smaller and faster comes after 0.11, in patch releases that keep the interface.
 
-Speed, measured on 2026-11-11 (macOS, Apple M-class, Node 24, load average 5 to 7), medians:
+Speed and memory are measured, not gates. Measured on 2026-11-11 (macOS, Apple M-class, Node 24,
+load average 5 to 7), medians, before `compute.wasm` moved kgdiff-core to opt-level `2`
+(alternating runs below for that):
 
-| What                                        | Measured | Target (1.0)          |
-| ------------------------------------------- | -------- | --------------------- |
-| `diffSync` (with the transport), 10k / 30k  | 227 ms   | < 150 ms              |
-| `diffSync`, 100k / 300k                     | 3.0 s    | < 2 s                 |
-| `json.diff`, 10k / 30k                      | 139 ms   | (reported, no target) |
-| `json.diff`, 100k / 300k                    | 1.78 s   | (reported, no target) |
-| `json.normalize` 100k / 300k, linear memory | 265 MiB  | measured only         |
-| similarity matching, 5k unmatched per side  | 269 ms   | < 800 ms              |
-| `layoutDiffSync`, 2k nodes                  | 592 ms   | < 450 ms              |
-| `parseGraphSync`, 50k Turtle triples        | 183 ms   | < 250 ms              |
+| What                                        | Measured | RFC 0002 §7 target (before 1.0) |
+| ------------------------------------------- | -------- | ------------------------------- |
+| `diffSync` (with the transport), 10k / 30k  | 219 ms   | < 150 ms                        |
+| `diffSync`, 100k / 300k                     | 2.7 s    | < 2 s                           |
+| `json.diff`, 10k / 30k                      | 138 ms   | —                               |
+| `json.normalize` 100k / 300k, linear memory | 220 MiB  | < 80 MB                         |
+| `json.hashGraph` 100k / 300k, linear memory | 71.5 MiB | —                               |
+| similarity matching, 5k unmatched per side  | 256 ms   | < 800 ms                        |
+| `layoutDiffSync`, 2k nodes                  | 553 ms   | < 450 ms                        |
+| `parseGraphSync`, 50k Turtle triples        | 184 ms   | < 250 ms                        |
 
 The transport (`JSON.parse` and `diffFromJSON` of `@kgdiff/core`) takes about 70 ms of the 10k
-diff and about 1 s of the 100k one.
+diff and about 1 s of the 100k one. Graphs are built from the JSON text as it is read
+(`normalize_json` of `kgdiff-core`): building the 100k / 300k graph needs 71.5 MiB of linear
+memory (`json.hashGraph`), and writing it back as a `kgdiff.graph` document (`json.normalize`)
+the rest.
 
-The engine at each opt-level (alternating runs, load average about 5; gzip of the `.wasm`):
+The engine at each opt-level, before the compact graph of kgdiff-core (alternating runs, load
+average about 5; gzip of the `.wasm`):
 
-| Build of `compute.wasm` | gzip      | `json.diff` 10k | with transport | `json.diff` 100k | with transport |
-| ----------------------- | --------- | --------------- | -------------- | ---------------- | -------------- |
-| `z` (shipped)           | 301.4 KiB | 144 ms          | 207 ms         | 1.93 s           | 2.99 s         |
-| `s`                     | 363.1 KiB | 114 ms          | 181 ms         | 1.60 s           | 2.49 s         |
-| `z`, kgdiff-core at `s` | 355.5 KiB | 115 ms          | 183 ms         | 1.51 s           | 2.83 s         |
-| `z`, kgdiff-core at `2` | 370.6 KiB | 91 ms           | 158 ms         | 1.38 s           | 2.37 s         |
-| `2`                     | 389.1 KiB | 90 ms           | 160 ms         | 1.26 s           | 2.20 s         |
-| `3`                     | 435.1 KiB | 90 ms           | 160 ms         | 1.19 s           | 2.13 s         |
-
-Only `z` is within the 350 KiB budget.
+| Build of `compute.wasm`           | gzip      | `json.diff` 10k | with transport | `json.diff` 100k | with transport |
+| --------------------------------- | --------- | --------------- | -------------- | ---------------- | -------------- |
+| `z`                               | 301.4 KiB | 144 ms          | 207 ms         | 1.93 s           | 2.99 s         |
+| `s`                               | 363.1 KiB | 114 ms          | 181 ms         | 1.60 s           | 2.49 s         |
+| `z`, kgdiff-core at `s`           | 355.5 KiB | 115 ms          | 183 ms         | 1.51 s           | 2.83 s         |
+| `z`, kgdiff-core at `2` (shipped) | 370.6 KiB | 91 ms           | 158 ms         | 1.38 s           | 2.37 s         |
+| `2`                               | 389.1 KiB | 90 ms           | 160 ms         | 1.26 s           | 2.20 s         |
+| `3`                               | 435.1 KiB | 90 ms           | 160 ms         | 1.19 s           | 2.13 s         |

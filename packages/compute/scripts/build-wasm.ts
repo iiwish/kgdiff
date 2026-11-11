@@ -48,17 +48,17 @@ interface ModuleSpec {
   readonly name: string;
   readonly features: string;
   readonly out: string;
-  /** RFC 0002 §7, gzip, of the module and its glue. */
+  /** RFC 0002 §7's budget, gzip, of the module and its glue, where 0.11 has one. */
   readonly budget?: number;
   /**
-   * The limit CI holds, gzip, of the module and its glue: the budget, or for a module that does
-   * not meet it yet, a little above its size, so that a regression is noticed.
+   * The limit CI holds, gzip, of the module and its glue: a guard against growing by accident,
+   * not a target. The budget where there is one, else the size measured for 0.11 plus about 5%.
    */
   readonly limit?: number;
   /** For `layout`, inlined in reports: the entry whose bundled JavaScript counts as glue. */
   readonly entry?: string;
-  /** The cargo opt-level of the module's own code; default `"z"`, optimized for size. */
-  readonly optLevel?: string;
+  /** Crates built at another opt-level than the module's `z`, by name. */
+  readonly optLevels?: Readonly<Record<string, number>>;
 }
 
 const MODULES: readonly ModuleSpec[] = [
@@ -66,34 +66,37 @@ const MODULES: readonly ModuleSpec[] = [
     name: 'layout',
     features: 'layout',
     out: join(PACKAGE, 'wasm'),
-    // RFC 0002 §7. The maintainer raises it after these measurements; the limit is the size.
-    budget: 45 * KIB,
-    limit: 91 * KIB,
+    // 0.11 measures the layout-only module (90.9 KiB) and shrinks it after 0.11 (RFC 0002 §7).
+    limit: 95 * KIB,
     entry: 'src/layout.ts',
   },
   {
     name: 'compute',
     features: 'engine',
     out: join(PACKAGE, 'wasm'),
-    // Raised from 250 for 1.0 by the maintainer (2026-11-11).
-    budget: 350 * KIB,
-    limit: 350 * KIB,
-    // Every faster opt-level is above the budget on the stable toolchain (README, "Size and
-    // speed"), so the engine is built for size like the others.
+    // RFC 0002 §7: < 400 kB gzip (250, then 350, then 400 on 2026-11-11).
+    budget: 400 * KIB,
+    limit: 400 * KIB,
+    // The diff engine itself for speed, everything else for size (README, "Size and speed").
+    optLevels: { 'kgdiff-core': 2 },
   },
-  { name: 'corpus', features: 'corpus', out: join(PACKAGE, 'test/wasm') },
+  {
+    name: 'corpus',
+    features: 'corpus',
+    out: join(PACKAGE, 'test/wasm'),
+    optLevels: { 'kgdiff-core': 2 },
+  },
   {
     name: 'formats',
     features: 'parsers',
     out: join(PACKAGE, 'wasm'),
-    // As for `layout`: to be raised, the limit is the size.
-    budget: 200 * KIB,
-    limit: 254 * KIB,
+    // As for `layout`: measured for 0.11 (253.1 KiB), smaller after it.
+    limit: 266 * KIB,
   },
 ];
 
 /**
- * The cargo profile: release, optimized for size unless a module says otherwise (`optLevel`), one
+ * The cargo profile: release, optimized for size but for the crates a module names (`optLevels`), one
  * codegen unit, LTO. Only what the pinned stable toolchain supports: no `-Z` flag, no rebuilt
  * standard library (it comes prebuilt at opt-level 3).
  */
@@ -201,7 +204,11 @@ for (const spec of MODULES) {
       '--locked',
       ...CARGO,
       '--config',
-      `profile.compute.opt-level=${/^\d$/.test(spec.optLevel ?? 'z') ? spec.optLevel : `"${spec.optLevel ?? 'z'}"`}`,
+      'profile.compute.opt-level="z"',
+      ...Object.entries(spec.optLevels ?? {}).flatMap(([name, level]) => [
+        '--config',
+        `profile.compute.package.${name}.opt-level=${level}`,
+      ]),
     ],
     { RUSTFLAGS },
   );
@@ -238,7 +245,7 @@ for (const spec of MODULES) {
   } finally {
     rmSync(staging, { recursive: true, force: true });
   }
-  if (spec.budget === undefined) continue;
+  if (spec.limit === undefined) continue;
   const wasm = readFileSync(join(spec.out, `${spec.name}.wasm`));
   let glue = readFileSync(join(spec.out, `${spec.name}.js`), 'utf8');
   if (spec.entry !== undefined) {
@@ -284,13 +291,13 @@ const hashes = run('cargo', [
 writeFileSync(join(PACKAGE, 'test/wasm/native-layouts.txt'), hashes);
 
 const table = [
-  '| @kgdiff/compute | `.wasm` | `.wasm` gzip -9 | glue gzip -9 | gzip in all | limit | RFC 0002 §7 budget |',
+  '| @kgdiff/compute | `.wasm` | `.wasm` gzip -9 | glue gzip -9 | gzip in all | CI limit | RFC 0002 §7 budget |',
   '| --- | --- | --- | --- | --- | --- | --- |',
   ...sizes.map(
     (s) =>
       `| \`${s.module}.wasm\` | ${kib(s.wasm)} | ${kib(s.wasmGzip)} | ${kib(s.glueGzip)} | ` +
       `${kib(s.gzip)} | ${s.limit === undefined ? '—' : kib(s.limit)} | ` +
-      `${s.budget === undefined ? '—' : kib(s.budget)} |`,
+      `${s.budget === undefined ? 'measured only' : kib(s.budget)} |`,
   ),
   '',
   'The glue of `layout` is `@kgdiff/compute/layout` bundled and minified, as a report inlines it.',
