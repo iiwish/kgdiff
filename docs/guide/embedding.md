@@ -440,7 +440,7 @@ change.
 
 | Part | What                                                                     | Planned for        | Until then                                                                                                                   |
 | ---- | ------------------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 3    | Typed graph input: build a `KGraph` from Rust values (`normalize_input`) | 1.0                | write kgdiff JSON and call `normalize`                                                                                       |
+| 3    | Typed graph input: build a `KGraph` from Rust values (`normalize_input`) | 0.11               | write kgdiff JSON and call `normalize`                                                                                       |
 | 4c   | The plain view: one graph in the viewer, colored by your categories      | 0.10, or after 1.0 | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
 | 4d   | Groups: a background per group, and a layout that keeps a group together | after 1.0          | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
 

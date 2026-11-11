@@ -212,9 +212,10 @@ Start with [docs/architecture.md](docs/architecture.md) and [CONTRIBUTING.md](CO
 
 ## Roadmap
 
-1.0: `@kgdiff/compute` replaces the TypeScript compute modules in the browser
-([RFC 0002](docs/rfcs/0002-rust-compute-core.md), phase 5) · the remaining parts of
-[RFC 0003](docs/rfcs/0003-embedding-hosts.md) for embedding hosts · KGCL and RDF Patch export ·
+0.11: `@kgdiff/compute` replaces the TypeScript compute modules in the browser
+([RFC 0002](docs/rfcs/0002-rust-compute-core.md), phase 5), with the typed graph input of
+[RFC 0003](docs/rfcs/0003-embedding-hosts.md) for embedding hosts. 1.0: 0.11 after two stable
+weeks, with no new code. After 1.0: KGCL and RDF Patch export ·
 three-way merge with conflict visualization · Web Worker pipeline and a WebGL renderer for very large graphs ·
 Cytoscape.js and Sigma.js adapters · Python bindings.
 
