@@ -8,8 +8,9 @@
   ([#79](https://github.com/iiwish/kgdiff/pull/79), 6c3a764); part 4a, renderer layers
   ([#80](https://github.com/iiwish/kgdiff/pull/80), d3e1dac). See [0.9 results](#09-results).
   Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges. Part
-  4b is implemented for 0.10, with D-3 and D-4 taken: see [4b results](#4b-results). The other
-  decisions, and parts 3, 4c and 4d, are not decided or started.
+  4b is implemented for 0.10 (bfe4b0d), with D-3 and D-4 taken: see [4b results](#4b-results).
+  All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Parts 3, 4c and 4d are not
+  started: 4c comes after 1.0, part 3 with 1.0.
 - **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
@@ -24,15 +25,15 @@ gaps. Each has a workaround, so none blocks it; each will be met again by the ne
 RFC says which to close, how, and when, around the work that is already planned
 ([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 1.0):
 
-| Part | What                                                         | Release       | Size   |
-| ---- | ------------------------------------------------------------ | ------------- | ------ |
-| 1    | `layout_graph`: the layout of one graph                      | 0.9           | small  |
-| 2    | Reports that carry the caller's layout; `report.v1.json`     | 0.9           | small  |
-| 4a   | Renderer layers: the host draws under and over the graph     | 0.9           | small  |
-| 4b   | Node shapes by type                                          | 0.10          | medium |
-| 4c   | The plain view: one graph, colored by the host's categories  | 0.10 or later | medium |
-| 3    | Typed graph input                                            | 1.0           | medium |
-| 4d   | Groups: backgrounds and a layout that keeps a group together | after 1.0     | large  |
+| Part | What                                                         | Release   | Size   |
+| ---- | ------------------------------------------------------------ | --------- | ------ |
+| 1    | `layout_graph`: the layout of one graph                      | 0.9       | small  |
+| 2    | Reports that carry the caller's layout; `report.v1.json`     | 0.9       | small  |
+| 4a   | Renderer layers: the host draws under and over the graph     | 0.9       | small  |
+| 4b   | Node shapes by type                                          | 0.10      | medium |
+| 4c   | The plain view: one graph, colored by the host's categories  | after 1.0 | medium |
+| 3    | Typed graph input                                            | 1.0       | medium |
+| 4d   | Groups: backgrounds and a layout that keeps a group together | after 1.0 | large  |
 
 Parts 1 to 3 are embedding API and change nothing kgdiff writes. Part 4 is the one that touches
 what kgdiff is, so this RFC first states a rule for it ([Positioning](#positioning)): kgdiff
@@ -344,7 +345,7 @@ interface NodeVisual {
   allocations (one more member, no object), and pan / zoom at 60 fps; the benchmarks run with
   a scene that uses all four shapes.
 
-### 4c. The plain view (0.10 or after 1.0)
+### 4c. The plain view (after 1.0)
 
 A plain view is the scene of a diff without changes (`stats.identical`), which a host gets by
 diffing a graph with itself. No new input type: `buildScene`, the report payload and the
@@ -432,9 +433,9 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
 | Release   | Parts                       | Where                            | Depends on                       |
 | --------- | --------------------------- | -------------------------------- | -------------------------------- |
 | 0.9       | 1, 2 (`report.v1.json`), 4a | Rust crates; `@kgdiff/renderer`  | nothing                          |
-| 0.10      | 4b; 4c if D-5 says so       | scene, renderer, g6, viewer      | the Positioning rules accepted   |
+| 0.10      | 4b                          | scene, renderer, g6, viewer      | the Positioning rules accepted   |
 | 1.0       | 3                           | `kgdiff-core`                    | the compact graph representation |
-| after 1.0 | 4d; 4c if deferred          | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
+| after 1.0 | 4c, 4d                      | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
 
 0.9 is the part the first host waits for: with it, its ontology graph and its reports need no
 copy of kgdiff's payload and no second canvas. Each later release adds something its users can
@@ -478,13 +479,13 @@ see, and the host deletes the matching piece of its own layer code.
 
 | ID  | Decision                                                     | Recommendation                                                                                                                                                                 |
 | --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| D-1 | Is the plain view in scope for kgdiff at all?                | Yes, under the four rules of [Positioning](#positioning). Without it every host that embeds the diff builds the graph view beside it, on another map                           |
+| D-1 | Is the plain view in scope for kgdiff at all?                | **Taken:** yes, under the four rules of [Positioning](#positioning). Without it every host that embeds the diff builds the graph view beside it, on another map                |
 | D-2 | Names: `layout_graph`, `report_payload_with`, `ReportLayout` | **Taken**, as written ([#78](https://github.com/iiwish/kgdiff/pull/78), [#79](https://github.com/iiwish/kgdiff/pull/79))                                                       |
 | D-3 | A hollow shape for a kind of node                            | **Taken:** no. Hollow means "not in this version" in every view, and is not lent to kinds of nodes                                                                             |
 | D-4 | The shape set, and whether a type change animates the shape  | **Taken:** `circle`, `square`, `diamond`, `hexagon`; no animation, the type change already has its badge and detail                                                            |
-| D-5 | 4c in 0.10, or after 1.0                                     | Decide when 4b merges, by where phase 5 stands. Default: after 1.0, with hosts coloring through an `over` layer until then                                                     |
-| D-6 | A thin typed input before 1.0                                | No, unless a second host asks; the first one exports JSON anyway                                                                                                               |
-| D-7 | `<kgdiff-viewer>`'s default layout for a plain view          | Not in this RFC: composed elements only. The default layout keeps its "No differences" card until a host asks for more                                                         |
+| D-5 | 4c in 0.10, or after 1.0                                     | **Taken:** after 1.0, with hosts coloring through an `over` layer until then                                                                                                   |
+| D-6 | A thin typed input before 1.0                                | **Taken:** no. The typed input (part 3) comes with 1.0's compact graph representation; the first host exports JSON anyway                                                      |
+| D-7 | `<kgdiff-viewer>`'s default layout for a plain view          | **Taken:** not changed. Composed elements only; the default layout keeps its "No differences" card                                                                             |
 | D-8 | `addLayer` on `<kgdiff-stage>`                               | **Taken:** yes, experimental ([#80](https://github.com/iiwish/kgdiff/pull/80)); otherwise the change graph inside the viewer cannot carry what the host draws on its own graph |
 | D-9 | `layoutGraph` in TypeScript                                  | **Taken:** only through `@kgdiff/compute` in phase 5 ([#78](https://github.com/iiwish/kgdiff/pull/78) adds none); not in the engine phase 5 deletes                            |
 

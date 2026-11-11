@@ -117,6 +117,22 @@ values only.
 - Halo: dark = radial glow radius `2.6·r`, alpha 0.32 (added / identity / selected); light =
   offset ring at `r + 5` px, 2 px, alpha 0.35.
 
+## What kgdiff draws, and what the host draws
+
+Three rules for views and hosts that go beyond a diff
+([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md#positioning)); the fourth, shape, is the next section.
+
+- **kgdiff draws a graph for the sake of its changes.** The plain view is one version with
+  nothing changed: the map a reviewer learns before a diff is put on it, and returns to after.
+  A host that wants a graph view with no diff in sight has G6, Cytoscape.js and Sigma.js, which
+  kgdiff adapts to rather than replaces.
+- **Color says one thing at a time.** In a view that shows a change, color is the change family.
+  Only in the plain view, where no family but neutral occurs, may color carry the host's
+  categories. The two never share a frame.
+- **What only the host knows, the host draws.** Certification marks, issue counts, lineage
+  bands: kgdiff gives layers to draw them on (`@kgdiff/renderer` layers) and no API to describe
+  them.
+
 ## Shape says what kind
 
 **Shape says what kind of thing a node is, in every view.** The cues of change (the hollow
