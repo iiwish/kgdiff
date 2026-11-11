@@ -34,7 +34,13 @@ impl Recorder {
             bin,
             version: String::new(),
         };
-        let run = recorder.capture("--version", &["--version".to_owned()], cwd, &Object::new(), None)?;
+        let run = recorder.capture(
+            "--version",
+            &["--version".to_owned()],
+            cwd,
+            &Object::new(),
+            None,
+        )?;
         let version = run
             .stdout
             .strip_prefix("kgdiff ")
@@ -106,7 +112,8 @@ impl Recorder {
             .code()
             .ok_or_else(|| format!("run \"{name}\" did not finish ({status})"))?;
         let text = |data: Vec<u8>, stream: &str| {
-            String::from_utf8(data).map_err(|_| format!("run \"{name}\" wrote {stream} that is not UTF-8"))
+            String::from_utf8(data)
+                .map_err(|_| format!("run \"{name}\" wrote {stream} that is not UTF-8"))
         };
         Ok(Captured {
             code,
@@ -188,7 +195,9 @@ pub fn report_record(
         return Err("the report's layout is not a version 2 document with a generator".to_owned());
     }
     if &layout != expected_layout {
-        return Err("the report's layout differs from layout_to_json(layout_diff(diff(…)))".to_owned());
+        return Err(
+            "the report's layout differs from layout_to_json(layout_diff(diff(…)))".to_owned(),
+        );
     }
     let scope = expected_layout.get("scope").and_then(Value::as_str);
     let scripts = script_count(html);
@@ -198,7 +207,9 @@ pub fn report_record(
         ));
     }
     if compact(&payload.get("diff").cloned().unwrap_or_default()) != packed_text {
-        return Err("the report's diff differs from pack_diff_json(diff_to_json(diff(…)))".to_owned());
+        return Err(
+            "the report's diff differs from pack_diff_json(diff_to_json(diff(…)))".to_owned(),
+        );
     }
     let mut meta = payload
         .get("meta")

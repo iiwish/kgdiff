@@ -88,19 +88,51 @@ const LOG2_DESCRIPTION: &str = "log2 of @kgdiff/core, which core's matching uses
 /// The first 64 of the 439 integers in 1…2·10⁶ whose log₂ Apple's libm rounds differently from
 /// V8 (found by comparing the two; every C library has such inputs). Kept as hard inputs for a
 /// port that calls a C library's log₂ instead of repeating `log2`'s operations.
-const HARD_LOG2: &[f64] = &[1375.0, 2750.0, 3393.0, 5500.0, 5755.0, 6131.0, 6351.0, 6786.0, 7957.0, 11000.0, 11219.0, 11443.0, 11510.0, 12043.0, 12262.0, 12702.0, 13572.0, 13735.0, 15914.0, 18817.0, 21099.0, 21703.0, 22000.0, 22438.0, 22886.0, 23020.0, 24086.0, 24524.0, 25309.0, 25404.0, 27144.0, 27470.0, 31828.0, 37634.0, 39493.0, 42198.0, 43406.0, 44000.0, 44876.0, 45477.0, 45772.0, 46040.0, 46581.0, 48172.0, 49048.0, 50618.0, 50808.0, 51651.0, 54288.0, 54940.0, 63656.0, 66683.0, 67359.0, 83743.0, 86015.0, 88424.0, 88632.0, 89516.0, 90727.0, 90768.0, 92078.0, 96143.0, 103485.0, 104703.0];
+const HARD_LOG2: &[f64] = &[
+    1375.0, 2750.0, 3393.0, 5500.0, 5755.0, 6131.0, 6351.0, 6786.0, 7957.0, 11000.0, 11219.0,
+    11443.0, 11510.0, 12043.0, 12262.0, 12702.0, 13572.0, 13735.0, 15914.0, 18817.0, 21099.0,
+    21703.0, 22000.0, 22438.0, 22886.0, 23020.0, 24086.0, 24524.0, 25309.0, 25404.0, 27144.0,
+    27470.0, 31828.0, 37634.0, 39493.0, 42198.0, 43406.0, 44000.0, 44876.0, 45477.0, 45772.0,
+    46040.0, 46581.0, 48172.0, 49048.0, 50618.0, 50808.0, 51651.0, 54288.0, 54940.0, 63656.0,
+    66683.0, 67359.0, 83743.0, 86015.0, 88424.0, 88632.0, 89516.0, 90727.0, 90768.0, 92078.0,
+    96143.0, 103485.0, 104703.0,
+];
 
 /// Inputs beyond the integers matching and the layout pass, as bits: the edges of the domain
 /// (0, -0, -1, -∞, NaN, +∞), subnormals and the largest double (the scaling loops' longest runs),
 /// mantissas next to 1 and 2 (the series' shortest and slowest cases) and a few fractions.
-const SPECIAL_LOG2: &[u64] = &[0x0000000000000000, 0x8000000000000000, 0xbff0000000000000, 0xfff0000000000000, 0x7ff8000000000000, 0x7ff0000000000000, 0x0000000000000001, 0x0010000000000000, 0x001fffffffffffff, 0x7fefffffffffffff, 0x3ff0000000000001, 0x3fffffffffffffff, 0x3fe0000000000000, 0x3fe8000000000000, 0x3ff8000000000000, 0x3f50624dd2f1a9fc, 0x3fb999999999999a, 0x401e000000000000, 0x40fe240c9fbe76c9, 0x4340000000000001, 0x7e37e43c8800759c];
+const SPECIAL_LOG2: &[u64] = &[
+    0x0000000000000000,
+    0x8000000000000000,
+    0xbff0000000000000,
+    0xfff0000000000000,
+    0x7ff8000000000000,
+    0x7ff0000000000000,
+    0x0000000000000001,
+    0x0010000000000000,
+    0x001fffffffffffff,
+    0x7fefffffffffffff,
+    0x3ff0000000000001,
+    0x3fffffffffffffff,
+    0x3fe0000000000000,
+    0x3fe8000000000000,
+    0x3ff8000000000000,
+    0x3f50624dd2f1a9fc,
+    0x3fb999999999999a,
+    0x401e000000000000,
+    0x40fe240c9fbe76c9,
+    0x4340000000000001,
+    0x7e37e43c8800759c,
+];
 
 /// log2 is evaluated up to here for the digest.
 const LOG2_DIGEST_TO: u32 = 1 << 22;
 
 fn log2() -> String {
     let mut explicit = Vec::new();
-    let integers = (1..=1024u32).map(f64::from).chain(HARD_LOG2.iter().copied());
+    let integers = (1..=1024u32)
+        .map(f64::from)
+        .chain(HARD_LOG2.iter().copied());
     for n in integers {
         explicit.push(row(vec![n.into(), bits(js::math::log2(n)).into()]));
     }
@@ -257,7 +289,12 @@ const PREDICATES: &[&str] = &[
 fn predicate_label() -> String {
     let pairs = PREDICATES
         .iter()
-        .map(|p| row(vec![(*p).into(), kgdiff_core::text::predicate_label(p).into()]))
+        .map(|p| {
+            row(vec![
+                (*p).into(),
+                kgdiff_core::text::predicate_label(p).into(),
+            ])
+        })
         .collect();
     lines(&[
         (

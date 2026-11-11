@@ -104,7 +104,8 @@ fn run(args: &[String]) -> Result<ExitCode, String> {
     let definitions = definitions::load(&repo)?;
     let mut corpus = Corpus::new();
     for def in &definitions {
-        let files = generate_case(&repo, def, &recorder).map_err(|e| format!("case {}: {e}", def.id))?;
+        let files =
+            generate_case(&repo, def, &recorder).map_err(|e| format!("case {}: {e}", def.id))?;
         corpus.extend(files);
     }
     corpus.extend(shared(&definitions));
@@ -142,7 +143,8 @@ fn build_kgdiff(repo: &Path) -> Result<PathBuf, String> {
     if !status.success() {
         return Err("`cargo build --release -p kgdiff` failed".to_owned());
     }
-    let target = std::env::var_os("CARGO_TARGET_DIR").map_or_else(|| repo.join("target"), PathBuf::from);
+    let target =
+        std::env::var_os("CARGO_TARGET_DIR").map_or_else(|| repo.join("target"), PathBuf::from);
     Ok(target
         .join("release")
         .join(format!("kgdiff{}", std::env::consts::EXE_SUFFIX)))
@@ -226,7 +228,10 @@ fn generate_case(repo: &Path, def: &Definition, recorder: &Recorder) -> Result<C
     ]);
     let run = recorder.capture("report", &args, &work.0, &base_env(), None)?;
     if run.code != 0 {
-        return Err(format!("the report run exited with {}:\n{}", run.code, run.stderr));
+        return Err(format!(
+            "the report run exited with {}:\n{}",
+            run.code, run.stderr
+        ));
     }
     let html = String::from_utf8(read_file(&report)?).map_err(|e| e.to_string())?;
     let layout = library::report_layout(&lib.result)?;
@@ -247,13 +252,13 @@ fn generate_case(repo: &Path, def: &Definition, recorder: &Recorder) -> Result<C
                 .stdout
                 .replace(recorder.version.as_str(), VERSION_PLACEHOLDER);
         }
-        let expected = spec.exit.unwrap_or(
-            if spec.name == "exit-code" && !lib.result.stats.identical {
-                1
-            } else {
-                0
-            },
-        );
+        let expected =
+            spec.exit
+                .unwrap_or(if spec.name == "exit-code" && !lib.result.stats.identical {
+                    1
+                } else {
+                    0
+                });
         if captured.code != expected {
             return Err(format!(
                 "run \"{}\" exited with {}, expected {expected}:\n{}",
@@ -298,7 +303,6 @@ fn generate_case(repo: &Path, def: &Definition, recorder: &Recorder) -> Result<C
         record.insert("exit", captured.code);
         records.push(Value::Object(record));
     }
-    drop(put);
 
     // `kgdiff apply` must reproduce the after graph.
     let applied = files
@@ -361,7 +365,7 @@ fn shared(definitions: &[Definition]) -> Corpus {
     manifest.insert("version", 1);
     manifest.insert(
         "description",
-        "Language-neutral conformance corpus of kgdiff: inputs, options and the expected outputs of the reference (TypeScript) implementation. See README.md.",
+        "Language-neutral conformance corpus of kgdiff: inputs, options and the expected outputs of the reference (Rust) implementation. See README.md.",
     );
     manifest.insert("versionPlaceholder", VERSION_PLACEHOLDER);
     let cases = definitions
@@ -517,7 +521,11 @@ fn prune_empty(dir: &Path) -> Result<(), String> {
             prune_empty(&path)?;
         }
     }
-    if fs::read_dir(dir).map_err(|e| e.to_string())?.next().is_none() {
+    if fs::read_dir(dir)
+        .map_err(|e| e.to_string())?
+        .next()
+        .is_none()
+    {
         fs::remove_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
     Ok(())
@@ -549,7 +557,10 @@ fn check(root: &Path, definitions: &[Definition], corpus: &Corpus) -> Result<Exi
         problems.push(format!("{path}: no case defines it"));
     }
     if problems.is_empty() {
-        println!("conformance: the {} generated files are up to date.", corpus.len());
+        println!(
+            "conformance: the {} generated files are up to date.",
+            corpus.len()
+        );
         Ok(ExitCode::SUCCESS)
     } else {
         for problem in &problems {

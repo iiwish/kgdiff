@@ -246,10 +246,12 @@ fn definition(repo: &Path, value: &Value, what: String) -> Result<Definition, St
     let f = Fields::new(what.clone(), value, FIELDS)?;
     let inputs = f
         .sides("inputs")?
-        .and_then(|s| Some(Sides {
-            before: s.before?,
-            after: s.after?,
-        }))
+        .and_then(|s| {
+            Some(Sides {
+                before: s.before?,
+                after: s.after?,
+            })
+        })
         .ok_or_else(|| format!("{what} has no inputs"))?;
     let (copied_from, dataset_options) = match f.optional_string("dataset")? {
         None => (None, None),
@@ -276,7 +278,9 @@ fn definition(repo: &Path, value: &Value, what: String) -> Result<Definition, St
     };
     let options = match (dataset_options, f.get("options")) {
         (Some(_), Some(_)) => {
-            return Err(format!("{what}: a dataset case takes the options of its meta.json"));
+            return Err(format!(
+                "{what}: a dataset case takes the options of its meta.json"
+            ));
         }
         (Some(options), None) => options,
         (None, Some(options @ Value::Object(_))) => options.clone(),
@@ -285,7 +289,11 @@ fn definition(repo: &Path, value: &Value, what: String) -> Result<Definition, St
     };
     let mut extra_runs = Vec::new();
     for run in f.get("extraRuns").and_then(Value::as_array).unwrap_or(&[]) {
-        let r = Fields::new(format!("{what}: an extra run"), run, &["name", "flags", "env", "file"])?;
+        let r = Fields::new(
+            format!("{what}: an extra run"),
+            run,
+            &["name", "flags", "env", "file"],
+        )?;
         extra_runs.push(ExtraRun {
             name: r.string("name")?,
             flags: r.strings("flags")?.unwrap_or_default(),
@@ -364,10 +372,10 @@ impl Definition {
             return Err(format!("the CLI cannot express the diff option \"{key}\""));
         }
         let matching = o.get("match");
-        if let Some(key) = matching
-            .and_then(Value::as_object)
-            .and_then(|m| m.keys().find(|k| !["strategy", "threshold"].contains(&k.as_str())))
-        {
+        if let Some(key) = matching.and_then(Value::as_object).and_then(|m| {
+            m.keys()
+                .find(|k| !["strategy", "threshold"].contains(&k.as_str()))
+        }) {
             return Err(format!("the CLI cannot express the match option \"{key}\""));
         }
         let mut flags = Vec::new();
@@ -375,7 +383,9 @@ impl Definition {
             flags.push(flag.to_owned());
             flags.push(value);
         };
-        if let Some(strategy) = matching.and_then(|m| m.get("strategy")).and_then(Value::as_str)
+        if let Some(strategy) = matching
+            .and_then(|m| m.get("strategy"))
+            .and_then(Value::as_str)
             && !strategy.is_empty()
         {
             push("--match", strategy.to_owned());
@@ -395,7 +405,11 @@ impl Definition {
         {
             push("--edge-identity", identity.to_owned());
         }
-        for k in o.get("ignoreAttrs").and_then(Value::as_array).unwrap_or(&[]) {
+        for k in o
+            .get("ignoreAttrs")
+            .and_then(Value::as_array)
+            .unwrap_or(&[])
+        {
             push("--ignore-attr", k.to_js_string());
         }
         if o.get("detectMerges") == Some(&Value::Bool(false)) {

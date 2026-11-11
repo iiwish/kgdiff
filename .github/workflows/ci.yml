@@ -97,15 +97,12 @@ jobs:
         run: |
           cargo build --release -p kgdiff --locked
           pnpm conformance:replay --bin "target/release/kgdiff${{ runner.os == 'Windows' && '.exe' || '' }}"
-      # The Rust kgdiff records what the CLI produces (RFC 0002, §9, "Corpus ownership"): the whole
-      # corpus, generated again with it and the TypeScript packages, must be what is committed.
-      # The generator also checks each report's layout against @kgdiff/layout's.
-      - name: Regenerate the conformance corpus with the Rust kgdiff
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          pnpm conformance:update --bin target/release/kgdiff
-          git status --porcelain -- conformance
-          test -z "$(git status --porcelain -- conformance)"
+      # The Rust crates generate the corpus (RFC 0002, §9, "Corpus ownership"): generated again
+      # on each OS with them and the release kgdiff, it must be what is committed, byte for byte.
+      # The generator also checks that the CLI and the library agree where both write a file.
+      - name: Regenerate the conformance corpus and compare it with the committed one
+        shell: bash
+        run: cargo xtask conformance --check --bin "target/release/kgdiff${{ runner.os == 'Windows' && '.exe' || '' }}"
       - name: Docs
         if: matrix.os == 'ubuntu-latest'
         env:

@@ -2,7 +2,8 @@
  * Runs `kgdiff` as a real process, as the corpus's CLI runs are defined (README, "CLI runs"): the
  * run's arguments, a working directory, the run's environment and only what starting a process
  * needs besides it, stdin piped from bytes (empty when absent), stdout and stderr through pipes.
- * `corpus.ts` records the runs this way and `replay.ts` checks them.
+ * `replay.ts` checks the recorded runs this way; the generator (`cargo xtask conformance`) records
+ * them the same way.
  */
 import { spawn } from 'node:child_process';
 

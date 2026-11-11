@@ -1,23 +1,28 @@
 # kgdiff conformance corpus
 
 A language-neutral specification by example of what kgdiff computes and prints. Every case holds
-input graphs, the options to diff them with, and the outputs of the reference implementations
-(the TypeScript packages of this repository for the library outputs, the Rust `kgdiff` for what
-the CLI produces; "Changing the corpus" below): the diff, the packed diff, the delta and its
+input graphs, the options to diff them with, and the outputs of the reference implementation,
+the Rust crates of this repository (`kgdiff-formats`, `kgdiff-core` and `kgdiff-layout` for the
+library outputs, the `kgdiff` binary for what the CLI produces; "Changing the corpus" below): the
+diff, the packed diff, the delta and its
 inverse, the content hashes, the normalized graphs, the parse results, the hunk titles, the report
 payload's metadata, the layout's combinatorial part, and the CLI's text outputs, warnings, error
-messages and exit codes. Primitive vectors pin the JavaScript built-ins those outputs depend on.
+messages and exit codes. Primitive vectors pin the JavaScript built-ins those outputs depend on,
+and some of kgdiff's own functions one value at a time.
 
 An implementation conforms when it reproduces every expected file of every case and passes every
-primitive vector. The Rust port described in
-[RFC 0002](../docs/rfcs/0002-rust-compute-core.md) is checked against it; so is the TypeScript
-implementation, on every CI run (`pnpm test`).
+primitive vector. The Rust crates described in
+[RFC 0002](../docs/rfcs/0002-rust-compute-core.md) generate it and are checked against it
+(`cargo test`), on Linux, macOS and Windows and in WebAssembly. The TypeScript packages keep only
+the read path (normalizing, hashing and serializing graphs, reading, packing and presenting a
+diff, applying and inverting deltas), and `pnpm test` checks that part against the files.
 
 ## Layout
 
 ```
 conformance/
   manifest.json                 format marker, the list of cases and primitive vectors
+  definitions.json              the case definitions the generator reads; not part of the format
   cases/<id>/
     case.json                   what the case is, how to parse and diff it, the CLI runs
     <inputs>                    the input files, as bytes (UTF-16, gzip and CRLF included)
@@ -38,8 +43,12 @@ conformance/
       layout-contract.json      the part of layoutDiff that is not floating point     (value)
       cli/*                     stdout of the other CLI runs listed in case.json      (bytes)
   primitives/*.json             vectors for number formatting, string order, log2, …
-  cases.ts, corpus.ts, …        the generator (TypeScript); not part of the format
+  conformance.test.ts           the check of the TypeScript read path (`pnpm test`)
+  replay.ts, process.ts         the replay of the CLI runs (`pnpm conformance:replay`)
 ```
+
+The generator is the Rust crate [`xtask/`](../xtask/) (`cargo xtask conformance`), not part of
+the format either.
 
 **Bytes** files must be reproduced exactly. **Value** files — `parse.*`, `issues`, `hashes`,
 `titles`, `report` and `layout-contract` — are compared as JSON values: parse both, then compare
@@ -168,7 +177,7 @@ and that is what is recorded (`cli-errors`, `obo-clipped-line`). With `versionPl
 replace `kgdiff <version>` by the implementation's `kgdiff X.Y.Z` before comparing.
 
 The generator records the runs exactly this way, with the Rust `kgdiff` as a real process
-(`pnpm conformance:update`), and CI replays every one of them with it on Linux, macOS and Windows
+(`cargo xtask conformance`), and CI replays every one of them with it on Linux, macOS and Windows
 (`pnpm conformance:replay`, after `cargo build --release -p kgdiff`). Another implementation is
 replayed with `pnpm conformance:replay --bin <executable>`.
 
@@ -176,8 +185,8 @@ The HTML report of every case, which no run records, is written by the generator
 arguments of the `summary` run and `-o report.html --reproducible`: `report.json` records what its
 payload says besides the diff and the layout; the generator checks that its diff is
 `diff.packed.json`, that its layout (a version 2 document with a `generator`) is the one
-`@kgdiff/layout` computes, version and generator aside, and that it inlines the compute add-on
-exactly when that layout covers only the changes.
+`kgdiff-layout` computes with the default options, and that it inlines the compute add-on exactly
+when that layout covers only the changes.
 
 Every case has the standard runs `summary` (no output option), `stat` (`--stat`), `name-status`
 (`--name-status`), `markdown` (`--markdown`), `json` (`--json`, stdout = `expected/diff.json`),
@@ -199,18 +208,25 @@ Doubles are written as 16 hex digits of their IEEE 754 bits (big-endian), so che
 formatting never depends on number formatting. Each file has a `description`. `label-width.json`
 belongs to the layout (RFC 0002 phase 4); the others to the core (phase 2).
 
-| File                      | Content                                                                                                                                                              |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `number-to-string.json`   | `{ bits, string, json, exponential, fixed }`: `String(x)`, `JSON.stringify(x)`, `x.toExponential()` and `x.toFixed(0 / 1 / 2)` for curated and pseudo-random doubles |
-| `number-from-string.json` | `{ text, number, json }`: bits of `Number(text)` (or `"NaN"`) and of `JSON.parse(text)` (or `null` for a syntax error)                                               |
-| `js-math.json`            | `Math.round` (half up, keeping `-0`), `ToUint32` (`x >>> 0`), `ToInt32` (`x \| 0`)                                                                                   |
-| `log2.json`               | core's exact `log2` (its operations are in the file) for n = 1…1024, inputs C libraries round differently and special values; a SHA-256 over all n up to 2²²         |
-| `string-order.json`       | strings in JavaScript's default sort order (UTF-16 code units)                                                                                                       |
-| `json-roundtrip.json`     | `JSON.stringify(JSON.parse(text))`, compact and with `null, 2`; `null` when the text is not JSON or holds a lone surrogate escape (RFC 0002, D-2)                    |
-| `text-similarity.json`    | `[a, b, textSimilarity(a, b)]`                                                                                                                                       |
-| `predicate-label.json`    | `[predicate, predicateLabel(predicate)]`                                                                                                                             |
-| `label-width.json`        | `[text, fontSize, estimateLabelWidth(text, fontSize)]` and `[degree, nodeRadius(degree)]`                                                                            |
-| `facet-labels.json`       | `facetLabel(kind, locale)` for every facet kind                                                                                                                      |
+Two kinds, the **Kind** column below. The vectors of kgdiff's own functions are **generated**:
+`cargo xtask conformance` writes them from the inputs in `xtask/src/conformance/primitives.rs`.
+The vectors of JavaScript built-ins are **fixed** reference data: V8 computed them while the
+TypeScript implementation generated the corpus, the generator never writes them, and the
+Rust implementation is checked against them (`cargo test -p kgdiff-core --test conformance`).
+They change only by hand, with the reason in the pull request.
+
+| File                      | Kind      | Content                                                                                                                                                              |
+| ------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `number-to-string.json`   | fixed     | `{ bits, string, json, exponential, fixed }`: `String(x)`, `JSON.stringify(x)`, `x.toExponential()` and `x.toFixed(0 / 1 / 2)` for curated and pseudo-random doubles |
+| `number-from-string.json` | fixed     | `{ text, number, json }`: bits of `Number(text)` (or `"NaN"`) and of `JSON.parse(text)` (or `null` for a syntax error)                                               |
+| `js-math.json`            | fixed     | `Math.round` (half up, keeping `-0`), `ToUint32` (`x >>> 0`), `ToInt32` (`x \| 0`)                                                                                   |
+| `log2.json`               | generated | core's exact `log2` (its operations are in the file) for n = 1…1024, inputs C libraries round differently and special values; a SHA-256 over all n up to 2²²         |
+| `string-order.json`       | fixed     | strings in JavaScript's default sort order (UTF-16 code units)                                                                                                       |
+| `json-roundtrip.json`     | fixed     | `JSON.stringify(JSON.parse(text))`, compact and with `null, 2`; `null` when the text is not JSON or holds a lone surrogate escape (RFC 0002, D-2)                    |
+| `text-similarity.json`    | generated | `[a, b, textSimilarity(a, b)]`                                                                                                                                       |
+| `predicate-label.json`    | generated | `[predicate, predicateLabel(predicate)]`                                                                                                                             |
+| `label-width.json`        | generated | `[text, fontSize, estimateLabelWidth(text, fontSize)]` and `[degree, nodeRadius(degree)]`                                                                            |
+| `facet-labels.json`       | generated | `facetLabel(kind, locale)` for every facet kind                                                                                                                      |
 
 ## Cases
 
@@ -271,40 +287,69 @@ The corpus is generated; never edit an expected file by hand.
 
 ```sh
 pnpm build:viewer-assets                 # once: the viewer bundles kgdiff's reports embed
-pnpm conformance:update                  # regenerate everything (builds the Rust kgdiff first)
-pnpm vitest run --project conformance    # check the TypeScript packages (also part of pnpm test)
+cargo xtask conformance                  # regenerate everything (builds the Rust kgdiff first)
+cargo xtask conformance --check          # the same, comparing with the files instead of writing
 cargo test --workspace                   # check the Rust crates against it
+pnpm vitest run --project conformance    # check the TypeScript read path (also part of pnpm test)
 cargo build --release -p kgdiff && pnpm conformance:replay
 ```
 
-- The library outputs (everything below `expected/` but `cli/`, `apply.json` and `report.json`)
-  come from the TypeScript packages; the CLI runs (`case.json`'s `cli`, their stdout files, which
-  include `diff.json` and `delta.json`) and `report.json` from the Rust `kgdiff`, which `pnpm
-  conformance:update` builds with `cargo build --release -p kgdiff` and runs as a real process
-  (`--bin <path>` records with another executable). Where both write a file, or the report embeds
-  one, the generator checks that they agree.
-- `pnpm test` regenerates the library outputs and `case.json`'s definitions, and reads the CLI's
-  outputs as given, so it needs no Rust toolchain; CI regenerates the whole corpus with the Rust
-  `kgdiff` and fails on any difference, and replays every run on each OS.
-- A behaviour change shows up as a failing `pnpm test` (TypeScript packages) or `cargo test` and
-  replay (Rust); regenerate, review the diff of `conformance/` (it is the change every
+- `cargo xtask conformance` (the crate [`xtask/`](../xtask/); `pnpm conformance:update` runs the
+  same) reads the case definitions of `definitions.json`, computes the library outputs with
+  `kgdiff-formats`, `kgdiff-core` and `kgdiff-layout`, and records the CLI runs (`case.json`'s
+  `cli`, their stdout files, which include `diff.json`, `delta.json` and `apply.json`) and
+  `report.json` with the Rust `kgdiff`, which it builds with `cargo build --release -p kgdiff` and
+  runs as a real process in a copy of the case directory (`--bin <path>` records with another
+  executable). Where two of them write the same thing, or the report embeds it, it checks that
+  they agree, and that `kgdiff apply` reproduces the after graph.
+- It rewrites `case.json`, `expected/`, copied inputs, the generated `primitives/` and the
+  manifest, removes expected files no longer generated, and never touches authored inputs or the
+  fixed primitive vectors; a directory under `cases/` that no case defines is reported, for
+  removal by hand.
+- CI regenerates the whole corpus and fails on any difference (`git status`), runs `cargo test`
+  and replays every run on Linux, macOS and Windows, and runs the corpus against the WebAssembly
+  build. `pnpm test` reads the files as given and checks the TypeScript read path against them,
+  so it needs no Rust toolchain.
+- A behaviour change shows up as a failing `cargo test` and replay (Rust) or `pnpm test`
+  (TypeScript read path); regenerate, review the diff of `conformance/` (it is the change every
   implementation must follow) and commit it with the code.
-- A new case: add its inputs under `cases/<id>/` (or point `copiedFrom` at a dataset), add a
-  definition to `cases.ts`, regenerate. Keep inputs small and their characters Unicode-stable.
-- `pnpm conformance:update` rewrites `case.json`, `expected/`, copied inputs, `primitives/` and the
-  manifest, removes expected files no longer generated, and never touches authored inputs; a
-  directory under `cases/` that no case defines is reported, for removal by hand.
+- A new case: add its inputs under `cases/<id>/` (or name a dataset), add a definition to
+  `definitions.json`, regenerate. Keep inputs small and their characters Unicode-stable.
 - Inputs are committed as bytes: `.gitattributes` disables line-ending conversion below
   `conformance/cases/`, and Biome does not format the corpus.
 - Generated outputs never depend on the time, the machine or the kgdiff version (the Markdown
   footer's version is replaced by `kgdiff <version>`), so the corpus only changes when behaviour
   does.
 
-**Who generates the corpus.** The reference moves to the Rust port one part at a time, and only
-after the Rust part reproduces the corpus as it stands. Since phase 4 the Rust `kgdiff` records
-what the CLI produces (the CLI runs and `report.json`); the TypeScript packages still generate the
-library outputs, the layout contract among them, until phase 5 moves everything else. From then
-on the TypeScript check covers only what TypeScript keeps (the read path). RFC 0002, §9, "Corpus
-ownership", has the details.
+### definitions.json
+
+`{ "description": …, "cases": [definition, …] }`, the cases in manifest order. A definition has
+the fields below; anything else is an error. `case.json` records the parsing, the options and
+every run they imply.
+
+| Field         | Meaning                                                                                                                                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`          | the directory name under `cases/`                                                                                                                                                                                                |
+| `dataset`     | optional: a directory of `examples/datasets/`. The inputs are copied from it, and the case is diffed with the `options` of its `meta.json`, whose `files` must name the inputs                                                   |
+| `description` | what the case is about                                                                                                                                                                                                           |
+| `covers`      | short tags of what it exercises                                                                                                                                                                                                  |
+| `inputs`      | `{ "before": <file>, "after": <file> }`, names inside the case directory                                                                                                                                                         |
+| `formats`     | optional `{ "before"?, "after"? }`: `--format` when both are given and equal, else `--before-format` / `--after-format`; absent is `auto`                                                                                        |
+| `languages`   | optional: `--lang`                                                                                                                                                                                                               |
+| `allowEmpty`  | optional: `--allow-empty`                                                                                                                                                                                                        |
+| `options`     | the `DiffOptions` (every case but a dataset case): only what the CLI can express — match strategy and threshold, edge identity, hierarchy predicates, ignored attributes, merge and split detection                              |
+| `textFlags`   | optional: CLI flags that shape only the text outputs (`--watch-attr`, `--limit`)                                                                                                                                                 |
+| `locale`      | locale of the standard runs                                                                                                                                                                                                      |
+| `layout`      | optional: the `LayoutOptions` of `layout-contract.json`                                                                                                                                                                          |
+| `extraRuns`   | optional: `{ name, flags, env?, file }`, the case's diff arguments with `flags` appended, stdout in `expected/cli/<file>`, exit code 0                                                                                           |
+| `customRuns`  | optional: `{ name, args, env?, stdin?, exit, file? }`, a run with arguments of its own (paths relative to the case directory), stdout in `expected/cli/<file>` or empty without one; `exit` is expected, the generator checks it |
+| `extraInputs` | optional: further authored files the custom runs read                                                                                                                                                                            |
+
+**Who generates the corpus.** The reference moved to the Rust port one part at a time, each only
+after the Rust part reproduced the corpus as it stood: since phase 4 the Rust `kgdiff` recorded
+what the CLI produces, and since phase 5 (kgdiff 0.11) the Rust crates generate everything, with
+the TypeScript packages' outputs as the last reference: regenerated in Rust, the corpus was byte
+for byte what the TypeScript generator had written. The TypeScript check now covers only what
+TypeScript keeps (the read path). RFC 0002, §9, "Corpus ownership", has the details.
 
 The corpus data is released under CC0-1.0, like the example datasets it copies.

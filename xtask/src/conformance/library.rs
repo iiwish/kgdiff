@@ -124,7 +124,12 @@ pub fn compute(def: &Definition, inputs: [&[u8]; 2]) -> Result<Library, String> 
         hash_graph(&result.before).to_owned(),
         hash_graph(&result.after).to_owned(),
     ];
-    let named = |side: &str| delta.get(side).and_then(|s| s.get("hash")).and_then(Value::as_str);
+    let named = |side: &str| {
+        delta
+            .get(side)
+            .and_then(|s| s.get("hash"))
+            .and_then(Value::as_str)
+    };
     if named("base") != Some(hashes[0].as_str()) || named("target") != Some(hashes[1].as_str()) {
         return Err("the delta does not name the hashes of the two graphs".to_owned());
     }
@@ -144,8 +149,14 @@ pub fn compute(def: &Definition, inputs: [&[u8]; 2]) -> Result<Library, String> 
     let files = vec![
         ("expected/parse.before.json", pretty(&parsed[0].to_value())),
         ("expected/parse.after.json", pretty(&parsed[1].to_value())),
-        ("expected/graph.before.json", compact(&graph_to_json(&result.before))),
-        ("expected/graph.after.json", compact(&graph_to_json(&result.after))),
+        (
+            "expected/graph.before.json",
+            compact(&graph_to_json(&result.before)),
+        ),
+        (
+            "expected/graph.after.json",
+            compact(&graph_to_json(&result.after)),
+        ),
         ("expected/issues.json", pretty(&Value::Object(issues))),
         ("expected/hashes.json", pretty(&Value::Object(hash_record))),
         ("expected/diff.json", diff_text.clone()),
@@ -178,8 +189,7 @@ fn titles(result: &DiffResult) -> Result<Value, String> {
     for locale in [Locale::En, Locale::ZhCn] {
         let mut list = Vec::new();
         for hunk in &result.hunks {
-            let (title, subtitle) =
-                format_hunk(hunk, result, locale).map_err(|e| e.message)?;
+            let (title, subtitle) = format_hunk(hunk, result, locale).map_err(|e| e.message)?;
             let mut entry = Object::new();
             entry.insert("id", &hunk.id);
             entry.insert("title", title);
