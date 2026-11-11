@@ -122,6 +122,7 @@ fn graph(value: &Value, edge_identity: EdgeIdentity) -> KGraph {
 fn corpus_pairs() -> Vec<Pair> {
     let manifest = read(&corpus().join("manifest.json"));
     let cases = manifest.get("cases").and_then(Value::as_array).unwrap();
+    // Written out, not read from the manifest: a corpus that loses cases must fail here.
     assert_eq!(cases.len(), 30);
     cases
         .iter()

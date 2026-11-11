@@ -104,7 +104,8 @@ fn read(path: &Path) -> Value {
 fn equals_the_layout_of_the_identical_diff_on_both_graphs_of_every_corpus_case() {
     let manifest = read(&corpus().join("manifest.json"));
     let cases = manifest.get("cases").and_then(Value::as_array).unwrap();
-    assert_eq!(cases.len(), 29);
+    // Written out, not read from the manifest: a corpus that loses cases must fail here.
+    assert_eq!(cases.len(), 30);
     let empty = || Value::Object(Object::new());
     for entry in cases {
         let id = entry.get("id").and_then(Value::as_str).unwrap();

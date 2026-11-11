@@ -236,7 +236,8 @@ fn text(layout: &LayoutResult) -> String {
 #[test]
 fn every_corpus_case() {
     let cases = cases();
-    assert_eq!(cases.len(), 29);
+    // Written out, not read from the manifest: a corpus that loses cases must fail here.
+    assert_eq!(cases.len(), 30);
     for case in &cases {
         let what = case.id.as_str();
         let result = diff(case, &case.before, &case.after);
