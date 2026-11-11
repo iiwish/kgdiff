@@ -16,7 +16,6 @@ import { BoundElement, define } from './bound.js';
  * target: `/` focuses the one registered last that is shown.
  *
  * @tagname kgdiff-search
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffSearch extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'search';
@@ -32,7 +31,6 @@ define('kgdiff-search', KgdiffSearch);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-search': KgdiffBoundElement;
   }
 }

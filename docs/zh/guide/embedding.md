@@ -4,7 +4,7 @@ kgdiff 的引擎是一组 Rust crate，画面是一组 npm 包。本指南跟着
 
 下面每个 Rust 函数都摘自 `kgdiff-report` 的 [`examples/embedding.rs`](../../../crates/kgdiff-report/examples/embedding.rs)（`cargo run -p kgdiff-report --example embedding`）。有一条测试在[一致性语料](../../../conformance/README.md)每个用例的两张图上运行这些函数，并检查本页对它们的说法（[`tests/mental_map.rs`](../../../crates/kgdiff-report/tests/mental_map.rs)）。
 
-`layout_graph`、`layout_diff_on`、`layout_after`、`report_payload_with` 和渲染器的 `addLayer` 是 0.9 新增的，在一个次版本内为实验性（[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) 的第 1、2、4a 部分，英文）。该 RFC 的其余部分见[还没有的东西](#还没有的东西)。
+`layout_graph`、`layout_diff_on`、`layout_after`、`report_payload_with` 和渲染器的 `addLayer` 是 0.9 新增的，在 1.0 之前为实验性，1.0 转正（[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) 的第 1、2、4a 部分，英文）。该 RFC 的其余部分见[还没有的东西](#还没有的东西)。
 
 ## 依赖什么
 

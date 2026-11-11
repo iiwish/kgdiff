@@ -18,7 +18,6 @@ const VARIANTS: readonly LegendVariant[] = ['full', 'mini'];
  * clear of fits and flights unless registered.
  *
  * @tagname kgdiff-legend
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffLegend extends BoundElement implements KgdiffLegendElement {
   static override get observedAttributes(): readonly string[] {
@@ -97,7 +96,6 @@ define('kgdiff-legend', KgdiffLegend);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-legend': KgdiffLegendElement;
   }
 }

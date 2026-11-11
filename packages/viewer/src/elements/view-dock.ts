@@ -15,7 +15,6 @@ import { BoundElement, define } from './bound.js';
  * registered (`stage.registerObstacle`).
  *
  * @tagname kgdiff-view-dock
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffViewDock extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'view-dock';
@@ -37,7 +36,6 @@ define('kgdiff-view-dock', KgdiffViewDock);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-view-dock': KgdiffBoundElement;
   }
 }

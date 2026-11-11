@@ -106,7 +106,7 @@ hashes in the delta check it, so a report opens the same way in every browser.
 | layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                                 |
 | scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`                                                                                 |
 | renderer | `createRenderer` (`setFrame`, `camera`, `pick`, `toDataURL`; experimental `addLayer`: the host draws under and over the graph), `createMinimap`, `labelFootprint`                                                 |
-| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; experimental elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                            |
+| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; composable elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                              |
 | g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                                     |
 | cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                               |
 

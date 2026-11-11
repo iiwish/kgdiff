@@ -12,7 +12,6 @@ import { BoundElement, define } from './bound.js';
  * next and the reviewed toggle. A labelled region.
  *
  * @tagname kgdiff-change-detail
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffChangeDetail extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'change-detail';
@@ -28,7 +27,6 @@ define('kgdiff-change-detail', KgdiffChangeDetail);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-change-detail': KgdiffBoundElement;
   }
 }

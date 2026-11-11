@@ -1,7 +1,7 @@
 /**
  * @kgdiff/viewer: the drop-in `<kgdiff-viewer>` web component, and the elements it is made of.
  *
- * Importing this module defines `<kgdiff-viewer>` and the experimental elements
+ * Importing this module defines `<kgdiff-viewer>` and the composable elements
  * `<kgdiff-root>`, `<kgdiff-stage>`, `<kgdiff-change-list>`, `<kgdiff-change-detail>`,
  * `<kgdiff-search>` and `<kgdiff-filters>` (each not yet defined; each also has a subpath,
  * `@kgdiff/viewer/elements/<name>`, that defines only it). Behaviour: docs/interaction.md.
@@ -61,7 +61,7 @@ export type ViewerLegend = 'auto' | 'full' | 'mini' | 'none';
  * What `<kgdiff-stage>`'s `addLayer` takes, and what a layer is told about its frame: the
  * renderer's types (`@kgdiff/renderer`), where the rules for layers are documented.
  *
- * @experimental New in 0.9 (RFC 0003, part 4a).
+ * @experimental New in 0.9 (RFC 0003, part 4a); stable in 1.0.
  */
 export type { LayerView, RendererLayer } from '@kgdiff/renderer';
 export type { Keymap, ShortcutName } from './keyboard.js';
@@ -103,22 +103,16 @@ export type ViewerPanels = { readonly [R in PanelRegion]?: PanelState };
 /**
  * The version a `<kgdiff-stage>` draws whatever the mode (`version`): `before` or `after`, for
  * side-by-side canvases of one session.
- *
- * @experimental Like the elements, in 0.6.
  */
 export type StageVersion = 'before' | 'after';
 
 /**
  * The regions of `<kgdiff-stage>`'s built-in chrome (its `panels`).
- *
- * @experimental Like the elements, in 0.6.
  */
 export type StageRegion = 'dock' | 'transport' | 'legend' | 'zoom' | 'minimap';
 
 /**
  * The states of some of the stage's chrome regions; the others keep theirs.
- *
- * @experimental Like the elements, in 0.6.
  */
 export type StagePanels = { readonly [R in StageRegion]?: PanelState };
 
@@ -249,8 +243,7 @@ export interface FitOptions {
  *
  * Boolean attribute `sync-hash`: deep links `#kgdiff=hunk:<id>;mode:<mode>;scope:<scope>`.
  *
- * `<kgdiff-viewer>` is stable; `<kgdiff-root>`, the element of this type on its own, is
- * experimental in 0.6 (its tag name map entry says so).
+ * `<kgdiff-viewer>` and `<kgdiff-root>`, the element of this type on its own, are stable.
  */
 export interface KgdiffRootElement extends HTMLElement {
   /** Reflected to the `mode` attribute. Default `overlay`. */
@@ -320,8 +313,6 @@ export interface KgdiffRootElement extends HTMLElement {
    * `"x:none r:review"` (`Space` names the space bar). Keys are `KeyboardEvent.key` values; a
    * letter stands for both its cases unless the other case is named too; keys not named keep the
    * default map; entries naming no shortcut are ignored with a warning.
-   *
-   * @experimental The shortcut names (`ShortcutName`) are new in 0.6.
    */
   get keymap(): Keymap | null;
   set keymap(value: Keymap | string | null);
@@ -397,14 +388,11 @@ export interface KgdiffViewerElement extends KgdiffRootElement {
 }
 
 /**
- * An element bound to a root (experimental): `<kgdiff-stage>`, `<kgdiff-change-list>`,
+ * An element bound to a root: `<kgdiff-stage>`, `<kgdiff-change-list>`,
  * `<kgdiff-change-detail>`, `<kgdiff-search>`, `<kgdiff-filters>`. It shows the session of the
  * nearest `<kgdiff-root>` or `<kgdiff-viewer>` around it (across shadow roots), or of the one
  * named by its `for` attribute (an element id) anywhere on the page; a root defined or
  * connected later is found then.
- *
- * @experimental The elements are experimental in 0.6: names, attributes and markup may change
- * in a minor release before they are stable.
  */
 export interface KgdiffBoundElement extends HTMLElement {
   /**
@@ -419,16 +407,11 @@ export interface KgdiffBoundElement extends HTMLElement {
 
 /**
  * `<kgdiff-legend>`'s `variant`: `full` (the card of every family) or `mini` (one line).
- *
- * @experimental Like the elements, in 0.6.
  */
 export type LegendVariant = 'full' | 'mini';
 
 /**
- * `<kgdiff-legend>` (experimental): what the colors mean, bound to a root.
- *
- * @experimental The elements are experimental in 0.6: names, attributes and markup may change
- * in a minor release before they are stable.
+ * `<kgdiff-legend>`: what the colors mean, bound to a root.
  */
 export interface KgdiffLegendElement extends KgdiffBoundElement {
   /** Reflected to `variant`: `full` (default) or `mini`; another value reads `full`. */
@@ -438,12 +421,9 @@ export interface KgdiffLegendElement extends KgdiffBoundElement {
 }
 
 /**
- * An element that acts on one stage's view (experimental): `<kgdiff-zoom>`,
+ * An element that acts on one stage's view: `<kgdiff-zoom>`,
  * `<kgdiff-minimap>`. It binds to the nearest `<kgdiff-stage>` around it, or to the one its
  * `stage` attribute (an element id) names anywhere on the page.
- *
- * @experimental The elements are experimental in 0.6: names, attributes and markup may change
- * in a minor release before they are stable.
  */
 export interface KgdiffStageBoundElement extends HTMLElement {
   /**
@@ -461,10 +441,7 @@ export interface KgdiffStageBoundElement extends HTMLElement {
 }
 
 /**
- * `<kgdiff-minimap>` (experimental): an overview of one stage's view.
- *
- * @experimental The elements are experimental in 0.6: names, attributes and markup may change
- * in a minor release before they are stable.
+ * `<kgdiff-minimap>`: an overview of one stage's view.
  */
 export interface KgdiffMinimapElement extends KgdiffStageBoundElement {
   /**
@@ -477,15 +454,12 @@ export interface KgdiffMinimapElement extends KgdiffStageBoundElement {
 }
 
 /**
- * `<kgdiff-stage>` (experimental): the canvas, with five named slots for the page's content
+ * `<kgdiff-stage>`: the canvas, with five named slots for the page's content
  * over it (`top-start`, `top-end`, `bottom-start`, `bottom-center`, `bottom-end`). Every
  * slotted element is kept clear of fits and flights. A chrome element slotted in
  * (`<kgdiff-view-dock>`, `<kgdiff-transport>`, `<kgdiff-legend>`, `<kgdiff-zoom>`,
  * `<kgdiff-minimap>`) replaces the built-in region; `panels` keeps applying to the rest. Content
  * placed anywhere else over the canvas is no obstacle unless registered (`registerObstacle`).
- *
- * @experimental The elements are experimental in 0.6: names, attributes and markup may change
- * in a minor release before they are stable.
  */
 export interface KgdiffStageElement extends KgdiffBoundElement {
   /**
@@ -525,7 +499,7 @@ export interface KgdiffStageElement extends KgdiffBoundElement {
    * without a `draw` function or with another `order`. `<kgdiff-viewer>`'s built-in stage has
    * no such method.
    *
-   * @experimental New in 0.9 (RFC 0003, part 4a); may change in a minor release before it is
+   * @experimental New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes
    * stable.
    */
   addLayer(layer: RendererLayer): () => void;

@@ -20,7 +20,6 @@ import { define } from './bound.js';
  * there.
  *
  * @tagname kgdiff-root
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffRoot extends RootElement implements KgdiffRootElement {
   static get observedAttributes(): readonly string[] {
@@ -80,7 +79,6 @@ define('kgdiff-root', KgdiffRoot);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-root': KgdiffRootElement;
   }
 }

@@ -57,9 +57,9 @@ Every region can be open, collapsed or hidden: `list`, `detail`, `search`, `filt
 region's state and the sizes now. The viewer remembers what the reader changes (panels, sizes, theme, palette, language) per
 origin; what the page sets wins over it, `persist="none"` turns it off, and `persist-key` names the
 storage entry (`kgdiff:viewer` by default) for apps that share an origin. Colors and fonts are
-`--kgdiff-*` CSS custom properties: override them on the element.
+`--kgdiff-*` CSS custom properties: override them on the element. There are no `::part()` names (1.0 does not offer them).
 
-## Compose your own layout (experimental)
+## Compose your own layout
 
 `<kgdiff-root>` holds the session; the other elements show its parts, inside it or anywhere with
 `for="<root id>"`: `<kgdiff-stage>` (the canvas, with five slots for your own content over it;
@@ -67,8 +67,7 @@ several stages of one root draw it side by side, `version="before"` / `"after"`)
 `<kgdiff-change-list>`, `<kgdiff-change-detail>`, `<kgdiff-search>`, `<kgdiff-filters>`, and the
 canvas chrome: `<kgdiff-view-dock>`, `<kgdiff-transport>`, `<kgdiff-legend>`, `<kgdiff-zoom>`,
 `<kgdiff-minimap>`, `<kgdiff-title>`, `<kgdiff-actions>`. Importing `@kgdiff/viewer` defines them
-all, and `@kgdiff/viewer/elements/<name>` defines one. They are experimental in 0.6 and stable
-from 0.7. See [the guide](../../docs/guide/viewer.md#compose-your-own-layout).
+all, and `@kgdiff/viewer/elements/<name>` defines one. They are stable since 0.10. See [the guide](../../docs/guide/viewer.md#compose-your-own-layout).
 
 ## Editor support
 

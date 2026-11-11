@@ -23,7 +23,6 @@ import { ViewBoundElement } from './view-bound.js';
  * @cssstate overview - While the whole graph is in view. A minimap the page places stays
  *   shown; `kgdiff-minimap:state(overview) { visibility: hidden }` hides it in place.
  *   Slotted into a stage it hides then, as the stage's own does.
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffMinimap extends ViewBoundElement implements KgdiffMinimapElement {
   protected readonly name = 'minimap';
@@ -69,7 +68,6 @@ define('kgdiff-minimap', KgdiffMinimap);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-minimap': KgdiffMinimapElement;
   }
 }

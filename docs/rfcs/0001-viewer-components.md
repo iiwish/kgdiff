@@ -4,7 +4,7 @@
   are implemented ([PR #34](https://github.com/iiwish/kgdiff/pull/34), merged as 34a7b13;
   [PR #37](https://github.com/iiwish/kgdiff/pull/37), merged as 22f28c6;
   [PR #39](https://github.com/iiwish/kgdiff/pull/39), merged as 3c1c16b); phase 4 is in
-  review (see [Phase 4 results](#phase-4-results)). The elements ship experimental in 0.6 and become stable in 0.7 (decision 7).
+  review (see [Phase 4 results](#phase-4-results)). The elements shipped experimental in 0.6 and become stable in 0.10; `::part()` names are not offered, theming uses CSS variables (decision 7).
 - **Date:** 2026-11-06
 - **Prototype:** the branch `spike/viewer-components` was never merged and was deleted on
   2026-11-06; its findings are in [Prototype results](#prototype-results)
@@ -378,10 +378,12 @@ Recorded 2026-11-06 by the maintainer.
    `<kgdiff-filters>` ([Granularity](#granularity)).
 6. **`StageView` is split in phase 3,** after the first public elements prove the protocol; the
    session / view boundary is respected from phase 1 on.
-7. **Experimental in 0.6, stable in 0.7** (recorded 2026-11-07). Every element and API marked
-   `@experimental` ships as experimental in 0.6 and becomes stable in 0.7, after one minor of
-   real use ([Compatibility](#compatibility)); phase 4 removes no marks. The CSS `::part()`
-   names are decided with the stabilization, and stay open until then.
+7. **Experimental in 0.6, stable in 0.10** (recorded 2026-11-07; updated 2026-11-11). Every
+   element and API marked `@experimental` shipped as experimental in 0.6 and becomes stable
+   in 0.10 (planned for 0.7, which did not happen), after real use
+   ([Compatibility](#compatibility)); phase 4 removes no marks. **`::part()` is not offered
+   in 1.0:** no `part` attribute exists, theming uses the `--kgdiff-*` CSS variables, and
+   adding `::part()` names later is purely additive.
 
 ## Risks
 

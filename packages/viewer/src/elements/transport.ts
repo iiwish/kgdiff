@@ -17,7 +17,6 @@ import { BoundElement, define } from './bound.js';
  * defines it.
  *
  * @tagname kgdiff-transport
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffTransport extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'transport';
@@ -33,7 +32,6 @@ define('kgdiff-transport', KgdiffTransport);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-transport': KgdiffBoundElement;
   }
 }

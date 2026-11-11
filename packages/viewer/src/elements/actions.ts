@@ -16,7 +16,6 @@ import { BoundElement, define } from './bound.js';
  * no sidebar). Slotted into a viewer it replaces the actions over its canvas.
  *
  * @tagname kgdiff-actions
- * @experimental In 0.6; stable from 0.7 (RFC 0001, decision 7).
  */
 export class KgdiffActions extends BoundElement implements KgdiffBoundElement {
   protected readonly name = 'actions';
@@ -88,7 +87,6 @@ define('kgdiff-actions', KgdiffActions);
 
 declare global {
   interface HTMLElementTagNameMap {
-    /** @experimental In 0.6. */
     'kgdiff-actions': KgdiffBoundElement;
   }
 }
