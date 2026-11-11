@@ -183,6 +183,8 @@ mod quadtree;
 mod result;
 mod scope;
 mod simulate;
+#[doc(hidden)]
+pub mod table;
 mod text_metrics;
 mod union;
 
@@ -265,7 +267,7 @@ pub fn layout_diff<'a>(
     input: impl Into<LayoutInput<'a>>,
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
-    pipeline::layout(input.into(), options)
+    pipeline::layout(&table::LayoutTable::from(input.into()), options)
 }
 
 /// The layout of one graph: the positions [`layout_diff`] gives the diff of `graph` with itself,
@@ -312,7 +314,10 @@ fn of_the_identical_diff(graph: &KGraph, options: &LayoutOptions) -> Result<Layo
             ..DiffOptions::default()
         },
     )?;
-    pipeline::layout(LayoutInput::from(&identical), options)
+    pipeline::layout(
+        &table::LayoutTable::from(LayoutInput::from(&identical)),
+        options,
+    )
 }
 
 /// The layout of a diff on the map of its before version: every node `previous` places stays
@@ -357,7 +362,7 @@ pub fn layout_diff_on<'a>(
     previous: &LayoutResult,
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
-    carry::diff_on(input.into(), previous, options)
+    carry::diff_on(&table::LayoutTable::from(input.into()), previous, options)
 }
 
 /// The layout of the after version of a diff on the map of the diff: every node is where
@@ -392,7 +397,7 @@ pub fn layout_after(
 ) -> Result<LayoutResult> {
     options.keeps_positions("the positions of the diff's layout are kept")?;
     let mut options = options.for_graph()?;
-    options.pinned = carry::after_pins(diff, layout)?;
+    options.pinned = carry::after_pins(&table::LayoutTable::from(LayoutInput::from(diff)), layout)?;
     of_the_identical_diff(&diff.after, &options)
 }
 
@@ -414,7 +419,12 @@ pub fn extend_layout<'a>(
     nodes: &[UnionId],
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
-    extend::extend(input.into(), layout, nodes, options)
+    extend::extend(
+        &table::LayoutTable::from(input.into()),
+        layout,
+        nodes,
+        options,
+    )
 }
 
 /// The `kgdiff.layout` document of a layout: version 2 with its `generator` (version 1 for a

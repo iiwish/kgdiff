@@ -3,7 +3,7 @@
  * in CITATION.cff (scripts/sync-citation.ts), the version of the Rust workspace
  * (scripts/sync-versions.ts) and the platform packages of @kgdiff/cli (scripts/npm-platforms.ts).
  */
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -44,6 +44,31 @@ const ROOT = join(import.meta.dirname, '..');
 const changelog = (name: string, ...sections: string[]): PackageChangelog => ({
   name,
   changelog: `# ${name}\n\n${sections.join('\n')}`,
+});
+
+describe('the npm packages', () => {
+  it('are one fixed Changesets group at one version, @kgdiff/compute included', () => {
+    const config = JSON.parse(readFileSync(join(ROOT, '.changeset/config.json'), 'utf8')) as {
+      fixed: string[][];
+    };
+    const published = readdirSync(join(ROOT, 'packages'))
+      .map((dir) => join(ROOT, 'packages', dir, 'package.json'))
+      .filter((file) => existsSync(file))
+      .map(
+        (file) =>
+          JSON.parse(readFileSync(file, 'utf8')) as {
+            name: string;
+            version: string;
+            private?: boolean;
+          },
+      )
+      .filter((pkg) => !pkg.private);
+    expect(published.map((p) => p.name)).toContain('@kgdiff/compute');
+    expect(config.fixed).toHaveLength(1);
+    expect([...(config.fixed[0] ?? [])].sort()).toEqual(published.map((p) => p.name).sort());
+    for (const pkg of published)
+      expect([pkg.name, pkg.version]).toEqual([pkg.name, packagesVersion()]);
+  });
 });
 
 describe('CITATION.cff', () => {

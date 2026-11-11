@@ -6,7 +6,10 @@
  * Every public package under packages/ is packed with `pnpm pack` (workspace ranges rewritten,
  * the root LICENSE added), then its tarball must
  *
- * - contain package.json, README.md and LICENSE;
+ * - contain package.json, README.md and LICENSE, and for @kgdiff/compute its three WebAssembly
+ *   modules and their glue (`pnpm --filter @kgdiff/compute build:wasm`). Without that build,
+ *   @kgdiff/compute is left out with a notice, unless KGDIFF_COMPUTE is set (the `compute` job of
+ *   CI and the release), where it fails;
  * - resolve every source map it references: each `sourceMappingURL` of an emitted .js / .d.ts
  *   is in the tarball, and so is every map source (`../src/*.ts`) without inline content;
  * - pass publint (strict: warnings fail) and Are the Types Wrong? (ESM-only profile).
@@ -35,6 +38,12 @@ const UNTYPED_ENTRYPOINTS: Readonly<Record<string, readonly string[]>> = {
   ],
   '@kgdiff/viewer': ['./standalone', './standalone/compute'],
 };
+/** The modules @kgdiff/compute must ship (RFC 0002, §7). */
+const COMPUTE_FILES = ['compute', 'layout', 'formats'].flatMap((name) => [
+  `wasm/${name}.wasm`,
+  `wasm/${name}.js`,
+  `wasm/${name}.d.ts`,
+]);
 const SOURCE_MAPPING_URL = /\/\/# sourceMappingURL=(\S+)\s*$/;
 
 interface PackResult {
@@ -56,12 +65,22 @@ function packageDirs(): Map<string, string> {
     const file = join(ROOT, 'packages', entry, 'package.json');
     if (!existsSync(file)) continue;
     const pkg = JSON.parse(readFileSync(file, 'utf8')) as { name: string; private?: boolean };
-    if (!pkg.private) dirs.set(pkg.name, join(ROOT, 'packages', entry));
+    if (pkg.private) continue;
+    const dir = join(ROOT, 'packages', entry);
+    if (
+      pkg.name === '@kgdiff/compute' &&
+      process.env.KGDIFF_COMPUTE === undefined &&
+      !existsSync(join(dir, 'wasm', 'compute.wasm'))
+    ) {
+      console.info('- @kgdiff/compute: no WebAssembly build, not packed (KGDIFF_COMPUTE unset)');
+      continue;
+    }
+    dirs.set(pkg.name, dir);
   }
   return dirs;
 }
 
-/** Packs the given packages (private ones, such as @kgdiff/compute's preview, are left out). */
+/** Packs the given packages. */
 function pack(names: Iterable<string>): PackResult[] {
   rmSync(OUT, { recursive: true, force: true });
   const filters = [...names].flatMap((name) => ['--filter', name]);
@@ -137,7 +156,10 @@ for (const result of pack(dirs.keys())) {
   if (dir === undefined) throw new Error(`Packed ${result.name}, which is not under packages/`);
   const files = new Set(result.files.map((file) => file.path));
   const problems: string[] = [];
-  for (const file of REQUIRED_FILES) {
+  for (const file of [
+    ...REQUIRED_FILES,
+    ...(result.name === '@kgdiff/compute' ? COMPUTE_FILES : []),
+  ]) {
     if (!files.has(file)) problems.push(`${file} is not packed`);
   }
   const maps = checkSourceMaps(dir, files, problems);

@@ -8,7 +8,7 @@
  * packages it changed, the most significant bump first, and leave out the "Updated dependencies"
  * entries, which only restate the shared version.
  */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -177,6 +177,8 @@ export function readChangelogs(root: string = ROOT): PackageChangelog[] {
       continue;
     }
     if (typeof pkg.name !== 'string' || pkg.private === true) continue;
+    // A package not released yet has no changelog until `changeset version` writes its first.
+    if (!existsSync(join(base, 'CHANGELOG.md'))) continue;
     packages.push({ name: pkg.name, changelog: readFileSync(join(base, 'CHANGELOG.md'), 'utf8') });
   }
   return packages.sort((a, b) => rank(a.name) - rank(b.name) || a.name.localeCompare(b.name));

@@ -2,16 +2,17 @@
 
 The CLI and the viewer are built from packages you can use directly:
 
-| Package            | What it does                                                                            |
-| ------------------ | --------------------------------------------------------------------------------------- |
-| `@kgdiff/core`     | The diff engine: normalize, match, classify, hunks, invertible deltas. No dependencies. |
-| `@kgdiff/formats`  | Parsers from RDF, OBO and JSON graph formats into kgdiff graphs.                        |
-| `@kgdiff/layout`   | A deterministic, label-aware layout that both versions share.                           |
-| `@kgdiff/scene`    | Turns a diff into visual primitives: design tokens, encodings, replay timeline.         |
-| `@kgdiff/renderer` | A Canvas 2D renderer: camera, level of detail, labels, picking, minimap.                |
-| `@kgdiff/viewer`   | The [`<kgdiff-viewer>` web component](./viewer.md).                                     |
-| `@kgdiff/g6`       | Draws kgdiff scenes in AntV G6 v5 graphs.                                               |
-| `@kgdiff/cli`      | The command-line tool, `kgdiff`: runs its native binary, exports no JavaScript API.     |
+| Package            | What it does                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `@kgdiff/core`     | The diff engine: normalize, match, classify, hunks, invertible deltas. No dependencies.                |
+| `@kgdiff/formats`  | Parsers from RDF, OBO and JSON graph formats into kgdiff graphs.                                       |
+| `@kgdiff/layout`   | A deterministic, label-aware layout that both versions share.                                          |
+| `@kgdiff/scene`    | Turns a diff into visual primitives: design tokens, encodings, replay timeline.                        |
+| `@kgdiff/renderer` | A Canvas 2D renderer: camera, level of detail, labels, picking, minimap.                               |
+| `@kgdiff/viewer`   | The [`<kgdiff-viewer>` web component](./viewer.md).                                                    |
+| `@kgdiff/g6`       | Draws kgdiff scenes in AntV G6 v5 graphs.                                                              |
+| `@kgdiff/compute`  | The Rust engine compiled to WebAssembly: [the same bytes as the CLI](#the-rust-engine-in-the-browser). |
+| `@kgdiff/cli`      | The command-line tool, `kgdiff`: runs its native binary, exports no JavaScript API.                    |
 
 All of them are ESM only and run in Node.js 22 or later and in evergreen browsers. Core and
 formats are synchronous and do no I/O: you pass text and objects in and get objects out.
@@ -139,6 +140,40 @@ The viewer does all of this for you. To build your own interface:
 The package READMEs show each step: [layout](../../packages/layout/README.md),
 [scene](../../packages/scene/README.md), [renderer](../../packages/renderer/README.md) and
 [g6](../../packages/g6/README.md).
+
+## The Rust engine in the browser
+
+`@kgdiff/compute` is kgdiff's Rust engine compiled to WebAssembly. Its results are byte for byte
+what the kgdiff CLI computes, in every JavaScript engine. It is three modules, each loaded only
+when asked for: `compute.wasm` (diff and matching, about 250 KiB gzip), `formats.wasm` (the
+parsers) and `layout.wasm` (the layout of a diff, small enough to inline in a page).
+
+```ts
+import { init, diffSync, layoutDiffSync } from '@kgdiff/compute';
+
+await init(); // compiles the modules, once; init({ modules: ['compute'] }) for some only
+const result = diffSync(before, after); // a DiffResult, as diff() of @kgdiff/core gives
+const layout = layoutDiffSync(result); // a LayoutResult, as layoutDiff() gives
+```
+
+The `*Sync` functions need their module loaded; `diff`, `parseGraph`, `layoutDiff` and the other
+names without the suffix return promises and load their module themselves. `json.diff`,
+`json.parseGraph`, `json.layoutDiff` and the rest take and return JSON text. A page that only lays
+out diffs it already has imports `@kgdiff/compute/layout`, which never loads the other modules.
+The [package README](../../packages/compute/README.md) lists every function.
+
+**Bundlers.** The modules are located with `new URL('../wasm/<module>.wasm', import.meta.url)`.
+Vite, webpack 5, Rollup and Node 22 or later resolve it and copy the `.wasm` files as assets;
+esbuild needs a `file` loader for `.wasm`. Serve them as `application/wasm`. To serve them from
+elsewhere, pass their URLs (or bytes) to `init({ sources: { compute: url } })`; they are exported
+as `@kgdiff/compute/compute.wasm`, `/formats.wasm` and `/layout.wasm`.
+
+**Content Security Policy.** Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`,
+for example `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`.
+
+In kgdiff 1.0, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
+`@kgdiff/layout` become asynchronous and run on this package
+([RFC 0002, §6](../rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
 
 ## Errors
 

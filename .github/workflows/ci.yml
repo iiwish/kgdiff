@@ -228,7 +228,7 @@ jobs:
   # WebAssembly with wasm-bindgen and `wasm-opt -Oz`, its size against a limit (in the job
   # summary), and the conformance corpus run in Node against the build.
   compute:
-    name: "@kgdiff/compute: WebAssembly build, size, corpus (Node ${{ matrix.node }})"
+    name: "@kgdiff/compute: WebAssembly modules, sizes, corpus (Node ${{ matrix.node }})"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -249,8 +249,11 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install the toolchain of rust-toolchain.toml
-        run: rustup toolchain install
+      # rust-src: build-wasm.ts rebuilds the standard library for size (-Zbuild-std).
+      - name: Install the toolchain of rust-toolchain.toml, with rust-src
+        run: |
+          rustup toolchain install
+          rustup component add rust-src
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       # The exact version crates/kgdiff-wasm pins (wasm-bindgen = "=…").
       - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
@@ -263,10 +266,17 @@ jobs:
           echo "2dc9c7813f5375db93d96ead4b78222fcc3e2677bbb832297af4797782a37489  $RUNNER_TEMP/binaryen.tar.gz" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/binaryen.tar.gz" -C "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/binaryen-version_133/bin" >> "$GITHUB_PATH"
-      - name: Build the WebAssembly engine (sizes in the job summary)
+      # Fails when a module is above its limit (scripts/build-wasm.ts, RFC 0002 §7).
+      - name: Build the three WebAssembly modules (sizes in the job summary)
         run: pnpm --filter @kgdiff/compute build:wasm
       - name: The corpus and the API against the build, in Node ${{ matrix.node }}
         run: pnpm vitest run --project compute
+      # The check job packs @kgdiff/compute without its modules; here it is packed with them.
+      - name: Check the packed packages, @kgdiff/compute with its modules
+        if: matrix.node == 24
+        run: |
+          pnpm build
+          pnpm check:packages
 
   # The one check the main branch ruleset requires: it passes only when every job of every
   # matrix passed, so the jobs can change without touching the ruleset.
