@@ -1,10 +1,15 @@
 //! A JSON Schema (draft 2020-12) validator for the keywords kgdiff's schemas use, so that tests
-//! check the payloads the crate writes against `packages/core/schema/report.v1.json` without a
-//! schema crate (and its dependency tree) in the workspace. `report.v1.json` refers to the diff,
-//! packed diff, delta, graph and layout schemas next to it, so this validator loads the whole
-//! directory and follows references between the files. An unknown keyword is an error, and so
+//! check the payloads the crates write against `packages/core/schema/` (`report.v1.json`,
+//! `layout.v2.json`, …) without a schema
+//! crate (and its dependency tree) in the workspace. `report.v1.json` refers to the diff, packed
+//! diff, delta, graph and layout schemas next to it, so this validator loads the whole directory
+//! and follows references between the files. An unknown keyword is an error, and so
 //! is an unknown `pattern`, so that no schema can grow a rule this validator silently ignores.
-//! (kgdiff-layout's tests have a smaller one, for `layout.v2.json` alone.)
+//!
+//! This file exists twice, byte for byte: `crates/kgdiff-report/tests/support/schema.rs` and
+//! `crates/kgdiff-layout/tests/support/schema.rs`, because the tests of one crate cannot reach
+//! into another and each crate packages its own tests. `tests/schema_copies.rs` of kgdiff-report
+//! fails when they differ, so edit both.
 
 use kgdiff_core::js::{Object, Value, json};
 

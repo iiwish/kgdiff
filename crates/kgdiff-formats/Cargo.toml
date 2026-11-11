@@ -18,9 +18,5 @@ kgdiff-core.workspace = true
 oxrdf = { version = "0.3.5", features = ["rdf-12"] }
 oxttl = { version = "0.2.5", features = ["rdf-12"] }
 
-[dev-dependencies]
-flate2 = "1.1"
-serde_json = { workspace = true, features = ["float_roundtrip"] }
-
 [lints]
 workspace = true

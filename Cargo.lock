@@ -549,11 +549,9 @@ dependencies = [
 name = "kgdiff-formats"
 version = "0.9.0"
 dependencies = [
- "flate2",
  "kgdiff-core",
  "oxrdf",
  "oxttl",
- "serde_json",
 ]
 
 [[package]]

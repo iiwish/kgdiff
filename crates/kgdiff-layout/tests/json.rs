@@ -9,7 +9,7 @@ use kgdiff_core::js::{Object, Value, json};
 use kgdiff_layout::{
     GENERATOR, LayoutOptions, LayoutScope, layout_diff, layout_from_json, layout_to_json,
 };
-use schema::Schema;
+use schema::Schemas;
 use support::{GraphSpec, NodeSpec, changes, components};
 
 fn scoped() -> (Value, kgdiff_layout::LayoutResult) {
@@ -39,17 +39,18 @@ fn writes_version_2_with_the_generator_and_no_timing() {
 
 #[test]
 fn validates_against_the_schema() {
-    let schema = Schema::load("layout.v2.json");
+    let schemas = Schemas::load();
+    let errors = |value: &Value| schemas.errors("layout.v2.json", value);
     let (document, _) = scoped();
-    assert_eq!(schema.errors(&document), Vec::<String>::new());
+    assert_eq!(errors(&document), Vec::<String>::new());
     let all = layout_to_json(
         &layout_diff(&components(30, 40, 3).diff(), &LayoutOptions::default()).unwrap(),
     );
-    assert_eq!(schema.errors(&all), Vec::<String>::new());
+    assert_eq!(errors(&all), Vec::<String>::new());
     let empty = layout_to_json(
         &layout_diff(&GraphSpec::default().diff(), &LayoutOptions::default()).unwrap(),
     );
-    assert_eq!(schema.errors(&empty), Vec::<String>::new());
+    assert_eq!(errors(&empty), Vec::<String>::new());
 
     // The schema rejects what the writer never writes.
     let with = |name: &str, value: Value| {
@@ -69,7 +70,7 @@ fn validates_against_the_schema() {
         ("bounds", json::parse(r#"{"x":0}"#).unwrap()),
     ] {
         assert!(
-            !schema.errors(&with(name, value.clone())).is_empty(),
+            !errors(&with(name, value.clone())).is_empty(),
             "{name}: {}",
             json::to_string(&value)
         );
