@@ -139,7 +139,7 @@
 </script>
 ```
 
-HTML 属性和它们对应的 JavaScript 属性、其他 JavaScript 属性（`payload`，预先计算好的报告，没有布局时在浏览器里布局；`layout`，每个区域的状态和尺寸）、方法和事件（冒泡并且 composed 的 `CustomEvent`）都列在由源码生成的[查看器元素：参考](viewer-elements.md#kgdiff-viewer)里；本页各节解释它们：[视图](#视图)、[面板](#panels)、[快捷键](#快捷键)、[主题](#主题)。旧值 `mode="changes"` 按 `overlay` 加 `scope="changes"` 处理，旧的 `mode:changes` 深链接（`sync-hash`）仍然有效。
+HTML 属性和它们对应的 JavaScript 属性、其他 JavaScript 属性（`payload`，预先计算好的报告，没有布局时在浏览器里布局；`layout`，每个区域的状态和尺寸）、方法和事件（冒泡并且 composed 的 `CustomEvent`）都列在由源码生成的[查看器元素：参考](viewer-elements.md#kgdiff-viewer)里；本页各节解释它们：[视图](#视图)、[面板](#panels)、[快捷键](#快捷键)、[主题](#主题)。`changes` 是 scope，不是 mode：`mode="changes"` 是未知值，按默认的 `overlay` 处理。
 
 <a id="elements"></a>
 

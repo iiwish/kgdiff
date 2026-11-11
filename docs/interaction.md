@@ -240,8 +240,8 @@ state and the sizes), the methods and the events
 (`CustomEvent`s that bubble and are composed) are listed in
 [Viewer elements: reference](viewer-elements.md#kgdiff-viewer), generated from the sources; the
 sections here explain them: [Modes](#modes), [Panels](#panels), [Keyboard map](#keyboard-map),
-[Theming](#theming). The legacy `mode="changes"` reads as `overlay` with `scope="changes"`, and
-old `mode:changes` deep links (`sync-hash`) still work.
+[Theming](#theming). `changes` is a scope, not a mode: `mode="changes"` is
+an unknown value, and reads as the default, `overlay`.
 
 ## Elements (experimental)
 

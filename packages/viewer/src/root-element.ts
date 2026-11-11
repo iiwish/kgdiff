@@ -22,7 +22,6 @@ import { type Keymap, toKeymap } from './keyboard.js';
 import { assertPayload } from './payload.js';
 import {
   DEFAULT_LOOP_DELAY,
-  LEGACY_CHANGES_MODE,
   sanitizeView,
   toDelay,
   toLocale,
@@ -248,8 +247,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
   /**
    * Apply a preference from an attribute or a property. Valid values are explicit (a report's
    * `view` does not override them); invalid ones fall back to the default (`overlay`, `all`,
-   * `auto`, `default`, the browser's language). Properties reflect the normalized value; the
-   * legacy mode `changes` reflects as `overlay` + scope `changes`.
+   * `auto`, `default`, the browser's language). Properties reflect the normalized value.
    */
   protected applyPreference(
     name: 'mode' | 'scope' | 'theme' | 'palette' | 'locale',
@@ -257,17 +255,9 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     reflect: boolean,
   ): void {
     const c = this.controller;
-    // `mode="changes"` is rewritten to the attribute pair it stands for.
-    const legacy = name === 'mode' && raw === LEGACY_CHANGES_MODE;
     let value: string | null;
     switch (name) {
       case 'mode': {
-        if (legacy) {
-          c.explicit.add('scope');
-          c.setView('overlay', 'changes');
-          value = 'overlay';
-          break;
-        }
         const v = toMode(raw);
         c.setMode(v ?? 'overlay');
         value = v;
@@ -303,8 +293,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     }
     if (value === null) c.explicit.delete(name);
     else c.explicit.add(name);
-    if (reflect || legacy) this.reflect(name, value);
-    if (legacy) this.reflect('scope', c.scope);
+    if (reflect) this.reflect(name, value);
   }
 
   // ─── Properties ───────────────────────────────────────────────────────────
@@ -313,7 +302,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     return this.controller.mode;
   }
 
-  set mode(value: ViewerMode | typeof LEGACY_CHANGES_MODE) {
+  set mode(value: ViewerMode) {
     this.applyPreference('mode', value, true);
   }
 

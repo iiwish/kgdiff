@@ -315,17 +315,14 @@ describe('modes and frames', () => {
     c.setMode('swipe');
     c.setMode('replay');
     c.setScope('changes');
-    c.setMode('changes');
     expect(cam.get()).toEqual({ x: 12, y: 34, k: 1.5 });
     expect(host.events.filter((e) => e.type === 'mode').map((e) => e.detail)).toEqual([
       { mode: 'swipe', scope: 'all' },
       { mode: 'replay', scope: 'all' },
       { mode: 'replay', scope: 'changes' },
-      // The legacy `changes` mode: overlay + the changes scope.
-      { mode: 'overlay', scope: 'changes' },
     ]);
-    c.setView('overlay', 'changes');
-    expect(host.events.filter((e) => e.type === 'mode')).toHaveLength(4);
+    c.setView('replay', 'changes');
+    expect(host.events.filter((e) => e.type === 'mode')).toHaveLength(3);
   });
 
   it('keeps the changes-scope focus in every mode', async () => {

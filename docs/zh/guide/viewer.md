@@ -51,7 +51,7 @@ viewer.play();
 每个 HTML 属性、JavaScript 属性、方法和事件，连同取值和默认值，都列在由源码生成的
 [查看器元素：参考](../viewer-elements.md#kgdiff-viewer)里。页面最常设置的是：`mode`（`overlay`、`swipe`、`replay`）、`scope`（`changes`：只看变更，可配合任意对比方式）、`theme`、`locale`、`panels`（[见下文](#调整布局)）和 `chrome`（`none` 用于[小块嵌入](#嵌入一段循环回放)）。事件会冒泡出查看器，并且在每个元素、document 和 window 上都有类型（`KgdiffEventMap`）。
 
-加入 `scope` 之前的写法 `mode="changes"` 仍然有效：它表示 `overlay` 加 `scope="changes"`，属性会被改写成这两个值。
+`changes` 是 scope，不是 mode。加入 `scope` 之前表示“只看变更”的 `mode="changes"` 现在是未知值，按默认的 `overlay` 处理；请改写成 `mode="overlay" scope="changes"`。
 
 ## 调整布局
 

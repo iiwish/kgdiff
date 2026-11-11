@@ -100,6 +100,18 @@ describe('1 · invalid preferences never break the viewer', () => {
     expect([el.theme, el.mode]).toEqual(['light', 'swipe']);
   });
 
+  it('treats the removed report mode changes as unknown: ignored, with a warning', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const el = mount({ locale: 'en' });
+    await ready(el, payload({ mode: 'changes' }));
+    expect(warn).toHaveBeenCalledOnce();
+    expect(String(warn.mock.calls[0]?.[0])).toContain('mode');
+    expect([el.mode, el.scope]).toEqual(['overlay', 'all']);
+    // An explicit scope in the same view is kept.
+    await ready(el, payload({ mode: 'changes', scope: 'changes' }));
+    expect([el.mode, el.scope]).toEqual(['overlay', 'changes']);
+  });
+
   it('normalizes attributes and properties through the same rules', () => {
     const el = mount();
     el.setAttribute('palette', 'rainbow');

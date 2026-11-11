@@ -1,8 +1,8 @@
 // @ts-check
 /**
  * How the action runs kgdiff (RFC 0002, §8): the native binary of `@kgdiff/cli`'s platform package
- * for this runner, from 0.8.0 on, started directly for every file; npx for versions without
- * platform packages, or runners none fits.
+ * for this runner, started directly for every file. Versions before 0.8.0, which had no platform
+ * packages, are refused with an error that says how to keep using them.
  *
  * `version()` resolves the version input against npm (`npm view @kgdiff/cli@<spec> version`: a
  * version, range or tag, as npx would), downloads the platform package's tarball with `npm pack`
@@ -82,42 +82,23 @@ export function run({ command, args }, cwd, { capture = false, quiet = false } =
   });
 }
 
+/** The first `@kgdiff/cli` version with platform packages, and so the first the action runs. */
+export const MIN_VERSION = '0.8.0';
+
 /**
- * kgdiff from npm, through `npx --yes @kgdiff/cli@<version>`. Once the version is resolved and
- * installed, comparisons run that exact version from npm's cache (`--prefer-offline`).
+ * Whether `version` (`x.y.z`, with or without a prerelease) is at least {@link MIN_VERSION}.
+ * A version that is not `x.y.z` is not refused here: npm resolved it, so it is a real release.
  *
- * @param {string} spec An npm version, range or tag.
- * @param {string} cwd
- * @returns {Kgdiff}
+ * @param {string} version
  */
-export function npxKgdiff(spec, cwd) {
-  let exact = spec;
-  return {
-    async version() {
-      const invocation = npmTool('npx', ['--yes', '--', `@kgdiff/cli@${spec}`, '--version']);
-      const result = await run(invocation, cwd, { capture: true });
-      const version = /^kgdiff (\S+)/.exec(result.stdout.trim())?.[1];
-      if (result.code !== 0 || !version) {
-        throw new ActionError(
-          `Could not run @kgdiff/cli@${spec} with npx (exit code ${result.code}).`,
-          'Check the version input and that the runner can reach the npm registry.',
-        );
-      }
-      exact = version;
-      return version;
-    },
-    async run(args, dir) {
-      const invocation = npmTool('npx', [
-        '--yes',
-        '--prefer-offline',
-        '--',
-        `@kgdiff/cli@${exact}`,
-        ...args,
-      ]);
-      const { code, stderr } = await run(invocation, dir);
-      return { code, stderr };
-    },
-  };
+export function supportsNative(version) {
+  const parts = /^(\d+)\.(\d+)\.(\d+)/.exec(version)?.slice(1).map(Number);
+  const min = MIN_VERSION.split('.').map(Number);
+  if (parts === undefined) return true;
+  for (const [i, n] of parts.entries()) {
+    if (n !== min[i]) return n > (min[i] ?? 0);
+  }
+  return true;
 }
 
 /**
@@ -191,14 +172,12 @@ export function extractFile(tgz, path) {
  * @property {string} [os]
  * @property {string} [cpu]
  * @property {'glibc' | 'musl' | undefined} [libc]
- * @property {(spec: string, cwd: string) => Kgdiff} [fallback] For versions without platform packages.
  * @property {(line: string) => void} [log]
  * @property {Readonly<Record<string, string | undefined>>} [env] `KGDIFF_BINARY`.
  */
 
 /**
- * kgdiff as the native binary of `@kgdiff/cli`'s platform package for this runner, or through
- * npx when the version has none for it.
+ * kgdiff as the native binary of `@kgdiff/cli`'s platform package for this runner.
  *
  * @param {string} spec An npm version, range or tag.
  * @param {string} cwd The job's work directory: the binary is unpacked below it.
@@ -214,8 +193,6 @@ export function nativeKgdiff(spec, cwd, deps = {}) {
   const libc = 'libc' in deps ? deps.libc : detectLibc(/** @type {NodeJS.Platform} */ (os));
   /** @type {string | undefined} */
   let binary;
-  /** @type {Kgdiff | undefined} */
-  let fallback;
 
   /** @param {string} version */
   async function fetchBinary(version) {
@@ -287,16 +264,23 @@ export function nativeKgdiff(spec, cwd, deps = {}) {
           'Check the version input and that the runner can reach the npm registry.',
         );
       }
+      if (!supportsNative(version)) {
+        throw new ActionError(
+          `@kgdiff/cli ${version} is older than ${MIN_VERSION}, the first version this action can run.`,
+          `Set the version input to ${MIN_VERSION} or later, or pin an earlier release of the action ` +
+            `(iiwish/kgdiff@v0.7.0 is the last one that does), which still runs those versions with npx.`,
+        );
+      }
       binary = await fetchBinary(version);
       if (binary === undefined) {
-        // Before 0.8.0, @kgdiff/cli was the TypeScript CLI, without platform packages.
-        fallback = (deps.fallback ?? npxKgdiff)(version, cwd);
-        return fallback.version();
+        throw new ActionError(
+          `@kgdiff/cli ${version} has no native build for this runner (${os}, ${cpu}${libc ? `, ${libc}` : ''}).`,
+          'Run the action on a macOS, Linux or Windows runner on x64 or arm64, or point KGDIFF_BINARY at a kgdiff you built.',
+        );
       }
       return version;
     },
     async run(args, dir) {
-      if (fallback) return fallback.run(args, dir);
       if (binary === undefined) throw new Error('kgdiff.version() resolves the binary first.');
       const { code, stderr } = await run({ command: binary, args: [...args] }, dir);
       return { code, stderr };

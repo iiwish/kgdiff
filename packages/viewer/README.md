@@ -41,8 +41,8 @@ ESM only. Runs in evergreen browsers.
   and for payloads without a layout; without it, such a payload shows an error that says so.
 
 Every attribute, property, method and event (with its values and default) is in the
-[reference](../../docs/viewer-elements.md), generated from the sources. The legacy
-`mode="changes"` still works: it means `overlay` with `scope="changes"`.
+[reference](../../docs/viewer-elements.md), generated from the sources. `changes` is
+a scope, not a mode: write `mode="overlay" scope="changes"`.
 
 ## Arrange the layout
 

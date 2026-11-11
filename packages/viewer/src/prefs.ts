@@ -36,12 +36,6 @@ export function toScope(value: unknown): ViewerScope | null {
   return SCOPES.includes(value as ViewerScope) ? (value as ViewerScope) : null;
 }
 
-/**
- * Before scopes existed, “changes only” was a fourth mode. Attributes, properties, deep links
- * and reports may still say `changes`: it means overlay + the `changes` scope.
- */
-export const LEGACY_CHANGES_MODE = 'changes';
-
 export function toTheme(value: unknown): ThemePreference | null {
   return THEMES.includes(value as ThemePreference) ? (value as ThemePreference) : null;
 }
@@ -77,9 +71,8 @@ type View = NonNullable<ReportPayload['view']>;
 export function sanitizeView(view: unknown, quiet = false): View | undefined {
   if (typeof view !== 'object' || view === null) return undefined;
   const v = view as Record<string, unknown>;
-  const legacy = v.mode === LEGACY_CHANGES_MODE;
-  const mode = legacy ? 'overlay' : toMode(v.mode);
-  const scope = toScope(v.scope) ?? (legacy && v.scope === undefined ? 'changes' : null);
+  const mode = toMode(v.mode);
+  const scope = toScope(v.scope);
   const theme = toTheme(v.theme);
   const palette = toPalette(v.palette);
   const locale = toLocale(v.locale);
