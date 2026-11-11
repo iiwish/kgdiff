@@ -186,7 +186,7 @@ cargo run -p kgdiff -- examples/datasets/enterprise-kg/before.json \
 
 ## 路线图
 
-1.0：`@kgdiff/compute` 取代浏览器里的 TypeScript 计算模块（[RFC 0002](docs/rfcs/0002-rust-compute-core.md) 第 5 阶段）· [RFC 0003](docs/rfcs/0003-embedding-hosts.md)（嵌入宿主）的其余部分 · 导出 KGCL 和 RDF Patch · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器 · Cytoscape.js 与 Sigma.js 适配器 · Python 绑定。
+0.11：`@kgdiff/compute` 取代浏览器里的 TypeScript 计算模块（[RFC 0002](docs/rfcs/0002-rust-compute-core.md) 第 5 阶段），并带上 [RFC 0003](docs/rfcs/0003-embedding-hosts.md)（嵌入宿主）的类型化建图入口。1.0：0.11 稳定两周后原样发布，不带新代码。1.0 之后： 导出 KGCL 和 RDF Patch · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器 · Cytoscape.js 与 Sigma.js 适配器 · Python 绑定。
 
 ## 许可证
 
