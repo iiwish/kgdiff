@@ -2,11 +2,13 @@
  * Union node ids (docs/algorithms.md §6) and node classification (§4).
  */
 import { attrKeys, attrsEqual, attrValueEquals, canonicalize, ownAttr } from './canonical.js';
+import { sortedSetDiff } from './engine-util.js';
 import type { Restructuring } from './merge-split.js';
-import type { NodeRecord, PipelineContext, RestructureIndex } from './model.js';
-import { movedKey } from './model.js';
+import type { NodeRecord } from './model.js';
+import type { PipelineContext, RestructureIndex } from './pipeline.js';
+import { movedKey } from './pipeline.js';
 import type { AttrChange, Attrs, Id, KGNode, KGraph, NodeFacet, UnionId } from './types.js';
-import { compareStrings, getOrCreate, sortedSetDiff, stringArraysEqual } from './util.js';
+import { compareStrings, getOrCreate, stringArraysEqual } from './util.js';
 
 /**
  * Union ids of before-version nodes that differ from their own id: matched nodes take the

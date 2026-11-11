@@ -12,7 +12,7 @@ import { canonicalJSON } from './canonical.js';
 import { checkDelta } from './delta.js';
 import { KgdiffError } from './errors.js';
 import { hashGraph } from './graph-json.js';
-import { hunkSummary } from './hunks.js';
+import { hunkSummary } from './hunk-summary.js';
 import { computeStats } from './stats.js';
 import type {
   AttrValue,

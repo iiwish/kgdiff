@@ -10,7 +10,7 @@ import type {
   LayoutScope,
   LayoutStrategy,
 } from './index.js';
-import { round2 } from './math.js';
+import { round2 } from './round.js';
 
 const byKey = <T>([a]: readonly [string, T], [b]: readonly [string, T]): number =>
   a < b ? -1 : a > b ? 1 : 0;

@@ -4,10 +4,11 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { removeOverlaps } from '../src/forces/collide-rect.js';
-import { coolingFactor, log2, powInt, pseudoAngle, round2 } from '../src/math.js';
+import { coolingFactor, log2, powInt, pseudoAngle } from '../src/math.js';
 import { defaultIterations } from '../src/options.js';
 import { pack } from '../src/pack.js';
 import { hashString, mulberry32, randomDirection, seedState } from '../src/prng.js';
+import { round2 } from '../src/round.js';
 import type { SimNode } from '../src/simulate.js';
 
 describe('deterministic math', () => {

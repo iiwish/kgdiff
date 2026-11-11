@@ -11,12 +11,6 @@
 export const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
-/** Round to 0.01 (the layout's output precision); never returns `-0`. */
-export function round2(value: number): number {
-  const rounded = Math.round(value * 100) / 100;
-  return rounded === 0 ? 0 : rounded;
-}
-
 /**
  * log₂ from exactly rounded operations: `@kgdiff/core`'s, so that the layout and matching share
  * one function (and a port reproduces both by porting it once).

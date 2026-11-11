@@ -7,9 +7,10 @@
  * (k candidates per node, d average degree) thanks to blocking. No step compares all pairs.
  */
 import { attrKeys, attrValueEquals, isEmptyAttrs, ownAttr } from './canonical.js';
+import { round6 } from './engine-util.js';
 import { log2 } from './math.js';
 import { resolveMatchOptions } from './options.js';
-import { blockKeys, ProfileCache, profileSimilarity } from './text.js';
+import { blockKeys, ProfileCache, profileSimilarity } from './similarity.js';
 import type {
   Id,
   KGNode,
@@ -20,7 +21,7 @@ import type {
   MatchSuggestion,
   NodeMatch,
 } from './types.js';
-import { compareStrings, getOrCreate, pushTo, round6 } from './util.js';
+import { compareStrings, getOrCreate, pushTo } from './util.js';
 
 /** Evidence weights (docs/algorithms.md §2, step 5). */
 const WEIGHTS = { label: 0.55, neighbors: 0.25, types: 0.1, attrs: 0.1 } as const;

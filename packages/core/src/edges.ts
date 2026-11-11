@@ -7,8 +7,9 @@
  */
 import { canonicalJSON, hasParallelSuffix, splitStructuralKey, tripleKey } from './canonical.js';
 import { attrChanges } from './classify.js';
-import type { EdgeRecord, PipelineContext, RestructureIndex } from './model.js';
-import { movedKey } from './model.js';
+import type { EdgeRecord } from './model.js';
+import type { PipelineContext, RestructureIndex } from './pipeline.js';
+import { movedKey } from './pipeline.js';
 import { predicateLabel } from './text.js';
 import type { EdgeFacet, EdgeKey, KGEdge, UnionId } from './types.js';
 import { compareStrings, getOrCreate, pushTo } from './util.js';

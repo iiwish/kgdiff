@@ -2,7 +2,7 @@ import { predicateLabel, textSimilarity } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { tripleKey } from '../src/canonical.js';
-import { blockKeys, jaroWinkler, normalizeText, textProfile } from '../src/text.js';
+import { blockKeys, jaroWinkler, normalizeText, textProfile } from '../src/similarity.js';
 
 describe('normalizeText', () => {
   it('applies NFKC, lowercases, turns punctuation into spaces and collapses whitespace', () => {

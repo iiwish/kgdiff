@@ -14,7 +14,6 @@ import {
 } from './canonical.js';
 import { checkConsistency } from './consistency.js';
 import { nodeInput } from './delta.js';
-import { toUnionEdge, toUnionNode } from './diff.js';
 import { createDiffIndex } from './diff-index.js';
 import { KgdiffError } from './errors.js';
 import { edgeToJSON, nodeContentEquals, nodeToJSON } from './graph-json.js';
@@ -43,6 +42,7 @@ import type {
   UnionNode,
   UnionNodeJSON,
 } from './types.js';
+import { toUnionEdge, toUnionNode } from './union.js';
 import { isRecord } from './util.js';
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };

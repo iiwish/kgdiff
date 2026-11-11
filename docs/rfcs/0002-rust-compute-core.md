@@ -1071,6 +1071,11 @@ Acceptance:
   d3 dependencies. Kept, and still checked by the corpus: the read path of §1, including what its
   consistency checks recompute (`computeStats`, `hunkSummary`, `checkDelta`).
 
+The file-by-file split of `@kgdiff/core` and `@kgdiff/layout` into the read path, the compute code
+this phase deletes and each package's entry is
+[`tests/read-path.ts`](../../tests/read-path.ts); its test checks that no read-path file imports
+the compute code, and where the lists above and in §1 differ from it, the code-checked list holds.
+
 ### 10. Risks
 
 | Risk                                                                                                               | Likelihood                                                                            | Impact                                                                           | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |

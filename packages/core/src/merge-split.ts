@@ -10,12 +10,13 @@
  */
 
 import { tripleKey } from './canonical.js';
+import { round6 } from './engine-util.js';
 import type { Alignment } from './match.js';
 import { attrEvidence, evidenceOf, typeEvidence } from './match.js';
-import type { ProfileCache } from './text.js';
-import { nameKeys, profileSimilarity } from './text.js';
+import type { ProfileCache } from './similarity.js';
+import { nameKeys, profileSimilarity } from './similarity.js';
 import type { Id, KGNode, KGraph, MatchSuggestion } from './types.js';
-import { compareStrings, getOrCreate, pushTo, round6 } from './util.js';
+import { compareStrings, getOrCreate, pushTo } from './util.js';
 
 const LABEL_EVIDENCE = 0.9;
 const CARRY_OVER = 0.5;

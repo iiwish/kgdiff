@@ -1,7 +1,7 @@
 import { diff, type GraphInput, matchNodes, normalize } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
 import { combineEvidence, generateCandidates } from '../src/match.js';
-import { ProfileCache } from '../src/text.js';
+import { ProfileCache } from '../src/similarity.js';
 import { shuffleGraph } from './support/arbitraries.js';
 
 const graph = (nodes: GraphInput['nodes'], edges: GraphInput['edges'] = []) =>
