@@ -1,9 +1,9 @@
 # RFC 0003: Embedding hosts and the plain view
 
-- **Status:** Draft, proposed. The parts planned for 0.9 are merged, for release as 0.9.0:
+- **Status:** Draft, proposed. The parts planned for 0.9 are merged and released as 0.9.0:
   part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d), and
   with it `layout_diff_on` and `layout_after`, which carry a layout to the next version
-  through the diff ([#86](https://github.com/iiwish/kgdiff/pull/86)); part 2, reports with
+  through the diff ([#86](https://github.com/iiwish/kgdiff/pull/86), 3ae8f98); part 2, reports with
   the caller's layout and `report.v1.json`
   ([#79](https://github.com/iiwish/kgdiff/pull/79), 6c3a764); part 4a, renderer layers
   ([#80](https://github.com/iiwish/kgdiff/pull/80), d3e1dac). See [0.9 results](#09-results).

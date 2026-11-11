@@ -1,34 +1,14 @@
 # RFC 0002: A Rust compute core
 
-- **Status:** Draft, proposed. Phase 1 (the conformance corpus,
-  [`conformance/`](../../conformance/README.md)) is implemented
-  ([PR #41](https://github.com/iiwish/kgdiff/pull/41), merged as a0c52d5). Items 1 and 2 of
-  [Before phase 2](#before-phase-2-a-typescript-0x-release) are merged
-  ([#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0;
-  [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808). Phase 2's `kgdiff-core` crate is
-  merged ([#51](https://github.com/iiwish/kgdiff/pull/51), aafb0e9 to 3e096f2): every corpus case
-  and core vector passes, and the nightly differential run is in place. Its performance work is
-  merged too ([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b), and so is the preview
-  `@kgdiff/compute` ([#63](https://github.com/iiwish/kgdiff/pull/63), 2c54ccf to 2c8a5e0).
-  The native `normalize` memory target and the WebAssembly targets of
-  [§7](#7-size-and-performance-budgets) are not met yet; they are gates of 1.0 (phase 5) and do
-  not block 0.7.0 ([Phase 2 results](#phase-2-results)). Phase 3 is merged
-  ([#53](https://github.com/iiwish/kgdiff/pull/53) and
-  [#64](https://github.com/iiwish/kgdiff/pull/64)–[#67](https://github.com/iiwish/kgdiff/pull/67),
-  cca58f9 to 0c2acd5; D-9 in [#55](https://github.com/iiwish/kgdiff/pull/55), 6c618c8 and
-  e319f6d; [Phase 3 results](#phase-3-results)). Of phase 4, the `kgdiff-layout` crate and layout
-  JSON version 2 are merged ([#62](https://github.com/iiwish/kgdiff/pull/62), f91a5df to 86ecec9),
-  with the TypeScript readers for both ([#52](https://github.com/iiwish/kgdiff/pull/52), e510258;
-  [#54](https://github.com/iiwish/kgdiff/pull/54), 9ebb278), and so is the Rust CLI writing
-  complete reports ([#69](https://github.com/iiwish/kgdiff/pull/69), 687b0af to e1045c3).
-  **0.7.0 is released** (27aa871): the npm packages, and the five crates on crates.io. The rest of
-  phase 4 is merged too, for 0.8.0: the corpus's CLI runs recorded with the Rust `kgdiff`
-  ([#70](https://github.com/iiwish/kgdiff/pull/70), 7ae2a81), npm's `@kgdiff/cli` as the
-  launcher of the native binary with the TypeScript CLI removed
-  ([#71](https://github.com/iiwish/kgdiff/pull/71), c3e8a63 and e0480ca), the GitHub Action on
-  the native binary ([#72](https://github.com/iiwish/kgdiff/pull/72), 403f63c and 1182f6a) and
-  D-3 ([#73](https://github.com/iiwish/kgdiff/pull/73), 3fe4030 and 0d42e7a). Phase 4 is
-  complete ([Phase 4 progress](#phase-4-progress)).
+- **Status:** Draft, proposed; implemented through phase 4, and released. 0.7.0 shipped the phase 1 to 3 work
+  and the layout crate, and 0.8.0 the native CLI, the npm launcher and the Action on the binary
+  ([Phase 1](#phase-1--conformance-corpus-this-change), [Phase 2 results](#phase-2-results),
+  [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 is the
+  current release. Left for 1.0 is phase 5: `@kgdiff/compute` replacing the TypeScript compute
+  modules in the browser, with the gates the earlier phases did not meet (the native `normalize`
+  memory target and the WebAssembly targets of [§7](#7-size-and-performance-budgets)), the
+  Rust corpus generator and the migration guide. The pull requests and commits of every
+  phase are listed in its results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
   results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10.
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
@@ -743,6 +723,8 @@ generator; `main`, `cliVersion` and the `CliIO` type go with the CLI runs and `r
 
 #### Phase 1 — Conformance corpus (this change)
 
+Merged in [PR #41](https://github.com/iiwish/kgdiff/pull/41) (a0c52d5).
+
 Deliverables: [`conformance/`](../../conformance/README.md) — inputs, options and the expected
 outputs of the current TypeScript implementation for every case, primitive vectors for the
 JavaScript built-ins in §4, a README that specifies the format for any implementation, the
@@ -792,7 +774,7 @@ copy. One TypeScript 0.x release, each change with its corpus update in the same
    released from then on reads what phases 3 and 4 write.
 5. The `ignoreAttrs` / `kgdiff apply` decision of §11, if it is made by then.
 
-Phase 2 may start once items 1 and 2 are merged on `main` (they are: d01c4e0 and 7586808); they
+Phase 2 may start once items 1 and 2 are merged on `main` (they are: [#43](https://github.com/iiwish/kgdiff/pull/43), d01c4e0, and [#44](https://github.com/iiwish/kgdiff/pull/44), 7586808); they
 are released together with phase 2, as kgdiff 0.7.0. The others may come in a later 0.x release:
 item 4 at the latest with phase 2, items 3 and 5 before phase 3.
 
@@ -820,9 +802,11 @@ Acceptance:
 ##### Phase 2 results
 
 Status as of 2026-11-09: `kgdiff-core` is merged
-([#51](https://github.com/iiwish/kgdiff/pull/51)), and so is its performance work
-([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b). The preview `@kgdiff/compute`
-([#63](https://github.com/iiwish/kgdiff/pull/63)) is in review. Phase 2 meets its acceptance
+([#51](https://github.com/iiwish/kgdiff/pull/51), aafb0e9 to 3e096f2; the nightly differential
+run is in place), and so is its performance work
+([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b) and the preview `@kgdiff/compute`
+([#63](https://github.com/iiwish/kgdiff/pull/63), 2c54ccf to 2c8a5e0); 0.7.0 released them.
+Phase 2 meets its acceptance
 except for the memory target, which now gates 1.0 instead (below).
 
 - **Corpus:** every case and every primitive vector except `label-width.json` passes, 299
@@ -1001,8 +985,8 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
   dry run, the platform packages and a smoke test through the launcher on Linux (x64 and Arm64,
   glibc and musl), macOS and Windows gate "Version or publish".
 - **The GitHub Action** ([#72](https://github.com/iiwish/kgdiff/pull/72), 1182f6a) runs the
-  native binary of the runner's platform package directly, for every file, and npx only for
-  versions before 0.8.0; its workflow runs it with the binary built from the commit on Linux and
+  native binary of the runner's platform package directly, for every file, and, until 0.9.0, npx
+  for versions before 0.8.0 (that fallback is removed in 5dfeb83); its workflow runs it with the binary built from the commit on Linux and
   Windows. A table of which package to install for what (README and docs home, en and zh) went in
   with it (403f63c).
 - **D-3** ([#73](https://github.com/iiwish/kgdiff/pull/73), 3fe4030 and 0d42e7a): TypeScript's

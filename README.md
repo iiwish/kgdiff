@@ -57,8 +57,8 @@ example datasets, or two files of your own, in your browser. Nothing is uploaded
 - **`kgdiff` CLI**: colored terminal summaries, `--stat`, `--name-status`, `--json`, `--delta`,
   GitHub-flavoured `--markdown` for PR comments, `--exit-code` for CI, `apply` for deltas, and
   single-file offline HTML reports (`-o report.html`, byte-identical with `--reproducible`).
-- **Libraries**: a zero-dependency diff engine, parsers, a stable layout engine, a
-  renderer-agnostic visual model, a Canvas renderer and an AntV G6 adapter.
+- **Libraries**: a zero-dependency diff engine, parsers (RDF through `n3`), a stable layout
+  engine, a renderer-agnostic visual model, a Canvas renderer and an AntV G6 adapter.
 
 ## Quick start
 
@@ -190,8 +190,8 @@ All packages:
 
 ## Examples
 
-[`examples/datasets`](examples/datasets) holds five realistic before/after pairs with the exact
-changes kgdiff should report: an enterprise credit KG ontology (Chinese), an OBO disease
+[`examples/datasets`](examples/datasets) holds six realistic before/after pairs with the exact
+changes kgdiff should report: an enterprise credit KG ontology (in Chinese and in English), an OBO disease
 ontology release, two LLM extraction runs with random ids, a dbt-style lineage DAG, and a
 schema.org-like Turtle vocabulary. `scripts/gen-synthetic.ts` generates large synthetic pairs.
 
@@ -212,8 +212,10 @@ Start with [docs/architecture.md](docs/architecture.md) and [CONTRIBUTING.md](CO
 
 ## Roadmap
 
-KGCL and RDF Patch export · accept / reject per hunk with filtered delta export · three-way merge
-with conflict visualization · Web Worker pipeline and a WebGL renderer for very large graphs ·
+1.0: `@kgdiff/compute` replaces the TypeScript compute modules in the browser
+([RFC 0002](docs/rfcs/0002-rust-compute-core.md), phase 5) · the remaining parts of
+[RFC 0003](docs/rfcs/0003-embedding-hosts.md) for embedding hosts · KGCL and RDF Patch export ·
+three-way merge with conflict visualization · Web Worker pipeline and a WebGL renderer for very large graphs ·
 Cytoscape.js and Sigma.js adapters · Python bindings.
 
 ## License

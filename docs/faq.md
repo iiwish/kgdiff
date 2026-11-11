@@ -45,7 +45,9 @@ such as `robot diff` alongside it. See [Ontologies](./guide/ontologies.md#limits
 ## How do I ignore attributes that always change?
 
 `--ignore-attr <key>`, repeated for each key. Ignored attributes are still shown in the details
-but never count as changes.
+but never count as changes. They are also left out of the delta, so `kgdiff apply` of such a
+delta warns that the result differs from the delta's target
+([known limitation](delta-format.md#known-limitation-ignored-attributes)).
 
 ## Which languages does kgdiff speak?
 
