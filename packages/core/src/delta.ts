@@ -99,7 +99,7 @@ function fieldValuesEqual(a: NodeFieldValue | undefined, b: NodeFieldValue | und
  * cycles are broken through a temporary id. Without conflicts (always the case unless ids are
  * ignored for matching) the order is simply by `from`. Occupancy carries over between runs.
  */
-export class RenamePlanner {
+class RenamePlanner {
   readonly plan: [Id, Id][] = [];
   private readonly vacated = new Set<Id>();
   private readonly filled = new Set<Id>();

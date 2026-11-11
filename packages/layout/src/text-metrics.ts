@@ -84,7 +84,7 @@ function asciiAdvance(cp: number): number {
 }
 
 /** Advance of one code point, in em. */
-export function charAdvance(char: string): number {
+function charAdvance(char: string): number {
   const cp = char.codePointAt(0) ?? 0;
   if (cp < 0x80) return asciiAdvance(cp);
   // Combining marks, joiners, variation selectors, emoji skin-tone modifiers draw no advance.

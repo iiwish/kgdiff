@@ -409,8 +409,6 @@ const zhCN: Messages = {
 
 export const MESSAGES: Readonly<Record<Locale, Messages>> = { en, 'zh-CN': zhCN };
 
-export const LOCALES: readonly Locale[] = ['en', 'zh-CN'];
-
 /** `zh*` → `zh-CN`, anything else → `en`. */
 export function normalizeLocale(value: string | null | undefined): Locale | null {
   if (!value) return null;

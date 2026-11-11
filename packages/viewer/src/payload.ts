@@ -132,7 +132,7 @@ function firstViewer(root: ParentNode): Element | null {
 }
 
 /** The viewer a payload script targets: `data-for="<id>"`, else the first viewer in `root`. */
-export function payloadTarget(script: Element, root: ParentNode): Element | null {
+function payloadTarget(script: Element, root: ParentNode): Element | null {
   const id = script.getAttribute('data-for');
   return id ? findById(root, id) : firstViewer(root);
 }

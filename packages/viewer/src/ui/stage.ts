@@ -26,15 +26,6 @@ import { ZoomBar } from './zoom.js';
 /** How the legend shows: the card, one line of dots, or not at all. */
 export type LegendStyle = 'full' | 'mini' | 'none';
 
-/** The named slots of `<kgdiff-stage>`, where the page puts its own content over the canvas. */
-export const STAGE_SLOTS = [
-  'top-start',
-  'top-end',
-  'bottom-start',
-  'bottom-center',
-  'bottom-end',
-] as const;
-
 /** The chrome over a canvas: the stage's regions, and the viewer's title and actions. */
 export type ChromeRegion = StageRegion | 'title' | 'actions';
 
