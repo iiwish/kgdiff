@@ -25,6 +25,13 @@ use super::number::push_number;
 use super::object::Object;
 use super::value::Value;
 
+/// Which array of a graph document an element comes from ([`Parser::stream_graph`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum GraphSection {
+    Nodes,
+    Edges,
+}
+
 /// How deeply arrays and objects may nest by default.
 pub const DEFAULT_MAX_DEPTH: usize = 1000;
 
@@ -144,6 +151,99 @@ impl<'a> Parser<'a> {
                 column,
             }
         })
+    }
+
+    /// Reads a graph document member by member: each element of its `nodes` array and then of
+    /// its `edges` array goes to `each` as soon as it is read, and is not kept; the other members
+    /// are returned. `None` for a document that has to be read whole to know what it means: not
+    /// an object, either array missing, repeated or out of order, `each` returning false, or a
+    /// syntax error.
+    pub(crate) fn stream_graph(
+        mut self,
+        each: &mut dyn FnMut(GraphSection, Value) -> bool,
+    ) -> Option<Object> {
+        self.space();
+        if self.peek() != Some(b'{') {
+            return None;
+        }
+        self.at += 1;
+        let mut rest = Object::new();
+        let (mut nodes_seen, mut edges_seen) = (false, false);
+        self.space();
+        if self.peek() == Some(b'}') {
+            return None;
+        }
+        loop {
+            self.space();
+            if self.peek() != Some(b'"') {
+                return None;
+            }
+            let key = self.shared_string().ok()?;
+            self.space();
+            if self.peek() != Some(b':') {
+                return None;
+            }
+            self.at += 1;
+            match key.as_str() {
+                "nodes" if !nodes_seen && !edges_seen => {
+                    nodes_seen = true;
+                    self.stream_array(GraphSection::Nodes, each)?;
+                }
+                "edges" if nodes_seen && !edges_seen => {
+                    edges_seen = true;
+                    self.stream_array(GraphSection::Edges, each)?;
+                }
+                "nodes" | "edges" => return None,
+                _ => {
+                    let value = self.value(1).ok()?;
+                    rest.insert(key, value);
+                }
+            }
+            self.space();
+            match self.peek() {
+                Some(b',') => self.at += 1,
+                Some(b'}') => {
+                    self.at += 1;
+                    break;
+                }
+                _ => return None,
+            }
+        }
+        self.space();
+        (nodes_seen && self.at == self.bytes.len()).then_some(rest)
+    }
+
+    /// The elements of an array at the top of a graph document, or `None`.
+    fn stream_array(
+        &mut self,
+        section: GraphSection,
+        each: &mut dyn FnMut(GraphSection, Value) -> bool,
+    ) -> Option<()> {
+        self.space();
+        if self.peek() != Some(b'[') {
+            return None;
+        }
+        self.at += 1;
+        self.space();
+        if self.peek() == Some(b']') {
+            self.at += 1;
+            return Some(());
+        }
+        loop {
+            let item = self.value(2).ok()?;
+            if !each(section, item) {
+                return None;
+            }
+            self.space();
+            match self.peek() {
+                Some(b',') => self.at += 1,
+                Some(b']') => {
+                    self.at += 1;
+                    return Some(());
+                }
+                _ => return None,
+            }
+        }
     }
 
     fn peek(&self) -> Option<u8> {

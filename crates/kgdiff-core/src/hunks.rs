@@ -50,10 +50,10 @@ fn neighbors(ctx: &Ctx<'_>, node: &UnionNode) -> Vec<UnionId> {
     let mut out = Vec::new();
     let mut visit = |graph: &KGraph, id: &Id, to_union: &dyn Fn(&Id) -> UnionId| {
         for e in graph.outgoing(id) {
-            out.push(to_union(&e.target));
+            out.push(to_union(e.target()));
         }
         for e in graph.incoming(id) {
-            out.push(to_union(&e.source));
+            out.push(to_union(e.source()));
         }
     };
     if let Some(id) = &node.before_id {

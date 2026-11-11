@@ -80,8 +80,8 @@ fn table_node(node: &UnionNode) -> TableNode {
         label: node.label.clone(),
         label_before,
         degree: node.degree.before.max(node.degree.after),
-        position: finite(node.before.as_ref().and_then(|n| n.position.as_ref()))
-            .or_else(|| finite(node.after.as_ref().and_then(|n| n.position.as_ref()))),
+        position: finite(node.before.as_ref().and_then(|n| n.position()).as_ref())
+            .or_else(|| finite(node.after.as_ref().and_then(|n| n.position()).as_ref())),
     }
 }
 

@@ -3,7 +3,8 @@
 use kgdiff_core::js::{JsStr, Value, json};
 use kgdiff_core::options::DanglingEdges;
 use kgdiff_core::{
-    EdgeIdentity, ErrorCode, GraphIssueCode, KGraph, NormalizeOptions, hash_graph, normalize,
+    EdgeIdentity, ErrorCode, GraphIssueCode, KGEdge, KGraph, NormalizeOptions, hash_graph,
+    normalize,
 };
 
 fn graph(text: &str) -> Value {
@@ -22,12 +23,16 @@ fn by_id(text: &str) -> KGraph {
     normalize(&graph(text), options).unwrap()
 }
 
-fn keys(g: &KGraph) -> Vec<&str> {
-    g.edges.keys().map(|k| k.as_str()).collect()
+fn keys(g: &KGraph) -> Vec<String> {
+    g.edges().map(|e| e.key().to_string()).collect()
+}
+
+fn edges_of(g: &KGraph) -> Vec<KGEdge> {
+    g.edges().map(|e| e.to_edge()).collect()
 }
 
 fn codes(g: &KGraph) -> Vec<GraphIssueCode> {
-    g.issues.iter().map(|i| i.code).collect()
+    g.issues().iter().map(|i| i.code).collect()
 }
 
 #[test]
@@ -35,12 +40,12 @@ fn fills_defaults_and_canonicalizes_sets() {
     let g = norm(
         r#"{"nodes":[{"id":"a","type":["B","A","B",""],"aliases":["Y","a","X","Y"],"replaces":["r2","r1"]}],"edges":[]}"#,
     );
-    let a = &g.nodes["a"];
-    assert_eq!(a.label.as_str(), "a");
-    assert_eq!(a.types, ["A", "B"].map(JsStr::from));
-    assert_eq!(a.aliases, ["X", "Y"].map(JsStr::from));
-    assert_eq!(a.replaces, ["r1", "r2"].map(JsStr::from));
-    assert!(!a.deprecated && !a.implicit);
+    let a = g.node("a").unwrap();
+    assert_eq!(a.label().as_str(), "a");
+    assert_eq!(a.types(), &["A", "B"].map(JsStr::from));
+    assert_eq!(a.aliases(), &["X", "Y"].map(JsStr::from));
+    assert_eq!(a.replaces(), &["r1", "r2"].map(JsStr::from));
+    assert!(!a.is_deprecated() && !a.is_implicit());
 }
 
 #[test]
@@ -48,14 +53,14 @@ fn merges_duplicate_declarations_field_wise() {
     let g = norm(
         r#"{"nodes":[{"id":"a","label":"First","type":"A","attrs":{"k":1,"keep":true},"deprecated":true},{"id":"a","label":"Second","type":"B","attrs":{"k":2}}],"edges":[]}"#,
     );
-    let a = &g.nodes["a"];
-    assert_eq!(a.label.as_str(), "Second");
-    assert_eq!(a.types, ["A", "B"].map(JsStr::from));
+    let a = g.node("a").unwrap();
+    assert_eq!(a.label().as_str(), "Second");
+    assert_eq!(a.types(), &["A", "B"].map(JsStr::from));
     assert_eq!(
-        json::to_string(&Value::Object(a.attrs.clone())),
+        json::to_string(&Value::Object(a.attrs().clone())),
         r#"{"k":2,"keep":true}"#
     );
-    assert!(a.deprecated);
+    assert!(a.is_deprecated());
     assert_eq!(codes(&g), [GraphIssueCode::DuplicateNode]);
 }
 
@@ -81,10 +86,10 @@ fn keys_parallel_copies_in_content_order() {
         [base.to_owned(), format!("{base}#2"), format!("{base}#3")]
     );
     assert_eq!(
-        forward.edges[base].attrs.get("since"),
+        forward.edge(base).unwrap().attrs().get("since"),
         Some(&Value::Number(2019.0))
     );
-    assert_eq!(forward.edges, backward.edges);
+    assert_eq!(edges_of(&forward), edges_of(&backward));
     assert_eq!(codes(&forward), [GraphIssueCode::DuplicateEdge]);
 }
 
@@ -93,8 +98,8 @@ fn collapses_identical_copies_keeping_the_smallest_id() {
     let g = norm(
         r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[{"id":"e2","source":"a","target":"b","predicate":"p"},{"id":"e1","source":"a","target":"b","predicate":"p"}]}"#,
     );
-    assert_eq!(g.edges.len(), 1);
-    assert_eq!(g.edges[0].id.as_deref(), Some("e1"));
+    assert_eq!(g.edge_count(), 1);
+    assert_eq!(g.edge_at(0).unwrap().id().map(|id| id.as_str()), Some("e1"));
     assert_eq!(codes(&g), [GraphIssueCode::DuplicateEdge]);
 }
 
@@ -107,10 +112,10 @@ fn keys_edges_by_id_under_id_identity() {
     let merged = by_id(
         r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[{"id":"e","source":"a","target":"b","predicate":"p","attrs":{"w":1,"keep":1}},{"id":"e","source":"a","target":"a","predicate":"q","attrs":{"w":2}}]}"#,
     );
-    let e = &merged.edges["e"];
-    assert_eq!((e.target.as_str(), e.predicate.as_str()), ("a", "q"));
+    let e = merged.edge("e").unwrap();
+    assert_eq!((e.target().as_str(), e.predicate().as_str()), ("a", "q"));
     assert_eq!(
-        json::to_string(&Value::Object(e.attrs.clone())),
+        json::to_string(&Value::Object(e.attrs().clone())),
         r#"{"w":2,"keep":1}"#
     );
     assert_eq!(codes(&merged), [GraphIssueCode::DuplicateEdge]);
@@ -127,8 +132,11 @@ fn keeps_edge_ids_and_structural_keys_apart() {
     let backward = by_id(&format!(
         r#"{{"nodes":[{{"id":"a"}},{{"id":"b"}}],"edges":[{structural},{lookalike}]}}"#
     ));
-    assert_eq!(forward.edges.len(), 2);
-    assert_eq!(forward.edges[r#"["a","p","b"]"#].label.as_str(), "X");
+    assert_eq!(forward.edge_count(), 2);
+    assert_eq!(
+        forward.edge(r#"["a","p","b"]"#).unwrap().label().as_str(),
+        "X"
+    );
     assert_eq!(hash_graph(&forward), hash_graph(&backward));
 }
 
@@ -136,15 +144,15 @@ fn keeps_edge_ids_and_structural_keys_apart() {
 fn applies_the_dangling_edge_policies() {
     let g =
         norm(r#"{"nodes":[{"id":"a"}],"edges":[{"source":"a","target":"ghost","predicate":"p"}]}"#);
-    assert!(g.nodes["ghost"].implicit);
-    assert_eq!(g.issues[0].reference.as_deref(), Some("ghost"));
+    assert!(g.node("ghost").unwrap().is_implicit());
+    assert_eq!(g.issues()[0].reference.as_deref(), Some("ghost"));
     let drop = NormalizeOptions {
         dangling_edges: DanglingEdges::Drop,
         ..NormalizeOptions::default()
     };
     let dropped = normalize(&graph(r#"{"nodes":[{"id":"a"}],"edges":[{"source":"ghost","target":"a"},{"source":"a","target":"a"}]}"#), drop).unwrap();
     assert_eq!(
-        (dropped.edges.len(), dropped.nodes.contains_key("ghost")),
+        (dropped.edge_count(), dropped.contains_node("ghost")),
         (1, false)
     );
     let error = NormalizeOptions {
@@ -245,9 +253,7 @@ fn checks_the_format_marker() {
     }
     for format in ["\"graphml\"", "7", "null"] {
         assert_eq!(
-            norm(&format!(r#"{{"format":{format},"version":9,{plain}}}"#))
-                .nodes
-                .len(),
+            norm(&format!(r#"{{"format":{format},"version":9,{plain}}}"#)).node_count(),
             1
         );
     }
@@ -258,7 +264,8 @@ fn keeps_proto_as_an_ordinary_key_and_turns_non_finite_numbers_into_text() {
     let g = norm(
         r#"{"nodes":[{"id":"a","attrs":{"__proto__":{"x":1},"constructor":2,"big":1e400}}],"edges":[]}"#,
     );
-    let attrs = &g.nodes["a"].attrs;
+    let node = g.node("a").unwrap();
+    let attrs = node.attrs();
     assert_eq!(
         json::to_string(&Value::Object(attrs.clone())),
         r#"{"__proto__":{"x":1},"constructor":2,"big":"Infinity"}"#
@@ -271,8 +278,8 @@ fn composes_labels_aliases_and_types_to_nfc_but_not_ids() {
     let g = norm(&format!(
         r#"{{"nodes":[{{"id":"{decomposed}","label":"{decomposed}","aliases":["{decomposed}","x"],"type":"{decomposed}"}}],"edges":[]}}"#
     ));
-    let node = &g.nodes[decomposed];
-    assert_eq!(node.label.as_str(), "Café");
-    assert_eq!(node.types[0].as_str(), "Café");
-    assert_eq!(node.aliases, ["x"].map(JsStr::from));
+    let node = g.node(decomposed).unwrap();
+    assert_eq!(node.label().as_str(), "Café");
+    assert_eq!(node.types()[0].as_str(), "Café");
+    assert_eq!(node.aliases(), &["x"].map(JsStr::from));
 }

@@ -132,7 +132,8 @@ fn merge_suggestions(lists: [Vec<MatchSuggestion>; 2]) -> Vec<MatchSuggestion> {
 ///
 /// `invalid-input` when a graph's edge identity is not the options' (re-normalize it first).
 pub fn diff_graphs(before: KGraph, after: KGraph, options: DiffOptions) -> Result<DiffResult> {
-    if before.edge_identity != options.edge_identity || after.edge_identity != options.edge_identity
+    if before.edge_identity() != options.edge_identity
+        || after.edge_identity() != options.edge_identity
     {
         return Err(KgdiffError::invalid_input(format!(
             "Both graphs must be normalized with the edge identity of the options ({})",

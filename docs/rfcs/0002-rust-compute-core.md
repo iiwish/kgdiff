@@ -4,13 +4,16 @@
   and the layout crate, and 0.8.0 the native CLI, the npm launcher and the Action on the binary
   ([Phase 1](#phase-1--conformance-corpus-this-change), [Phase 2 results](#phase-2-results),
   [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 is the
-  current release. Left for 1.0 is phase 5: `@kgdiff/compute` replacing the TypeScript compute
-  modules in the browser, with the gates the earlier phases did not meet (the native `normalize`
-  memory target and the WebAssembly targets of [§7](#7-size-and-performance-budgets)), the
-  Rust corpus generator and the migration guide. The pull requests and commits of every
-  phase are listed in its results section.
+  current release and 0.10.0 (the cleanup before phase 5) is about to ship. Left is phase 5, which
+  is now **kgdiff 0.11** (decided 2026-11-11, [Revision](#revision-2026-11-11)): `@kgdiff/compute`
+  replacing the TypeScript compute modules in the browser, with the gates the earlier phases did
+  not meet (the native `normalize` memory target and the WebAssembly targets of
+  [§7](#7-size-and-performance-budgets)), the Rust corpus generator and the migration guide.
+  kgdiff 1.0 carries no new code: it is 0.11 after a two-week stable period ([kgdiff 1.0](#kgdiff-10)). The
+  pull requests and commits of every phase are listed in its results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
-  results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10.
+  results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10; phase 5 moved from 1.0 to 0.11 and 1.0
+  defined as a stable 0.11 on 2026-11-11 ([Revision](#revision-2026-11-11)).
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
@@ -22,7 +25,7 @@ hashing and the layout, about 22,800 lines of TypeScript — to a Rust workspace
 repository, and keep the interactive half (scene, renderer, viewer, G6 adapter) in TypeScript.
 Rust ships as one static `kgdiff` binary, as crates (`kgdiff-core`, `kgdiff-formats`,
 `kgdiff-layout`, `kgdiff-report`), as a WebAssembly package for browsers and Node
-(`@kgdiff/compute`) and as a Python package.
+(`@kgdiff/compute`) and, after 1.0, as a Python package.
 
 The two halves meet only at the JSON documents kgdiff already defines and versions — `kgdiff.graph`,
 `kgdiff.diff`, `kgdiff.diff.packed`, `kgdiff.delta` and the layout. The Rust implementation must
@@ -34,7 +37,7 @@ its own way, and the layout document goes to version 2.
 
 Five phases, each releasable on its own: the corpus; `kgdiff-core`; `kgdiff-formats` with the
 Rust CLI; `kgdiff-layout`; and `@kgdiff/compute` replacing the TypeScript compute code in the
-browser, which is kgdiff 1.0.
+browser, which is kgdiff 0.11 (1.0 is that release after a stable period, with no new code).
 
 ## Motivation
 
@@ -78,7 +81,7 @@ browser, which is kgdiff 1.0.
    conformance corpus, not by review.
 3. The same results natively (x86-64, AArch64 on Linux, macOS, Windows) and in WebAssembly.
 4. Distribution as a single binary (GitHub releases, Homebrew, `cargo install`, npm), as crates,
-   as an npm WebAssembly package and as a Python wheel, all with one version number.
+   as an npm WebAssembly package and, after 1.0, as a Python wheel, all with one version number.
 5. Every phase is releasable; the project can stop after any phase and be better off.
 6. The viewer's standalone bundle stays within its 130 kB budget; reports keep opening without
    running the diff engine.
@@ -150,29 +153,46 @@ PyPI, [D-6](#open-decisions)).
 
 #### What stays in TypeScript
 
-After phase 5 the TypeScript side keeps the **read path**: everything the viewer needs to show a
+After phase 5 (kgdiff 0.11) the TypeScript side keeps the **read path**: everything the viewer needs to show a
 precomputed report synchronously, without WebAssembly:
 
-| Kept in TypeScript (synchronous)                                                                     | Why                                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| core types (`DiffResult`, `UnionNode`, …), `KgdiffError`, `resolveOptions`                           | the data model scene, renderer, viewer and g6 are written against                                                                                                 |
-| `diffFromJSON` with its consistency checks and index, `unpackDiffJSON`, `packDiffJSON`, `diffToJSON` | the viewer reads report payloads with them and verifies what it reads; the site packs diffs it computed                                                           |
-| `normalize`, `isKGraph`, `graphToJSON`, `hashGraph`, `predicateLabel`                                | `diffFromJSON` rebuilds both graphs, checks each is what `normalize` keeps (re-normalizing a non-canonical document) and compares content hashes with the delta's |
-| `applyDelta`, `invertDelta`                                                                          | small, dependency-free, and synchronous callers (delta validation in a host app) gain nothing from WebAssembly                                                    |
-| `formatHunk`, `facetLabel`                                                                           | the scene titles hunks in the viewer's locale                                                                                                                     |
-| `layoutFromJSON`, `layoutToJSON`, `nodeRadius`, `estimateLabelWidth`                                 | the scene sizes nodes and label boxes exactly as the layout reserved them                                                                                         |
-| scene, renderer, viewer, g6                                                                          | non-goals above                                                                                                                                                   |
+| Kept in TypeScript (synchronous)                                                                          | Why                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| core types (`DiffResult`, `UnionNode`, …), `KgdiffError`, `resolveOptions`                                | the data model scene, renderer, viewer and g6 are written against                                                                                                 |
+| `diffFromJSON` with its consistency checks and index, `unpackDiffJSON`, `packDiffJSON`, `diffToJSON`      | the viewer reads report payloads with them and verifies what it reads; the site packs diffs it computed                                                           |
+| `normalize`, `isKGraph`, `graphToJSON`, `hashGraph`, `predicateLabel`                                     | `diffFromJSON` rebuilds both graphs, checks each is what `normalize` keeps (re-normalizing a non-canonical document) and compares content hashes with the delta's |
+| `applyDelta`, `invertDelta`                                                                               | small, dependency-free, and synchronous callers (delta validation in a host app) gain nothing from WebAssembly                                                    |
+| `formatHunk`, `facetLabel`, `hunkSummary`, `computeStats`                                                 | the scene titles hunks in the viewer's locale; `diffFromJSON` recomputes the summaries and statistics it checks                                                   |
+| `toUnionNode`, `toUnionEdge`, `NodeRecord` / `EdgeRecord`, `FACET_ORDER`, `nodeInput`, `withEdgeIdentity` | `diffFromJSON` rebuilds the union graph through them and `applyDelta` needs the last two (`union.ts`, `model.ts`, `delta.ts` in `tests/read-path.ts`)             |
+| `layoutFromJSON`, `layoutToJSON`, `nodeRadius`, `estimateLabelWidth`                                      | the scene sizes nodes and label boxes exactly as the layout reserved them                                                                                         |
+| scene, renderer, viewer, g6                                                                               | non-goals above                                                                                                                                                   |
 
 These kept functions exist in both languages and must agree exactly; the corpus covers each
 of them (normalized graphs, hashes, diffs, packed diffs, deltas and their inverses, `kgdiff
 apply`, hunk titles, predicate labels, label widths, radii). Everything else — the parsers,
 matching (with `textSimilarity` and the blocking keys), merges and splits, classification, edge
 pairing, hunks, ordering, delta emission, statistics and the layout engine — is deleted from
-TypeScript in phase 5. With the TypeScript CLI, which phase 4 retires, that is about three
-quarters of the 22,800 lines (roughly 17,000: formats 6,600, CLI 4,400, core 3,200, layout 3,000).
+TypeScript in phase 5. That includes the compute helpers that only the removed code uses:
+`log2` (matching and the layout's options; a public export of `@kgdiff/core`, so its removal is
+a breaking change the migration guide covers, like `textSimilarity` and `matchNodes`) and
+`labelBox` with its constants (only the layout engine uses them). With the TypeScript CLI, which
+phase 4 retires, that is about three quarters of the 22,800 lines (roughly 17,000: formats 6,600,
+CLI 4,400, core 3,300, layout 3,000).
+
+**The file-by-file list is [`tests/read-path.ts`](../../tests/read-path.ts) and the code wins
+over this section's prose.** PR [#92](https://github.com/iiwish/kgdiff/pull/92) split the files so
+that every source file of `@kgdiff/core` and `@kgdiff/layout` is wholly read path or wholly
+compute, and its test pins the boundary. It found five places where this RFC and the code
+differed, corrected above and below: (1) `log2` is compute, not named here before; (2) parts of
+"the pipeline" and "hunks" are read path (`toUnionNode`, `toUnionEdge`, `NodeRecord`,
+`EdgeRecord`, `FACET_ORDER`, `hunkSummary`, `nodeInput`, `withEdgeIdentity`); (3) `labelBox` is
+compute, since no read-path file uses it; (4) layout's `text-metrics.ts` is kept only for
+`estimateLabelWidth`, and layout's `math.ts` is compute except `round2`, which `layoutToJSON`
+needs; (5) core's `options.ts` is kept whole, because `resolveOptions` calls
+`resolveMatchOptions`.
 
 **The read path is implemented twice for good, not for a transition.** The other quarter, about
-5,800 lines, stays in TypeScript after 1.0, and it holds the parts where JavaScript semantics are
+5,200 lines (and the two package entries, edited rather than deleted), stays in TypeScript after phase 5, and it holds the parts where JavaScript semantics are
 hardest to match: `normalize` (NFC, canonical JSON, duplicate merging), the canonical forms and
 cyrb53 behind `hashGraph`, the delta checks, `diffFromJSON`'s consistency checks and the label
 widths. The corpus stays the bridge for as long as both exist: from phase 5 Rust generates it and
@@ -522,7 +542,7 @@ asynchronous by necessity — browsers refuse to compile large modules synchrono
 thread — so the JavaScript API becomes:
 
 ```ts
-import { diff } from '@kgdiff/core'; // 1.0
+import { diff } from '@kgdiff/core'; // 0.11
 const result = await diff(before, after, options); // was synchronous in 0.x
 
 import { init, diffSync } from '@kgdiff/compute'; // for hot loops and workers
@@ -532,15 +552,16 @@ const r = diffSync(before, after, options);
 
 `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat`, `layoutDiff` and `extendLayout`
 follow the same pattern; the read path (§1) stays synchronous. Changing the signature of
-`diff` breaks every caller, so this is **kgdiff 1.0**, released with phase 5. `@kgdiff/core` has
-about 1,000 downloads a month and the repository 46 stars: the cost of a clean break is small now
-and only grows, and pre-1.0 is the time to make it. Phases 2 and 3 change no TypeScript API;
+`diff` breaks every caller, so this is a breaking minor: **kgdiff 0.11**, released with phase 5
+(it was first planned as 1.0; see [Revision](#revision-2026-11-11)). 0.11 is the last release with
+breaking changes. `@kgdiff/core` has about 1,000 downloads a month and the repository 46 stars:
+the cost of a clean break is small now and only grows, and the 0.x series is the time to make it. Phases 2 and 3 change no TypeScript API;
 phase 4 removes the JavaScript exports of `@kgdiff/cli` when its npm package becomes the native
-launcher (a breaking minor, allowed before 1.0 by [releasing.md](../releasing.md)).
+launcher (a breaking minor, allowed in 0.x by [releasing.md](../releasing.md)).
 
 #### npm package names
 
-| Package                     | Through phase 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 1.0 (phase 5)                                                                                                                                                                                                                                                                                        |
+| Package                     | Through phase 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 0.11 (phase 5)                                                                                                                                                                                                                                                                                       |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@kgdiff/core`              | TypeScript, unchanged                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | model, read path and i18n, synchronous as today (`normalize`, `hashGraph`, `diffFromJSON`, `applyDelta`, …) + asynchronous `diff`, `matchNodes` and `textSimilarity` delegating to `@kgdiff/compute` (loaded with a dynamic `import()`, so bundles that only read reports never include WebAssembly) |
 | `@kgdiff/formats`           | TypeScript, unchanged                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | asynchronous `parseGraph` / `detectFormat` over `@kgdiff/compute`; deprecated in favour of `@kgdiff/compute`, removed in 2.0                                                                                                                                                                         |
@@ -568,7 +589,7 @@ script.
 
 #### Migration guide (written with phase 5)
 
-`docs/guide/migrating-to-1.0.md`, in English and Chinese, covering:
+`docs/guide/migrating-to-0.11.md`, in English and Chinese, covering (1.0 changes nothing, so it has no guide of its own):
 
 1. `await` in front of `diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat`,
    `layoutDiff` and `extendLayout`; or `await init()` once and the `*Sync` functions of
@@ -586,7 +607,7 @@ script.
    release of phase 4), what replaces each function.
 7. What does not change: every JSON document, hash, summary and delta is byte-identical; error
    codes are the same; the viewer's API is unchanged.
-8. Support: 0.x receives security fixes for six months after 1.0.
+8. Support: 0.x releases before 0.11 receive security fixes for six months after 0.11.
 
 ### 7. Size and performance budgets
 
@@ -594,42 +615,63 @@ The budgets in [architecture.md](../architecture.md#budgets) stay; phase accepta
 targets. TypeScript numbers are measured on an M-class laptop as the architecture document
 specifies; the Rust numbers are targets, to be confirmed by benchmarks (`divan`) in each phase.
 
-| What                                                | Budget today (TS)                | Rust target (native)    | WebAssembly target (Node / Chrome)                        |
-| --------------------------------------------------- | -------------------------------- | ----------------------- | --------------------------------------------------------- |
-| `diff`, exact ids, 10k nodes / 30k edges            | < 150 ms                         | < 40 ms                 | < 80 ms, < 150 ms including the transport to `DiffResult` |
-| `diff`, exact ids, 100k nodes / 300k edges          | < 2 s                            | < 500 ms                | < 1 s, < 2 s including the transport                      |
-| `normalize` memory, 100k nodes / 300k edges         | < 135 MB retained heap (~111 MB) | < 50 MB resident growth | < 80 MB linear memory                                     |
-| similarity matching, 5k unmatched on each side      | < 1.5 s                          | < 400 ms                | < 800 ms                                                  |
-| `layoutDiff`, 2k nodes                              | < 800 ms (~0.6–0.7 s)            | < 250 ms                | < 450 ms                                                  |
-| parsing 50k triples (Turtle)                        | "well under a second"            | < 100 ms                | < 250 ms                                                  |
-| CLI start-up (`kgdiff --version`, warm)             | ~50 ms (Node 24, measured)       | < 5 ms                  | —                                                         |
-| CLI, enterprise-kg summary end to end (warm)        | ~100 ms (measured)               | < 20 ms                 | —                                                         |
-| `kgdiff` binary (stripped, viewer bundles included) | —                                | < 12 MB                 | —                                                         |
+| What                                                | Budget today (TS)                | Rust target (native)    | WebAssembly target (Node / Chrome)                                                                         |
+| --------------------------------------------------- | -------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `diff`, exact ids, 10k nodes / 30k edges            | < 150 ms                         | < 40 ms                 | < 150 ms including the transport to `DiffResult` (original target: < 80 ms without it, dropped 2026-11-11) |
+| `diff`, exact ids, 100k nodes / 300k edges          | < 2 s                            | < 500 ms                | < 2 s including the transport (original target: < 1 s without it, dropped 2026-11-11)                      |
+| `normalize` memory, 100k nodes / 300k edges         | < 135 MB retained heap (~111 MB) | < 50 MB resident growth | < 80 MB linear memory (to be reviewed against measurements, see below)                                     |
+| similarity matching, 5k unmatched on each side      | < 1.5 s                          | < 400 ms                | < 800 ms                                                                                                   |
+| `layoutDiff`, 2k nodes                              | < 800 ms (~0.6–0.7 s)            | < 250 ms                | < 450 ms                                                                                                   |
+| parsing 50k triples (Turtle)                        | "well under a second"            | < 100 ms                | < 250 ms                                                                                                   |
+| CLI start-up (`kgdiff --version`, warm)             | ~50 ms (Node 24, measured)       | < 5 ms                  | —                                                                                                          |
+| CLI, enterprise-kg summary end to end (warm)        | ~100 ms (measured)               | < 20 ms                 | —                                                                                                          |
+| `kgdiff` binary (stripped, viewer bundles included) | —                                | < 12 MB                 | —                                                                                                          |
 
 **Which phase each target gates.** Each phase's acceptance names the targets it must meet. The
-native `normalize` memory target, every WebAssembly target in the table above and the WebAssembly
-sizes below are gates of 1.0 (phase 5), not of the 0.x releases before it (decided 2026-11-09).
+gates below are gates of 0.11 (phase 5), not of the 0.x releases before it (decided 2026-11-09).
 Phase 2 measured them and did not meet them ([Phase 2 results](#phase-2-results)); the planned
-route for memory is a compact graph representation in `kgdiff-core`.
+route for memory is a compact graph representation in `kgdiff-core`. Revised 2026-11-11, so that
+the gates are what a user can perceive:
+
+- **Held, no worse than today:** the viewer standalone bundle < 130 kB gzip and never any
+  WebAssembly in it, and reports that are only read load no WebAssembly; `diff` in the browser
+  including the transport to `DiffResult` (< 150 ms for 10k nodes / 30k edges, < 2 s for 100k / 300k,
+  today's TypeScript budgets); the layout-only module < 45 kB gzip (it is inlined in reports that
+  lay out only their changes); the parsers module < 200 kB gzip (not measured yet, unchanged); and
+  output byte-identical to native.
+- **Relaxed:** the full engine (core and layout, no parsers) from < 250 kB to **< 350 kB gzip**
+  (original target: < 250 kB). It loads once, on demand, and is cached (the playground, comparing
+  files on a web page, an npm user calling `diff`); core alone in the phase 2 preview is already
+  306.5 KiB, and going lower would mean cutting Unicode data, which breaks byte-identical output.
+- **Dropped as gates:** the WebAssembly speed of `diff` without the transport (original targets:
+  < 80 ms for 10k / 30k, < 1 s for 100k / 300k). Users perceive the time with the transport, and
+  the browser gets determinism from WebAssembly, not speed (below). The numbers stay as
+  measurements. The trade available if the held gate cannot be met: the phase 2 preview at
+  opt-level `z` takes 144 ms and 306.5 KiB; at opt-level `3`, 93 ms and 441.7 KiB, so core may
+  be built for speed, which is also a reason for the 350 kB.
+- **Numbers kept, not promised:** the native `normalize` memory target (< 50 MB resident growth)
+  and the WebAssembly one (< 80 MB linear memory). 0.11 still has to answer the memory question,
+  but both figures are scaled from native targets and are to be reviewed against measurements once
+  the compact graph representation has landed.
 
 **What WebAssembly buys in the browser is not speed.** For a large diff the transport to a
 `DiffResult` — `diff.v1` JSON text, `JSON.parse`, `diffFromJSON` with its consistency checks —
 costs about as much as the diff itself, so the WebAssembly targets including it are simply
-today's TypeScript budgets, and phase 5 has to hold them, not beat them. The browser gains one
+today's TypeScript budgets, and phase 5 (0.11) has to hold them, not beat them. The browser gains one
 implementation and the same bytes as the CLI in every engine; native speed is the gain of the CLI,
 the crates and the Python package.
 
 Sizes in the browser, measured on `main` as of 2026-11-07 (`pnpm build`, gzip level 9; "kB" here is
 KiB, 1,024 bytes, as `packages/viewer/test/standalone.test.ts` computes it):
 
-| Artifact                                                             | Today                                                    | Budget after phase 5                                               |
-| -------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------ |
-| viewer standalone bundle (`kgdiff-viewer.js`)                        | 374.2 kB min, 116.3 kB gzip                              | **unchanged budget: < 130 kB gzip**; no WebAssembly in it, ever    |
-| compute add-on, diff + layout (`kgdiff-viewer-compute.js`)           | 97.4 kB min, 33.9 kB gzip (TypeScript)                   | split in two, below                                                |
-| ↳ layout-only WebAssembly (`layout.wasm` + glue), inlined in reports | —                                                        | < 45 kB gzip                                                       |
-| ↳ full engine (`compute.wasm`: core + layout, no parsers)            | —                                                        | < 250 kB gzip; loaded on demand (playground, `load()` with graphs) |
-| ↳ parsers (`formats.wasm`)                                           | not bundled today (`@kgdiff/formats` imported on demand) | < 200 kB gzip; loaded only for text input                          |
-| HTML report overhead without data or compute add-on                  | < 135 kB gzip (budget)                                   | unchanged                                                          |
+| Artifact                                                             | Today                                                    | Budget in 0.11 (phase 5)                                                                                           |
+| -------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| viewer standalone bundle (`kgdiff-viewer.js`)                        | 374.2 kB min, 116.3 kB gzip                              | **unchanged budget: < 130 kB gzip**; no WebAssembly in it, ever                                                    |
+| compute add-on, diff + layout (`kgdiff-viewer-compute.js`)           | 97.4 kB min, 33.9 kB gzip (TypeScript)                   | split in two, below                                                                                                |
+| ↳ layout-only WebAssembly (`layout.wasm` + glue), inlined in reports | —                                                        | < 45 kB gzip                                                                                                       |
+| ↳ full engine (`compute.wasm`: core + layout, no parsers)            | —                                                        | < 350 kB gzip (original target: < 250 kB, relaxed 2026-11-11); loaded on demand (playground, `load()` with graphs) |
+| ↳ parsers (`formats.wasm`)                                           | not bundled today (`@kgdiff/formats` imported on demand) | < 200 kB gzip; loaded only for text input                                                                          |
+| HTML report overhead without data or compute add-on                  | < 135 kB gzip (budget)                                   | unchanged                                                                                                          |
 
 **Why the split.** A report laid out around its changes inlines the compute add-on only so that
 collapsed groups can be expanded, which needs `extendLayout` and nothing else. Inlining the whole
@@ -654,13 +696,13 @@ add-on. Size is tracked in CI from phase 2 on (`wasm-opt -Oz`, `twiggy` reports 
   WebAssembly compute add-on.
 - A `targets` job (from phase 4): hash the outputs of every corpus case, layouts included, on
   x86-64 Linux, AArch64 macOS, x86-64 Windows and WebAssembly; all hashes must be equal.
-- Until phase 5 retires the TypeScript compute code, a nightly `differential` workflow generates
+- Until phase 5 (0.11) retires the TypeScript compute code, a nightly `differential` workflow generates
   random graph pairs (seeded, with the generator in `scripts/gen-synthetic.ts` and a proptest
   strategy) and compares the TypeScript and Rust outputs byte for byte; a mismatch becomes a
   corpus case with its fix.
 - `CI passed` (the one required check) depends on every job. Actions stay pinned by commit SHA:
   `dtolnay/rust-toolchain`, `Swatinem/rust-cache`, `PyO3/maturin-action`.
-- Contributors who only touch the viewer need no Rust toolchain until phase 5; from then on the
+- Contributors who only touch the viewer need no Rust toolchain until phase 5 (0.11); from then on the
   workspace can use a prebuilt `@kgdiff/compute` from npm, or build it (`pnpm build:compute`).
 - **Build order.** The Rust CLI embeds the viewer bundles. `pnpm build:viewer-assets` (to be added
   with phase 3) copies `packages/viewer/dist/standalone/*.js` into `crates/kgdiff-report/assets/`
@@ -670,6 +712,12 @@ add-on. Size is tracked in CI from phase 2 on (`wasm-opt -Oz`, `twiggy` reports 
   in release builds).
 
 #### One version, four registries
+
+**Update 2026-11-11:** the Python package is not part of 0.11 or 1.0; it comes after 1.0 and is
+purely additive ([D-7](#open-decisions)). Until then "four registries" is three (npm, crates.io
+and the GitHub release with the Homebrew tap), `scripts/sync-versions.ts` has no `pyproject.toml`
+to write and the `maturin` build and the PyPI step below are not run. The rest of this section
+is the design the Python package will join.
 
 The single version number stays: kgdiff `X.Y.Z` names one consistent set of npm packages,
 crates, the Python package and the binaries. Changesets stays the source of truth;
@@ -710,11 +758,11 @@ part at a time, never before the Rust part reproduces the corpus as it stands. B
 land in the owner first and in the other implementation in the same pull request (or as a failing
 case with an issue).
 
-| Phases | Owner and generator                                                                                                                                                                                                 | TypeScript check in `pnpm test`                                                                                                                                                                                                                                                                                                                                              |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1–3    | TypeScript: `pnpm conformance:update` generates everything                                                                                                                                                          | regenerates everything in memory, byte for byte (today's check)                                                                                                                                                                                                                                                                                                              |
-| 4      | split: the TypeScript CLI is deleted, so `cargo xtask conformance` (Rust) writes what the CLI produced — the CLI runs, `report.json` — and the layout contract; the TypeScript generator writes the library outputs | regenerates the library outputs; reads the CLI runs, `report.json` and the layout contract as given                                                                                                                                                                                                                                                                          |
-| 5      | Rust: `cargo xtask conformance` generates everything; `pnpm conformance:update` is removed                                                                                                                          | checks what TypeScript keeps against the files: `normalize` and `graphToJSON` from `parse.*.json` → `graph.*`; `hashGraph` → `hashes`; `diffFromJSON` then `diffToJSON` → `diff.json`; `packDiffJSON` / `unpackDiffJSON`; `applyDelta` → `apply.json`; `invertDelta`; `formatHunk` → `titles`; `predicateLabel`, `estimateLabelWidth`, `nodeRadius` and `facetLabel` vectors |
+| Phases   | Owner and generator                                                                                                                                                                                                 | TypeScript check in `pnpm test`                                                                                                                                                                                                                                                                                                                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1–3      | TypeScript: `pnpm conformance:update` generates everything                                                                                                                                                          | regenerates everything in memory, byte for byte (today's check)                                                                                                                                                                                                                                                                                                              |
+| 4        | split: the TypeScript CLI is deleted, so `cargo xtask conformance` (Rust) writes what the CLI produced — the CLI runs, `report.json` — and the layout contract; the TypeScript generator writes the library outputs | regenerates the library outputs; reads the CLI runs, `report.json` and the layout contract as given                                                                                                                                                                                                                                                                          |
+| 5 (0.11) | Rust: `cargo xtask conformance` generates everything; `pnpm conformance:update` is removed                                                                                                                          | checks what TypeScript keeps against the files: `normalize` and `graphToJSON` from `parse.*.json` → `graph.*`; `hashGraph` → `hashes`; `diffFromJSON` then `diffToJSON` → `diff.json`; `packDiffJSON` / `unpackDiffJSON`; `applyDelta` → `apply.json`; `invertDelta`; `formatHunk` → `titles`; `predicateLabel`, `estimateLabelWidth`, `nodeRadius` and `facetLabel` vectors |
 
 Before phase 4 deletes the CLI sources, the TypeScript generator drops every `@kgdiff/cli`
 import: `readInput` / `parseInput` (input decoding, which README step 1 specifies) move into the
@@ -795,7 +843,7 @@ Acceptance:
   ported to `proptest` and pass (delta round trips, `diff(A, A)` empty, shuffle invariance).
 - The nightly differential run finds no mismatch in 10,000 random pairs.
 - Benchmarks meet the native speed targets of §7 (`diff`, similarity matching). The native
-  `normalize` memory target is measured here and gates 1.0 (phase 5), not this phase.
+  `normalize` memory target is measured here and gates 0.11 (phase 5), not this phase.
 - The crate's documentation shows, as tested examples, diffing two graphs, checking a delta with
   `apply_delta` and reading a `diff.v1` document.
 
@@ -807,7 +855,7 @@ run is in place), and so is its performance work
 ([#56](https://github.com/iiwish/kgdiff/pull/56), 06e7b9b) and the preview `@kgdiff/compute`
 ([#63](https://github.com/iiwish/kgdiff/pull/63), 2c54ccf to 2c8a5e0); 0.7.0 released them.
 Phase 2 meets its acceptance
-except for the memory target, which now gates 1.0 instead (below).
+except for the memory target, which now gates 0.11 instead (below).
 
 - **Corpus:** every case and every primitive vector except `label-width.json` passes, 299
   checks in all (`cargo test -p kgdiff-core --test conformance`). `diff_from_json(diff_to_json(d))`
@@ -820,6 +868,7 @@ except for the memory target, which now gates 1.0 instead (below).
   - seed 42: 10,040 pairs, 110,440 outputs.
 
   `.github/workflows/differential.yml` repeats the check every night.
+
 - **Benchmarks** (`cargo bench -p kgdiff-core`, divan). The machine was a macOS M-class laptop
   shared with other builds, so the load average is given with each number. The load never
   stayed low: it fell to about 3 once, and the run started then saw it climb to 17.7, so that
@@ -835,15 +884,16 @@ except for the memory target, which now gates 1.0 instead (below).
   The memory target assumed a smaller graph than the TypeScript model the crate mirrors: one
   `Arc<KGEdge>` per edge, `Arc<str>` text and keyed maps. On a 64-bit target that model needs
   about 90 MB for this graph even at its smallest. Decided 2026-11-09: the target stands, as a
-  gate of 1.0 (phase 5), and does not block 0.7.0. The planned route is a compact graph
+  gate of 0.11 (phase 5), and does not block 0.7.0. The planned route is a compact graph
   representation in `kgdiff-core`: interned ids, and edges stored as columns.
+
 - **WebAssembly** ([#63](https://github.com/iiwish/kgdiff/pull/63), with #56, Node 24): the
   core-only module is 771.6 KiB, 306.5 KiB gzip (cargo opt-level `z`, `wasm-opt -Oz`). The full
   engine's budget is < 250 kB. `diffJSON` (parsing and writing JSON included) takes a median
   144 ms for 10k / 30k (target < 80 ms) and 1.97 s for 100k / 300k (target < 1 s).
   `normalizeJSON` 100k / 300k reaches 265 MiB of linear memory, against a target of < 80 MB:
   the text transport holds the input text, the parsed value, the graph and the output at once.
-  None of the WebAssembly targets is met yet. Like the memory target, they stand as gates of 1.0
+  None of the WebAssembly targets is met yet. Like the memory target, they stand as gates of 0.11
   (phase 5) and do not block 0.7.0. About 80% of the module is code, much of it generic code
   instantiated many times.
 
@@ -852,14 +902,15 @@ except for the memory target, which now gates 1.0 instead (below).
   100k / 300k in 1.33 s instead of 1.77 s, but its module is 441.7 KiB gzip, 44% larger. Size
   is what a browser pays on every load, and the transport bounds a large diff's speed anyway;
   phase 5 measures the trade again for the full engine.
+
 - **Decided along the way:** D-13 (`diff_from_json` stays typed). `foldhash` was added to §5's
   crates. `thiserror` and the `serde` feature were not needed yet. The native memory target and
-  the WebAssembly targets gate 1.0, not 0.7.0 ([§7](#7-size-and-performance-budgets)). The
+  the WebAssembly targets gate 0.11, not 0.7.0 ([§7](#7-size-and-performance-budgets)). The
   preview `@kgdiff/compute` is built at opt-level `z`.
 - **Moved to later:**
   - the crates.io release, the registry names and kgdiff 0.7.0 (the maintainer's);
   - the native memory target (a compact graph representation) and the WebAssembly targets
-    (size and speed): phase 5, as gates of 1.0;
+    (size and speed): phase 5 (0.11), as gates of 0.11;
   - the viewer's layout-less payloads and `layoutFromJSON` version 2, a TypeScript change in
     progress ([before phase 2](#before-phase-2-a-typescript-0x-release), item 4);
   - lone surrogates (D-2), which the corpus leaves out and which phase 3 settles.
@@ -1003,7 +1054,7 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
   the action workflow passes with the binary.
 - **2k-node layout**: 158.6 ms (`tree_2k`) and 194.0 ms (`scale_free_2k`) at load average 3–5,
   against the 250 ms of §7 (earlier 175–234 ms at load average about 5, and 250–370 ms under heavy
-  load). The WebAssembly layout budgets of §7 are gates of 1.0 with the other WebAssembly
+  load). The WebAssembly layout budgets of §7 are gates of 0.11 with the other WebAssembly
   targets.
 - **Accepted differences from TypeScript**: the Rust reader requires the `iterations` and `hidden`
   counts to be integers (TypeScript accepts any finite number; everything kgdiff writes satisfies
@@ -1029,12 +1080,32 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
   publisher, as `docs/releasing.md` describes; `CRATES_RELEASE_ENABLED` is set, so the crates
   publish from CI from 0.8.0 on.
 
-#### Phase 5 — `@kgdiff/compute` replaces TypeScript compute in the browser (kgdiff 1.0)
+#### Phase 5 — `@kgdiff/compute` replaces TypeScript compute in the browser (kgdiff 0.11)
 
-Deliverables: `@kgdiff/compute` (core, formats, layout; three WebAssembly modules per §7), the
-asynchronous facades in `@kgdiff/core`, `@kgdiff/formats` and `@kgdiff/layout`, the compute
-add-on and the playground on WebAssembly, the removal of the TypeScript compute modules, the Rust
-generator as the corpus's only one, the migration guide, 1.0.0 on every registry.
+**Revised 2026-11-11 ([Revision](#revision-2026-11-11)).** This phase was first planned as kgdiff
+1.0. It is now kgdiff **0.11**, one version, the last with breaking changes. kgdiff 1.0 is 0.11
+after a stable period and carries no new code ([kgdiff 1.0](#kgdiff-10)). 0.10.0, released before
+it, holds the cleanup this phase needed: the three compatibility shims removed, the read path and
+the compute code split file by file (`tests/read-path.ts`), `ignoreAttrs` carrying the changes of
+ignored attributes in the delta, RFC 0001's elements made stable without `::part()`, node shapes
+by type (RFC 0003, part 4b) and a version on the stored review progress.
+
+Deliverables:
+
+- **TypeScript interface.** `diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat`,
+  `layoutDiff` and `extendLayout` become asynchronous (§6). `@kgdiff/compute` is published as a
+  public package: synchronous functions after `init`, and the JSON-in / JSON-out low-level
+  interface. `@kgdiff/formats` is deprecated. Public exports that exist only for the compute code,
+  such as `log2` and the `labelBox` family, are removed with it; §1 and the "Deleted" list below
+  follow `tests/read-path.ts`.
+- **Implementation.** Three WebAssembly modules (core with layout, layout only, parsers; §7). The
+  viewer's compute add-on and the playground move to WebAssembly. The TypeScript compute code is
+  deleted. The corpus generator moves to Rust as a whole and is the corpus's only one.
+- **Rust.** `kgdiff-core`'s graph becomes a compact representation (the way to the memory target),
+  and the typed graph input of [RFC 0003](./0003-embedding-hosts.md) part 3 lands with it.
+- **Docs.** The migration guide, `docs/guide/migrating-to-0.11.md` (§6). 1.0 has nothing to
+  migrate.
+- **Not in 0.11:** the Python package (after 1.0, purely additive).
 
 Acceptance:
 
@@ -1044,21 +1115,47 @@ Acceptance:
 - In-browser diff of 10k nodes / 30k edges, with the module already initialized and including the
   transport to `DiffResult`, within the TypeScript budget (< 150 ms); initialization itself
   (compiling the module from the HTTP cache) < 100 ms.
-- The targets that phase 2 measured and did not meet, gates of 1.0
-  ([Phase 2 results](#phase-2-results)): the native `normalize` memory target (< 50 MB resident
-  growth for 100k nodes / 300k edges), and every WebAssembly target of §7 (`diff` 10k and 100k,
-  with and without the transport; `normalize` < 80 MB of linear memory; the module sizes).
+- The gates of §7 (revised 2026-11-11) that phase 2 did not meet ([Phase 2 results](#phase-2-results)):
+  `diff` including the transport (10k < 150 ms, 100k < 2 s), the full engine < 350 kB gzip, the
+  layout-only module < 45 kB and the parsers < 200 kB. The two memory figures (native `normalize`
+  < 50 MB resident growth, WebAssembly < 80 MB of linear memory) are reviewed against measurements
+  once the compact graph lands, and not promised beforehand.
 - The viewer, scene, renderer and G6 test suites pass unchanged; reports open without
   initializing WebAssembly unless a group is expanded.
 - Deleted: `match`, `merge-split`, `classify`, `edges`, `order`, hunk partitioning, delta
-  emission, the similarity and blocking parts of `text`, every parser, the layout engine and the
-  d3 dependencies. Kept, and still checked by the corpus: the read path of §1, including what its
-  consistency checks recompute (`computeStats`, `hunkSummary`, `checkDelta`).
+  emission (`delta-emit`), the similarity and blocking parts of `text` (`similarity`), the
+  pipeline context (`pipeline`), `engine-util`, core's `math` (`log2`), every parser, the layout
+  engine, `label-box` and the d3 dependencies. Kept, and still checked by the corpus: the read path
+  of §1, including what its consistency checks recompute (`computeStats`, `hunkSummary`,
+  `checkDelta`) and the union and model files `diffFromJSON` rebuilds through.
+- The migration guide is written, in English and Chinese.
+- 0.11.0 is published on npm, crates.io and the GitHub release channels.
 
 The file-by-file split of `@kgdiff/core` and `@kgdiff/layout` into the read path, the compute code
 this phase deletes and each package's entry is
 [`tests/read-path.ts`](../../tests/read-path.ts); its test checks that no read-path file imports
 the compute code, and where the lists above and in §1 differ from it, the code-checked list holds.
+
+#### kgdiff 1.0
+
+Added 2026-11-11. kgdiff 1.0 carries **no new code**. It is the last 0.x minor, after its stable
+period, republished unchanged under a new version number; the only differences are that the
+`@experimental` marks are removed from the APIs that carry them and that the version is 1.0.0.
+0.11 is the last release with breaking changes.
+
+Conditions for 1.0:
+
+1. Two weeks have passed since 0.11 was published, and in that time only patch releases were
+   made, none with a breaking change.
+2. At least one real embedding host runs on 0.11
+   ([RFC 0003](./0003-embedding-hosts.md)).
+3. The gates of [§7](#7-size-and-performance-budgets) as revised on 2026-11-11 (the user-perceived
+   ones, with the memory figures reviewed against measurements), which used to be "gates of
+   1.0", were met in 0.11.
+
+If a breaking change cannot be avoided during the stable period, it ships as 0.12 and the two
+weeks start again from there. After 1.0 the public API follows semver; the Python package, parts
+4c and 4d of RFC 0003 and the other items of the roadmap are additive and come after it.
 
 ### 10. Risks
 
@@ -1125,8 +1222,8 @@ the compute code, and where the lists above and in §1 differ from it, the code-
 | D-3  | Layout version 2 with `generator`, or keep version 1                                                        | **Taken.** Version 2 (§2), written back by TypeScript's `layoutToJSON` too ([#73](https://github.com/iiwish/kgdiff/pull/73)); the alternative is silent change of what a stored layout means                                                                                                                                                                                                                                                                                               |
 | D-4  | `kgdiff-report` as its own crate, or a feature of `kgdiff`                                                  | Its own crate (an embedding application depends on it without the CLI's dependencies)                                                                                                                                                                                                                                                                                                                                                                                                      |
 | D-5  | Ship the viewer's layout-less payloads before phase 2 or with phase 3                                       | Before phase 2: small and additive; applications that compute diffs themselves can use the viewer at once                                                                                                                                                                                                                                                                                                                                                                                  |
-| D-6  | Registry names                                                                                              | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now                                                                                                                                                                                                                                                                                           |
-| D-7  | Python package in phase 3 or later                                                                          | After the CLI (phase 3), when both parsers and reports exist                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| D-6  | Registry names                                                                                              | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now. **2026-11-11:** the PyPI name stays reserved, but the package is published after 1.0                                                                                                                                                                                                     |
+| D-7  | Python package in phase 3 or later                                                                          | **Moved (2026-11-11): after 1.0**, purely additive. Originally: after the CLI (phase 3), when both parsers and reports exist                                                                                                                                                                                                                                                                                                                                                               |
 | D-8  | MSRV and edition                                                                                            | Edition 2024; MSRV no newer than the stable release of six months before, raised only in minor releases                                                                                                                                                                                                                                                                                                                                                                                    |
 | D-9  | `oxrdfxml` / `oxjsonld` or ports of kgdiff's readers                                                        | **Taken** (spike of 2026-11-09, `spike/d9/` on branch `claude/rust-phase3-d9-spike`): `oxttl`, strict, re-reading leniently when only IRI validation fails (§5); ports of `rdfxml.ts` / `xml.ts` and `jsonld.ts`, as `oxrdfxml` and `oxjsonld` each differ on both corpus inputs. Left different from n3: such a re-read text that n3 also rejects for another reason is read; error wording; blank labels (only `multiple-ontologies` can name one)                                       |
 | D-10 | Phase 3 reports without a precomputed layout, or swap phases 3 and 4                                        | Keep the order and accept the bounded regression on the native channels only (phase 3); swapping would delay the CLI, the larger win, behind the riskiest port                                                                                                                                                                                                                                                                                                                             |
@@ -1155,6 +1252,39 @@ the CLI writes, and CI replays the recorded runs with the real process.
    [Before phase 2](#before-phase-2-a-typescript-0x-release)).
 5. **The browser gains determinism, not speed,** from WebAssembly, and the transport risk is rated
    by §7's own budgets ([§7](#7-size-and-performance-budgets), [§10](#10-risks)).
+
+### Revision 2026-11-11
+
+The maintainer decided that 1.0 is a release that has been used stable for a while and does not
+arrive with a large change. Phase 5 changes the signature of seven functions, replaces the engine
+under the browser and deletes about 13,000 lines of TypeScript; declaring that "stable" in the
+same version would mean the first users of the new engine are also the first users of 1.0. An
+interface change, an engine replacement and a declaration of stability should not land in one
+version. The RFC changed as follows:
+
+1. **Phase 5 is kgdiff 0.11,** one version, not split in two, and the last with breaking changes.
+   Its scope is rewritten ([Phase 5](#phase-5--kgdiffcompute-replaces-typescript-compute-in-the-browser-kgdiff-011)):
+   the asynchronous interface, `@kgdiff/compute` as a public package, `@kgdiff/formats`
+   deprecated, three WebAssembly modules, the compact graph in `kgdiff-core` with RFC 0003's
+   typed input, the corpus generator in Rust, and `docs/guide/migrating-to-0.11.md`.
+2. **1.0 carries no new code** ([kgdiff 1.0](#kgdiff-10)): 0.11 after two weeks with only patch
+   releases, at least one real embedding host running on it, and §7's gates met in 0.11. A breaking
+   change in the stable period ships as 0.12 and restarts the two weeks.
+3. **§7's gates** (native memory, the WebAssembly targets and sizes) changed from "gates of 1.0"
+   to "gates of 0.11".
+4. **Gates revised again, 2026-11-11** (the same day): the targets were figures scaled from the
+   native budgets and marked "to be confirmed by benchmarks", so they now follow what a user can
+   perceive. Held: the viewer bundle < 130 kB without WebAssembly, `diff` including the transport
+   (< 150 ms and < 2 s), layout-only < 45 kB, parsers < 200 kB, byte-identical output. Relaxed: the
+   full engine from < 250 kB to < 350 kB gzip. Dropped as gates: WebAssembly `diff` without the
+   transport (< 80 ms, < 1 s). Unpromised until measured on the compact graph: the two memory
+   figures. The original targets stay in the §7 tables.
+5. **The Python package** moved out of 0.11 and 1.0 to after 1.0, being purely additive (D-7).
+6. **0.10.0** (cleanup before phase 5) is listed in phase 5; §1's kept list and the deleted list
+   follow [`tests/read-path.ts`](../../tests/read-path.ts) after PR #92 found five differences
+   between this RFC and the code.
+
+No phase result, measurement, pull request or commit recorded above changed.
 
 ## Alternatives considered
 

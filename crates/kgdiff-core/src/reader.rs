@@ -266,7 +266,7 @@ impl<'a> EdgeFinder<'a> {
     }
 
     fn find(&mut self, json: &Object) -> Option<Arc<KGEdge>> {
-        let mode = self.graph.edge_identity;
+        let mode = self.graph.edge_identity();
         let key = match json.get("id") {
             Some(id) if mode == EdgeIdentity::Id => id.to_js_string(),
             _ => stringify_list(&[
@@ -279,16 +279,16 @@ impl<'a> EdgeFinder<'a> {
                 json.get("target"),
             ]),
         };
-        if let Some(direct) = self.graph.edges.get(key.as_str())
-            && same_fingerprint(direct, json, mode)
+        if let Some(direct) = self.graph.edge(key.as_str()).map(|e| e.to_edge())
+            && same_fingerprint(&direct, json, mode)
         {
-            return Some(direct.clone());
+            return Some(Arc::new(direct));
         }
         let graph = self.graph;
         let index = self.index.get_or_insert_with(|| {
             let mut index = Lookup::new();
-            for edge in graph.edges.values() {
-                index.insert(edge_fingerprint(edge, mode), edge.clone());
+            for edge in graph.shared_edges() {
+                index.insert(edge_fingerprint(&edge, mode), edge);
             }
             index
         });
@@ -552,15 +552,7 @@ fn canonical_graphs(
         after_of.push(a);
         before_of.push(b);
     }
-    let ends_known = |edges: &IndexMap<EdgeKey, Arc<KGEdge>>, nodes: &IndexMap<Id, Arc<KGNode>>| {
-        edges
-            .values()
-            .all(|e| nodes.contains_key(&e.source) && nodes.contains_key(&e.target))
-    };
-    if !issues.is_empty()
-        || !ends_known(&after_edges, &after_nodes)
-        || !ends_known(&before_edges, &before_nodes)
-    {
+    if !issues.is_empty() {
         return None;
     }
     let meta = doc.get("meta").and_then(Value::as_object);
@@ -571,14 +563,14 @@ fn canonical_graphs(
             before_edges,
             mode,
             Vec::new(),
-        ),
+        )?,
         after: index_graph(
             meta.and_then(|m| m.get("after")),
             after_nodes,
             after_edges,
             mode,
             Vec::new(),
-        ),
+        )?,
         before_of,
         after_of,
     })
@@ -1281,8 +1273,8 @@ fn check_consistency(
     let check = |reference: Option<&Value>, graph: &KGraph, side: &str| -> Result<()> {
         let version = if side == "base" { "before" } else { "after" };
         let field = |k: &str| reference.and_then(|r| r.get(k));
-        if field("nodes") != Some(&Value::from(graph.nodes.len()))
-            || field("edges") != Some(&Value::from(graph.edges.len()))
+        if field("nodes") != Some(&Value::from(graph.node_count()))
+            || field("edges") != Some(&Value::from(graph.edge_count()))
         {
             return Err(invalid(format!(
                 "delta.{side} counts other nodes / edges than the {version} graph of the diff"

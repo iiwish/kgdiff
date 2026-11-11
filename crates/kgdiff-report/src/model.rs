@@ -326,11 +326,11 @@ pub fn possible_matches(diff: &DiffResult) -> Vec<PossibleMatch> {
             continue;
         }
         let before_name = before
-            .and_then(|n| n.before.as_ref().map(|b| b.label.to_string()))
+            .and_then(|n| n.before.as_ref().map(|b| b.label().to_string()))
             .or_else(|| before.map(|n| n.label.to_string()))
             .unwrap_or_else(|| s.before.to_string());
         let after_name = after
-            .and_then(|n| n.after.as_ref().map(|a| a.label.to_string()))
+            .and_then(|n| n.after.as_ref().map(|a| a.label().to_string()))
             .or_else(|| after.map(|n| n.label.to_string()))
             .unwrap_or_else(|| s.after.to_string());
         list.push(PossibleMatch {

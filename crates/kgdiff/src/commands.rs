@@ -139,7 +139,7 @@ fn report_parse_warnings(
 }
 
 fn report_issues(ctx: &OutputContext, io: &mut dyn CliIo, input: &RawInput, graph: &KGraph) {
-    for (first, n) in grouped(&graph.issues, |i| i.code) {
+    for (first, n) in grouped(graph.issues(), |i| i.code) {
         let text = format_warning(
             &format!("{}: {}{}", input.display, sanitize(&first.message), more(n)),
             &ctx.err_paint,

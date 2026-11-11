@@ -56,7 +56,8 @@ use std::error::Error;
 
 use kgdiff_core::js::{Value, json};
 use kgdiff_core::{
-    DiffOptions, DiffResult, KGraph, Locale, NormalizeOptions, Result, diff_graphs, normalize,
+    DiffOptions, DiffResult, EdgeInput, GraphInput, KGraph, Locale, NodeInput, NormalizeOptions,
+    Result, diff_graphs, graph_to_json, normalize, normalize_input,
 };
 use kgdiff_layout::{
     LayoutOptions, LayoutResult, layout_after, layout_diff_on, layout_from_json, layout_graph,
@@ -83,9 +84,51 @@ pub fn read_graph(export: &str) -> std::result::Result<KGraph, Box<dyn Error>> {
 ```
 
 - `normalize` validates and indexes: labels default to the id, duplicate nodes are merged,
-  dangling edge ends become implicit nodes. What it had to repair is in `graph.issues`.
-- A `KGraph` cannot be built from typed values yet; that is
-  [part 3 of RFC 0003](#what-is-not-there-yet). Until then the export goes through JSON.
+  dangling edge ends become implicit nodes. What it had to repair is in `graph.issues()`.
+- `normalize_json` takes the text itself and reads it element by element, without holding the
+  whole document as a tree of values: for a large export it needs much less memory.
+- A `KGraph` is read through methods: `nodes()`, `node(id)`, `edges()`, `edge(key)`,
+  `outgoing(id)`, `incoming(id)`, `meta()`, `issues()`. Nodes are `&KGNode`, edges are
+  `EdgeRef`s, both with methods for their fields (`label()`, `types()`, `source()`, …).
+
+An application that holds its graph as values builds the same graph without writing JSON:
+`normalize_input` takes a `GraphInput` whose members are those of kgdiff JSON, and gives the
+graph `normalize` gives for `input.to_value()`, with the same `graph_to_json` bytes, hash and
+issues (the conformance corpus checks it on every graph). Attribute values stay
+`kgdiff_core::js::Value`s.
+
+```rust
+/// The same, built from the application's own values instead of JSON text: here, concepts and
+/// metrics with the concept each metric is measured on. The members are those of kgdiff JSON;
+/// the graph is the one `read_graph` makes of the same version written as JSON.
+pub fn build_graph(
+    name: &str,
+    concepts: &[(&str, &str)],
+    metrics: &[(&str, &str, &str)],
+) -> Result<KGraph> {
+    let mut input = GraphInput::default();
+    input.meta.insert("name", name);
+    for &(id, label) in concepts {
+        input.nodes.push(NodeInput {
+            label: Some(label.into()),
+            types: vec!["concept".into()],
+            ..NodeInput::new(id)
+        });
+    }
+    for &(id, label, measured_on) in metrics {
+        input.nodes.push(NodeInput {
+            label: Some(label.into()),
+            types: vec!["metric".into()],
+            ..NodeInput::new(id)
+        });
+        input
+            .edges
+            .push(EdgeInput::new(id, "measured_on", measured_on));
+    }
+    normalize_input(input, NormalizeOptions::default())
+}
+```
+
 - Files in other formats (Turtle, OBO, JSON-LD, …) are read with `parse_graph` of
   [`kgdiff-formats`](../../crates/kgdiff-formats/README.md), whose result holds the same JSON.
 
@@ -308,7 +351,7 @@ and the graph's layout:
 ```rust
 pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -> Result<Value> {
     let options = DiffOptions {
-        edge_identity: graph.edge_identity,
+        edge_identity: graph.edge_identity(),
         ..DiffOptions::default()
     };
     let unchanged = diff_graphs(graph.clone(), graph.clone(), options)?;
@@ -324,10 +367,10 @@ pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -
 <kgdiff-viewer theme="auto" style="height: 640px"></kgdiff-viewer>
 
 <script type="module">
-  import '@kgdiff/viewer';
+  import "@kgdiff/viewer";
 
-  const viewer = document.querySelector('kgdiff-viewer');
-  viewer.payload = await (await fetch('/changes/42/report.json')).json();
+  const viewer = document.querySelector("kgdiff-viewer");
+  viewer.payload = await (await fetch("/changes/42/report.json")).json();
 </script>
 ```
 
@@ -435,12 +478,10 @@ The rules in full are in the
 ## What is not there yet
 
 [RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) plans
-three more parts. None of them exists yet, and the RFC is a draft: releases and details may
-change.
+two more parts. Neither exists yet, and the RFC is a draft: releases and details may change.
 
 | Part | What                                                                     | Planned for        | Until then                                                                                                                   |
 | ---- | ------------------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 3    | Typed graph input: build a `KGraph` from Rust values (`normalize_input`) | 1.0                | write kgdiff JSON and call `normalize`                                                                                       |
 | 4c   | The plain view: one graph in the viewer, colored by your categories      | 0.10, or after 1.0 | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
 | 4d   | Groups: a background per group, and a layout that keeps a group together | after 1.0          | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
 

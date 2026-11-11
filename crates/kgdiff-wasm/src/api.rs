@@ -8,8 +8,8 @@ use kgdiff_core::js::{JsStr, Object, Value, json};
 use kgdiff_core::model::FacetKind;
 use kgdiff_core::options::{DanglingEdges, resolve_edge_identity, resolve_match_options};
 use kgdiff_core::{
-    ApplyOptions, Delta, NormalizeOptions, apply_delta, diff, diff_from_json, diff_to_json,
-    graph_to_json, hash_graph, invert_delta, match_nodes, normalize, pack_diff_json,
+    ApplyOptions, Delta, ErrorCode, KGraph, NormalizeOptions, apply_delta, diff, diff_from_json,
+    diff_to_json, graph_to_json, hash_graph, invert_delta, match_nodes, pack_diff_json,
     resolve_options, unpack_diff_json,
 };
 use kgdiff_layout::{
@@ -22,6 +22,20 @@ use crate::failure::{Failure, Result};
 /// `text` read as JSON, `what` naming it in the message of an `invalid-input` failure.
 fn parse(text: &str, what: &str) -> Result<Value> {
     json::parse(text).map_err(|e| Failure::invalid_input(format!("{what} is not JSON: {e}")))
+}
+
+/// `normalize` of a graph given as JSON text, read as it is parsed (`normalize_json`), so that the
+/// text, a tree of values and the graph are not all in memory at once. Text that is not JSON fails
+/// as [`parse`] does, `what` naming it.
+fn normalize_text(text: &str, what: &str, options: NormalizeOptions) -> Result<KGraph> {
+    kgdiff_core::normalize_json(text, options).map_err(|error| {
+        match error.message.strip_prefix("The graph is not JSON: ") {
+            Some(rest) if error.code == ErrorCode::InvalidInput => {
+                Failure::invalid_input(format!("{what} is not JSON: {rest}"))
+            }
+            _ => Failure::from(error),
+        }
+    })
 }
 
 /// Options given as JSON text: empty text and `null` are none.
@@ -74,7 +88,7 @@ pub fn diff_json(before: &str, after: &str, options_text: &str) -> Result<String
 pub fn match_nodes_json(before: &str, after: &str, options_text: &str) -> Result<String> {
     let options = resolve_match_options(options(options_text, "the match options")?.as_ref())?;
     let graph = |text: &str, what: &str| -> Result<_> {
-        Ok(normalize(&parse(text, what)?, NormalizeOptions::default())?)
+        normalize_text(text, what, NormalizeOptions::default())
     };
     let (matches, suggestions) = match_nodes(
         &graph(before, "the before graph")?,
@@ -100,29 +114,24 @@ pub fn text_similarity(a: &str, b: &str) -> f64 {
 
 /// `graphToJSON(normalize(graph, options))`: the `kgdiff.graph` document.
 pub fn normalize_json(graph: &str, options_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(options_text)?,
-    )?;
+    let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
     Ok(json::to_string(&graph_to_json(&graph)))
 }
 
 /// `normalize(graph, options).issues`.
 pub fn graph_issues_json(graph: &str, options_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(options_text)?,
-    )?;
-    let issues = graph.issues.iter().map(|issue| issue.to_value()).collect();
+    let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
+    let issues = graph
+        .issues()
+        .iter()
+        .map(|issue| issue.to_value())
+        .collect();
     Ok(json::to_string(&Value::Array(issues)))
 }
 
 /// `hashGraph(normalize(graph, options))`.
 pub fn hash_graph_json(graph: &str, options_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(options_text)?,
-    )?;
+    let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
     Ok(hash_graph(&graph).to_owned())
 }
 
@@ -180,8 +189,9 @@ pub fn apply_delta_json(graph: &str, delta: &str, options_text: &str) -> Result<
             }
         },
     };
-    let base = normalize(
-        &parse(graph, "the graph")?,
+    let base = normalize_text(
+        graph,
+        "the graph",
         NormalizeOptions {
             edge_identity: delta.edge_identity,
             ..NormalizeOptions::default()
@@ -314,11 +324,8 @@ pub fn extend_layout_json(
 }
 
 /// `layout_graph(normalize(graph, normalize_options), options)`.
-pub fn layout_graph_json(graph: &str, options_text: &str, normalize_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(normalize_text)?,
-    )?;
+pub fn layout_graph_json(graph: &str, options_text: &str, normalize_given: &str) -> Result<String> {
+    let graph = normalize_text(graph, "the graph", normalize_options(normalize_given)?)?;
     Ok(layout_text(&layout_graph(
         &graph,
         &layout_options(options_text)?,

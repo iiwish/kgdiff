@@ -10,12 +10,12 @@
   Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges. Part
   4b is implemented for 0.10 (bfe4b0d), with D-3 and D-4 taken: see [4b results](#4b-results).
   All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Parts 3, 4c and 4d are not
-  started: 4c comes after 1.0, part 3 with 1.0.
+  started: part 3 comes with 0.11 (RFC 0002, phase 5, moved there from 1.0 on 2026-11-11), 4c and 4d after 1.0.
 - **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
   `docs/visual-language.md` (two new rules), the report payload (a schema, optional members).
-  No document changes its version. The layout engine changes only in part 4d, after 1.0.
+  No document changes its version. The layout engine changes only in part 4d, after 1.0 (so after phase 5, kgdiff 0.11).
 
 ## Summary
 
@@ -23,7 +23,7 @@ The first application that embeds kgdiff's crates (an ontology editor: Rust on t
 scene and the renderer in its web pages) checked what it needs against 0.8.0 and found four
 gaps. Each has a workaround, so none blocks it; each will be met again by the next host. This
 RFC says which to close, how, and when, around the work that is already planned
-([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 1.0):
+([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 is 0.11 after a stable period):
 
 | Part | What                                                         | Release   | Size   |
 | ---- | ------------------------------------------------------------ | --------- | ------ |
@@ -32,7 +32,7 @@ RFC says which to close, how, and when, around the work that is already planned
 | 4a   | Renderer layers: the host draws under and over the graph     | 0.9       | small  |
 | 4b   | Node shapes by type                                          | 0.10      | medium |
 | 4c   | The plain view: one graph, colored by the host's categories  | after 1.0 | medium |
-| 3    | Typed graph input                                            | 1.0       | medium |
+| 3    | Typed graph input                                            | 0.11      | medium |
 | 4d   | Groups: backgrounds and a layout that keeps a group together | after 1.0 | large  |
 
 Parts 1 to 3 are embedding API and change nothing kgdiff writes. Part 4 is the one that touches
@@ -115,7 +115,7 @@ forbid. The proposal is to accept them under four rules, and to write the rules 
 5. A host can show one graph colored and grouped by its own categories, on the same map as
    its diffs.
 6. Nothing kgdiff writes today changes: every corpus case, every layout byte, every report.
-7. 1.0 (RFC 0002, phase 5) is not delayed by any of this.
+7. Phase 5 (RFC 0002, kgdiff 0.11) and 1.0 after it are not delayed by any of this.
 
 ## Non-goals
 
@@ -237,7 +237,7 @@ pub fn build_report_html_with(
   the crate writes against it, as they do for the other documents. With hosts making reports
   through an API, the payload is a contract for more than the CLI.
 
-### 3. Typed graph input (1.0)
+### 3. Typed graph input (0.11)
 
 ```rust
 pub struct GraphInput { pub meta: Object, pub nodes: Vec<NodeInput>, pub edges: Vec<EdgeInput> }
@@ -252,7 +252,7 @@ numbers, key order and canonical form are JavaScript's (RFC 0002, §4). The cont
 `normalize_input(x)` gives the graph `normalize(&x.to_value(), …)` gives — the same
 `graph_to_json` bytes, hash and issues — checked on every corpus graph.
 
-**Why with 1.0 and not now.** The native memory gate of 1.0 (`normalize` of 100k nodes / 300k
+**Why with 0.11 and not now.** The native memory gate of 0.11 (`normalize` of 100k nodes / 300k
 edges under 50 MB; 150 MiB measured) is to be met by a compact graph representation: interned
 ids, edges as columns. A typed input is the natural front end of that representation, and the
 JSON reader can feed the same builder instead of a `Value` tree, which is also part of the
@@ -395,7 +395,7 @@ the force layout does not put them together. So this part is two things that shi
   edges, with label halos that match. In a view with changes the backgrounds are neutral
   (rule 2); in the plain view they take the category's `soft` tint.
 
-**Why after 1.0.** Until phase 5 the layout engine exists twice, and the two give
+**Why after 1.0.** Until phase 5 (0.11) the layout engine exists twice, and the two give
 bit-identical positions on the corpus (RFC 0002, phase 4 progress); the browser's
 `extendLayout` is the TypeScript one. A new force would be written twice and one copy deleted
 weeks later. After phase 5 it is written once, in Rust, and reaches the browser through
@@ -413,7 +413,7 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
 - `FrameVisuals` gains an optional member per node (4b). A renderer that does not read it
   draws circles.
 - The new APIs are marked experimental for one minor, as RFC 0001's elements were, and become
-  stable in 1.0 (0.10 is that minor); the Rust additions follow the crates' semver from their
+  stable in 1.0 (0.10 is that minor; 1.0 itself carries no new code and only removes the `@experimental` marks); the Rust additions follow the crates' semver from their
   first release.
 
 ## Testing
@@ -434,7 +434,8 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
 | --------- | --------------------------- | -------------------------------- | -------------------------------- |
 | 0.9       | 1, 2 (`report.v1.json`), 4a | Rust crates; `@kgdiff/renderer`  | nothing                          |
 | 0.10      | 4b                          | scene, renderer, g6, viewer      | the Positioning rules accepted   |
-| 1.0       | 3                           | `kgdiff-core`                    | the compact graph representation |
+| 0.11      | 3                           | `kgdiff-core`                    | the compact graph representation |
+| 1.0       | none (marks removed)        | the experimental APIs            | 0.11 stable for two weeks        |
 | after 1.0 | 4c, 4d                      | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
 
 0.9 is the part the first host waits for: with it, its ontology graph and its reports need no
@@ -446,7 +447,7 @@ see, and the host deletes the matching piece of its own layer code.
 | Risk                                                                 | Likelihood | Impact | Mitigation                                                                                                                                 |
 | -------------------------------------------------------------------- | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | The plain view grows into a general graph viewer, request by request | medium     | high   | the four rules of [Positioning](#positioning) in visual-language.md; closed sets instead of callbacks; rule 4 for everything host-specific |
-| 4b and 4c delay 1.0 (one maintainer)                                 | medium     | high   | they touch only the interactive half, which phase 5 does not; 4c moves after 1.0 by default (D-5); 0.9's three parts are days, not weeks   |
+| 4b and 4c delay 0.11 and 1.0 (one maintainer)                        | medium     | high   | they touch only the interactive half, which phase 5 does not; 4c is after 1.0 (D-5); 0.9's three parts are days, not weeks                 |
 | Category colors are read as change colors by habit                   | medium     | medium | never in one frame (tested); the legend switches with the view; backgrounds neutral in views with changes                                  |
 | Shapes weaken the cues of change                                     | low        | medium | every cue is defined per shape and tested per shape; hollow stays reserved                                                                 |
 | Layers let hosts draw what breaks the visual language                | certain    | low    | by design (rule 4): the host's pixels are the host's; kgdiff's own passes and their contrast tests are unaffected                          |
@@ -484,7 +485,7 @@ see, and the host deletes the matching piece of its own layer code.
 | D-3 | A hollow shape for a kind of node                            | **Taken:** no. Hollow means "not in this version" in every view, and is not lent to kinds of nodes                                                                             |
 | D-4 | The shape set, and whether a type change animates the shape  | **Taken:** `circle`, `square`, `diamond`, `hexagon`; no animation, the type change already has its badge and detail                                                            |
 | D-5 | 4c in 0.10, or after 1.0                                     | **Taken:** after 1.0, with hosts coloring through an `over` layer until then                                                                                                   |
-| D-6 | A thin typed input before 1.0                                | **Taken:** no. The typed input (part 3) comes with 1.0's compact graph representation; the first host exports JSON anyway                                                      |
+| D-6 | A thin typed input before 0.11                               | **Taken:** no. The typed input (part 3) comes with 0.11's compact graph representation; the first host exports JSON anyway                                                     |
 | D-7 | `<kgdiff-viewer>`'s default layout for a plain view          | **Taken:** not changed. Composed elements only; the default layout keeps its "No differences" card                                                                             |
 | D-8 | `addLayer` on `<kgdiff-stage>`                               | **Taken:** yes, experimental ([#80](https://github.com/iiwish/kgdiff/pull/80)); otherwise the change graph inside the viewer cannot carry what the host draws on its own graph |
 | D-9 | `layoutGraph` in TypeScript                                  | **Taken:** only through `@kgdiff/compute` in phase 5 ([#78](https://github.com/iiwish/kgdiff/pull/78) adds none); not in the engine phase 5 deletes                            |
@@ -587,10 +588,17 @@ Where it decides beyond this RFC, or differs from it:
 - **`view.shapes` is read from payloads only.** `load()` has no option for it, and the CLI none
   either: shapes come from hosts, through `ReportInfo`.
 
+## Revision 2026-11-11
+
+RFC 0002 moved its phase 5 from kgdiff 1.0 to 0.11 and made 1.0 a stable 0.11 with no new code
+([RFC 0002, Revision](./0002-rust-compute-core.md#revision-2026-11-11)). This RFC follows: part 3
+(the typed graph input, with the compact graph representation) is now in 0.11; the experimental
+APIs still become stable in 1.0, which only removes their marks; 4c and 4d stay after 1.0.
+
 ## References
 
 - [RFC 0002: A Rust compute core](./0002-rust-compute-core.md): the crates, the phases, the
-  gates of 1.0, the layout decision
+  gates of 0.11, the layout decision
 - [RFC 0001: Composable viewer components](./0001-viewer-components.md): the elements a host
   composes, and how experimental APIs become stable
 - [architecture.md](../architecture.md), [visual-language.md](../visual-language.md)

@@ -19,13 +19,8 @@ pub fn triple_key(source: &str, predicate: &str, target: &str) -> JsStr {
     JsStr::from(out)
 }
 
-/// [`triple_key`] built in a reusable buffer, so that only the key itself is allocated.
-pub(crate) fn triple_key_in(
-    buffer: &mut String,
-    source: &str,
-    predicate: &str,
-    target: &str,
-) -> JsStr {
+/// Writes [`triple_key`] in `buffer`, replacing what it held.
+pub(crate) fn write_triple_key(buffer: &mut String, source: &str, predicate: &str, target: &str) {
     buffer.clear();
     buffer.push('[');
     json::push_string(buffer, source);
@@ -34,6 +29,16 @@ pub(crate) fn triple_key_in(
     buffer.push(',');
     json::push_string(buffer, target);
     buffer.push(']');
+}
+
+/// [`triple_key`] built in a reusable buffer, so that only the key itself is allocated.
+pub(crate) fn triple_key_in(
+    buffer: &mut String,
+    source: &str,
+    predicate: &str,
+    target: &str,
+) -> JsStr {
+    write_triple_key(buffer, source, predicate, target);
     JsStr::new(buffer)
 }
 

@@ -33,7 +33,7 @@ proptest! {
         let b = normalize(&support::shuffle_graph(&g, seed).to_value(), options).unwrap();
         prop_assert_eq!(hash_graph(&a), hash_graph(&b));
         prop_assert_eq!(json::to_string(&graph_to_json(&a)), json::to_string(&graph_to_json(&b)));
-        prop_assert_eq!(&a.issues, &b.issues);
+        prop_assert_eq!(a.issues(), b.issues());
     }
 
     /// `normalize(graphToJSON(g))` rebuilds `g`.

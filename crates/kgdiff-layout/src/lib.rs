@@ -310,7 +310,7 @@ fn of_the_identical_diff(graph: &KGraph, options: &LayoutOptions) -> Result<Layo
         graph.clone(),
         graph.clone(),
         DiffOptions {
-            edge_identity: graph.edge_identity,
+            edge_identity: graph.edge_identity(),
             ..DiffOptions::default()
         },
     )?;

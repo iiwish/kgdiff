@@ -3,16 +3,17 @@
 //! leniency as the TypeScript implementation.
 
 use std::cmp::Ordering;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use crate::js::{IndexMap, IndexSet};
 
 use crate::canonical::{canonical_json, triple_key, triple_key_in};
 use crate::error::{ErrorCode, KgdiffError, Result};
-use crate::js::{self, JsStr, Lookup, Object, Value};
+use crate::graph::{EdgeDraft, EdgeRow, EdgeTable, KeyContext, NodeParts};
+use crate::input::{EdgeInput, GraphInput, NodeInput};
+use crate::js::{self, JsStr, Lookup, Object, Value, json};
 use crate::model::{
-    Adjacency, Attrs, EdgeIdentity, EdgeKey, GraphIssue, GraphIssueCode, Id, KGEdge, KGNode,
-    KGraph, Point,
+    Attrs, EdgeIdentity, EdgeKey, GraphIssue, GraphIssueCode, Id, KGEdge, KGNode, KGraph, Point,
 };
 use crate::options::{DanglingEdges, NormalizeOptions};
 use crate::text::{nfc_str, predicate_label, raw_predicate_label};
@@ -332,7 +333,7 @@ pub(crate) fn finish_node(draft: NodeDraft) -> KGNode {
     if let Some(at) = aliases.iter().position(|a| *a == label) {
         aliases.remove(at);
     }
-    KGNode {
+    KGNode::from_parts(NodeParts {
         label,
         types: sorted_unique(&draft.types),
         aliases,
@@ -343,49 +344,57 @@ pub(crate) fn finish_node(draft: NodeDraft) -> KGNode {
         implicit: draft.implicit,
         position: draft.position,
         id: draft.id,
+    })
+}
+
+/// The text of the edge drafts' positions.
+#[derive(Clone, Copy)]
+struct Names<'a> {
+    nodes: &'a IndexMap<Id, Arc<KGNode>>,
+    texts: &'a [JsStr],
+}
+
+impl<'a> Names<'a> {
+    fn node(self, at: u32) -> &'a Id {
+        match self
+            .nodes
+            .get_index(usize::try_from(at).unwrap_or(usize::MAX))
+        {
+            Some((id, _)) => id,
+            None => unreachable!("the ends of a draft are nodes"),
+        }
     }
-}
 
-/// An edge before its key is known (`EdgeDraft`).
-#[derive(Clone, Debug)]
-struct EdgeDraft {
-    id: Option<Id>,
-    source: Id,
-    target: Id,
-    predicate: JsStr,
-    label: JsStr,
-    attrs: Attrs,
-    /// Positions of the source and the target among the nodes.
-    ends: (usize, usize),
-    /// Which predicate it is, by order of first use.
-    predicate_at: usize,
-}
+    fn text(self, at: u32) -> &'a JsStr {
+        &self.texts[usize::try_from(at).unwrap_or(usize::MAX)]
+    }
 
-impl EdgeDraft {
-    fn into_edge(self, key: EdgeKey) -> (KGEdge, (usize, usize)) {
-        let edge = KGEdge {
-            key,
-            id: self.id,
-            source: self.source,
-            target: self.target,
-            predicate: self.predicate,
-            label: self.label,
-            attrs: self.attrs,
-        };
-        (edge, self.ends)
+    fn source(self, draft: &EdgeDraft) -> &'a Id {
+        self.node(draft.row.source)
+    }
+
+    fn target(self, draft: &EdgeDraft) -> &'a Id {
+        self.node(draft.row.target)
+    }
+
+    fn predicate(self, draft: &EdgeDraft) -> &'a JsStr {
+        self.text(draft.row.predicate)
+    }
+
+    fn label(self, draft: &EdgeDraft) -> &'a JsStr {
+        self.text(draft.row.label)
     }
 }
 
 /// Content that distinguishes parallel copies of one triple (`parallelContent`).
-fn parallel_content(edge: &EdgeDraft) -> String {
+fn parallel_content(edge: &EdgeDraft, names: Names<'_>) -> String {
     canonical_json(&Value::Array(vec![
-        Value::from(&edge.label),
+        Value::from(names.label(edge)),
         Value::Object(edge.attrs.clone()),
     ]))
 }
 
-/// Node declarations by id, in the order ids first appear. The ids are kept apart from the
-/// drafts, so that looking an edge's ends up touches only the compact table of ids.
+/// Node declarations by id, in the order ids first appear.
 struct Drafts {
     ids: IndexSet<Id>,
     drafts: Vec<NodeDraft>,
@@ -397,14 +406,6 @@ impl Drafts {
             ids: IndexSet::with_capacity_and_hasher(capacity, Default::default()),
             drafts: Vec::with_capacity(capacity),
         }
-    }
-
-    fn get_index_of(&self, id: &str) -> Option<usize> {
-        self.ids.get_index_of(id)
-    }
-
-    fn contains_key(&self, id: &str) -> bool {
-        self.ids.contains(id)
     }
 
     fn get_mut(&mut self, id: &str) -> Option<&mut NodeDraft> {
@@ -421,15 +422,6 @@ impl Drafts {
             self.drafts[at] = draft;
         }
     }
-}
-
-/// The declarations of one edge identity (`EdgeGroup`).
-struct EdgeGroup {
-    /// The identity (an id or a structural key); the edge key once a single declaration has one.
-    key: JsStr,
-    id_keyed: bool,
-    /// The first declaration, by position among the edge drafts.
-    first: usize,
 }
 
 fn is_record(value: &Value) -> Option<&Object> {
@@ -451,6 +443,60 @@ pub fn normalize(input: &Value, options: NormalizeOptions) -> Result<KGraph> {
     normalize_as(input, options, TextForm::Input)
 }
 
+/// [`normalize`] of a graph built from Rust values: the graph `normalize(&input.to_value(), …)`
+/// gives, with the same `graph_to_json` bytes, hash and issues, without a JSON tree in between.
+///
+/// # Errors
+///
+/// `invalid-input` for attribute values nested too deeply, `dangling-edge` (policy `Error`).
+pub fn normalize_input(input: GraphInput, options: NormalizeOptions) -> Result<KGraph> {
+    let mut shared = Shared::default();
+    let mut builder = GraphBuilder::new(
+        options,
+        TextForm::Input,
+        &mut shared,
+        input.nodes.len(),
+        input.edges.len(),
+    );
+    for node in input.nodes {
+        builder.add_node_input(node)?;
+    }
+    for edge in input.edges {
+        builder.add_edge_input(edge)?;
+    }
+    Ok(builder.finish(input.meta))
+}
+
+/// [`normalize`] of a graph given as JSON text: the graph `normalize(&json::parse(text)?, …)`
+/// gives. The elements of `nodes` and then `edges` go to the graph as they are read, so that the
+/// whole text never exists as a tree of values, unless the document needs one (the arrays in the
+/// other order or repeated, or the text or the graph at fault, to report it).
+///
+/// # Errors
+///
+/// `invalid-input` for text that is not JSON, and what [`normalize`] rejects.
+pub fn normalize_json(text: &str, options: NormalizeOptions) -> Result<KGraph> {
+    if let Some(graph) = stream_graph(text, options) {
+        return Ok(graph);
+    }
+    let input = json::parse(text).map_err(|e| fail(format!("The graph is not JSON: {e}")))?;
+    normalize(&input, options)
+}
+
+/// The graph of a document read element by element, or `None` for [`normalize_json`] to read it
+/// whole.
+fn stream_graph(text: &str, options: NormalizeOptions) -> Option<KGraph> {
+    let mut shared = Shared::default();
+    let mut builder = GraphBuilder::new(options, TextForm::Input, &mut shared, 0, 0);
+    let rest = json::Parser::new(text).stream_graph(&mut |section, item| match section {
+        json::GraphSection::Nodes => builder.read_node(&item).is_ok(),
+        json::GraphSection::Edges => builder.read_edge(&item).is_ok(),
+    })?;
+    check_format(&rest).ok()?;
+    let meta = rest.get("meta").and_then(Value::as_object).cloned();
+    Some(builder.finish(meta.unwrap_or_default()))
+}
+
 pub(crate) fn normalize_as(
     input: &Value,
     options: NormalizeOptions,
@@ -464,9 +510,8 @@ pub(crate) fn normalize_as(
 /// Sharing changes no result.
 #[derive(Default)]
 pub(crate) struct Shared<'a> {
-    /// Each predicate once, with its default label and its position (which identifies it when
-    /// edges are grouped).
-    predicates: Lookup<JsStr, (JsStr, JsStr, usize)>,
+    /// Each predicate once, with its default label.
+    predicates: Lookup<JsStr, (JsStr, JsStr)>,
     /// The nodes of a graph normalized before, whose ids the next graph shares.
     nodes: Option<&'a IndexMap<Id, Arc<KGNode>>>,
 }
@@ -502,33 +547,161 @@ pub(crate) fn normalize_shared(
         Some(Value::Array(items)) => items,
         Some(_) => return Err(fail("graph.edges must be an array")),
     };
-    let edge_identity = options.edge_identity;
-    let dangling = options.dangling_edges;
-    let mut issues: Vec<GraphIssue> = Vec::new();
-
-    // ── Nodes ──
-    let mut drafts = Drafts::with_capacity(raw_nodes.len());
+    let mut builder = GraphBuilder::new(options, form, shared, raw_nodes.len(), raw_edges.len());
     for raw in raw_nodes {
-        let raw = is_record(raw).ok_or_else(|| fail("graph.nodes must contain objects"))?;
-        let Some(id) = coerce_id(raw.get("id")) else {
-            issues.push(GraphIssue {
-                code: GraphIssueCode::EmptyId,
-                message: "Dropped a node without an id".to_owned(),
-                reference: None,
-            });
-            continue;
-        };
-        let id = match shared
+        builder.read_node(raw)?;
+    }
+    for raw in raw_edges {
+        builder.read_edge(raw)?;
+    }
+    let meta = record.get("meta").and_then(Value::as_object).cloned();
+    Ok(builder.finish(meta.unwrap_or_default()))
+}
+
+/// A position in one of the tables of a graph, which are addressed with 32 bits.
+fn table_position(at: usize) -> Result<u32> {
+    u32::try_from(at)
+        .ok()
+        .filter(|&at| at < u32::MAX)
+        .ok_or_else(|| fail("A graph may have at most 4,294,967,294 nodes, edges and texts"))
+}
+
+fn usize_of(at: u32) -> usize {
+    usize::try_from(at).unwrap_or(usize::MAX)
+}
+
+/// The predicates and labels of a graph's edges, each text once.
+#[derive(Default)]
+struct Texts {
+    positions: Lookup<JsStr, u32>,
+    texts: Vec<JsStr>,
+}
+
+impl Texts {
+    fn intern(&mut self, text: JsStr) -> Result<u32> {
+        if let Some(&at) = self.positions.get(text.as_str()) {
+            return Ok(at);
+        }
+        let at = table_position(self.texts.len())?;
+        self.texts.push(text.clone());
+        self.positions.insert(text, at);
+        Ok(at)
+    }
+}
+
+/// An edge whose ends, predicate and label are settled, waiting for its id and attributes.
+struct EdgeSlot(EdgeRow);
+
+/// Builds one graph from declarations, whichever way they are read: JSON values, Rust values or
+/// JSON text. Nodes first, then edges.
+struct GraphBuilder<'a, 'n> {
+    edge_identity: EdgeIdentity,
+    dangling: DanglingEdges,
+    form: TextForm,
+    shared: &'a mut Shared<'n>,
+    issues: Vec<GraphIssue>,
+    /// The declarations, until the first edge settles them into `nodes`.
+    drafts: Drafts,
+    nodes: IndexMap<Id, Arc<KGNode>>,
+    texts: Texts,
+    /// Each predicate once: its position and that of its default label.
+    predicates: Lookup<JsStr, (u32, u32)>,
+    /// The edges as they are declared, which is what the graph keeps unless some of them repeat.
+    edges: EdgeTable,
+}
+
+impl<'a, 'n> GraphBuilder<'a, 'n> {
+    fn new(
+        options: NormalizeOptions,
+        form: TextForm,
+        shared: &'a mut Shared<'n>,
+        nodes: usize,
+        edges: usize,
+    ) -> Self {
+        GraphBuilder {
+            edge_identity: options.edge_identity,
+            dangling: options.dangling_edges,
+            form,
+            shared,
+            issues: Vec::new(),
+            drafts: Drafts::with_capacity(nodes),
+            nodes: IndexMap::default(),
+            texts: Texts::default(),
+            predicates: Lookup::new(),
+            edges: EdgeTable::with_capacity(edges),
+        }
+    }
+
+    /// The text of `id` to keep: the first graph's, if it has the node too.
+    fn shared_id(&self, id: Id) -> Id {
+        match self
+            .shared
             .nodes
             .and_then(|nodes| nodes.get_key_value(id.as_str()))
         {
             Some((known, _)) => known.clone(),
             None => id,
+        }
+    }
+
+    fn node_without_id(&mut self) {
+        self.issues.push(GraphIssue {
+            code: GraphIssueCode::EmptyId,
+            message: "Dropped a node without an id".to_owned(),
+            reference: None,
+        });
+    }
+
+    fn edge_without_end(&mut self) {
+        self.issues.push(GraphIssue {
+            code: GraphIssueCode::EmptyId,
+            message: "Dropped an edge with an empty endpoint".to_owned(),
+            reference: None,
+        });
+    }
+
+    fn read_node(&mut self, raw: &Value) -> Result<()> {
+        let raw = is_record(raw).ok_or_else(|| fail("graph.nodes must contain objects"))?;
+        let Some(id) = coerce_id(raw.get("id")) else {
+            self.node_without_id();
+            return Ok(());
         };
-        let draft = draft_node(raw, id.clone(), form)?;
-        if let Some(existing) = drafts.get_mut(&id) {
+        let id = self.shared_id(id);
+        let draft = draft_node(raw, id, self.form)?;
+        self.add_draft(draft)
+    }
+
+    fn add_node_input(&mut self, node: NodeInput) -> Result<()> {
+        if node.id.is_empty() {
+            self.node_without_id();
+            return Ok(());
+        }
+        let id = self.shared_id(node.id);
+        let form = self.form;
+        let attrs = attrs_of(Some(&Value::Object(node.attrs)), &id, None)?;
+        self.add_draft(NodeDraft {
+            label: node
+                .label
+                .filter(|label| !label.is_empty())
+                .map(|label| form.text(&label)),
+            types: node.types.iter().map(|t| form.text(t)).collect(),
+            aliases: node.aliases.iter().map(|a| form.text(a)).collect(),
+            attrs,
+            deprecated: Some(node.deprecated),
+            replaces: node.replaces,
+            replaced_by: node.replaced_by,
+            implicit: node.implicit,
+            position: node.position.filter(|p| p.x.is_finite() && p.y.is_finite()),
+            id,
+        })
+    }
+
+    fn add_draft(&mut self, draft: NodeDraft) -> Result<()> {
+        table_position(self.drafts.ids.len())?;
+        let id = draft.id.clone();
+        if let Some(existing) = self.drafts.get_mut(&id) {
             merge_draft(existing, draft);
-            issues.push(GraphIssue {
+            self.issues.push(GraphIssue {
                 code: GraphIssueCode::DuplicateNode,
                 message: format!(
                     "Node \"{id}\" is declared more than once; the declarations were merged"
@@ -536,129 +709,265 @@ pub(crate) fn normalize_shared(
                 reference: Some(id),
             });
         } else {
-            drafts.insert(id, draft);
+            self.drafts.insert(id, draft);
         }
+        Ok(())
     }
 
-    // ── Edges: endpoints, defaults ──
-    // Each predicate once, with its default label: edges share both.
-    let predicates = &mut shared.predicates;
-    // Taken out one by one when the edges are keyed.
-    let mut edge_drafts: Vec<Option<EdgeDraft>> = Vec::with_capacity(raw_edges.len());
-    for raw in raw_edges {
+    /// Turns the declarations into nodes, at the first edge: from then on a node can only be
+    /// created for a dangling end, and is declared only once. Done before the edges take up
+    /// memory, so that the drafts and the edges are never held at once.
+    fn settle_nodes(&mut self) {
+        if self.drafts.ids.is_empty() {
+            return;
+        }
+        let drafts = std::mem::replace(&mut self.drafts, Drafts::with_capacity(0));
+        self.nodes = drafts
+            .ids
+            .into_iter()
+            .zip(drafts.drafts)
+            .map(|(id, draft)| (id, Arc::new(finish_node(draft))))
+            .collect();
+    }
+
+    fn read_edge(&mut self, raw: &Value) -> Result<()> {
         let edge = is_record(raw).ok_or_else(|| fail("graph.edges must contain objects"))?;
         let (Some(source), Some(target)) =
             (coerce_id(edge.get("source")), coerce_id(edge.get("target")))
         else {
-            issues.push(GraphIssue {
-                code: GraphIssueCode::EmptyId,
-                message: "Dropped an edge with an empty endpoint".to_owned(),
-                reference: None,
-            });
-            continue;
+            self.edge_without_end();
+            return Ok(());
         };
         let predicate =
             optional_string(edge.get("predicate"), &source, Some(&target), "predicate")?
                 .unwrap_or_default();
         let explicit = optional_string(edge.get("label"), &source, Some(&target), "label")?;
-        let next = predicates.len();
-        let (predicate, default_label, predicate_at) = predicates
+        let Some(slot) = self.settle_edge(&source, &target, predicate, explicit)? else {
+            return Ok(());
+        };
+        let id = coerce_id(edge.get("id"));
+        let attrs = attrs_of(edge.get("attrs"), &source, Some(&target))?.unwrap_or_default();
+        self.push_edge(slot, id, attrs)
+    }
+
+    fn add_edge_input(&mut self, edge: EdgeInput) -> Result<()> {
+        if edge.source.is_empty() || edge.target.is_empty() {
+            self.edge_without_end();
+            return Ok(());
+        }
+        let Some(slot) =
+            self.settle_edge(&edge.source, &edge.target, edge.predicate, edge.label)?
+        else {
+            return Ok(());
+        };
+        let attrs = attrs_of(
+            Some(&Value::Object(edge.attrs)),
+            &edge.source,
+            Some(&edge.target),
+        )?
+        .unwrap_or_default();
+        self.push_edge(slot, edge.id.filter(|id| !id.is_empty()), attrs)
+    }
+
+    /// The positions of a predicate and of its default label.
+    fn predicate_at(&mut self, predicate: JsStr) -> Result<(u32, u32)> {
+        if let Some(&found) = self.predicates.get(predicate.as_str()) {
+            return Ok(found);
+        }
+        let form = self.form;
+        let (text, label) = self
+            .shared
+            .predicates
             .get_or_insert_with(predicate.clone(), || {
                 let label = form.edge_label(&predicate);
-                (predicate, label, next)
+                (predicate, label)
             })
             .clone();
-        let label = match explicit {
-            Some(label) => form.text(&label),
+        let found = (self.texts.intern(text.clone())?, self.texts.intern(label)?);
+        self.predicates.insert(text, found);
+        Ok(found)
+    }
+
+    /// Finds the ends of an edge, applying the dangling policy, and its predicate and label.
+    /// `None`: the edge is dropped.
+    fn settle_edge(
+        &mut self,
+        source: &Id,
+        target: &Id,
+        predicate: JsStr,
+        explicit: Option<JsStr>,
+    ) -> Result<Option<EdgeSlot>> {
+        self.settle_nodes();
+        let (predicate_at, default_label) = self.predicate_at(predicate)?;
+        let label_at = match explicit {
+            Some(label) => self.texts.intern(self.form.text(&label))?,
             None => default_label,
         };
-        let mut ends = (drafts.get_index_of(&source), drafts.get_index_of(&target));
+        let mut ends = (
+            self.nodes.get_index_of(source.as_str()),
+            self.nodes.get_index_of(target.as_str()),
+        );
         if ends.0.is_none() || ends.1.is_none() {
+            let predicate = self.texts.texts[usize_of(predicate_at)].clone();
             handle_dangling(
-                &source,
+                source,
                 &predicate,
-                &target,
-                dangling,
-                &mut drafts,
-                &mut issues,
+                target,
+                self.dangling,
+                &mut self.nodes,
+                &mut self.issues,
             )?;
-            if dangling == DanglingEdges::Drop {
-                continue;
+            if self.dangling == DanglingEdges::Drop {
+                return Ok(None);
             }
-            ends = (drafts.get_index_of(&source), drafts.get_index_of(&target));
+            ends = (
+                self.nodes.get_index_of(source.as_str()),
+                self.nodes.get_index_of(target.as_str()),
+            );
         }
         let (Some(source_at), Some(target_at)) = ends else {
             unreachable!("dangling ends were created")
         };
-        // The ends as the nodes' own ids, which the graph shares.
-        let id_at = |at: usize| drafts.ids.get_index(at).cloned();
-        let (Some(source), Some(target)) = (id_at(source_at), id_at(target_at)) else {
-            unreachable!("ends are nodes")
-        };
-        let id = coerce_id(edge.get("id"));
-        let attrs = attrs_of(edge.get("attrs"), &source, Some(&target))?.unwrap_or_default();
-        edge_drafts.push(Some(EdgeDraft {
-            id,
-            source,
-            target,
-            predicate,
-            label,
-            attrs,
-            ends: (source_at, target_at),
-            predicate_at,
-        }));
+        Ok(Some(EdgeSlot(EdgeRow {
+            source: table_position(source_at)?,
+            target: table_position(target_at)?,
+            predicate: predicate_at,
+            label: label_at,
+        })))
     }
 
-    let nodes: IndexMap<Id, Arc<KGNode>> = drafts
-        .ids
-        .into_iter()
-        .zip(drafts.drafts)
-        .map(|(id, draft)| (id, Arc::new(finish_node(draft))))
-        .collect();
+    fn push_edge(&mut self, slot: EdgeSlot, id: Option<Id>, attrs: Attrs) -> Result<()> {
+        table_position(self.edges.len())?;
+        self.edges.push(slot.0, id, attrs);
+        Ok(())
+    }
 
-    // ── Edges: identity keys ──
-    // Ids and structural keys are grouped apart, and id-keyed groups are keyed first, so an id
-    // that looks like a structural key can only push the structural key aside (to `#2`).
-    let edge_count = edge_drafts.len();
-    let mut groups: Vec<EdgeGroup> = Vec::with_capacity(edge_count);
-    // The further declarations of an identity, by group; most identities occur once.
-    let mut repeats: Lookup<usize, Vec<usize>> = Lookup::new();
-    {
-        let mut by_id: Lookup<JsStr, usize> = Lookup::new();
-        // Triples by the positions of their source, predicate and target: equal positions are
-        // equal strings, so no structural key needs hashing.
-        let mut by_triple: Lookup<(usize, usize, usize), usize> = Lookup::with_capacity(edge_count);
-        let mut buffer = String::new();
-        for (at, draft) in edge_drafts.iter().enumerate() {
-            let Some(draft) = draft else { continue };
-            let next = groups.len();
-            let (group, id_keyed) = match &draft.id {
-                Some(id) if edge_identity == EdgeIdentity::Id => {
-                    (*by_id.get_or_insert_with(id.clone(), || next), true)
-                }
-                _ => {
-                    let triple = (draft.ends.0, draft.predicate_at, draft.ends.1);
-                    (*by_triple.get_or_insert_with(triple, || next), false)
-                }
-            };
-            if group != next {
-                repeats.get_or_insert_with(group, Vec::new).push(at);
+    fn finish(mut self, meta: Object) -> KGraph {
+        self.settle_nodes();
+        let GraphBuilder {
+            edge_identity,
+            mut issues,
+            nodes,
+            texts,
+            mut edges,
+            ..
+        } = self;
+        edges.set_texts(texts.texts);
+        let edges = key_edges(edges, &nodes, edge_identity, &mut issues);
+        issues.sort_by(|a, b| {
+            a.code
+                .as_str()
+                .cmp(b.code.as_str())
+                .then_with(|| {
+                    js::cmp_utf16(
+                        a.reference.as_deref().unwrap_or(""),
+                        b.reference.as_deref().unwrap_or(""),
+                    )
+                })
+                .then_with(|| js::cmp_utf16(&a.message, &b.message))
+        });
+        KGraph::assemble(meta, nodes, edges, edge_identity, issues)
+    }
+}
+
+/// The declarations of each structural identity, as the first one and the further ones. Edges
+/// are compared by the positions of their source, predicate and target (equal positions are
+/// equal strings), within the edges of one source. Edges for which `keyed_by_id` holds are left
+/// out.
+fn repeated_triples(
+    rows: &[EdgeRow],
+    nodes: usize,
+    keyed_by_id: impl Fn(usize) -> bool,
+) -> Vec<(u32, u32)> {
+    let mut starts = vec![0u32; nodes + 1];
+    for row in rows {
+        starts[usize_of(row.source) + 1] += 1;
+    }
+    for i in 0..nodes {
+        starts[i + 1] += starts[i];
+    }
+    let mut next = starts.clone();
+    let mut by_source = vec![0u32; rows.len()];
+    for (at, row) in (0u32..).zip(rows) {
+        let slot = &mut next[usize_of(row.source)];
+        by_source[usize_of(*slot)] = at;
+        *slot += 1;
+    }
+    drop(next);
+    let mut repeated = Vec::new();
+    for window in starts.windows(2) {
+        let list = &mut by_source[usize_of(window[0])..usize_of(window[1])];
+        if list.len() < 2 {
+            continue;
+        }
+        let triple = |at: u32| (rows[usize_of(at)].predicate, rows[usize_of(at)].target);
+        list.sort_by_key(|&at| triple(at));
+        let mut first: Option<u32> = None;
+        for &at in list.iter() {
+            if keyed_by_id(usize_of(at)) {
                 continue;
             }
-            let key = match (&draft.id, id_keyed) {
-                (Some(id), true) => id.clone(),
-                _ => triple_key_in(&mut buffer, &draft.source, &draft.predicate, &draft.target),
-            };
-            groups.push(EdgeGroup {
-                key,
-                id_keyed,
-                first: at,
-            });
+            match first {
+                Some(leader) if triple(leader) == triple(at) => repeated.push((leader, at)),
+                _ => first = Some(at),
+            }
         }
     }
-    // Collisions between keys are only possible when ids and structural keys mix.
-    let mut taken: Option<Lookup<EdgeKey, ()>> =
-        (edge_identity == EdgeIdentity::Id).then(Lookup::new);
+    repeated
+}
+
+/// Settles the identity of every edge: repeated declarations are merged or become parallel
+/// copies, and every key is unique. What needs no change stays as it was declared.
+fn key_edges(
+    mut edges: EdgeTable,
+    nodes: &IndexMap<Id, Arc<KGNode>>,
+    edge_identity: EdgeIdentity,
+    issues: &mut Vec<GraphIssue>,
+) -> EdgeTable {
+    let id_mode = edge_identity == EdgeIdentity::Id;
+    let edge_count = edges.len();
+    // Ids and structural keys are grouped apart, and id-keyed groups are keyed first, so an id
+    // that looks like a structural key can only push the structural key aside (to `#2`).
+    let keyed_by_id: Vec<bool> = if id_mode {
+        (0..edge_count).map(|at| edges.id(at).is_some()).collect()
+    } else {
+        Vec::new()
+    };
+    let is_id_keyed = |at: usize| keyed_by_id.get(at).copied().unwrap_or(false);
+    // The further declarations of an identity, by its first; most identities occur once.
+    let mut repeats: Lookup<u32, Vec<u32>> = Lookup::new();
+    let mut repeated: Lookup<u32, ()> = Lookup::new();
+    let mut triples = repeated_triples(edges.rows(), nodes.len(), is_id_keyed);
+    triples.sort_by_key(|&(_, at)| at);
+    for (leader, at) in triples {
+        repeats.get_or_insert_with(leader, Vec::new).push(at);
+        repeated.insert(at, ());
+    }
+    if id_mode {
+        let mut by_id: Lookup<JsStr, u32> = Lookup::new();
+        for (at, keyed) in (0u32..).zip(keyed_by_id.iter().copied()) {
+            if !keyed {
+                continue;
+            }
+            let Some(id) = edges.id(usize_of(at)) else {
+                continue;
+            };
+            let leader = *by_id.get_or_insert_with(id.clone(), || at);
+            if leader != at {
+                repeats.get_or_insert_with(leader, Vec::new).push(at);
+                repeated.insert(at, ());
+            }
+        }
+    }
+    if repeats.is_empty() && !id_mode {
+        return edges;
+    }
+
+    // The edges of identities declared more than once: one merged edge, or parallel copies.
+    let mut several: Lookup<u32, Vec<(EdgeKey, EdgeDraft)>> = Lookup::new();
+    // Keys that had to give way, by edge.
+    let mut moved: Lookup<u32, EdgeKey> = Lookup::new();
+    let mut taken: Option<Lookup<EdgeKey, ()>> = id_mode.then(Lookup::new);
     let mut unique = |key: JsStr| -> JsStr {
         let Some(taken) = taken.as_mut() else {
             return key;
@@ -672,138 +981,145 @@ pub(crate) fn normalize_shared(
         taken.insert(candidate.clone(), ());
         candidate
     };
-    // The edges of groups declared more than once: one merged edge, or parallel copies.
-    let mut several: Lookup<usize, Vec<(EdgeKey, EdgeDraft)>> = Lookup::new();
+    let mut buffer = String::new();
+    let texts = edges.take_texts();
+    let names = Names {
+        nodes,
+        texts: &texts,
+    };
     for pass in [true, false] {
-        for (at, group) in groups.iter_mut().enumerate() {
-            if group.id_keyed != pass {
+        if pass && !id_mode {
+            continue;
+        }
+        for at in 0..edge_count {
+            let this = u32::try_from(at).unwrap_or(u32::MAX);
+            if is_id_keyed(at) != pass
+                || repeated.contains_key(&this)
+                || (!id_mode && !repeats.contains_key(&this))
+            {
                 continue;
             }
-            let Some(more) = repeats.remove(&at) else {
-                group.key = unique(group.key.clone());
+            let row = edges.rows()[at];
+            let base = match edges.id(at) {
+                Some(id) if pass => id.clone(),
+                _ => triple_key_in(
+                    &mut buffer,
+                    names.node(row.source),
+                    names.text(row.predicate),
+                    names.node(row.target),
+                ),
+            };
+            let Some(more) = repeats.remove(&this) else {
+                if id_mode {
+                    let key = unique(base.clone());
+                    if key != base {
+                        moved.insert(this, key);
+                    }
+                }
                 continue;
             };
-            let drafts: Vec<EdgeDraft> = std::iter::once(group.first)
+            let drafts: Vec<EdgeDraft> = std::iter::once(this)
                 .chain(more)
-                .filter_map(|at| edge_drafts[at].take())
+                .map(|at| edges.take_draft(usize_of(at)))
                 .collect();
             let count = drafts.len();
             if pass {
-                let merged = merge_edge_drafts(drafts);
-                several.insert(at, vec![(unique(group.key.clone()), merged)]);
+                let merged = merge_edge_drafts(drafts, names);
+                several.insert(this, vec![(unique(base.clone()), merged)]);
                 issues.push(GraphIssue {
                     code: GraphIssueCode::DuplicateEdge,
                     message: format!(
-                        "Edge id \"{}\" is used {count} times; the declarations were merged",
-                        group.key
+                        "Edge id \"{base}\" is used {count} times; the declarations were merged"
                     ),
-                    reference: Some(group.key.clone()),
+                    reference: Some(base),
                 });
             } else {
-                let keyed = insert_parallel(&group.key, drafts, &mut issues)
+                let keyed = insert_parallel(&base, drafts, names, issues)
                     .into_iter()
                     .map(|(key, draft)| (unique(key), draft))
                     .collect();
-                several.insert(at, keyed);
+                several.insert(this, keyed);
             }
         }
     }
+    if repeated.is_empty() && several.is_empty() && moved.is_empty() {
+        edges.set_texts(texts);
+        return edges;
+    }
     // Edges keep the order in which their identity first appeared.
-    let mut edges: IndexMap<EdgeKey, Arc<KGEdge>> =
-        IndexMap::with_capacity_and_hasher(edge_count, Default::default());
-    let mut ends: Vec<(usize, usize)> = Vec::with_capacity(edge_count);
-    let mut add = |key: EdgeKey, draft: EdgeDraft| {
-        let (edge, at) = draft.into_edge(key);
-        let (index, replaced) = edges.insert_full(edge.key.clone(), Arc::new(edge));
-        if replaced.is_some() {
-            ends[index] = at;
-        } else {
-            ends.push(at);
-        }
+    let mut table = EdgeTable::with_capacity(edge_count);
+    table.set_texts(texts);
+    let mut keys = KeyContext {
+        nodes,
+        identity: edge_identity,
+        buffer: String::new(),
     };
-    for (at, group) in groups.into_iter().enumerate() {
-        match several.remove(&at) {
+    for at in 0..edge_count {
+        let this = u32::try_from(at).unwrap_or(u32::MAX);
+        if repeated.contains_key(&this) {
+            continue;
+        }
+        match several.remove(&this) {
             Some(keyed) => {
                 for (key, draft) in keyed {
-                    add(key, draft);
+                    table.push_keyed(&mut keys, draft, key);
                 }
             }
             None => {
-                if let Some(draft) = edge_drafts[group.first].take() {
-                    add(group.key, draft);
+                let draft = edges.take_draft(at);
+                match moved.remove(&this) {
+                    Some(key) => table.push_keyed(&mut keys, draft, key),
+                    None => table.push(draft.row, draft.id, draft.attrs),
                 }
             }
         }
     }
-    drop(edge_drafts);
-
-    issues.sort_by(|a, b| {
-        a.code
-            .as_str()
-            .cmp(b.code.as_str())
-            .then_with(|| {
-                js::cmp_utf16(
-                    a.reference.as_deref().unwrap_or(""),
-                    b.reference.as_deref().unwrap_or(""),
-                )
-            })
-            .then_with(|| js::cmp_utf16(&a.message, &b.message))
-    });
-    Ok(graph_of(
-        record.get("meta"),
-        nodes,
-        edges,
-        &ends,
-        edge_identity,
-        issues,
-    ))
+    table
 }
 
 /// The graph of indexed nodes and keyed edges, with its adjacency (`indexGraph`): for every node,
-/// in node order, its outgoing and its incoming edges, in edge order. Every end of
-/// an edge must be a node (`normalize` and `diff_from_json` make sure of it); an edge whose end is
-/// not is left out of the adjacency.
+/// in node order, its outgoing and its incoming edges, in edge order. `None` if an end of an edge
+/// is not a node.
 pub(crate) fn index_graph(
     meta: Option<&Value>,
     nodes: IndexMap<Id, Arc<KGNode>>,
     edges: IndexMap<EdgeKey, Arc<KGEdge>>,
     edge_identity: EdgeIdentity,
     issues: Vec<GraphIssue>,
-) -> KGraph {
-    let ends: Vec<(usize, usize)> = edges
-        .values()
-        .map(|e| {
-            let at = |id: &Id| nodes.get_index_of(id).unwrap_or(usize::MAX);
-            (at(&e.source), at(&e.target))
-        })
-        .collect();
-    graph_of(meta, nodes, edges, &ends, edge_identity, issues)
-}
-
-/// [`index_graph`] with the positions of each edge's ends among the nodes known already.
-fn graph_of(
-    meta: Option<&Value>,
-    nodes: IndexMap<Id, Arc<KGNode>>,
-    edges: IndexMap<EdgeKey, Arc<KGEdge>>,
-    ends: &[(usize, usize)],
-    edge_identity: EdgeIdentity,
-    issues: Vec<GraphIssue>,
-) -> KGraph {
-    let n = nodes.len();
-    // An edge whose source or target is not a node is in neither list.
-    let both = |&(s, t): &(usize, usize)| s < n && t < n;
-    let outgoing = Adjacency::build(n, ends.iter().map(|e| both(e).then_some(e.0)));
-    let incoming = Adjacency::build(n, ends.iter().map(|e| both(e).then_some(e.1)));
-    KGraph {
-        meta: meta.and_then(Value::as_object).cloned().unwrap_or_default(),
+) -> Option<KGraph> {
+    let mut texts = Texts::default();
+    let mut rows = Vec::with_capacity(edges.len());
+    for edge in edges.values() {
+        rows.push(EdgeRow {
+            source: table_position(nodes.get_index_of(&edge.source)?).ok()?,
+            target: table_position(nodes.get_index_of(&edge.target)?).ok()?,
+            predicate: texts.intern(edge.predicate.clone()).ok()?,
+            label: texts.intern(edge.label.clone()).ok()?,
+        });
+    }
+    let mut table = EdgeTable::with_capacity(edges.len());
+    table.set_texts(texts.texts);
+    let mut keys = KeyContext {
+        nodes: &nodes,
+        identity: edge_identity,
+        buffer: String::new(),
+    };
+    for (row, (key, edge)) in rows.into_iter().zip(edges) {
+        let draft = EdgeDraft {
+            id: edge.id.clone(),
+            attrs: edge.attrs.clone(),
+            row,
+        };
+        table.push_keyed(&mut keys, draft, key);
+    }
+    let meta = meta.and_then(Value::as_object).cloned();
+    Some(KGraph::assemble(
+        meta.unwrap_or_default(),
         nodes,
-        edges,
-        outgoing,
-        incoming,
+        table,
         edge_identity,
         issues,
-        hash: OnceLock::new(),
-    }
+    ))
 }
 
 /// Applies the dangling-endpoint policy to an edge with an undeclared endpoint (`handleDangling`).
@@ -812,7 +1128,7 @@ fn handle_dangling(
     predicate: &JsStr,
     target: &Id,
     policy: DanglingEdges,
-    drafts: &mut Drafts,
+    nodes: &mut IndexMap<Id, Arc<KGNode>>,
     issues: &mut Vec<GraphIssue>,
 ) -> Result<()> {
     let endpoints: &[&Id] = if source == target {
@@ -821,7 +1137,7 @@ fn handle_dangling(
         &[source, target]
     };
     for &endpoint in endpoints {
-        if drafts.contains_key(endpoint) {
+        if nodes.contains_key(endpoint.as_str()) {
             continue;
         }
         match policy {
@@ -841,21 +1157,19 @@ fn handle_dangling(
                 ])));
             }
             DanglingEdges::Create => {
-                drafts.insert(
-                    endpoint.clone(),
-                    NodeDraft {
-                        id: endpoint.clone(),
-                        label: None,
-                        types: Vec::new(),
-                        aliases: Vec::new(),
-                        attrs: None,
-                        deprecated: None,
-                        replaces: Vec::new(),
-                        replaced_by: Vec::new(),
-                        implicit: true,
-                        position: None,
-                    },
-                );
+                let node = finish_node(NodeDraft {
+                    id: endpoint.clone(),
+                    label: None,
+                    types: Vec::new(),
+                    aliases: Vec::new(),
+                    attrs: None,
+                    deprecated: None,
+                    replaces: Vec::new(),
+                    replaced_by: Vec::new(),
+                    implicit: true,
+                    position: None,
+                });
+                nodes.insert(endpoint.clone(), Arc::new(node));
             }
             DanglingEdges::Drop => {}
         }
@@ -875,13 +1189,13 @@ fn handle_dangling(
 
 /// Repeated edge ids, merged independently of declaration order (`mergeEdgeDrafts`): the
 /// structure of the declaration largest by canonical JSON, attributes merged per key.
-fn merge_edge_drafts(group: Vec<EdgeDraft>) -> EdgeDraft {
+fn merge_edge_drafts(group: Vec<EdgeDraft>, names: Names<'_>) -> EdgeDraft {
     let structure = |d: &EdgeDraft| {
         canonical_json(&Value::Array(vec![
-            Value::from(&d.source),
-            Value::from(&d.predicate),
-            Value::from(&d.target),
-            Value::from(&d.label),
+            Value::from(names.source(d)),
+            Value::from(names.predicate(d)),
+            Value::from(names.target(d)),
+            Value::from(names.label(d)),
         ]))
     };
     let mut group = group.into_iter();
@@ -904,12 +1218,13 @@ fn merge_edge_drafts(group: Vec<EdgeDraft>) -> EdgeDraft {
 fn insert_parallel(
     base: &JsStr,
     group: Vec<EdgeDraft>,
+    names: Names<'_>,
     issues: &mut Vec<GraphIssue>,
 ) -> Vec<(JsStr, EdgeDraft)> {
     let mut by_content: IndexMap<String, EdgeDraft> = IndexMap::default();
     let mut collapsed = 0;
     for draft in group {
-        let content = parallel_content(&draft);
+        let content = parallel_content(&draft, names);
         match by_content.get_mut(&content) {
             None => {
                 by_content.insert(content, draft);

@@ -3,9 +3,10 @@
 
 use std::io::Read;
 
-use kgdiff_core::js::{Object, Value, json};
+use kgdiff_core::js::{JsStr, Object, Value, json, number_to_string};
 use kgdiff_core::{
-    KGraph, NormalizeOptions, graph_to_json, hash_graph, normalize, resolve_options,
+    EdgeInput, GraphInput, KGraph, NodeInput, NormalizeOptions, Point, graph_to_json, hash_graph,
+    normalize, normalize_input, normalize_json, resolve_options,
 };
 use kgdiff_formats::{FormatId, ParseOptions, ParseResult, RdfOptions, parse_graph};
 
@@ -202,13 +203,170 @@ pub fn graph_after(case: &Case) -> Result<Vec<u8>, String> {
     Ok(line(&graph_to_json(&after)))
 }
 
+// ─── The other ways into a graph (RFC 0003, part 3) ─────────────────────────
+
+/// An id as `normalize` reads one: a string, or a finite number as text; empty otherwise.
+fn id_of(value: Option<&Value>) -> Option<JsStr> {
+    match value {
+        None => Some(JsStr::default()),
+        Some(Value::String(s)) => Some(s.clone()),
+        Some(Value::Number(x)) if x.is_finite() => Some(JsStr::from(number_to_string(*x))),
+        Some(_) => Some(JsStr::default()),
+    }
+}
+
+fn text_of(value: Option<&Value>) -> Option<Option<JsStr>> {
+    match value {
+        None | Some(Value::Null) => Some(None),
+        Some(Value::String(s)) => Some(Some(s.clone())),
+        Some(_) => None,
+    }
+}
+
+fn texts_of(value: Option<&Value>) -> Option<Vec<JsStr>> {
+    match value {
+        None | Some(Value::Null) => Some(Vec::new()),
+        Some(Value::String(s)) => Some(vec![s.clone()]),
+        Some(Value::Array(items)) => items.iter().map(|i| i.as_js_str().cloned()).collect(),
+        Some(_) => None,
+    }
+}
+
+fn attrs_of(value: Option<&Value>) -> Option<Object> {
+    match value {
+        None | Some(Value::Null) => Some(Object::new()),
+        Some(Value::Object(attrs)) => Some(attrs.clone()),
+        Some(_) => None,
+    }
+}
+
+/// The graph a parsed input stands for, as Rust values; `None` if it has a field `normalize`
+/// rejects (the typed input cannot hold it).
+fn input_of(graph: &Value) -> Option<GraphInput> {
+    let record = graph.as_object()?;
+    let mut input = GraphInput {
+        meta: record
+            .get("meta")
+            .and_then(Value::as_object)
+            .cloned()
+            .unwrap_or_default(),
+        ..GraphInput::default()
+    };
+    for node in record.get("nodes")?.as_array()? {
+        let node = node.as_object()?;
+        let mut types = texts_of(node.get("type"))?;
+        types.extend(texts_of(node.get("types"))?);
+        let position = node
+            .get("position")
+            .and_then(Value::as_object)
+            .and_then(|p| {
+                Some(Point {
+                    x: p.get("x")?.as_f64()?,
+                    y: p.get("y")?.as_f64()?,
+                })
+            });
+        input.nodes.push(NodeInput {
+            id: id_of(node.get("id"))?,
+            label: text_of(node.get("label"))?,
+            types,
+            aliases: texts_of(node.get("aliases"))?,
+            attrs: attrs_of(node.get("attrs"))?,
+            deprecated: match node.get("deprecated") {
+                None | Some(Value::Null) => false,
+                Some(Value::Bool(b)) => *b,
+                Some(_) => return None,
+            },
+            replaces: texts_of(node.get("replaces"))?,
+            replaced_by: texts_of(node.get("replacedBy"))?,
+            implicit: node.get("implicit") == Some(&Value::Bool(true)),
+            position,
+        });
+    }
+    let edges = match record.get("edges") {
+        None | Some(Value::Null) => &[][..],
+        Some(Value::Array(items)) => items,
+        Some(_) => return None,
+    };
+    for edge in edges {
+        let edge = edge.as_object()?;
+        input.edges.push(EdgeInput {
+            id: id_of(edge.get("id")).filter(|id| !id.is_empty()),
+            source: id_of(edge.get("source"))?,
+            target: id_of(edge.get("target"))?,
+            predicate: text_of(edge.get("predicate"))?.unwrap_or_default(),
+            label: text_of(edge.get("label"))?,
+            attrs: attrs_of(edge.get("attrs"))?,
+        });
+    }
+    Some(input)
+}
+
+/// What the contract compares: the `graph_to_json` bytes, the hash and the issues.
+fn outcome(graph: &kgdiff_core::Result<KGraph>) -> String {
+    match graph {
+        Ok(graph) => format!(
+            "{}\n{}\n{}",
+            json::to_string(&graph_to_json(graph)),
+            hash_graph(graph),
+            json::to_string(&Value::Array(
+                graph.issues().iter().map(|i| i.to_value()).collect()
+            ))
+        ),
+        Err(e) => format!("error {} {}", e.code, e.message),
+    }
+}
+
+/// One side normalized four ways — from the parsed value, from Rust values (`normalize_input`)
+/// and their JSON (`to_value`), and from JSON text (`normalize_json`) — which must agree; then the
+/// graph, which must be the expected one.
+fn every_way(case: &Case, side: &str) -> Result<Vec<u8>, String> {
+    let options = resolve_options(Some(&options(case)?)).map_err(|e| e.message)?;
+    let options = NormalizeOptions {
+        edge_identity: options.edge_identity,
+        ..NormalizeOptions::default()
+    };
+    let graph = graph_of(case, side)?;
+    let reference = normalize(&graph, options);
+    let expected = outcome(&reference);
+    let text = outcome(&normalize_json(&json::to_string(&graph), options));
+    if text != expected {
+        return Err(format!("normalize_json({side}) differs from normalize"));
+    }
+    let input = input_of(&graph).ok_or_else(|| format!("{side} has no typed form"))?;
+    let typed = outcome(&normalize_input(input.clone(), options));
+    if typed != outcome(&normalize(&input.to_value(), options)) {
+        return Err(format!(
+            "normalize_input({side}) differs from normalize(to_value)"
+        ));
+    }
+    if typed != expected {
+        return Err(format!("normalize_input({side}) differs from normalize"));
+    }
+    let graph = reference.map_err(|e| format!("normalize({side}): {} {}", e.code, e.message))?;
+    Ok(line(&graph_to_json(&graph)))
+}
+
+pub fn input_before(case: &Case) -> Result<Vec<u8>, String> {
+    every_way(case, "before")
+}
+
+pub fn input_after(case: &Case) -> Result<Vec<u8>, String> {
+    every_way(case, "after")
+}
+
 pub fn issues(case: &Case) -> Result<Vec<u8>, String> {
     let graphs = graphs(case)?;
     let mut out = Object::new();
     for (side, graph) in SIDES.iter().zip(&graphs) {
         out.insert(
             *side,
-            Value::Array(graph.issues.iter().map(|issue| issue.to_value()).collect()),
+            Value::Array(
+                graph
+                    .issues()
+                    .iter()
+                    .map(|issue| issue.to_value())
+                    .collect(),
+            ),
         );
     }
     Ok(line(&Value::Object(out)))

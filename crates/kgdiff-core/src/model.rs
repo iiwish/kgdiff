@@ -1,10 +1,10 @@
 //! The normalized graph (`KGraph` and its parts in `types.ts`).
 
-use std::sync::{Arc, OnceLock};
-
-use crate::js::IndexMap;
+use std::sync::Arc;
 
 use crate::js::{JsStr, Object, Value};
+
+pub use crate::graph::{EdgeRef, KGEdge, KGNode, KGraph};
 
 /// Identifier of a node within one graph version.
 pub type Id = JsStr;
@@ -51,39 +51,6 @@ impl EdgeIdentity {
     }
 }
 
-/// A normalized node.
-#[derive(Clone, Debug, PartialEq)]
-pub struct KGNode {
-    pub id: Id,
-    /// Never empty: falls back to the id.
-    pub label: JsStr,
-    /// Sorted, unique.
-    pub types: Vec<JsStr>,
-    /// Sorted, unique, never contains `label`.
-    pub aliases: Vec<JsStr>,
-    pub attrs: Attrs,
-    pub deprecated: bool,
-    /// Sorted, unique.
-    pub replaces: Vec<Id>,
-    /// Sorted, unique.
-    pub replaced_by: Vec<Id>,
-    /// Created implicitly for a dangling edge endpoint.
-    pub implicit: bool,
-    pub position: Option<Point>,
-}
-
-/// A normalized edge.
-#[derive(Clone, Debug, PartialEq)]
-pub struct KGEdge {
-    pub key: EdgeKey,
-    pub id: Option<Id>,
-    pub source: Id,
-    pub target: Id,
-    pub predicate: JsStr,
-    pub label: JsStr,
-    pub attrs: Attrs,
-}
-
 /// Codes of the issues `normalize` reports.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum GraphIssueCode {
@@ -125,102 +92,6 @@ impl GraphIssue {
             out.insert("ref", reference);
         }
         Value::Object(out)
-    }
-}
-
-/// A normalized, indexed, immutable graph (`normalize`).
-#[derive(Clone, Debug)]
-pub struct KGraph {
-    pub meta: Object,
-    pub nodes: IndexMap<Id, Arc<KGNode>>,
-    pub edges: IndexMap<EdgeKey, Arc<KGEdge>>,
-    /// The edges leaving each node (`outgoing`), see [`KGraph::outgoing`].
-    pub(crate) outgoing: Adjacency,
-    /// The edges entering each node (`incoming`), see [`KGraph::incoming`].
-    pub(crate) incoming: Adjacency,
-    pub edge_identity: EdgeIdentity,
-    pub issues: Vec<GraphIssue>,
-    /// `hash_graph`, computed once.
-    pub(crate) hash: OnceLock<String>,
-}
-
-/// The edges at each node as positions in [`KGraph::edges`], grouped by the node's position in
-/// [`KGraph::nodes`] (compressed rows), each list in edge order. Built once with the graph.
-#[derive(Clone, Debug, Default)]
-pub(crate) struct Adjacency {
-    /// The edges of node `i` are `edges[starts[i]..starts[i + 1]]`.
-    starts: Vec<usize>,
-    edges: Vec<usize>,
-}
-
-impl Adjacency {
-    /// The lists of `nodes` nodes from each edge's end (`None` for an end that is not a node),
-    /// in edge order.
-    pub(crate) fn build(nodes: usize, ends: impl Iterator<Item = Option<usize>> + Clone) -> Self {
-        let mut starts = vec![0usize; nodes + 1];
-        for at in ends.clone().flatten() {
-            starts[at + 1] += 1;
-        }
-        for i in 0..nodes {
-            starts[i + 1] += starts[i];
-        }
-        let mut next = starts.clone();
-        let mut edges = vec![0usize; starts[nodes]];
-        for (edge, at) in ends.enumerate() {
-            if let Some(at) = at {
-                edges[next[at]] = edge;
-                next[at] += 1;
-            }
-        }
-        Adjacency { starts, edges }
-    }
-
-    fn of(&self, node: usize) -> &[usize] {
-        match (self.starts.get(node), self.starts.get(node + 1)) {
-            (Some(&from), Some(&to)) => &self.edges[from..to],
-            _ => &[],
-        }
-    }
-}
-
-impl KGraph {
-    /// The edges leaving the node `id`, in edge order; none for an absent id.
-    pub fn outgoing(&self, id: &str) -> impl Iterator<Item = &Arc<KGEdge>> {
-        self.edges_of(&self.outgoing, id)
-    }
-
-    /// The edges entering the node `id`, in edge order; none for an absent id.
-    pub fn incoming(&self, id: &str) -> impl Iterator<Item = &Arc<KGEdge>> {
-        self.edges_of(&self.incoming, id)
-    }
-
-    /// [`outgoing`](KGraph::outgoing) or, with `out` false, [`incoming`](KGraph::incoming).
-    pub(crate) fn adjacent(&self, id: &str, out: bool) -> impl Iterator<Item = &Arc<KGEdge>> {
-        self.edges_of(if out { &self.outgoing } else { &self.incoming }, id)
-    }
-
-    fn edges_of<'a>(
-        &'a self,
-        adjacency: &'a Adjacency,
-        id: &str,
-    ) -> impl Iterator<Item = &'a Arc<KGEdge>> {
-        let list = self
-            .nodes
-            .get_index_of(id)
-            .map_or(&[][..], |at| adjacency.of(at));
-        list.iter()
-            .filter_map(|&at| self.edges.get_index(at).map(|(_, edge)| edge))
-    }
-
-    /// The degree of the node at position `index` of `nodes`, without a lookup.
-    pub fn degree_at(&self, index: usize) -> usize {
-        self.outgoing.of(index).len() + self.incoming.of(index).len()
-    }
-
-    /// Number of edge ends at a node (a self-loop counts twice); 0 for an absent id (`degree`).
-    pub fn degree(&self, id: Option<&str>) -> usize {
-        id.and_then(|id| self.nodes.get_index_of(id))
-            .map_or(0, |at| self.degree_at(at))
     }
 }
 
@@ -666,7 +537,7 @@ impl UnionNode {
         self.after
             .as_ref()
             .or(self.before.as_ref())
-            .map_or(&[], |n| n.types.as_slice())
+            .map_or(&[], |n| n.types())
     }
 }
 
