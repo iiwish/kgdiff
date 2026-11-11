@@ -1,4 +1,4 @@
-//! The single-file HTML report (`html.ts`, `report.ts`): the standalone viewer bundle and the
+//! The single-file HTML report: the standalone viewer bundle and the
 //! report payload inlined in one accessible document that works offline.
 //!
 //! The payload (`kgdiff.report` version 1, `packages/core/schema/report.v1.json`) carries the
@@ -9,8 +9,8 @@
 //! none (RFC 0003, part 2). The viewer's compute add-on is inlined only where the browser may
 //! still have to lay out: when the layout covers just the changes (large graphs), whose collapsed
 //! groups the reader can expand, or when there is no layout ([`needs_compute`]). Deterministic
-//! apart from `generatedAt`; the gzip stream of a large payload is this encoder's (reports are
-//! not byte-identical to the TypeScript CLI's, a non-goal of RFC 0002).
+//! apart from `generatedAt`; the gzip stream of a large payload is this encoder's
+//! (RFC 0002 does not require it to match any other encoder's).
 
 use std::io::Write as _;
 
@@ -275,7 +275,7 @@ pub fn gzip(data: &[u8]) -> Vec<u8> {
     encoder.finish().unwrap_or_default()
 }
 
-/// The payload as embedded text and its `data-encoding` (`encodePayload`).
+/// The payload as embedded text and its `data-encoding`.
 pub fn encode_payload(payload: &Value, threshold: usize) -> (String, Option<&'static str>) {
     let json = json::to_string(payload);
     if json.len() <= threshold {
@@ -433,7 +433,7 @@ pub fn describe_diff(diff: &DiffResult, locale: Locale) -> String {
     }
 }
 
-/// Whether a report inlines the compute add-on (`needsCompute`): when its layout covers only the
+/// Whether a report inlines the compute add-on: when its layout covers only the
 /// changes (large graphs), where the viewer may lay out the collapsed groups the reader expands,
 /// or when it has no layout at all. A full layout needs nothing computed in the browser.
 pub fn needs_compute(payload: &Value) -> bool {
@@ -463,7 +463,7 @@ fn report_html(
     )
 }
 
-/// The whole report document for a diff (`buildReportHtml`), with the default layout
+/// The whole report document for a diff, with the default layout
 /// ([`report_payload`]): the compute add-on of `bundles` is inlined only when [`needs_compute`].
 pub fn build_report_html(
     diff: &DiffResult,

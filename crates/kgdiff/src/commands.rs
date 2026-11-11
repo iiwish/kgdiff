@@ -1,5 +1,5 @@
-//! The two commands: `kgdiff <before> <after>` (`diff-command.ts`) reads, parses and diffs, then
-//! writes every requested output; `kgdiff apply <graph> <delta>` (`apply-command.ts`) applies a
+//! The two commands: `kgdiff <before> <after>` reads, parses and diffs, then
+//! writes every requested output; `kgdiff apply <graph> <delta>` applies a
 //! delta and writes the patched graph as kgdiff JSON.
 
 use kgdiff_core::js::{self, Object, Value, json};
@@ -33,7 +33,7 @@ pub const MIN_WIDTH: f64 = 40.0;
 /// The width assumed when stdout is not a terminal and `COLUMNS` is unset.
 const PIPE_WIDTH: f64 = 120.0;
 
-/// The columns of text output (`outputWidth`): the terminal's width on a terminal (else
+/// The columns of text output: the terminal's width on a terminal (else
 /// `COLUMNS`, else 80), `COLUMNS` or 120 otherwise; clamped to 40–120.
 pub fn output_width(io: &dyn CliIo) -> usize {
     let from_env = io
@@ -59,7 +59,7 @@ fn meta_text(meta: Option<&Object>, key: &str) -> Option<String> {
     (!trimmed.is_empty()).then(|| trimmed.to_owned())
 }
 
-/// One side's display name (`graphLabel`): `name version` from the graph's meta, else the
+/// One side's display name: `name version` from the graph's meta, else the
 /// input as given.
 pub fn graph_label(meta: Option<&Object>, input: &RawInput) -> String {
     match (meta_text(meta, "name"), meta_text(meta, "version")) {
@@ -69,7 +69,7 @@ pub fn graph_label(meta: Option<&Object>, input: &RawInput) -> String {
     }
 }
 
-/// The default title (`defaultTitle`): `name v1 → v2` when both sides share a name, the two
+/// The default title: `name v1 → v2` when both sides share a name, the two
 /// labels when they differ, else the inputs as given (`a/g.json → b/g.json`).
 pub fn default_title(
     before: (Option<&Object>, &RawInput),
@@ -439,7 +439,7 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
 
 const DELTA_HINT: &str = "Create a delta with `kgdiff <before> <after> --delta <file>`.";
 
-/// Reads a delta from JSON text (`readDelta`): a `kgdiff.delta` document, or a `kgdiff.diff`
+/// Reads a delta from JSON text: a `kgdiff.delta` document, or a `kgdiff.diff`
 /// document (`--json` output), whose delta is used. Its shape and version are checked when it
 /// is applied.
 pub fn read_delta(input: &RawInput) -> CliResult<Value> {
@@ -491,7 +491,7 @@ pub fn read_delta(input: &RawInput) -> CliResult<Value> {
     Ok(value)
 }
 
-/// The patched graph as kgdiff JSON (`graphOutputJSON`): `name` and `version` of the delta's
+/// The patched graph as kgdiff JSON: `name` and `version` of the delta's
 /// target; `source` names the output file, or is left out on stdout, so the result never
 /// claims to be the input file.
 pub fn graph_output_json(graph: &KGraph, source: Option<&str>) -> Value {

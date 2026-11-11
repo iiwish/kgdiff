@@ -1,4 +1,4 @@
-//! The presentation model every text output shares (`model.ts`): hunk families, glyphs,
+//! The presentation model every text output shares: hunk families, glyphs,
 //! name-status letters, phase grouping, the counts behind the counters and the diffstat bar, the
 //! watched attributes flagged for review first, and the possible matches.
 
@@ -59,7 +59,7 @@ pub fn hunk_glyph(hunk: &Hunk) -> &'static str {
     }
 }
 
-/// The `--name-status` letter (`nameStatus`).
+/// The `--name-status` letter.
 pub fn name_status(hunk: &Hunk, diff: &DiffResult) -> &'static str {
     match hunk.kind {
         HunkKind::Add => "A",
@@ -163,7 +163,7 @@ pub fn overview(diff: &DiffResult) -> Overview {
     out
 }
 
-/// Hunks in list order, grouped by `LIST_PHASES`, each group in review order (`groupByPhase`).
+/// Hunks in list order, grouped by `LIST_PHASES`, each group in review order.
 pub fn group_by_phase(hunks: &[Hunk]) -> Vec<(ReplayPhase, Vec<&Hunk>)> {
     LIST_PHASES
         .iter()
@@ -241,7 +241,7 @@ pub fn is_definition_key(key: &str) -> bool {
     DEFAULT_WATCH_ATTRS.contains(&key)
 }
 
-/// The watched attributes each hunk changes, by hunk id, in `watch` order (`watchedChanges`).
+/// The watched attributes each hunk changes, by hunk id, in `watch` order.
 pub fn watched_changes(diff: &DiffResult, watch: &[String]) -> Vec<(String, Vec<String>)> {
     let watched: IndexSet<&str> = watch.iter().map(String::as_str).collect();
     let mut by_hunk = Vec::new();
@@ -313,7 +313,7 @@ fn short_name(label: &str) -> String {
     }
 }
 
-/// The suggestions a reviewer of the text outputs needs (`possibleMatches`): where the before
+/// The suggestions a reviewer of the text outputs needs: where the before
 /// node is reported removed or the after node added. Highest score first, then by ids.
 pub fn possible_matches(diff: &DiffResult) -> Vec<PossibleMatch> {
     let mut list = Vec::new();

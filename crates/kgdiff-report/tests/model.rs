@@ -1,7 +1,6 @@
-//! `packages/cli/test/model.test.ts`, ported: hunk families, glyphs and name-status letters,
-//! the overview, apportioning, watched attributes, possible matches and locales. Where the
-//! TypeScript tests use a hand-made `DiffResult`, these use real diffs that produce the same
-//! situations.
+//! Hunk families, glyphs and name-status letters,
+//! the overview, apportioning, watched attributes, possible matches and locales. The
+//! tests build real diffs, not hand-made `DiffResult`s.
 
 use kgdiff_core::js::json;
 use kgdiff_core::{DiffResult, Locale, resolve_options};

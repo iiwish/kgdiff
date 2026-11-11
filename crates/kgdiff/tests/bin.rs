@@ -1,4 +1,4 @@
-//! `packages/cli/test/bin.test.ts`, ported: the real binary's exit codes, stdio, stdin piping
+//! The real binary's exit codes, stdio, stdin piping
 //! and error output without a trace.
 
 mod common;

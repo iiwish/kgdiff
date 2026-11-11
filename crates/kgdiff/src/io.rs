@@ -1,4 +1,4 @@
-//! Everything the CLI needs from the outside world (`io.ts`), behind a trait so that
+//! Everything the CLI needs from the outside world, behind a trait so that
 //! [`crate::cli::run`] runs in memory in tests (captured streams, in-memory files, a fixed clock,
 //! injected viewer bundles) and for real in the binary ([`crate::system::SystemIo`]).
 //!

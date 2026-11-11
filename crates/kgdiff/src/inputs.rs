@@ -1,4 +1,4 @@
-//! Reading inputs (`inputs.ts`): files or stdin, gzip-compressed or not, UTF-8 or UTF-16 text,
+//! Reading inputs: files or stdin, gzip-compressed or not, UTF-8 or UTF-16 text,
 //! parsed with kgdiff-formats. Failures become [`CliError`]s that name the input and suggest a
 //! fix.
 
@@ -51,7 +51,7 @@ fn input_error(message: String, hint: Option<String>) -> CliError {
 }
 
 /// `KGDIFF_MAX_INPUT` (bytes, or with a binary `K` / `M` / `G` suffix, e.g. `4G`), else
-/// [`DEFAULT_MAX_INPUT`] (`maxInputBytes`).
+/// [`DEFAULT_MAX_INPUT`].
 pub fn max_input_bytes(io: &dyn CliIo) -> CliResult<u64> {
     let Some(raw) = io.var("KGDIFF_MAX_INPUT") else {
         return Ok(DEFAULT_MAX_INPUT);
@@ -186,7 +186,7 @@ fn gunzip(data: &[u8], limit: u64) -> std::io::Result<Option<Vec<u8>>> {
     Ok(Some(out))
 }
 
-/// Decodes input bytes (`decodeText`): gunzip when compressed (the output capped at `limit`,
+/// Decodes input bytes: gunzip when compressed (the output capped at `limit`,
 /// so that a gzip bomb is an error, not an out-of-memory crash), UTF-16 by byte order mark,
 /// else strict UTF-8.
 pub fn decode_text(bytes: Vec<u8>, where_: &str, limit: u64) -> CliResult<String> {
@@ -254,7 +254,7 @@ pub struct ReadOptions<'a> {
     pub empty_hint: Option<&'a str>,
 }
 
-/// Reads a file, or stdin for `-`, as text (`readInput`). `role` names the argument in
+/// Reads a file, or stdin for `-`, as text. `role` names the argument in
 /// messages. Inputs above the size limit, and empty inputs unless allowed, are errors.
 pub fn read_input(
     io: &mut dyn CliIo,
@@ -341,8 +341,8 @@ fn strip_gz(name: &str) -> String {
     }
 }
 
-/// Reads two inputs; when both fail, the first one's error is reported (`readPair`). Both are
-/// read either way, as the TypeScript CLI reads them concurrently.
+/// Reads two inputs; when both fail, the first one's error is reported. Both are
+/// read either way.
 pub fn read_pair(
     io: &mut dyn CliIo,
     first: (&str, &str, ReadOptions<'_>),
@@ -367,7 +367,7 @@ fn strip_period(message: &str) -> &str {
     message.strip_suffix('.').unwrap_or(message)
 }
 
-/// Parses a graph, turning parser errors into messages that name the input (`parseInput`).
+/// Parses a graph, turning parser errors into messages that name the input.
 pub fn parse_input(input: &RawInput, options: &GraphParseOptions<'_>) -> CliResult<ParseResult> {
     let mut parse_options = ParseOptions {
         format: options.format,

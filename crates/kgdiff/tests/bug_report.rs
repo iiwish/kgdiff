@@ -1,4 +1,4 @@
-//! `packages/cli/test/bug-report.test.ts`, ported: an unexpected error links the bug report form
+//! An unexpected error links the bug report form
 //! with public metadata only.
 
 mod common;

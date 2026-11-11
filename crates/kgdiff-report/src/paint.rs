@@ -1,5 +1,4 @@
-//! A tiny painter for the meaning families of docs/visual-language.md (`createPainter` of
-//! `style.ts`). Which level a terminal supports is the CLI's to decide (`kgdiff::style`).
+//! A tiny painter for the meaning families of docs/visual-language.md. Which level a terminal supports is the CLI's to decide (`kgdiff::style`).
 
 /// 0 = no color, 1 = 16 colors, 2 = 256 colors, 3 = truecolor.
 pub type ColorLevel = u8;
@@ -63,7 +62,7 @@ fn colors(tone: Tone) -> ToneColors {
 const CUBE: [i32; 6] = [0, 95, 135, 175, 215, 255];
 
 fn nearest_cube(v: i32) -> usize {
-    // The first of equally near levels, as the TypeScript loop keeps it.
+    // The first of equally near levels, keeping the first on a tie.
     let mut best = 0;
     for (i, level) in CUBE.iter().enumerate().skip(1) {
         if (level - v).abs() < (CUBE[best] - v).abs() {

@@ -1,4 +1,4 @@
-//! An in-memory [`CliIo`] for tests and examples (the TypeScript tests' `createTestIO`):
+//! An in-memory [`CliIo`] for tests and examples:
 //! captured streams, files in memory, writes kept apart, a fixed clock, injected viewer
 //! bundles, links and an optional case-insensitive file system.
 

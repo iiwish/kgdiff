@@ -1,10 +1,10 @@
-//! Terminal display width of text and the helpers built on it (`width.ts`): sanitizing untrusted
+//! Terminal display width of text and the helpers built on it: sanitizing untrusted
 //! labels, truncating with an ellipsis, padding and wrapping.
 //!
 //! CJK, fullwidth and emoji-presentation characters take two columns, combining marks, joiners
 //! and variation selectors none, East Asian "ambiguous" characters one. Text is measured per
 //! grapheme cluster (UAX #29, `icu_segmenter`, as `Intl.Segmenter`); the East Asian width table
-//! is TypeScript's, as it is (Unicode 16; RFC 0002, J-16).
+//! is a fixed Unicode 16 table, as it is (RFC 0002, J-16).
 
 use icu_properties::props::{Emoji, EmojiPresentation, GeneralCategory, RegionalIndicator};
 use icu_properties::{CodePointMapDataBorrowed, CodePointSetDataBorrowed};
@@ -137,7 +137,7 @@ const WIDE_RANGES: &[(u32, u32)] = &[
     (0x30000, 0x3fffd),
 ];
 
-/// Whether the code point is East Asian Wide or Fullwidth (`isWideCodePoint`).
+/// Whether the code point is East Asian Wide or Fullwidth.
 pub fn is_wide_code_point(cp: u32) -> bool {
     if cp < 0x1100 {
         return false;
@@ -174,7 +174,7 @@ fn is_regional_indicator(c: char) -> bool {
     CodePointSetDataBorrowed::new::<RegionalIndicator>().contains(c)
 }
 
-/// The display width of one grapheme cluster: 0, 1 or 2 columns (`graphemeWidth`).
+/// The display width of one grapheme cluster: 0, 1 or 2 columns.
 pub fn grapheme_width(grapheme: &str) -> usize {
     let Some(first) = grapheme.chars().next() else {
         return 0;
@@ -230,7 +230,7 @@ pub fn byte_at_utf16(text: &str, units: usize) -> usize {
     text.len()
 }
 
-/// The display width of `text` in terminal columns (`stringWidth`).
+/// The display width of `text` in terminal columns.
 pub fn string_width(text: &str) -> usize {
     if text.bytes().all(|b| (0x20..=0x7e).contains(&b)) {
         return text.len();
