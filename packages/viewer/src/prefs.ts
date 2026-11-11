@@ -4,7 +4,7 @@
  * console warning for payloads, which come from files rather than code).
  */
 import type { Locale } from '@kgdiff/core';
-import type { PaletteName } from '@kgdiff/scene';
+import { isNodeShape, type NodeShape, type PaletteName } from '@kgdiff/scene';
 import { normalizeLocale } from './i18n.js';
 import type {
   ReportPayload,
@@ -64,6 +64,23 @@ export function toDelay(value: unknown): number | null {
 
 type View = NonNullable<ReportPayload['view']>;
 
+/** The entries of a report's `view.shapes` with a known shape, and the types of the others. */
+function toShapes(value: unknown): {
+  shapes: Readonly<Record<string, NodeShape>> | null;
+  invalid: readonly string[];
+} {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return { shapes: null, invalid: value === undefined ? [] : ['shapes'] };
+  }
+  const shapes: Record<string, NodeShape> = {};
+  const invalid: string[] = [];
+  for (const [type, shape] of Object.entries(value)) {
+    if (isNodeShape(shape)) shapes[type] = shape;
+    else invalid.push(`shapes.${type}`);
+  }
+  return { shapes: Object.keys(shapes).length > 0 ? shapes : null, invalid };
+}
+
 /**
  * Keep only the valid fields of a report's `view`, warning about the rest (once per payload:
  * `quiet` for a second read of the same view).
@@ -82,6 +99,8 @@ export function sanitizeView(view: unknown, quiet = false): View | undefined {
     (k) => v[k] !== undefined && { mode, scope, theme, palette, locale }[k] === null,
   );
   if (read && read.invalid.length > 0) dropped.push(`panels (${read.invalid.join(' ')})`);
+  const { shapes, invalid } = toShapes(v.shapes);
+  dropped.push(...invalid);
   if (dropped.length > 0 && !quiet && typeof console !== 'undefined') {
     console.warn(`[kgdiff] ignoring invalid report view preferences: ${dropped.join(', ')}`);
   }
@@ -92,5 +111,6 @@ export function sanitizeView(view: unknown, quiet = false): View | undefined {
     ...(palette ? { palette } : {}),
     ...(locale ? { locale } : {}),
     ...(panels ? { panels } : {}),
+    ...(shapes ? { shapes } : {}),
   };
 }

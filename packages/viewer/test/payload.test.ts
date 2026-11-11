@@ -1,6 +1,6 @@
 import { diff, diffToJSON } from '@kgdiff/core';
 import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { KgdiffViewer } from '../src/element.js';
 import { hydrateEmbeddedPayloads, PAYLOAD_SCRIPT_TYPE, type ReportPayload } from '../src/index.js';
 import { assertPayload, decodePayloadText } from '../src/payload.js';
@@ -17,6 +17,20 @@ function payload(): ReportPayload {
     layout: layoutToJSON(layoutDiff(d)),
     meta: { generator: 'test', before: { name: 'zoo v1' }, after: { name: 'zoo v2' } },
     view: { mode: 'replay', locale: 'zh-CN' },
+  };
+}
+
+/** The zoo with every node of the after version a `Bird`. */
+function typed(): ReportPayload {
+  const { before, after } = zoo();
+  const birds = { ...after, nodes: after.nodes.map((n) => ({ ...n, types: ['Bird'] })) };
+  const d = diff(before, birds);
+  return {
+    format: 'kgdiff.report',
+    version: 1,
+    diff: diffToJSON(d),
+    layout: layoutToJSON(layoutDiff(d)),
+    meta: { generator: 'test', before: { name: 'v1' }, after: { name: 'v2' } },
   };
 }
 
@@ -76,6 +90,16 @@ describe('payload decoding', () => {
     expect(() => assertPayload({ format: 'kgdiff.diff' })).toThrow(/kgdiff.report/);
     expect(() => assertPayload({ format: 'kgdiff.report', version: 2 })).toThrow(/version/);
     expect(() => assertPayload({ format: 'kgdiff.report', version: 1 })).toThrow(/diff/);
+  });
+
+  it('opens a report with members of `view` it does not know, which later versions add', async () => {
+    const p = payload();
+    const newer = {
+      ...p,
+      view: { ...p.view, plain: true, categories: { A: 1 }, futureMember: {} },
+    };
+    expect(assertPayload(newer)).toBe(newer);
+    expect(await decodePayloadText(JSON.stringify(newer), null)).toEqual(newer);
   });
 
   it('takes the layout as optional, and an object when present', async () => {
@@ -138,6 +162,35 @@ describe('hydrateEmbeddedPayloads', () => {
     const positions = (v as unknown as KgdiffViewer).controller.layout!.positions;
     expect(Object.fromEntries([...positions].map(([id, q]) => [id, [q.x, q.y]]))).toEqual(
       layout?.positions,
+    );
+  });
+
+  it('draws a report without `view.shapes` as circles and passes `shapes` to the scene', async () => {
+    const shown = async (view: ReportPayload['view']): Promise<KgdiffViewer> => {
+      const viewer = document.createElement('kgdiff-viewer') as KgdiffViewer;
+      document.body.append(viewer);
+      viewer.payload = { ...typed(), view };
+      await until(() => viewer.controller.status === 'ready');
+      return viewer;
+    };
+    const plain = await shown({ plainMember: true } as ReportPayload['view']);
+    expect(plain.controller.scene?.nodes.every((n) => n.shape === undefined)).toBe(true);
+    expect(plain.controller.scene?.shapes).toBeUndefined();
+
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const viewer = await shown({
+      shapes: { Bird: 'diamond', Odd: 'blob', Unused: 'square' },
+    } as unknown as ReportPayload['view']);
+    expect(warn.mock.calls.flat().join(' ')).toMatch(/shapes\.Odd/);
+    warn.mockRestore();
+    const scene = viewer.controller.scene;
+    expect(scene?.shapes).toEqual([{ type: 'Bird', shape: 'diamond' }]);
+    expect(scene?.nodes.some((n) => n.shape === 'diamond')).toBe(true);
+    const legend = viewer.shadowRoot?.querySelector('.legend-row[data-shape="diamond"]');
+    expect(legend?.textContent).toBe('Bird');
+    expect(legend?.querySelector('polygon')).not.toBeNull();
+    expect(viewer.shadowRoot?.querySelector('.mini-item[data-shape="diamond"]')?.textContent).toBe(
+      'Bird',
     );
   });
 

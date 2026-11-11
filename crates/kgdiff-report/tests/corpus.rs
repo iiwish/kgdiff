@@ -381,6 +381,7 @@ fn report_payloads_match_report_json_and_layouts_their_contract() {
             theme: None,
             locale,
             panels: None,
+            shapes: None,
         };
         let mut payload = kgdiff_report::html::report_payload(&case.result, &info);
         let errors = schemas.errors("report.v1.json", &payload);

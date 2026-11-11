@@ -191,6 +191,19 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 
 控制条放在画布下方而不是盖在上面，用来播放、单步和拖动根元素的回放；它只在回放模式下显示。如果把它放进画布的插槽 `<kgdiff-transport slot="bottom-center">`，它会替换画布自己的控制条，浮在画布上，图会避开它（保留 `dock:hidden`）。
 
+## 用形状区分节点种类
+
+报告可以在载荷的 `view.shapes` 里说明每种类型的节点画成什么形状：
+
+```js
+viewer.payload = {
+  ...report,
+  view: { ...report.view, shapes: { Concept: 'hexagon', Metric: 'diamond', Table: 'square' } },
+};
+```
+
+形状有 `circle`、`square`、`diamond` 和 `hexagon`。一个节点取映射里按声明顺序第一个它拥有的类型对应的形状（用 after 版本的类型，被删除的节点用 before 版本的），没有命中就是圆。形状表示节点是什么，颜色仍然表示什么变了：新增、删除和修改的节点外观不变，只是换成各自的轮廓。布局不受影响。图例按原样列出在用的形状和类型名（类型名尽量短）。形如整数的类型名在 JavaScript 对象里会排到最前，这样的键不保持原来的位置。`view.shapes` 只从载荷读取，`load()` 没有对应选项。在 1.0 之前是实验性的。
+
 ## 用 CSS 定制主题
 
 颜色和字体是 CSS 自定义属性，设在 `<kgdiff-viewer>`（或 `<kgdiff-root>`）上，画布和每个面板都继承它们。用普通 CSS 覆盖即可：

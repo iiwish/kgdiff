@@ -3,8 +3,15 @@
  */
 import type { EdgeData, NodeData } from '@antv/g6';
 import { KgdiffError } from '@kgdiff/core';
-import type { FrameVisuals, GlyphVisual, NodeVisual, Scene } from '@kgdiff/scene';
+import {
+  evenShapeDash,
+  type FrameVisuals,
+  type GlyphVisual,
+  type NodeVisual,
+  type Scene,
+} from '@kgdiff/scene';
 import { describe, expect, it } from 'vitest';
+import { evenCircleDash } from '../src/geometry.js';
 import { toG6Data } from '../src/index.js';
 import { crossesLod, type KgdiffDatumData, kgdiffData, mapFrame } from '../src/map.js';
 import {
@@ -797,5 +804,48 @@ describe('edge cases', () => {
     const out = toG6Data(scene, frame);
     expect(out.nodes).toHaveLength(5000);
     expect(out.edges).toHaveLength(10_000);
+  });
+});
+
+describe('node shapes', () => {
+  it('maps the shape, defaulting to a circle', () => {
+    const scene = three();
+    expect(node(scene, frameOf(scene), 'a').style?.shape).toBe('circle');
+    const square = withNode(scene, 0, { shape: 'square' });
+    expect(node(scene, square, 'a').style?.shape).toBe('square');
+  });
+
+  it.each(['square', 'diamond', 'hexagon'] as const)(
+    '%s: spaces ghost dashes along its outline',
+    (shape) => {
+      const scene = three();
+      const frame = withNode(scene, 0, { shape, fill: null, stroke: '#f00', dash: [3, 2.5] });
+      const style = node(scene, frame, 'a').style;
+      const dash: number[] = [];
+      const offset = evenShapeDash(shape, [3, 2.5], 6, dash);
+      expect(style?.lineDash).toEqual(dash);
+      expect(style?.lineDashOffset).toBeCloseTo(offset, 9);
+    },
+  );
+
+  it('leaves the circle ghost as it was', () => {
+    const scene = three();
+    const frame = withNode(scene, 0, { fill: null, stroke: '#f00', dash: [3, 2.5] });
+    const style = node(scene, frame, 'a').style;
+    expect(style?.lineDash).toEqual(evenCircleDash([3, 2.5], 6));
+    expect(style?.lineDashOffset).toBe(0);
+  });
+
+  it('anchors a badge on the outline', () => {
+    const scene = three();
+    const badge = { text: '+1', color: '#fff', background: '#000', minZoom: 0 };
+    const offsets = (shape: 'circle' | 'square' | 'diamond'): number => {
+      const style = node(scene, withNode(scene, 0, { r: 20, badge, shape }), 'a').style;
+      const badges = (style?.badges ?? []) as { offsetX: number }[];
+      return badges[0]?.offsetX ?? Number.NaN;
+    };
+    // From the key's corner: on the corner for a square, inside the box for a disc or a diamond.
+    expect(offsets('square')).toBeCloseTo(-2 + 5, 6);
+    expect(offsets('diamond')).toBeLessThan(offsets('circle'));
   });
 });

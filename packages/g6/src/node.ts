@@ -2,9 +2,10 @@
  * `kgdiff-node`: G6's built-in `circle` plus what it cannot express — a concentric ring, a replay
  * pulse, a struck-through old name under the label and visible strike-throughs — and a halo drawn the way
  * the visual language specifies it (a soft radial glow in dark themes, a crisp offset ring in
- * light ones) instead of G6's flat band.
+ * light ones) instead of G6's flat band. With `shape`, the key and its ring, pulse and light halo
+ * are that polygon's outline (grown by their gap), and edges stop at it.
  *
- * It reads the extra keys `toG6Data` emits (`ring*`, `pulse*`, `sublabel*`, `haloGlow`,
+ * It reads the extra keys `toG6Data` emits (`shape`, `ring*`, `pulse*`, `sublabel*`, `haloGlow`,
  * `haloRadius`); a plain `circle` ignores them, so the same data degrades gracefully. Every
  * sub-shape has a `get<Name>Style` method, which is what G6 animates during updates.
  */
@@ -14,8 +15,10 @@ import {
   ExtensionCategory,
   Label,
   type LabelStyleProps,
+  type Point,
   register,
 } from '@antv/g6';
+import { type NodeShape, shapeDistance, shapeVertices } from '@kgdiff/scene';
 import { glowGradient } from './color.js';
 import {
   GLOW_MIN_SCALE,
@@ -25,9 +28,12 @@ import {
   NODE_TYPE,
   TEXT_HALO_WIDTH,
 } from './constants.js';
+import { outlinePoints } from './geometry.js';
 
 /** Style keys of kgdiff-node beyond G6's circle (all optional; see map.ts for their meaning). */
 export interface KgdiffNodeStyleProps extends CircleStyleProps {
+  /** Absent means `circle`. */
+  shape?: NodeShape;
   haloGlow?: boolean;
   haloRadius?: number;
   ring?: boolean;
@@ -59,7 +65,7 @@ type Container = NonNullable<Parameters<Circle['render']>[1]>;
 type ShapeStyle = Record<string, unknown>;
 
 /** Keys of ours that must not leak onto the key circle. */
-const OWN = /^(ring|pulse|sublabel)/;
+const OWN = /^(ring|pulse|sublabel|shape$)/;
 
 function num(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
@@ -67,6 +73,11 @@ function num(v: unknown, fallback: number): number {
 
 function str(v: unknown, fallback: string): string {
   return typeof v === 'string' && v.length > 0 ? v : fallback;
+}
+
+/** Which G shape draws a style: one with `points` is a polygon outline. */
+function shapeClass(style: false | ShapeStyle): 'polygon' | 'circle' {
+  return style !== false && 'points' in style ? 'polygon' : 'circle';
 }
 
 export class KgdiffNode extends Circle {
@@ -79,10 +90,52 @@ export class KgdiffNode extends Circle {
     return Math.min(...this.getSize(attributes)) / 2;
   }
 
+  /** The node's outline grown by `grow`, as the style of a polygon; null for a circle. */
+  private outline(attributes: Attrs, grow: number): ShapeStyle | null {
+    const points = outlinePoints(this.extras(attributes).shape, this.radius(attributes), grow);
+    return points === null ? null : { points, lineJoin: 'round' };
+  }
+
   protected override getKeyStyle(attributes: Attrs): ReturnType<Circle['getKeyStyle']> {
     const style = super.getKeyStyle(attributes);
     for (const key of Object.keys(style)) if (OWN.test(key)) Reflect.deleteProperty(style, key);
-    return style;
+    const outline = this.outline(attributes, 0);
+    if (outline === null) return style;
+    Reflect.deleteProperty(style, 'r');
+    return { ...style, ...outline };
+  }
+
+  protected override drawKeyShape(
+    attributes: Attrs,
+    container: Container,
+  ): ReturnType<Circle['drawKeyShape']> {
+    if (shapeVertices(this.extras(attributes).shape).length === 0) {
+      return super.drawKeyShape(attributes, container);
+    }
+    return this.upsert('key', 'polygon', this.getKeyStyle(attributes), container);
+  }
+
+  /** The glow stays a disc on every shape; only the light halo follows the outline. */
+  protected override drawHaloShape(attributes: Attrs, container: Container): void {
+    const style = this.getHaloStyle(attributes);
+    this.upsert('halo', shapeClass(style), style as never, container);
+  }
+
+  /** Where a line from the center to `point` crosses the outline. */
+  public override getIntersectPoint(point: Point, useExtendedLine = false): Point {
+    const shape = this.extras(this.parsedAttributes).shape;
+    if (shapeVertices(shape).length === 0) return super.getIntersectPoint(point, useExtendedLine);
+    const center = this.getCenter();
+    const cx = center[0] as number;
+    const cy = center[1] as number;
+    const cz = center[2] ?? 0;
+    const s = useExtendedLine ? -1 : 1;
+    const dx = s * (point[0] - cx);
+    const dy = s * (point[1] - cy);
+    const len = Math.hypot(dx, dy);
+    if (!(len > 0)) return [cx, cy, cz];
+    const d = shapeDistance(shape, this.radius(this.parsedAttributes), 0, dx / len, dy / len);
+    return [cx + (dx / len) * d, cy + (dy / len) * d, cz];
   }
 
   /** Dark: radial glow of radius max(haloRadius, 1.6·r). Light: 2-wide ring 5 outside r (or the ring). */
@@ -104,9 +157,10 @@ export class KgdiffNode extends Circle {
     }
     const ringOuter = a.ring === true ? r + num(a.ringGap, 0) + num(a.ringLineWidth, 0) / 2 : 0;
     const base = Math.max(num(a.haloRadius, r), 0);
+    const radius = Math.max(base + HALO_RING_OFFSET, ringOuter + 1.5 + HALO_RING_WIDTH / 2);
     return {
       ...common,
-      r: Math.max(base + HALO_RING_OFFSET, ringOuter + 1.5 + HALO_RING_WIDTH / 2),
+      ...(this.outline(attributes, radius - r) ?? { r: radius }),
       fill: 'none',
       stroke: color,
       lineWidth: HALO_RING_WIDTH,
@@ -118,8 +172,9 @@ export class KgdiffNode extends Circle {
     const a = this.extras(attributes);
     const width = num(a.ringLineWidth, 0);
     if (a.ring !== true || width <= 0) return false;
+    const gap = num(a.ringGap, 0);
     return {
-      r: this.radius(attributes) + num(a.ringGap, 0),
+      ...(this.outline(attributes, gap) ?? { r: this.radius(attributes) + gap }),
       fill: 'none',
       stroke: str(a.ringStroke, '#888'),
       lineWidth: width,
@@ -136,8 +191,9 @@ export class KgdiffNode extends Circle {
     if (!(p > 0 && p < 1)) return false;
     const r = this.radius(attributes);
     const fade = 1 - p;
+    const grow = 3 + p * (12 + r * 0.6);
     return {
-      r: r + 3 + p * (12 + r * 0.6),
+      ...(this.outline(attributes, grow) ?? { r: r + grow }),
       fill: 'none',
       stroke: str(a.pulseStroke, '#888'),
       lineWidth: 0.75 + 1.75 * fade,
@@ -222,8 +278,10 @@ export class KgdiffNode extends Circle {
   public override render(attributes = this.parsedAttributes, container: Container = this): void {
     super.render(attributes, container);
     if (!this.getShape('key')) return;
-    this.upsert('ring', 'circle', this.getRingStyle(attributes), container);
-    this.upsert('pulse', 'circle', this.getPulseStyle(attributes), container);
+    const ring = this.getRingStyle(attributes);
+    this.upsert('ring', shapeClass(ring), ring, container);
+    const pulse = this.getPulseStyle(attributes);
+    this.upsert('pulse', shapeClass(pulse), pulse, container);
     this.upsert('sublabel', Label, this.getSublabelStyle(attributes), container);
     this.upsert('strike', 'line', this.getStrikeStyle(attributes), container);
     this.upsert('substrike', 'line', this.getSubstrikeStyle(attributes), container);

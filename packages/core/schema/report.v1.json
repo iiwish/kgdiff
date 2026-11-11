@@ -73,6 +73,11 @@
           },
           "additionalProperties": { "enum": ["open", "collapsed", "hidden"] },
           "description": "The initial state of regions of the default layout; the others keep theirs."
+        },
+        "shapes": {
+          "type": "object",
+          "additionalProperties": { "enum": ["circle", "square", "diamond", "hexagon"] },
+          "description": "Node type to shape: a node takes the shape of the first entry, in this order, among its types (the after version's; the before version's for a removed node); with none, a circle. Experimental until 1.0."
         }
       }
     }

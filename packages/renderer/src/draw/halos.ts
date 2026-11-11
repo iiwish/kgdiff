@@ -1,12 +1,13 @@
 /**
  * Halo pass. Dark themes: soft radial glows blitted from one cached gradient sprite per color.
- * Light themes: crisp offset rings at `r + 5` px.
+ * Light themes: crisp offset rings at `r + 5` px, the node's outline grown by that much.
  */
-import type { FrameVisuals, Theme } from '@kgdiff/scene';
+import { type FrameVisuals, shapeVertexRadius, shapeVertices, type Theme } from '@kgdiff/scene';
 import { parseColor, rgbaString } from '../color.js';
 import { type Ctx2D, NO_DASH, type Surface, type SurfaceFactory } from '../ctx.js';
 import type { FrameCache } from '../frame-cache.js';
 import { TAU } from '../math.js';
+import { polygonPath } from './shapes.js';
 import { CULL_MARGIN, HALO_RING_OFFSET, HALO_RING_WIDTH, NODE_MIN_R, type View } from './view.js';
 
 /** Glow falloff: (radius fraction, alpha) — a soft, roughly Gaussian profile. */
@@ -94,7 +95,11 @@ export function drawHalos(
     } else {
       ctx.strokeStyle = halo.color;
       ctx.beginPath();
-      ctx.arc(x, y, lightR, 0, TAU);
+      const vertices = shapeVertices(n.shape);
+      if (vertices.length > 0) {
+        ctx.lineJoin = 'round';
+        polygonPath(ctx, vertices, x, y, shapeVertexRadius(n.shape, r, lightR - r));
+      } else ctx.arc(x, y, lightR, 0, TAU);
       ctx.stroke();
     }
   }

@@ -51,6 +51,7 @@ import {
 } from './constants.js';
 import { backOut, bump, clamp01, easeInOut, easeStandard, lerp, segment } from './easing.js';
 import { edgeCurvatures } from './geometry.js';
+import { shapeDistance } from './shapes.js';
 import {
   type EdgeStyle,
   EL_BEFORE,
@@ -80,6 +81,7 @@ import type {
   GlyphKind,
   GlyphVisual,
   LabelVisual,
+  NodeShape,
   NodeVisual,
   Scene,
   ViewState,
@@ -275,6 +277,8 @@ class SceneResolver implements VisualResolver {
   private readonly nLabel: readonly string[];
   private readonly nLabelBefore: readonly (string | null)[];
   private readonly nBadge: readonly (string | null)[];
+  /** Shape by node index; null when every node is a circle (then frames carry no shape keys). */
+  private readonly nShape: readonly (NodeShape | undefined)[] | null;
   private readonly eS: Int32Array;
   private readonly eT: Int32Array;
   private readonly eSB: Int32Array;
@@ -377,6 +381,9 @@ class SceneResolver implements VisualResolver {
     this.nLabel = scene.nodes.map((n) => n.label);
     this.nLabelBefore = scene.nodes.map((n) => n.labelBefore ?? null);
     this.nBadge = scene.nodes.map((n) => n.badge ?? null);
+    this.nShape = scene.nodes.some((n) => n.shape !== undefined)
+      ? scene.nodes.map((n) => n.shape)
+      : null;
     this.eS = Int32Array.from(scene.edges, (e) => e.s);
     this.eT = Int32Array.from(scene.edges, (e) => e.t);
     this.eSB = Int32Array.from(scene.edges, (e) => e.sb);
@@ -589,6 +596,10 @@ class SceneResolver implements VisualResolver {
   }
 
   private prepare(frame: FrameVisuals): FramePool {
+    if (frame.nodes.length !== this.N) frame.nodes.length = this.N;
+    if (frame.edges.length !== this.M) frame.edges.length = this.M;
+    for (let i = 0; i < this.N; i++) if (frame.nodes[i] === undefined) frame.nodes[i] = newNode();
+    for (let j = 0; j < this.M; j++) if (frame.edges[j] === undefined) frame.edges[j] = newEdge();
     let pool = this.pools.get(frame);
     if (pool === undefined || pool.n !== this.N || pool.m !== this.M) {
       const make = <T>(n: number, f: () => T): T[] => Array.from({ length: n }, f);
@@ -608,12 +619,36 @@ class SceneResolver implements VisualResolver {
         glyphLabels: make(this.glyphs.length, newLabel),
       };
       this.pools.set(frame, pool);
+      this.adoptShapes(frame, pool);
     }
-    if (frame.nodes.length !== this.N) frame.nodes.length = this.N;
-    if (frame.edges.length !== this.M) frame.edges.length = this.M;
-    for (let i = 0; i < this.N; i++) if (frame.nodes[i] === undefined) frame.nodes[i] = newNode();
-    for (let j = 0; j < this.M; j++) if (frame.edges[j] === undefined) frame.edges[j] = newEdge();
     return pool;
+  }
+
+  /**
+   * Shapes do not animate, so a node's is written once, when a frame is first seen. Its keys are
+   * added to every element at once, so all elements of a frame keep one hidden class. Without
+   * shapes nothing is added; a frame that served a shaped scene before is cleared.
+   */
+  private adoptShapes(frame: FrameVisuals, pool: FramePool): void {
+    const shapes = this.nShape;
+    for (let i = 0; i < this.N; i++) {
+      const v = frame.nodes[i] as NodeVisual;
+      if (shapes !== null) v.shape = shapes[i];
+      else if (v.shape !== undefined) v.shape = undefined;
+    }
+    for (let j = 0; j < this.M; j++) {
+      const e = frame.edges[j] as EdgeVisual;
+      if (shapes !== null || e.shape1 !== undefined || e.shape2 !== undefined) {
+        e.shape1 = undefined;
+        e.shape2 = undefined;
+      }
+    }
+    for (const g of pool.glyphs) {
+      if (shapes !== null || g.shape1 !== undefined || g.shape2 !== undefined) {
+        g.shape1 = undefined;
+        g.shape2 = undefined;
+      }
+    }
   }
 
   // ─── Frame ────────────────────────────────────────────────────────────────
@@ -1288,6 +1323,10 @@ class SceneResolver implements VisualResolver {
     ev.x2 = b.x;
     ev.y2 = b.y;
     ev.r2 = b.r;
+    if (this.nShape !== null) {
+      ev.shape1 = a.shape;
+      ev.shape2 = b.shape;
+    }
   }
 
   private applyEdge(
@@ -1458,10 +1497,12 @@ class SceneResolver implements VisualResolver {
       ev.x2 = x;
       ev.y2 = y;
       ev.r2 = r;
+      if (this.nShape !== null) ev.shape2 = s < 0.5 ? from.shape : to.shape;
     } else {
       ev.x1 = x;
       ev.y1 = y;
       ev.r1 = r;
+      if (this.nShape !== null) ev.shape1 = s < 0.5 ? from.shape : to.shape;
     }
     ev.curvature = lerp(this.ghostCurv[j] as number, this.eCurv[j] as number, s);
   }
@@ -1574,6 +1615,11 @@ class SceneResolver implements VisualResolver {
     g.y2 = ny[spec.b] as number;
     g.r1 = (nr[spec.a] as number) + spec.clearA;
     g.r2 = (nr[spec.b] as number) + spec.clearB;
+    const shapes = this.nShape;
+    if (shapes !== null) {
+      g.shape1 = shapes[spec.a];
+      g.shape2 = shapes[spec.b];
+    }
   }
 
   private writeGlyph(
@@ -1658,8 +1704,12 @@ class SceneResolver implements VisualResolver {
       const dx = (nx[spec.b] as number) - px;
       const dy = (ny[spec.b] as number) - py;
       const len = Math.sqrt(dx * dx + dy * dy);
-      g.x1 = len > 0 ? px + (dx / len) * pr : px;
-      g.y1 = len > 0 ? py + (dy / len) * pr : py - pr;
+      // The dot sits on the outline, facing the new end.
+      const shape = this.nShape === null ? undefined : this.nShape[spec.a];
+      const reach =
+        shape !== undefined && len > 0 ? shapeDistance(shape, pr, 0, dx / len, dy / len) : pr;
+      g.x1 = len > 0 ? px + (dx / len) * reach : px;
+      g.y1 = len > 0 ? py + (dy / len) * reach : py - pr;
       g.x2 = g.x1;
       g.y2 = g.y1;
       g.r1 = 0;

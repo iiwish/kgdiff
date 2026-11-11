@@ -27,15 +27,18 @@ import {
   nodeLabelBefore,
   nodeRole,
 } from './roles.js';
+import { isNodeShape } from './shapes.js';
 import { getTheme } from './theme.js';
 import { buildTimeline, chapterPlan, type TourHunk, timelineMode, tourOrder } from './timeline.js';
 import type {
   ChangeFamily,
+  NodeShape,
   Scene,
   SceneEdge,
   SceneHunk,
   SceneNode,
   SceneOptions,
+  SceneShape,
   SceneSuggestion,
   Theme,
 } from './types.js';
@@ -62,6 +65,24 @@ function resolveReplay(options: SceneOptions): { pace: number; chapterThreshold:
     );
   }
   return { pace, chapterThreshold };
+}
+
+/** The entries of `options.shapes`, in order, checked; empty without any. */
+function resolveShapes(options: SceneOptions): readonly SceneShape[] {
+  const shapes = options.shapes;
+  if (shapes === undefined) return [];
+  if (typeof shapes !== 'object' || shapes === null) {
+    throw new KgdiffError('invalid-input', 'shapes must be an object of type → shape.');
+  }
+  return Object.entries(shapes).map(([type, shape]) => {
+    if (!isNodeShape(shape)) {
+      throw new KgdiffError(
+        'invalid-input',
+        `shapes["${type}"] must be circle, square, diamond or hexagon, got ${JSON.stringify(shape)}.`,
+      );
+    }
+    return { type, shape: shape as NodeShape };
+  });
 }
 
 /** Importance in [0, 1]: changed nodes 0.8–1, unchanged 0–0.75, both by degree percentile. */
@@ -163,7 +184,7 @@ function sceneHunkFamily(hunk: Hunk, byId: ReadonlyMap<UnionId, UnionNode>): Cha
  *
  * O(N log N + E + H √H). See `SceneOptions` for defaults.
  *
- * @throws KgdiffError(`invalid-input`) for invalid replay options or theme names.
+ * @throws KgdiffError(`invalid-input`) for invalid replay options, shapes or theme names.
  */
 export function buildScene(
   diff: DiffResult,
@@ -173,6 +194,7 @@ export function buildScene(
   const theme = resolveTheme(options);
   const locale = options.locale ?? 'en';
   const { pace, chapterThreshold } = resolveReplay(options);
+  const shapeEntries = resolveShapes(options);
 
   // ── Nodes in scope ──
   const unionNodes: UnionNode[] = [];
@@ -288,6 +310,7 @@ export function buildScene(
 
   // ── Scene nodes ──
   const importance = importances(unionNodes);
+  const shapesInUse = new Set<SceneShape>();
   const nodes: SceneNode[] = unionNodes.map((n, i) => {
     const role = nodeRole(n);
     const labelBefore = nodeLabelBefore(n);
@@ -307,6 +330,9 @@ export function buildScene(
     }
     if (flow === i) flow = undefined;
     const family = nodeFamily(n, role);
+    // `types` is the after version's, the before version's for a removed node.
+    const entry = shapeEntries.find((e) => n.types.includes(e.type));
+    if (entry !== undefined) shapesInUse.add(entry);
     const node: SceneNode = {
       index: i,
       id: n.id,
@@ -320,6 +346,7 @@ export function buildScene(
       label: n.label,
       ...(labelBefore !== undefined && labelBefore !== n.label ? { labelBefore } : {}),
       ...(badge !== undefined ? { badge } : {}),
+      ...(entry !== undefined && entry.shape !== 'circle' ? { shape: entry.shape } : {}),
       ...(flow !== undefined ? { flow } : {}),
       hunk: hunkOf(n.hunk),
       presentBefore: n.before !== undefined || n.beforeId !== undefined,
@@ -446,5 +473,8 @@ export function buildScene(
     nodeIndex,
     edgeIndex,
     hunkIndex: hunkIdx,
+    ...(shapesInUse.size > 0
+      ? { shapes: shapeEntries.filter((entry) => shapesInUse.has(entry)) }
+      : {}),
   };
 }

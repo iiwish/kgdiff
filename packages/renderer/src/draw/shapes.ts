@@ -24,6 +24,28 @@ export function roundRectPath(
   ctx.closePath();
 }
 
+/**
+ * Closed polygon subpath from `shapeVertices`, scaled to `radius`. It starts in the middle of
+ * the last side, where `evenShapeDash` puts no corner, so a dashed outline has no seam.
+ */
+export function polygonPath(
+  ctx: Ctx2D,
+  vertices: readonly number[],
+  x: number,
+  y: number,
+  radius: number,
+): void {
+  const n = vertices.length;
+  ctx.moveTo(
+    x + ((vertices[n - 2]! + vertices[0]!) / 2) * radius,
+    y + ((vertices[n - 1]! + vertices[1]!) / 2) * radius,
+  );
+  for (let i = 0; i < n; i += 2) {
+    ctx.lineTo(x + vertices[i]! * radius, y + vertices[i + 1]! * radius);
+  }
+  ctx.closePath();
+}
+
 /** Arrowhead subpath with its tip at (x, y) pointing along the unit vector (ux, uy). */
 export function arrowPath(ctx: Ctx2D, x: number, y: number, ux: number, uy: number): void {
   const bx = x - ux * ARROW_LEN;

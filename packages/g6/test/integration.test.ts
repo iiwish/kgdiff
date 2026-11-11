@@ -3,9 +3,10 @@
  * kgdiff-node draws its extra shapes, interaction and every controller path run in G6.
  */
 import type { Graph, IEvent } from '@antv/g6';
-import { getTheme, type Scene } from '@kgdiff/scene';
+import { getTheme, type Scene, shapeApothem, shapeGauge } from '@kgdiff/scene';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { HOVER_STATE } from '../src/constants.js';
+import { outlinePoints } from '../src/geometry.js';
 import { createDiffGraph, type DiffGraphController } from '../src/index.js';
 import { type CanvasMock, installCanvasMock } from './support/canvas.js';
 import { datasetScene } from './support/scene.js';
@@ -112,6 +113,82 @@ describe('createDiffGraph with G6', () => {
     const ring = shape(graph, String(haloed.id), 'halo')?.attributes;
     expect(ring).toMatchObject({ fill: 'none', lineWidth: 2 });
     expect(ring?.r as number).toBeGreaterThanOrEqual((haloed.style?.size as number) / 2 + 5);
+  });
+
+  describe.each(['square', 'diamond', 'hexagon'] as const)('%s nodes', (kind) => {
+    const shaped = (theme: 'dark' | 'light'): Scene => {
+      const scene = datasetScene('enterprise-kg', { theme });
+      return { ...scene, nodes: scene.nodes.map((n) => ({ ...n, shape: kind })) };
+    };
+    const frameShapes = async (
+      theme: 'dark' | 'light',
+    ): Promise<{ graph: Graph; c: DiffGraphController }> => {
+      const scene = shaped(theme);
+      const { graph, c } = await create(scene);
+      return { graph, c };
+    };
+
+    it('draw the key and the ring as the outline, grown by the gap', async () => {
+      const { graph } = await frameShapes('dark');
+      const ringed = graph.getNodeData().find((n) => n.style?.ring === true);
+      if (!ringed) throw new Error('fixture');
+      const id = String(ringed.id);
+      expect(ringed.style?.shape).toBe(kind);
+      const r = (ringed.style?.size as number) / 2;
+      const gap = ringed.style?.ringGap as number;
+      const key = shape(graph, id, 'key')?.attributes;
+      const ring = shape(graph, id, 'ring')?.attributes;
+      expect(key?.points).toEqual(outlinePoints(kind, r, 0));
+      expect(key?.r).toBeUndefined();
+      expect(key?.shape).toBeUndefined();
+      expect(ring?.points).toEqual(outlinePoints(kind, r, gap));
+    });
+
+    it('keep the dark glow a disc and follow the outline with the light halo', async () => {
+      const dark = await frameShapes('dark');
+      const glowing = dark.graph.getNodeData().find((n) => n.style?.halo === true);
+      if (!glowing) throw new Error('fixture');
+      const glow = shape(dark.graph, String(glowing.id), 'halo')?.attributes;
+      expect(glow?.points).toBeUndefined();
+      expect(String(glow?.fill)).toMatch(/^radial-gradient/);
+
+      const light = await frameShapes('light');
+      const ringed = light.graph.getNodeData().find((n) => n.style?.halo === true);
+      if (!ringed) throw new Error('fixture');
+      const halo = shape(light.graph, String(ringed.id), 'halo')?.attributes;
+      expect(halo).toMatchObject({ fill: 'none', lineWidth: 2 });
+      expect(Array.isArray(halo?.points)).toBe(true);
+    });
+
+    it('stop edges at the outline', async () => {
+      const { graph } = await frameShapes('dark');
+      const data = graph.getNodeData()[0];
+      if (!data) throw new Error('fixture');
+      const el = element(graph, String(data.id)) as Shape & {
+        getCenter(): number[];
+        getIntersectPoint(p: number[], extended?: boolean): number[];
+      };
+      const r = (data.style?.size as number) / 2;
+      const [cx = 0, cy = 0] = el.getCenter();
+      const [x = 0, y = 0] = el.getIntersectPoint([cx + 300, cy + 130]);
+      expect(shapeGauge(kind, x - cx, y - cy)).toBeCloseTo(shapeApothem(kind, r), 6);
+      const [ex = 0] = el.getIntersectPoint([cx + 300, cy + 130], true);
+      expect(ex).toBeLessThan(cx);
+    });
+  });
+
+  it('draws a built-in circle for a shaped node of G6 own type', async () => {
+    const scene = datasetScene();
+    const shaped = {
+      ...scene,
+      nodes: scene.nodes.map((n) => ({ ...n, shape: 'square' as const })),
+    };
+    const { graph } = await create(shaped, { animation: false, node: { type: 'circle' } });
+    const first = graph.getNodeData()[0];
+    if (!first) throw new Error('fixture');
+    const key = shape(graph, String(first.id), 'key')?.attributes;
+    expect(key?.points).toBeUndefined();
+    expect(key?.r).toBe((first.style?.size as number) / 2);
   });
 
   it('adds pivot dots that never take the pointer', async () => {

@@ -1,6 +1,14 @@
 /** Scene nodes and collapsed-group pills → G6 node data (see map.ts for the conventions). */
 import type { NodeBadgeStyleProps, NodeData } from '@antv/g6';
-import type { CollapsedGroup, NodeVisual, SceneNode } from '@kgdiff/scene';
+import {
+  type CollapsedGroup,
+  evenShapeDash,
+  type NodeVisual,
+  type SceneNode,
+  shapeDistance,
+  shapeVertexRadius,
+  shapeVertices,
+} from '@kgdiff/scene';
 import { composite } from './color.js';
 import {
   BADGE_FONT_SIZE,
@@ -54,6 +62,8 @@ function buildNodeBase(ctx: Ctx): NodeStyle {
     strokeOpacity: 1,
     lineWidth: 0,
     lineDash: 0,
+    lineDashOffset: 0,
+    shape: 'circle',
     halo: false,
     haloStroke: ctx.bg,
     haloStrokeOpacity: 0,
@@ -111,6 +121,37 @@ function buildNodeBase(ctx: Ctx): NodeStyle {
   };
 }
 
+/**
+ * Where the outermost outline meets the diagonal to the upper right, per axis, and the half size
+ * of the key shape, whose corner G6 measures the badge from.
+ */
+function badgeAnchor(
+  v: NodeVisual,
+  r: number,
+  grow: number,
+): { reach: number; halfWidth: number; halfHeight: number } {
+  const vertices = shapeVertices(v.shape);
+  if (vertices.length === 0) return { reach: 0.7 * (r + grow), halfWidth: r, halfHeight: r };
+  const radius = shapeVertexRadius(v.shape, r, 0);
+  let halfWidth = 0;
+  let halfHeight = 0;
+  for (let i = 0; i < vertices.length; i += 2) {
+    halfWidth = Math.max(halfWidth, Math.abs(vertices[i] as number) * radius);
+    halfHeight = Math.max(halfHeight, Math.abs(vertices[i + 1] as number) * radius);
+  }
+  const reach = shapeDistance(v.shape, r, grow, Math.SQRT1_2, -Math.SQRT1_2) * Math.SQRT1_2;
+  return { reach, halfWidth, halfHeight };
+}
+
+/** Ghost dashes along the outline: the pattern and its offset (`[0, 0]` when solid). */
+function outlineDash(v: NodeVisual, r: number, stroked: boolean): [number | number[], number] {
+  if (!stroked || v.dash === null || v.dash.length === 0) return [0, 0];
+  if (shapeVertices(v.shape).length === 0) return [evenCircleDash(v.dash, r), 0];
+  const dash: number[] = [];
+  const offset = evenShapeDash(v.shape, v.dash, r, dash);
+  return [dash, offset];
+}
+
 function badgeOf(v: NodeVisual, r: number, ctx: Ctx): NodeBadgeStyleProps[] {
   const b = v.badge;
   if (b === null) return NO_BADGES;
@@ -119,14 +160,15 @@ function badgeOf(v: NodeVisual, r: number, ctx: Ctx): NodeBadgeStyleProps[] {
   // The native pill sits at (x + 0.7·R − 2, y − 0.7·R − 15 + 2), R = outermost outline (ring
   // included). G6 anchors 'right-top' badges with their text's top-left at the key's corner.
   const ring = v.ring;
-  const outer = r + (ring !== null ? ring.gap + ring.width / 2 : 0);
+  const grow = ring !== null ? ring.gap + ring.width / 2 : 0;
   const padY = (BADGE_HEIGHT - BADGE_FONT_SIZE * 1.2) / 2;
+  const { reach, halfWidth, halfHeight } = badgeAnchor(v, r, grow);
   return [
     {
       text: b.text,
       placement: 'right-top',
-      offsetX: 0.7 * outer - 2 + BADGE_PAD_X - r,
-      offsetY: r - 0.7 * outer - BADGE_HEIGHT + 2 + padY,
+      offsetX: reach - 2 + BADGE_PAD_X - halfWidth,
+      offsetY: halfHeight - reach - BADGE_HEIGHT + 2 + padY,
       fill: b.color,
       fontSize: BADGE_FONT_SIZE,
       fontWeight: 600,
@@ -152,6 +194,7 @@ export function mapNode(sn: SceneNode, v: NodeVisual, ctx: Ctx): NodeData | null
   const badges = badgeOf(v, r, ctx);
   const changed = v.family !== 'neutral';
   const pulse = v.pulse > 0 && v.pulse < 1 ? v.pulse : 0;
+  const [lineDash, lineDashOffset] = outlineDash(v, r, hasStroke);
   const style: NodeStyle = {
     ...nodeBase(ctx),
     x: finite(v.x, 0),
@@ -164,7 +207,9 @@ export function mapNode(sn: SceneNode, v: NodeVisual, ctx: Ctx): NodeData | null
     fill: v.fill ?? ctx.bg,
     stroke: v.stroke ?? v.fill ?? ctx.bg,
     lineWidth: hasStroke ? v.strokeWidth : 0,
-    lineDash: hasStroke && v.dash !== null && v.dash.length > 0 ? evenCircleDash(v.dash, r) : 0,
+    lineDash,
+    lineDashOffset,
+    shape: v.shape ?? 'circle',
     halo: halo !== null,
     haloStroke: halo?.color ?? ctx.bg,
     haloStrokeOpacity: halo !== null ? unit(halo.alpha) : 0,

@@ -117,6 +117,43 @@ values only.
 - Halo: dark = radial glow radius `2.6·r`, alpha 0.32 (added / identity / selected); light =
   offset ring at `r + 5` px, 2 px, alpha 0.35.
 
+## Shape says what kind
+
+**Shape says what kind of thing a node is, in every view.** The cues of change (the hollow
+dashed ghost, the ring, the halo, the badge, the struck name) apply to every shape. Hollow keeps
+meaning "not in this version", so it is not a shape: a host that wants one kind drawn as a ring
+picks another shape. Shape is the host's (`SceneOptions.shapes`, type → shape); without it every
+node is a circle. It is the after version's type that counts, the before version's for a removed
+node, and a change of type does not animate the shape: the change has its badge and detail.
+
+Every shape fits the square of half side `r` around the node's center, which is the box the
+layout reserves, so positions do not depend on shapes. The sizes make the four look about equally
+heavy within that box; the two with points use all of it:
+
+| Shape     | Geometry at size `r`                                       | Area               |
+| --------- | ---------------------------------------------------------- | ------------------ |
+| `circle`  | radius `r`                                                 | π·r² ≈ 3.14·r²     |
+| `square`  | half side `√π/2·r ≈ 0.886·r`: the disc's area              | π·r²               |
+| `diamond` | points on the axes at `r` (the side's distance is `r/√2`)  | 2·r²               |
+| `hexagon` | flat top, points at `±r` on x, top and bottom at `±√3/2·r` | 3√3/2·r² ≈ 2.60·r² |
+
+How each cue follows the outline. _Grown by `g`_ means every side moved out by `g`, corners
+sharp in the path and joined round in the stroke:
+
+| Cue           | On a polygon                                                                                                |
+| ------------- | ----------------------------------------------------------------------------------------------------------- |
+| ghost         | whole number of dash periods per side, a dash centered on every corner, so corners stay and all sides match |
+| ring          | the outline grown by `gap`                                                                                  |
+| light halo    | the outline grown to the disc's offset (5 px, or clear of the ring)                                         |
+| dark halo     | radial, as on a disc                                                                                        |
+| pulse         | the outline grown by `3 + p·(12 + 0.6·r)`                                                                   |
+| badge         | anchored where the grown outline meets the diagonal to the upper right                                      |
+| edges, glyphs | stop at the outline (glyphs at the outline of their stop size); a pivot sits on it                          |
+| pointer       | inside the outline, then a 3 px band around it (the outline grown by 3)                                     |
+
+Labels stay at `r·k + 5 px` below the center on every shape. Below the tiny radius every node is
+a square, and the minimap keeps dots.
+
 ## Typography
 
 - Font stack: `Inter, "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",

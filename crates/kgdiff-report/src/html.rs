@@ -119,6 +119,10 @@ pub struct ReportInfo {
     pub locale: Locale,
     /// `view.panels`: region and state, in the order given.
     pub panels: Option<Vec<(String, String)>>,
+    /// `view.shapes`: node type and shape (`circle`, `square`, `diamond`, `hexagon`), in the
+    /// order given: a node takes the shape of the first entry among its types. Experimental
+    /// until 1.0.
+    pub shapes: Option<Vec<(String, String)>>,
 }
 
 fn side_value(side: &ReportSide) -> Value {
@@ -214,6 +218,13 @@ fn payload(diff: &DiffResult, layout: Option<Value>, info: &ReportInfo) -> Value
             .map(|(region, state)| (region.as_str(), state.as_str()))
             .collect();
         view.insert("panels", Value::Object(panels));
+    }
+    if let Some(shapes) = &info.shapes {
+        let shapes: Object = shapes
+            .iter()
+            .map(|(node_type, shape)| (node_type.as_str(), shape.as_str()))
+            .collect();
+        view.insert("shapes", Value::Object(shapes));
     }
     let mut payload = Object::new();
     payload.insert("format", "kgdiff.report");

@@ -332,6 +332,13 @@ describe('the report schema', () => {
     });
   });
 
+  it('describes view.shapes: type to one of the four shapes', () => {
+    const shapes = { A: 'circle', B: 'square', C: 'diamond', D: 'hexagon' };
+    expectValid(report, { ...payload, view: { ...payload.view, shapes } });
+    const bad = { ...payload, view: { ...payload.view, shapes: { A: 'triangle' } } };
+    expect(report(bad)).toBe(false);
+  });
+
   it.each([
     ['another format', { format: 'kgdiff.diff' }],
     ['a newer version', { version: 2 }],

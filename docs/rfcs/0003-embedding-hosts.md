@@ -7,9 +7,10 @@
   the caller's layout and `report.v1.json`
   ([#79](https://github.com/iiwish/kgdiff/pull/79), 6c3a764); part 4a, renderer layers
   ([#80](https://github.com/iiwish/kgdiff/pull/80), d3e1dac). See [0.9 results](#09-results).
-  Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges; the
-  others, and parts 3 and 4b to 4d, are not decided or started.
-- **Date:** 2026-11-10; 0.9 results the same day.
+  Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges. Part
+  4b is implemented for 0.10, with D-3 and D-4 taken: see [4b results](#4b-results). The other
+  decisions, and parts 3, 4c and 4d, are not decided or started.
+- **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
   `docs/visual-language.md` (two new rules), the report payload (a schema, optional members).
@@ -479,8 +480,8 @@ see, and the host deletes the matching piece of its own layer code.
 | --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | D-1 | Is the plain view in scope for kgdiff at all?                | Yes, under the four rules of [Positioning](#positioning). Without it every host that embeds the diff builds the graph view beside it, on another map                           |
 | D-2 | Names: `layout_graph`, `report_payload_with`, `ReportLayout` | **Taken**, as written ([#78](https://github.com/iiwish/kgdiff/pull/78), [#79](https://github.com/iiwish/kgdiff/pull/79))                                                       |
-| D-3 | A hollow shape for a kind of node                            | No: hollow means "not in this version" in every view                                                                                                                           |
-| D-4 | The shape set, and whether a type change animates the shape  | `circle`, `square`, `diamond`, `hexagon`; no animation, the type change already has its badge and detail                                                                       |
+| D-3 | A hollow shape for a kind of node                            | **Taken:** no. Hollow means "not in this version" in every view, and is not lent to kinds of nodes                                                                             |
+| D-4 | The shape set, and whether a type change animates the shape  | **Taken:** `circle`, `square`, `diamond`, `hexagon`; no animation, the type change already has its badge and detail                                                            |
 | D-5 | 4c in 0.10, or after 1.0                                     | Decide when 4b merges, by where phase 5 stands. Default: after 1.0, with hosts coloring through an `over` layer until then                                                     |
 | D-6 | A thin typed input before 1.0                                | No, unless a second host asks; the first one exports JSON anyway                                                                                                               |
 | D-7 | `<kgdiff-viewer>`'s default layout for a plain view          | Not in this RFC: composed elements only. The default layout keeps its "No differences" card until a host asks for more                                                         |
@@ -557,6 +558,33 @@ with that layout.
   whose changelog is where the crates have been mentioned so far, and part 2's on
   `@kgdiff/core`, which ships the schema. The eight npm packages share one version, and the
   crates take it.
+
+## 4b results
+
+Part 4b as built. No layout byte, `GENERATOR` or CLI report changes; without `shapes`, frames and
+draw calls are the same as before. The geometry and how each cue follows it are in
+[visual-language.md](../visual-language.md#shape-says-what-kind).
+
+Where it decides beyond this RFC, or differs from it:
+
+- **Edges carry their ends' shapes.** The sketch above adds `shape` to `NodeVisual` only. A
+  renderer gets a frame without its scene, and an edge has no node indices, so `EdgeVisual` and
+  `GlyphVisual` gain optional `shape1` and `shape2` as well, present only in scenes with
+  non-circle shapes. `Scene` gains optional `shapes`, the entries in use, for legends.
+- **One geometry, exported.** `@kgdiff/scene` exports the outline functions (`shapeVertices`,
+  `shapeDistance`, `shapeGauge`, `shapeApothem`, `shapeVertexRadius`, `evenShapeDash`,
+  `isNodeShape`, `NODE_SHAPES`), experimental, for the two renderers and for hosts' own layers.
+- **The ghost's dashes tile each side,** not just the outline: a whole number of periods per
+  side, a dash centered on every corner. Tiling the perimeter alone can put a gap on a corner,
+  and a diamond whose tips vanish no longer reads as a diamond.
+- **Badges and pivots follow the outline too,** which the list above does not name.
+- **Labels do not.** They stay at `r·k + 5 px` below the center, so a square's or a flat
+  hexagon's sits up to 0.134·r further from the shape. G6 places labels from the key shape's
+  bounds, so there they keep their gap: up to 2 px of difference between the two renderers.
+- **`buildScene` rejects an unknown shape;** the viewer drops one from a payload with a warning,
+  as it does other invalid `view` members, so a report from a later version still opens.
+- **`view.shapes` is read from payloads only.** `load()` has no option for it, and the CLI none
+  either: shapes come from hosts, through `ReportInfo`.
 
 ## References
 

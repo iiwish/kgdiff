@@ -361,6 +361,7 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
             theme: o.theme.clone(),
             locale: ctx.locale,
             panels: o.panels.clone(),
+            shapes: None,
         };
         let payload = report_payload(&result, &info);
         let compute = if needs_compute(&payload) {
