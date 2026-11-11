@@ -207,10 +207,9 @@ be parsed as when the delta was made (same `--format` / `--lang`). `--no-strict`
 operation whose precondition holds and reports how many were skipped on stderr; `--verbose`
 lists them (`#index op: reason`).
 
-Known limitation: with `--ignore-attr`, changes to the ignored attributes are left out of the
-delta, while the delta's target hash covers every attribute. Applying such a delta gives a graph
-with another hash, and `kgdiff apply` warns that the result differs from the delta's target
-([Delta format](delta-format.md#known-limitation-ignored-attributes)).
+With `--ignore-attr`, the delta still carries the changes of the ignored attributes, though the
+diff does not show them, so applying it reaches the delta's target
+([Delta format](delta-format.md#ignored-attributes)).
 
 ## Markdown summary
 

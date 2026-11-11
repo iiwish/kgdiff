@@ -1,0 +1,20 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "ignored", "version": "2" },
+  "nodes": [
+    { "id": "m1", "label": "Alpha concept", "attrs": { "definition": "Changed.", "ts": 2 } },
+    { "id": "m2", "label": "Beta concept", "attrs": { "ts": 2 } },
+    { "id": "n3", "label": "Gamma concept", "attrs": { "ts": 2 } },
+    { "id": "n4", "label": "Delta concept", "attrs": { "etag": "y" } },
+    { "id": "n6", "label": "Zeta thing", "attrs": { "ts": 2 } }
+  ],
+  "edges": [
+    { "source": "m1", "target": "n3", "predicate": "rel", "attrs": { "ts": 2 } },
+    { "source": "m2", "target": "n4", "predicate": "rel", "attrs": { "ts": 2 } },
+    { "source": "n3", "target": "n4", "predicate": "rel", "attrs": { "ts": 2, "weight": 2 } },
+    { "source": "n3", "target": "n4", "predicate": "par", "attrs": { "ts": 3, "tag": "a" } },
+    { "source": "n3", "target": "n4", "predicate": "par", "attrs": { "ts": 2, "tag": "b" } },
+    { "source": "n4", "target": "n6", "predicate": "rel", "attrs": { "ts": 2 } }
+  ]
+}

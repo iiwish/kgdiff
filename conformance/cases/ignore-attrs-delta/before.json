@@ -1,0 +1,20 @@
+{
+  "format": "kgdiff.graph",
+  "version": 1,
+  "meta": { "name": "ignored", "version": "1" },
+  "nodes": [
+    { "id": "n1", "label": "Alpha concept", "attrs": { "definition": "First.", "ts": 1 } },
+    { "id": "n2", "label": "Beta concept", "attrs": { "ts": 1 } },
+    { "id": "n3", "label": "Gamma concept", "attrs": { "ts": 1, "etag": "x" } },
+    { "id": "n4", "label": "Delta concept" },
+    { "id": "n5", "label": "Epsilon concept", "attrs": { "ts": 1 } }
+  ],
+  "edges": [
+    { "source": "n1", "target": "n3", "predicate": "rel", "attrs": { "ts": 1 } },
+    { "source": "n2", "target": "n4", "predicate": "rel", "attrs": { "ts": 1 } },
+    { "source": "n3", "target": "n4", "predicate": "rel", "attrs": { "ts": 1, "weight": 1 } },
+    { "source": "n3", "target": "n4", "predicate": "par", "attrs": { "ts": 1, "tag": "a" } },
+    { "source": "n3", "target": "n4", "predicate": "par", "attrs": { "ts": 2, "tag": "b" } },
+    { "source": "n4", "target": "n5", "predicate": "rel", "attrs": { "ts": 1 } }
+  ]
+}

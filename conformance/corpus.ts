@@ -550,14 +550,12 @@ export async function generateCase(def: CaseDefinition, rec?: Recorder): Promise
       });
     }
 
-    // `kgdiff apply` must reproduce the after graph — except under `ignoreAttrs`: the delta leaves
-    // changes of ignored attributes out while `hashGraph` covers them, so apply warns that the
-    // result differs from the delta's target (recorded in the apply run's stderr).
+    // `kgdiff apply` must reproduce the after graph.
     const applied = JSON.parse(decoder.decode(files.get(`${prefix}expected/apply.json`)));
     const appliedHash = hashGraph(
       normalize(applied, { edgeIdentity: result.options.edgeIdentity }),
     );
-    if ((def.options.ignoreAttrs ?? []).length === 0 && appliedHash !== hashes.after) {
+    if (appliedHash !== hashes.after) {
       fail(def, 'kgdiff apply does not reproduce the after graph');
     }
 

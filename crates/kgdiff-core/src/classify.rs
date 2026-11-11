@@ -68,17 +68,36 @@ pub(crate) fn attr_changes(before: &Attrs, after: &Attrs, ignore: &StringSet) ->
         if ignore.contains_key(&key) {
             continue;
         }
-        let (b, a) = (before.get(&key), after.get(&key));
-        if attr_value_equals(b, a) {
-            continue;
-        }
-        changes.push(AttrChange {
-            key,
-            before: b.map(canonicalize),
-            after: a.map(canonicalize),
-        });
+        changes.extend(attr_change(key, before, after));
     }
     changes
+}
+
+/// The changes `attr_changes` leaves out: those of the `ignored` keys (sorted), for the delta
+/// (`ignoredAttrChanges`).
+pub(crate) fn ignored_attr_changes(
+    before: &Attrs,
+    after: &Attrs,
+    ignored: &[JsStr],
+) -> Vec<AttrChange> {
+    ignored
+        .iter()
+        .filter_map(|key| attr_change(key.clone(), before, after))
+        .collect()
+}
+
+/// The change of one attribute, its values canonicalized; `None` when it did not change
+/// (`attrChange`).
+fn attr_change(key: JsStr, before: &Attrs, after: &Attrs) -> Option<AttrChange> {
+    let (b, a) = (before.get(&key), after.get(&key));
+    if attr_value_equals(b, a) {
+        return None;
+    }
+    Some(AttrChange {
+        key,
+        before: b.map(canonicalize),
+        after: a.map(canonicalize),
+    })
 }
 
 /// Union-id views of merges, splits and moves (`RestructureIndex`).

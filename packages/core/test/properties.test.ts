@@ -1,4 +1,5 @@
 import {
+  type Attrs,
   applyDelta,
   type DeltaOp,
   type DiffOptions,
@@ -20,6 +21,9 @@ import { graphArb, shuffleGraph, versionPairArb } from './support/arbitraries.js
 /** Override with KGDIFF_PROPERTY_RUNS for a deeper soak run. */
 const RUNS = Number(process.env.KGDIFF_PROPERTY_RUNS ?? 300);
 
+/** Keys `graphArb` and its mutations use on nodes and on edges. */
+const IGNORED = ['k1', '名称', 'w'];
+
 const VARIANTS: readonly [string, DiffOptions][] = [
   ['default options', {}],
   ['similarity matching', { match: { strategy: 'similarity' } }],
@@ -27,6 +31,11 @@ const VARIANTS: readonly [string, DiffOptions][] = [
   [
     'id matching without restructuring',
     { match: { strategy: 'id' }, detectMerges: false, detectSplits: false },
+  ],
+  ['ignored attributes', { ignoreAttrs: IGNORED }],
+  [
+    'ignored attributes, similarity matching, id edge identity',
+    { ignoreAttrs: IGNORED, match: { strategy: 'similarity' }, edgeIdentity: 'id' },
   ],
 ];
 
@@ -68,9 +77,10 @@ function expectHunkPartition(d: DiffResult): void {
   expect(edgeOwner.size).toBe(d.edges.filter((e) => e.status !== 'unchanged').length);
   d.delta.ops.forEach((op, i) => {
     if (opOwner.has(i)) return;
-    // Only the id changes of `similarity` matches, which are not changes, live outside hunks.
-    expect(op.op).toBe('node.rekey');
-    expect(d.options.match.strategy).toBe('similarity');
+    // Only what the diff does not show as a change lives outside hunks: the id changes of
+    // `similarity` matches and the changes of ignored attributes.
+    if (op.op === 'node.rekey') expect(d.options.match.strategy).toBe('similarity');
+    else expect(d.options.ignoreAttrs.length).toBeGreaterThan(0);
   });
   expect(d.hunks.map((h) => h.order)).toEqual(d.hunks.map((_, i) => i));
 }
@@ -178,6 +188,40 @@ describe.each(VARIANTS)('diff invariants (%s)', (_name, options) => {
       { numRuns: RUNS / 2 },
     );
   });
+});
+
+describe('ignored attributes', () => {
+  const stripAttrs = (attrs?: Attrs): Attrs | undefined =>
+    attrs && Object.fromEntries(Object.entries(attrs).filter(([k]) => !IGNORED.includes(k)));
+  const strip = (g: GraphInput): GraphInput => ({
+    ...g,
+    nodes: g.nodes.map((n) => ({ ...n, attrs: stripAttrs(n.attrs) })),
+    edges: g.edges.map((e) => ({ ...e, attrs: stripAttrs(e.attrs) })),
+  });
+  /** What a diff shows; `ops` only by count, since ignored attributes add ops ahead of them. */
+  const shown = (d: DiffResult): unknown => ({
+    nodes: d.nodes.map((n) => [n.id, n.status, n.facets, n.hunk]),
+    edges: d.edges.map((e) => [e.id, e.status, e.facets, e.hunk]),
+    hunks: d.hunks.map((h) => ({ ...h, ops: h.ops.length })),
+    stats: d.stats,
+  });
+
+  it.each([{}, { edgeIdentity: 'id' }, { match: { strategy: 'similarity' } }] as DiffOptions[])(
+    'are not shown: the diff is the one of the graphs without them (%j)',
+    (options) => {
+      fc.assert(
+        fc.property(versionPairArb(), ([a, b]) => {
+          // Attributes tell parallel copies apart, so removing them changes which copies exist.
+          fc.pre(![a, b].some((g) => [...normalize(g).edges.keys()].some((k) => k.includes('#'))));
+          const ignoring = diff(a, b, { ...options, ignoreAttrs: IGNORED });
+          expect(shown(ignoring)).toEqual(
+            shown(diff(strip(a), strip(b), { ...options, ignoreAttrs: IGNORED })),
+          );
+        }),
+        { numRuns: RUNS },
+      );
+    },
+  );
 });
 
 describe('graph invariants', () => {

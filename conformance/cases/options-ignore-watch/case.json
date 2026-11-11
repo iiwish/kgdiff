@@ -346,7 +346,7 @@
         "file": "expected/apply.json"
       },
       "stderr": {
-        "text": "warning: The result (c53:109cd29dbd2018) differs from the delta's target (c53:0f9144211bca03).\n"
+        "text": ""
       },
       "exit": 0
     }

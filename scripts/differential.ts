@@ -49,6 +49,8 @@ const VARIANTS: readonly DiffOptions[] = [
   { match: { strategy: 'similarity' } },
   { edgeIdentity: 'id' },
   { match: { strategy: 'id' }, detectMerges: false, detectSplits: false },
+  { ignoreAttrs: ['k1', '名称', 'w'] },
+  { ignoreAttrs: ['k1', '名称', 'w'], match: { strategy: 'similarity' }, edgeIdentity: 'id' },
 ];
 
 const LOCALES: readonly Locale[] = ['en', 'zh-CN'];

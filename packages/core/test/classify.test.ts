@@ -61,7 +61,7 @@ describe('node classification', () => {
     const b = { id: 'a', attrs: { updated: '2026-01-01', v: 1 } };
     const a = { id: 'a', attrs: { updated: '2026-02-01', v: 1 } };
     expect(facets(b, a, { ignoreAttrs: ['updated'] })).toEqual({ status: 'unchanged', facets: [] });
-    expect(diff(single(b), single(a), { ignoreAttrs: ['updated'] }).delta.ops).toEqual([]);
+    expect(diff(single(b), single(a), { ignoreAttrs: ['updated'] }).hunks).toEqual([]);
   });
 
   it('reports deprecation and un-deprecation', () => {

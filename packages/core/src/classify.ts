@@ -54,14 +54,30 @@ export function attrChanges(
   const changes: AttrChange[] = [];
   for (const key of [...keys].sort()) {
     if (ignore.has(key)) continue;
-    const b = ownAttr(before, key);
-    const a = ownAttr(after, key);
-    if (attrValueEquals(b, a)) continue;
-    if (b === undefined) changes.push({ key, after: canonicalize(a as NonNullable<typeof a>) });
-    else if (a === undefined) changes.push({ key, before: canonicalize(b) });
-    else changes.push({ key, before: canonicalize(b), after: canonicalize(a) });
+    const change = attrChange(key, before, after);
+    if (change) changes.push(change);
   }
   return changes;
+}
+
+/** The changes `attrChanges` leaves out: those of the `ignored` keys (sorted), for the delta. */
+export function ignoredAttrChanges(
+  before: Attrs,
+  after: Attrs,
+  ignored: readonly string[],
+): AttrChange[] {
+  if (before === after) return [];
+  return ignored.flatMap((key) => attrChange(key, before, after) ?? []);
+}
+
+/** The change of one attribute, its values canonicalized; undefined when it did not change. */
+function attrChange(key: string, before: Attrs, after: Attrs): AttrChange | undefined {
+  const b = ownAttr(before, key);
+  const a = ownAttr(after, key);
+  if (attrValueEquals(b, a)) return undefined;
+  if (b === undefined) return { key, after: canonicalize(a as NonNullable<typeof a>) };
+  if (a === undefined) return { key, before: canonicalize(b) };
+  return { key, before: canonicalize(b), after: canonicalize(a) };
 }
 
 /** Union-id views of merges and splits (moves are added by `classifyNodes`). */

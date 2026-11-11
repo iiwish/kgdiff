@@ -322,6 +322,108 @@ describe('applyDelta', () => {
   });
 });
 
+describe('ignored attributes in the delta', () => {
+  const ignoreAttrs = ['ts'];
+  const roundTrips = (d: ReturnType<typeof diff>): void => {
+    expect(hashGraph(applyDelta(d.before, d.delta))).toBe(d.delta.target.hash);
+    expect(hashGraph(applyDelta(d.after, invertDelta(d.delta)))).toBe(d.delta.base.hash);
+  };
+
+  it('carries them on an unchanged node and edge, in no hunk, showing no change', () => {
+    const d = diff(
+      {
+        nodes: [{ id: 'a', attrs: { ts: 1 } }, { id: 'b' }],
+        edges: [{ source: 'a', target: 'b', predicate: 'p', attrs: { ts: 1 } }],
+      },
+      {
+        nodes: [{ id: 'a' }, { id: 'b', attrs: { ts: 2 } }],
+        edges: [{ source: 'a', target: 'b', predicate: 'p', attrs: { ts: 2 } }],
+      },
+      { ignoreAttrs },
+    );
+    expect(d.delta.ops).toEqual([
+      { op: 'node.attr', id: 'a', key: 'ts', from: 1 },
+      { op: 'node.attr', id: 'b', key: 'ts', to: 2 },
+      {
+        op: 'edge.attr',
+        edge: { source: 'a', target: 'b', predicate: 'p' },
+        key: 'ts',
+        from: 1,
+        to: 2,
+      },
+    ]);
+    expect(d.hunks).toEqual([]);
+    expect(d.stats.identical).toBe(true);
+    expect(d.nodes.every((n) => n.status === 'unchanged' && n.facets.length === 0)).toBe(true);
+    roundTrips(d);
+  });
+
+  it('heads the delta, keeping them out of the hunk of a modified node', () => {
+    const d = diff(
+      { nodes: [{ id: 'a', label: 'A', attrs: { ts: 1, k: 1 } }], edges: [] },
+      { nodes: [{ id: 'a', label: 'A', attrs: { ts: 2, k: 2 } }], edges: [] },
+      { ignoreAttrs },
+    );
+    expect(d.delta.ops).toEqual([
+      { op: 'node.attr', id: 'a', key: 'ts', from: 1, to: 2 },
+      { op: 'node.attr', id: 'a', key: 'k', from: 1, to: 2 },
+    ]);
+    expect(d.hunks.map((h) => h.ops)).toEqual([[1]]);
+    expect(d.nodes[0]?.facets).toEqual([
+      { kind: 'attrs', changes: [{ key: 'k', before: 1, after: 2 }] },
+    ]);
+    roundTrips(d);
+  });
+
+  it('addresses the before graph, ahead of a rename that belongs to a hunk', () => {
+    const d = diff(
+      {
+        nodes: [
+          { id: 'old', label: 'Same', attrs: { k: 1 } },
+          { id: 'z', label: 'Other' },
+        ],
+        edges: [{ source: 'old', target: 'z', predicate: 'p', attrs: { ts: 1 } }],
+      },
+      {
+        nodes: [
+          { id: 'new', label: 'Same', attrs: { k: 2 } },
+          { id: 'z', label: 'Other' },
+        ],
+        edges: [{ source: 'new', target: 'z', predicate: 'p', attrs: { ts: 2 } }],
+      },
+      { ignoreAttrs, match: { strategy: 'similarity' } },
+    );
+    expect(d.delta.ops[0]).toEqual({
+      op: 'edge.attr',
+      edge: { source: 'old', target: 'z', predicate: 'p' },
+      key: 'ts',
+      from: 1,
+      to: 2,
+    });
+    expect(d.delta.ops[1]).toEqual({ op: 'node.rekey', from: 'old', to: 'new' });
+    expect(d.hunks.flatMap((h) => h.ops)).not.toContain(0);
+    expect(d.edges[0]?.status).toBe('unchanged');
+    roundTrips(d);
+  });
+
+  it('replaces a parallel copy, which has no locator of its own', () => {
+    const copies = (ts: number) => [
+      { source: 'a', target: 'b', predicate: 'p', attrs: { ts, tag: 'x' } },
+      { source: 'a', target: 'b', predicate: 'p', attrs: { ts: 9, tag: 'y' } },
+    ];
+    const nodes = [{ id: 'a' }, { id: 'b' }];
+    const d = diff({ nodes, edges: copies(1) }, { nodes, edges: copies(2) }, { ignoreAttrs });
+    const edge = { source: 'a', target: 'b', predicate: 'p' };
+    expect(d.delta.ops).toEqual([
+      { op: 'edge.remove', edge: { ...edge, attrs: { tag: 'x', ts: 1 } } },
+      { op: 'edge.add', edge: { ...edge, attrs: { tag: 'x', ts: 2 } } },
+    ]);
+    expect(d.hunks).toEqual([]);
+    expect(d.edges.every((e) => e.status === 'unchanged')).toBe(true);
+    roundTrips(d);
+  });
+});
+
 describe('invertDelta', () => {
   const d = diff(before, after);
 

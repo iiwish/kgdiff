@@ -260,9 +260,9 @@ the edges incident to a node, an edge identity — following its precondition an
 and, when it writes, on the readers since that write; removing edges at one node commutes, so
 only the node's removal waits for them. Lifted to hunks: `A.requires ∋ B` when an op of `A`
 depends on an op of `B` (an edge to a node added in `B`, a node whose edges `B` removes, a node
-`B` renames, …). Ops in no hunk (id-only rekeys under `similarity`) form a preamble at the
-start of the delta that never depends on a hunk: a hunk-owned node in its way is parked on a
-temporary id within the preamble. A cycle of hunks that require each other (rare) is merged
+`B` renames, …). Ops in no hunk (changes of ignored attributes, §8, and id-only rekeys under
+`similarity`) form a preamble at the start of the delta that never depends on a hunk: a
+hunk-owned node in its way is parked on a temporary id within the preamble. A cycle of hunks that require each other (rare) is merged
 into one hunk, which keeps the identity (id, kind, anchor, phase) of its best-ranked member.
 
 **Default order** (`order`): a topological order of `requires` — Kahn's algorithm that, among
@@ -379,6 +379,12 @@ The same id is the same place, not the same content. `modify:x` reviewed yesterd
 Built from the classified union. Canonical op order — each op's ids refer to the graph state
 reached by the previous ops:
 
+0. Changes of `ignoreAttrs`, in no hunk and addressing the before graph (before ids and
+   endpoints), on every element matched and not replaced: `node.attr` (by union id, then key);
+   `edge.remove`, then `edge.add` for a parallel copy, which has no locator of its own (by key);
+   `edge.attr` (by key, then attr key). Coming before every rename, they depend on no hunk (an
+   unchanged edge can have an endpoint a hunk renames) and no hunk depends on them, so `requires`
+   and the hunks are what they would be without them.
 1. `node.rekey`: every before id whose union id differs (matches with another id, removed nodes
    that need `@before`). Sorted by `from` when no rename blocks another (always the case unless
    ids are ignored for matching); otherwise chains run back to front and cycles go through a
@@ -402,8 +408,8 @@ and swaps base/target. Invariants (property-tested):
 - `diff(A, A).delta.ops.length === 0` and `diff(A, A).stats.identical`
 
 With strategy `similarity`, `node.rekey` ops of nodes whose only difference is their id belong
-to no hunk (the node is `unchanged`), so `stats.identical` can be true while the delta is not
-empty.
+to no hunk (the node is `unchanged`), and so do the changes of `ignoreAttrs`: `stats.identical`
+can be true while the delta is not empty.
 
 `hashGraph`: each node and edge is encoded canonically (attrs keys sorted) and hashed with
 cyrb53; the 64-bit element digests are summed (a multiset hash: order-independent, no sorting,
