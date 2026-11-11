@@ -236,7 +236,7 @@ fn walk(pair: &Pair, schemas: &Schemas) -> (Maps, Seen) {
     assert_eq!(first.scope, LayoutScope::All, "{what}");
     assert_eq!(
         sorted(previous.positions.keys()),
-        sorted(pair.before.nodes.keys()),
+        sorted(pair.before.nodes().map(|n| n.id())),
         "{what}: every before node has a stored position"
     );
     for (id, p) in &first.positions {
@@ -262,7 +262,7 @@ fn walk(pair: &Pair, schemas: &Schemas) -> (Maps, Seen) {
     assert_eq!(next.scope, LayoutScope::All, "{what}");
     assert_eq!(
         sorted(next.positions.keys()),
-        sorted(pair.after.nodes.keys()),
+        sorted(pair.after.nodes().map(|n| n.id())),
         "{what}: every after node has a position"
     );
     for node in &diff.nodes {
@@ -561,7 +561,7 @@ fn the_diff_laid_out_first_keeps_the_map_and_clears_the_removed_nodes() {
         );
         assert_eq!(
             sorted(next.positions.keys()),
-            sorted(pair.after.nodes.keys()),
+            sorted(pair.after.nodes().map(|n| n.id())),
             "{what}"
         );
         for node in &diff.nodes {
@@ -637,7 +637,7 @@ fn with_positions(graph: &KGraph, positions: &IndexMap<JsStr, Point>) -> KGraph 
     }
     let value = Value::Object(value);
     let options = NormalizeOptions {
-        edge_identity: graph.edge_identity,
+        edge_identity: graph.edge_identity(),
         ..NormalizeOptions::default()
     };
     let positioned = normalize(&value, options).unwrap();

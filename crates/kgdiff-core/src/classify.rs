@@ -153,27 +153,27 @@ fn hierarchy_parents(
     if hierarchy.is_empty() {
         return parents;
     }
-    for edge in graph.edges.values() {
-        if !hierarchy.contains_key(&edge.predicate) {
+    for edge in graph.edges() {
+        if !hierarchy.contains_key(edge.predicate()) {
             continue;
         }
-        let of_child = match parents.get_mut(&edge.source) {
+        let of_child = match parents.get_mut(edge.source()) {
             Some(of_child) => of_child,
             None => {
-                parents.insert(edge.source.clone(), Vec::new());
+                parents.insert(edge.source().clone(), Vec::new());
                 parents
-                    .get_mut(&edge.source)
+                    .get_mut(edge.source())
                     .unwrap_or_else(|| unreachable!())
             }
         };
-        let at = match of_child.iter().position(|(p, _)| *p == edge.predicate) {
+        let at = match of_child.iter().position(|(p, _)| p == edge.predicate()) {
             Some(at) => at,
             None => {
-                of_child.push((edge.predicate.clone(), Vec::new()));
+                of_child.push((edge.predicate().clone(), Vec::new()));
                 of_child.len() - 1
             }
         };
-        of_child[at].1.push(to_union(&edge.target));
+        of_child[at].1.push(to_union(edge.target()));
     }
     // Each list as a set in insertion order: repeats removed once, after the pass.
     for of_child in parents.values_mut() {
@@ -375,10 +375,10 @@ fn matched_facets(
             deprecated: a.deprecated,
         });
     }
-    if b.replaces != a.replaces || b.replaced_by != a.replaced_by {
-        let (added, removed) = sorted_set_diff(&b.replaces, &a.replaces);
+    if b.replaces() != a.replaces() || b.replaced_by() != a.replaced_by() {
+        let (added, removed) = sorted_set_diff(b.replaces(), a.replaces());
         let replaces = SetChange { added, removed };
-        let (added, removed) = sorted_set_diff(&b.replaced_by, &a.replaced_by);
+        let (added, removed) = sorted_set_diff(b.replaced_by(), a.replaced_by());
         facets.push(NodeFacet::Replacement {
             replaces,
             replaced_by: SetChange { added, removed },
@@ -387,7 +387,7 @@ fn matched_facets(
     if let Some(change) = set_facet(&b.types, &a.types) {
         facets.push(NodeFacet::Types(change));
     }
-    if let Some(change) = set_facet(&b.aliases, &a.aliases) {
+    if let Some(change) = set_facet(b.aliases(), a.aliases()) {
         facets.push(NodeFacet::Aliases(change));
     }
     let changes = attr_changes(&b.attrs, &a.attrs, &ctx.ignore_attrs);

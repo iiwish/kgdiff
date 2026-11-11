@@ -33,7 +33,7 @@ fn graph(value: &Value, edge_identity: EdgeIdentity) -> KGraph {
 
 fn diff_options(graph: &KGraph) -> DiffOptions {
     DiffOptions {
-        edge_identity: graph.edge_identity,
+        edge_identity: graph.edge_identity(),
         ..DiffOptions::default()
     }
 }
@@ -62,7 +62,7 @@ fn check_contract(what: &str, graph: &KGraph, options: &LayoutOptions) -> Layout
 
     assert_eq!(layout.scope, LayoutScope::All, "{what}");
     assert!(layout.hidden.is_empty(), "{what}");
-    let mut ids: Vec<&JsStr> = graph.nodes.keys().collect();
+    let mut ids: Vec<&JsStr> = graph.nodes().map(|n| n.id()).collect();
     ids.sort();
     let mut placed: Vec<&JsStr> = layout.positions.keys().collect();
     placed.sort();
@@ -274,7 +274,7 @@ fn random_options(random: &mut Rng, graph: &KGraph) -> LayoutOptions {
         options.hub_degree = Some(random.below(3) as f64);
     }
     if coin(random, 0.4) {
-        for id in graph.nodes.keys() {
+        for id in graph.nodes().map(|n| n.id()) {
             if coin(random, 0.2) {
                 options.pinned.insert(id.clone(), somewhere(random));
             }

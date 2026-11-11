@@ -49,7 +49,7 @@ fn outputs(result: &DiffResult) -> Result<Vec<(&'static str, String)>, String> {
         ),
         (
             "issues",
-            sides(&|g| Value::Array(g.issues.iter().map(|i| i.to_value()).collect())),
+            sides(&|g| Value::Array(g.issues().iter().map(|i| i.to_value()).collect())),
         ),
         ("hashes", sides(&|g| Value::from(hash_graph(g)))),
         ("diff", json::to_string(&diff_to_json(result))),

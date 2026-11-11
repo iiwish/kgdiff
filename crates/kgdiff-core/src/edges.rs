@@ -39,6 +39,8 @@ struct Pairing<'a, 'c> {
     index: &'a RestructureIndex,
     /// The union edges, to be sorted by id.
     records: KeySorted<UnionEdge>,
+    /// Positions of the after edges, by key.
+    after_at: &'a Lookup<JsStr, usize>,
     /// Per after edge (by index): paired already.
     paired: Vec<bool>,
     remaining_after: usize,
@@ -46,11 +48,7 @@ struct Pairing<'a, 'c> {
 
 impl Pairing<'_, '_> {
     fn is_free(&self, key: &str) -> bool {
-        self.ctx
-            .after
-            .edges
-            .get_index_of(key)
-            .is_some_and(|i| !self.paired[i])
+        self.after_at.get(key).is_some_and(|&i| !self.paired[i])
     }
 
     fn cause_of(&self, end: End, from: &UnionId, to: &UnionId, e: &KGEdge) -> Cause {
@@ -83,7 +81,7 @@ impl Pairing<'_, '_> {
     }
 
     fn pair(&mut self, m: &Mapped, a: &Arc<KGEdge>, in_place: bool, forced: Option<Cause>) {
-        let at = self.ctx.after.edges.get_index_of(&a.key);
+        let at = self.after_at.get(&a.key).copied();
         self.pair_at(m, a, at, in_place, forced);
     }
 
@@ -184,25 +182,34 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     let (before, after) = (ctx.before, ctx.after);
     let mode = ctx.options.edge_identity;
     let structural = |e: &KGEdge| mode == EdgeIdentity::Structure || e.id.is_none();
+    // The edges on their own, which the union edges keep.
+    let before_edges = before.shared_edges();
+    let after_edges = after.shared_edges();
+    let mut after_at: Lookup<JsStr, usize> = Lookup::with_capacity(after_edges.len());
+    for (at, edge) in after_edges.iter().enumerate() {
+        after_at.insert(edge.key.clone(), at);
+    }
+    let after_full = |key: &str| after_at.get(key).map(|&at| (at, &after_edges[at]));
     let mut p = Pairing {
         ctx,
         index,
-        records: KeySorted::with_capacity(before.edges.len().max(after.edges.len())),
-        paired: vec![false; after.edges.len()],
-        remaining_after: after.edges.len(),
+        after_at: &after_at,
+        records: KeySorted::with_capacity(before_edges.len().max(after_edges.len())),
+        paired: vec![false; after_edges.len()],
+        remaining_after: after_edges.len(),
     };
 
     // Parallel copies of a triple exist only when a graph reported them (structure identity), or
     // when an edge id pushed a structural key aside (id identity).
     let may_have_parallel = |g: &KGraph| {
         mode == EdgeIdentity::Id
-            || g.issues
+            || g.issues()
                 .iter()
                 .any(|i| i.code == GraphIssueCode::DuplicateEdge)
     };
     let mut parallel: Lookup<String, ()> = Lookup::new();
     if may_have_parallel(before) || may_have_parallel(after) {
-        for edge in before.edges.values() {
+        for edge in &before_edges {
             if structural(edge) && has_parallel_suffix(&edge.key) {
                 let base = split_structural_key(&edge.key).0;
                 let (source, target) = (
@@ -219,7 +226,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
                 parallel.insert(key, ());
             }
         }
-        for e in after.edges.values() {
+        for e in &after_edges {
             if structural(e) && has_parallel_suffix(&e.key) {
                 parallel.insert(split_structural_key(&e.key).0.to_owned(), ());
             }
@@ -229,7 +236,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     // ── 1. Exact ── (before edges are mapped into union space on the way)
     let mut remaining: Vec<Mapped> = Vec::new();
     let mut groups: IndexMap<String, (Vec<Mapped>, Vec<Arc<KGEdge>>)> = IndexMap::default();
-    for edge in before.edges.values() {
+    for edge in &before_edges {
         let source = ctx.union_of_before(&edge.source);
         let target = ctx.union_of_before(&edge.target);
         let is_structural = structural(edge);
@@ -248,8 +255,8 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             key,
         };
         if !is_structural {
-            match after.edges.get_full(&m.key) {
-                Some((at, _, a)) if a.id == edge.id && !structural(a) => {
+            match after_full(&m.key) {
+                Some((at, a)) if a.id == edge.id && !structural(a) => {
                     let a = a.clone();
                     p.pair_at(&m, &a, Some(at), true, None);
                 }
@@ -264,8 +271,8 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
                 continue;
             }
         }
-        match after.edges.get_full(&m.key) {
-            Some((at, _, a))
+        match after_full(&m.key) {
+            Some((at, a))
                 if structural(a)
                     && a.source == m.source
                     && a.target == m.target
@@ -278,7 +285,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
         }
     }
     if !groups.is_empty() {
-        for e in after.edges.values() {
+        for e in &after_edges {
             if !structural(e) {
                 continue;
             }
@@ -337,7 +344,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     let after_keys_by_triple = || {
         let mut by_triple: Lookup<JsStr, Vec<Arc<KGEdge>>> = Lookup::new();
         let mut keys: Vec<JsStr> = Vec::new();
-        for e in after.edges.values() {
+        for e in &after_edges {
             let triple = triple_key(&e.source, &e.predicate, &e.target);
             let list = by_triple.get_or_insert_with(triple.clone(), Vec::new);
             if list.is_empty() {
@@ -429,7 +436,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             b_groups.entry(before_key(m)).or_default().push(i);
         }
         let mut a_groups: Lookup<String, Vec<Arc<KGEdge>>> = Lookup::new();
-        for (i, a) in after.edges.values().enumerate() {
+        for (i, a) in after_edges.iter().enumerate() {
             if p.paired[i] {
                 continue;
             }
@@ -490,7 +497,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     );
 
     // ── 5. Leftovers ──
-    for (i, a) in after.edges.values().enumerate() {
+    for (i, a) in after_edges.iter().enumerate() {
         if p.paired[i] {
             continue;
         }
@@ -516,7 +523,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     let mut taken: Lookup<JsStr, ()> = Lookup::new();
     for (m, into) in removed {
         let id = unique_before_id(&m, structural(&m.edge), &|k| {
-            after.edges.contains_key(k) || taken.contains_key(k)
+            after_at.contains_key(k) || taken.contains_key(k)
         });
         taken.insert(id.clone(), ());
         let facets = into

@@ -16,7 +16,8 @@ use std::error::Error;
 
 use kgdiff_core::js::{Value, json};
 use kgdiff_core::{
-    DiffOptions, DiffResult, KGraph, Locale, NormalizeOptions, Result, diff_graphs, normalize,
+    DiffOptions, DiffResult, EdgeInput, GraphInput, KGraph, Locale, NodeInput, NormalizeOptions,
+    Result, diff_graphs, graph_to_json, normalize, normalize_input,
 };
 use kgdiff_layout::{
     LayoutOptions, LayoutResult, layout_after, layout_diff_on, layout_from_json, layout_graph,
@@ -33,6 +34,36 @@ use kgdiff_report::{
 pub fn read_graph(export: &str) -> std::result::Result<KGraph, Box<dyn Error>> {
     let value = json::parse(export)?;
     Ok(normalize(&value, NormalizeOptions::default())?)
+}
+
+/// The same, built from the application's own values instead of JSON text: here, concepts and
+/// metrics with the concept each metric is measured on. The members are those of kgdiff JSON;
+/// the graph is the one `read_graph` makes of the same version written as JSON.
+pub fn build_graph(
+    name: &str,
+    concepts: &[(&str, &str)],
+    metrics: &[(&str, &str, &str)],
+) -> Result<KGraph> {
+    let mut input = GraphInput::default();
+    input.meta.insert("name", name);
+    for &(id, label) in concepts {
+        input.nodes.push(NodeInput {
+            label: Some(label.into()),
+            types: vec!["concept".into()],
+            ..NodeInput::new(id)
+        });
+    }
+    for &(id, label, measured_on) in metrics {
+        input.nodes.push(NodeInput {
+            label: Some(label.into()),
+            types: vec!["metric".into()],
+            ..NodeInput::new(id)
+        });
+        input
+            .edges
+            .push(EdgeInput::new(id, "measured_on", measured_on));
+    }
+    normalize_input(input, NormalizeOptions::default())
 }
 
 /// The layout of a version that has no map yet, and the layout document to store with it.
@@ -138,7 +169,7 @@ pub fn report(diff: &DiffResult, layout: &LayoutResult, info: &ReportInfo) -> Re
 /// union ids of that diff are the graph's ids, so the layout of the graph is its layout.
 pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -> Result<Value> {
     let options = DiffOptions {
-        edge_identity: graph.edge_identity,
+        edge_identity: graph.edge_identity(),
         ..DiffOptions::default()
     };
     let unchanged = diff_graphs(graph.clone(), graph.clone(), options)?;
@@ -192,6 +223,30 @@ pub fn main() -> std::result::Result<(), Box<dyn Error>> {
     let v1 = read_graph(V1)?;
     let (map1, stored) = first_map(&v1)?;
     assert_eq!(map1.positions.len(), 4);
+    // Built from values, a version is the same graph as from its JSON.
+    let values = build_graph(
+        "metrics",
+        &[("customer", "Customer"), ("order", "Order")],
+        &[
+            ("revenue", "Revenue", "order"),
+            ("churn", "Churn rate", "customer"),
+        ],
+    )?;
+    let json_of_values = read_graph(
+        r#"{"meta":{"name":"metrics"},"nodes":[
+        {"id":"customer","label":"Customer","types":["concept"]},
+        {"id":"order","label":"Order","types":["concept"]},
+        {"id":"revenue","label":"Revenue","types":["metric"]},
+        {"id":"churn","label":"Churn rate","types":["metric"]}],"edges":[
+        {"source":"revenue","target":"order","predicate":"measured_on"},
+        {"source":"churn","target":"customer","predicate":"measured_on"}]}"#,
+    )?;
+    assert_eq!(
+        json::to_string(&graph_to_json(&values)),
+        json::to_string(&graph_to_json(&json_of_values))
+    );
+    assert_eq!(values.node_count(), 4);
+    assert_eq!(values.edge_count(), 2);
 
     // Version 2 arrives: diff it, and lay the diff out on the stored map.
     let v2 = read_graph(V2)?;

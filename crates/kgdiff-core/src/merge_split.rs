@@ -98,7 +98,7 @@ struct Neighbourhoods<'a> {
 
 fn keys_of(node: &KGNode, text_keys: &mut TextKeys) -> std::rc::Rc<Vec<NameKey>> {
     let texts: Vec<&str> = std::iter::once(node.label.as_str())
-        .chain(node.aliases.iter().map(JsStr::as_str))
+        .chain(node.aliases().iter().map(JsStr::as_str))
         .collect();
     let text = texts.join("\u{0}");
     text_keys
@@ -165,11 +165,11 @@ impl<'a> Neighbourhoods<'a> {
         let graph = self.graph;
         let mut ends: IndexSet<Id> = IndexSet::default();
         for edge in graph.adjacent(anchor, !incoming) {
-            if edge.predicate == *predicate {
+            if *edge.predicate() == *predicate {
                 ends.insert(if incoming {
-                    edge.source.clone()
+                    edge.source().clone()
                 } else {
-                    edge.target.clone()
+                    edge.target().clone()
                 });
             }
         }
@@ -192,14 +192,14 @@ impl<'a> Triples<'a> {
 
     fn has(&mut self, source: &str, predicate: &str, target: &str) -> bool {
         let key = triple_key(source, predicate, target);
-        if self.graph.edge_identity == EdgeIdentity::Structure {
-            return self.graph.edges.contains_key(&key);
+        if self.graph.edge_identity() == EdgeIdentity::Structure {
+            return self.graph.contains_edge(&key);
         }
         let graph = self.graph;
         let set = self.set.get_or_insert_with(|| {
             let mut set = Lookup::new();
-            for e in graph.edges.values() {
-                set.insert(triple_key(&e.source, &e.predicate, &e.target), ());
+            for e in graph.edges() {
+                set.insert(triple_key(e.source(), e.predicate(), e.target()), ());
             }
             set
         });
@@ -211,7 +211,7 @@ impl<'a> Triples<'a> {
 fn name_evidence(text: &JsStr, node: &KGNode, profiles: &mut ProfileCache) -> f64 {
     let p = profiles.get(text);
     let mut best = profile_similarity(&p, &profiles.get(&node.label));
-    for alias in &node.aliases {
+    for alias in node.aliases() {
         if best == 1.0 {
             break;
         }
@@ -220,10 +220,10 @@ fn name_evidence(text: &JsStr, node: &KGNode, profiles: &mut ProfileCache) -> f6
     best
 }
 
-/// `text ∈ node.aliases`, comparing normalized text (`isSynonym`).
+/// `text ∈ node.aliases()`, comparing normalized text (`isSynonym`).
 fn is_synonym(text: &JsStr, node: &KGNode, profiles: &mut ProfileCache) -> bool {
     let p = profiles.get(text);
-    node.aliases
+    node.aliases()
         .iter()
         .any(|alias| profile_similarity(&p, &profiles.get(alias)) == 1.0)
 }
@@ -270,20 +270,21 @@ fn carry_over(
     let mut candidates: IndexSet<Id> = IndexSet::default();
     for out in [true, false] {
         for edge in graph.adjacent(&subject.id, out) {
-            let end = if out { &edge.target } else { &edge.source };
+            let end = if out { edge.target() } else { edge.source() };
             let other = if *end == subject.id {
                 None
             } else {
                 map.get(end).cloned()
             };
             if let Some(other) = &other {
-                for c in neighbourhoods.candidates(out, &edge.predicate, other, &query, text_keys) {
+                for c in neighbourhoods.candidates(out, edge.predicate(), other, &query, text_keys)
+                {
                     candidates.insert(c);
                 }
             }
             edges.push(SubjectEdge {
                 out,
-                predicate: edge.predicate.clone(),
+                predicate: edge.predicate().clone(),
                 other,
             });
         }
@@ -449,14 +450,18 @@ fn detect_merges_of(
             return false;
         }
         if xb
-            .replaced_by
+            .replaced_by()
             .iter()
             .any(|r| to_after(r).as_ref() == Some(target))
         {
             return true;
         }
-        a2b.get(target)
-            .is_some_and(|y| before.nodes.get(y).is_some_and(|n| n.replaces.contains(x)))
+        a2b.get(target).is_some_and(|y| {
+            before
+                .nodes
+                .get(y)
+                .is_some_and(|n| n.replaces().contains(x))
+        })
     };
 
     let mut hints: IndexMap<Id, IndexSet<Id>> = IndexMap::default();
@@ -470,18 +475,18 @@ fn detect_merges_of(
         hints.entry(x).or_default().insert(target);
     };
     for node in before.nodes.values() {
-        for r in &node.replaced_by {
+        for r in node.replaced_by() {
             hint(Some(node.id.clone()), to_after(r));
         }
     }
     for node in after.nodes.values() {
-        if !node.replaced_by.is_empty() {
+        if !node.replaced_by().is_empty() {
             let x = a2b.get(&node.id).cloned();
-            for r in &node.replaced_by {
+            for r in node.replaced_by() {
                 hint(x.clone(), to_after(r));
             }
         }
-        for r in &node.replaces {
+        for r in node.replaces() {
             hint(to_before(r), Some(node.id.clone()));
         }
     }
@@ -683,18 +688,18 @@ fn detect_splits_of(
             });
     };
     for node in after.nodes.values() {
-        for r in &node.replaces {
+        for r in node.replaces() {
             add(&mut found, to_before(r), &node.id, 1.0, Via::Hint);
         }
-        if !node.replaced_by.is_empty() {
+        if !node.replaced_by().is_empty() {
             let x = a2b.get(&node.id).cloned();
-            for r in &node.replaced_by {
+            for r in node.replaced_by() {
                 add(&mut found, x.clone(), r, 1.0, Via::Hint);
             }
         }
     }
     for node in before.nodes.values() {
-        for r in &node.replaced_by {
+        for r in node.replaced_by() {
             add(&mut found, Some(node.id.clone()), r, 1.0, Via::Hint);
         }
     }
