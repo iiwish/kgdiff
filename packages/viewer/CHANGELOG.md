@@ -1,5 +1,58 @@
 # @kgdiff/viewer
 
+## 0.10.0
+
+### Minor Changes
+
+- 5dfeb83: Remove three compatibility paths. Breaking before 1.0:
+  - **GitHub Action: `version` below 0.8.0.** Before 0.8.0 `@kgdiff/cli` was a TypeScript CLI without
+    platform packages, and the action ran it with `npx`. The action now runs only the native
+    kgdiff, so a `version` input that resolves to a release before 0.8.0 fails with an error that
+    names the minimum. A runner with no native build for it also fails, with its own error, instead
+    of falling back to `npx`. To keep using an older version, pin an earlier release of the
+    action: `iiwish/kgdiff@v0.7.0`. The default (the action's own release) is not affected.
+  - **Viewer: the mode `changes`.** Before scopes existed, "only the changes" was a fourth mode.
+    `mode="changes"` (attribute or property), `mode:changes` in `sync-hash` deep links and
+    `view.mode: "changes"` in a report's payload were read as `overlay` plus scope `changes`; they
+    are now unknown values, like any other: the attribute and the property use the default,
+    `overlay`; a deep link drops that field; a report's `view` drops it and the viewer logs a
+    warning. The scope is not implied any more. Write `mode="overlay" scope="changes"`. The
+    TypeScript types of `mode` and `setMode` no longer accept `'changes'`.
+  - **Site playground.** Links with `mode=changes` open in the default mode; use `mode=overlay` and
+    `scope=changes`.
+- bfe4b0d: Node shapes by type (RFC 0003, part 4b), experimental until 1.0. `buildScene` takes
+  `shapes`, a map of node type to `circle`, `square`, `diamond` or `hexagon`; a node takes the shape
+  of the first entry among its types. Shape says what kind of thing a node is: the ghost, the ring,
+  the halo, the pulse and the edges all follow the outline, and picking tests the outline. Every
+  shape fits the box the layout reserves, so layouts do not change. `kgdiff-node` in `@kgdiff/g6`
+  draws them too; G6's own node types stay circles. A report's `view.shapes` (`ReportInfo.shapes` in
+  `kgdiff-report`, described in `report.v1.json`) carries the map to `<kgdiff-viewer>`, whose legend
+  lists the shapes in use. Without `shapes`, frames, draw calls and reports are unchanged.
+- 6bed516: The composable viewer elements are stable. RFC 0001 planned this for 0.7; it happens now, in 0.10.
+  `<kgdiff-root>`, `<kgdiff-stage>`, `<kgdiff-change-list>`, `<kgdiff-change-detail>`,
+  `<kgdiff-search>`, `<kgdiff-filters>`, `<kgdiff-view-dock>`, `<kgdiff-transport>`,
+  `<kgdiff-legend>`, `<kgdiff-zoom>`, `<kgdiff-minimap>`, `<kgdiff-title>` and `<kgdiff-actions>`,
+  with their attributes, properties, methods, events, slots, custom states, the element types, the
+  React types and the `keymap` shortcut names, no longer carry `@experimental`: from now on they
+  follow semantic versioning. Nothing changes in behavior or types.
+
+  CSS `::part()` is not offered in 1.0: theme the elements with the `--kgdiff-*` custom properties.
+  Adding `::part()` names later is purely additive.
+
+  `<kgdiff-stage>`'s `addLayer` and the `RendererLayer` / `LayerView` types stay experimental until
+  1.0, as RFC 0003 says.
+
+### Patch Changes
+
+- 643849c: The viewer's saved review progress is versioned. New writes carry `v: 1` in the value (the key is unchanged, so saved progress stays). Progress saved without a version is read as before and upgraded on the next write; a value from a newer viewer is read but never overwritten.
+- Updated dependencies [9168d34]
+- Updated dependencies [bfe4b0d]
+  - @kgdiff/core@0.10.0
+  - @kgdiff/scene@0.10.0
+  - @kgdiff/renderer@0.10.0
+  - @kgdiff/formats@0.10.0
+  - @kgdiff/layout@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes
