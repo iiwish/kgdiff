@@ -10,21 +10,22 @@
 
 use kgdiff_core::js::{IndexMap, Object};
 use kgdiff_core::model::{Point, UnionId};
-use kgdiff_core::{DiffResult, KgdiffError, Result};
+use kgdiff_core::{KgdiffError, Result};
 
-use crate::{LayoutInput, LayoutOptions, LayoutResult, pipeline};
+use crate::table::LayoutTable;
+use crate::{LayoutOptions, LayoutResult, pipeline};
 
 /// `layout_diff_on`: every union node that continues or was a node `previous` places is pinned
 /// there, unless the caller pinned it.
 pub(crate) fn diff_on(
-    input: LayoutInput<'_>,
+    table: &LayoutTable,
     previous: &LayoutResult,
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
     options.keeps_positions("the positions of the previous version's layout are kept")?;
     let mut options =
         options.with_every_node("a layout on the previous version's map places every node")?;
-    for node in input.nodes {
+    for node in &table.nodes {
         let Some(before) = &node.before_id else {
             continue;
         };
@@ -36,7 +37,7 @@ pub(crate) fn diff_on(
             options.pinned.insert(node.id.clone(), *position);
         }
     }
-    pipeline::layout(input, &options)
+    pipeline::layout(table, &options)
 }
 
 /// The pins of `layout_after`: every node of the after version, by its id in that version, where
@@ -46,7 +47,7 @@ pub(crate) fn diff_on(
 ///
 /// `invalid-input` when `layout` has no position for one of them.
 pub(crate) fn after_pins(
-    diff: &DiffResult,
+    diff: &LayoutTable,
     layout: &LayoutResult,
 ) -> Result<IndexMap<UnionId, Point>> {
     let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();

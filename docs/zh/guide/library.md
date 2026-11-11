@@ -2,16 +2,17 @@
 
 命令行工具和查看器都由下面这些包构建而成，你也可以直接使用它们：
 
-| 包                 | 作用                                                        |
-| ------------------ | ----------------------------------------------------------- |
-| `@kgdiff/core`     | diff 引擎：规范化、匹配、分类、分组、可反向的增量。无依赖。 |
-| `@kgdiff/formats`  | 解析器：把 RDF、OBO 和 JSON 图格式读成 kgdiff 的图。        |
-| `@kgdiff/layout`   | 确定性、考虑标签的布局，两个版本共用。                      |
-| `@kgdiff/scene`    | 把 diff 转成视觉元素：设计令牌、编码、回放时间线。          |
-| `@kgdiff/renderer` | Canvas 2D 渲染器：相机、细节层级、标签、拾取、小地图。      |
-| `@kgdiff/viewer`   | [`<kgdiff-viewer>` Web 组件](./viewer.md)。                 |
-| `@kgdiff/g6`       | 在 AntV G6 v5 中绘制 kgdiff 场景。                          |
-| `@kgdiff/cli`      | 命令行工具 `kgdiff`：运行原生程序，不导出 JavaScript 接口。 |
+| 包                 | 作用                                                                           |
+| ------------------ | ------------------------------------------------------------------------------ |
+| `@kgdiff/core`     | diff 引擎：规范化、匹配、分类、分组、可反向的增量。无依赖。                    |
+| `@kgdiff/formats`  | 解析器：把 RDF、OBO 和 JSON 图格式读成 kgdiff 的图。                           |
+| `@kgdiff/layout`   | 确定性、考虑标签的布局，两个版本共用。                                         |
+| `@kgdiff/scene`    | 把 diff 转成视觉元素：设计令牌、编码、回放时间线。                             |
+| `@kgdiff/renderer` | Canvas 2D 渲染器：相机、细节层级、标签、拾取、小地图。                         |
+| `@kgdiff/viewer`   | [`<kgdiff-viewer>` Web 组件](./viewer.md)。                                    |
+| `@kgdiff/g6`       | 在 AntV G6 v5 中绘制 kgdiff 场景。                                             |
+| `@kgdiff/compute`  | 编译成 WebAssembly 的 Rust 引擎：[与命令行逐字节相同](#浏览器里的-rust-引擎)。 |
+| `@kgdiff/cli`      | 命令行工具 `kgdiff`：运行原生程序，不导出 JavaScript 接口。                    |
 
 它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行。core 和 formats 都是同步的，不做任何 I/O：传入文本和对象，得到对象。
 
@@ -115,6 +116,26 @@ const updated = applyDelta(graph, delta);
 - `@kgdiff/renderer` 把场景画在 canvas 上；`@kgdiff/g6` 把它画进 AntV G6 图里。
 
 各包的 README 展示了每一步：[layout](../../../packages/layout/README.md)、[scene](../../../packages/scene/README.md)、[renderer](../../../packages/renderer/README.md) 和 [g6](../../../packages/g6/README.md)。
+
+## 浏览器里的 Rust 引擎
+
+`@kgdiff/compute` 是编译成 WebAssembly 的 kgdiff Rust 引擎，在任何 JavaScript 引擎里算出的结果都与 kgdiff 命令行逐字节相同。它分成三个模块，各自只在用到时加载：`compute.wasm`（diff 与匹配，gzip 后约 390 KiB）、`formats.wasm`（解析器）和 `layout.wasm`（diff 的布局，小到可以内联进页面）。
+
+```ts
+import { init, diffSync, layoutDiffSync } from '@kgdiff/compute';
+
+await init(); // 编译模块，只需一次；只要部分模块时用 init({ modules: ['compute'] })
+const result = diffSync(before, after); // DiffResult，与 @kgdiff/core 的 diff() 相同
+const layout = layoutDiffSync(result); // LayoutResult，与 layoutDiff() 相同
+```
+
+`*Sync` 函数要求对应模块已经加载；不带这个后缀的 `diff`、`parseGraph`、`layoutDiff` 等函数返回 Promise，并自己加载所需的模块。`json.diff`、`json.parseGraph`、`json.layoutDiff` 等以 JSON 文本进出。只为已有 diff 布局的页面引入 `@kgdiff/compute/layout`，它不会加载另外两个模块。全部函数见[包的 README](../../../packages/compute/README.md)（英文）。
+
+**打包器。** 模块通过 `new URL('../wasm/<模块>.wasm', import.meta.url)` 定位。Vite、webpack 5、Rollup 和 Node 22 及以上版本都能解析它，并把 `.wasm` 文件作为资源复制出去；esbuild 需要为 `.wasm` 配置 `file` 加载器。服务器应以 `application/wasm` 发送这些文件。要从别处提供它们，把 URL（或字节）传给 `init({ sources: { compute: url } })`；它们也以 `@kgdiff/compute/compute.wasm`、`/formats.wasm` 和 `/layout.wasm` 导出。
+
+**内容安全策略。** 编译 WebAssembly 需要在 `script-src` 中加入 `'wasm-unsafe-eval'`，例如 `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`。
+
+到 kgdiff 0.11，`@kgdiff/core` 的 `diff`、`@kgdiff/formats` 的 `parseGraph` 和 `@kgdiff/layout` 的 `layoutDiff` 会改成异步，并在这个包上运行（[RFC 0002 第 6 节](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)，英文）。
 
 ## 错误
 

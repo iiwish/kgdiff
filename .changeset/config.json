@@ -13,7 +13,8 @@
       "@kgdiff/scene",
       "@kgdiff/renderer",
       "@kgdiff/viewer",
-      "@kgdiff/g6"
+      "@kgdiff/g6",
+      "@kgdiff/compute"
     ]
   ],
   "linked": [],

@@ -3,7 +3,8 @@
 //! merge / split partner pairs. Built once per call in O(N + E).
 
 use kgdiff_core::js::{JsStr, Lookup};
-use kgdiff_core::model::{ChangeStatus, NodeFacet, UnionEdge, UnionNode};
+
+use crate::table::{LayoutTable, TableNode};
 
 /// A merge / split pair: the node that should travel little during replay and its partner.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -16,7 +17,7 @@ pub(crate) struct Partner {
 
 pub(crate) struct UnionGraph<'a> {
     /// Union nodes sorted by id (UTF-16 code unit order).
-    pub nodes: Vec<&'a UnionNode>,
+    pub nodes: &'a [TableNode],
     pub index_of: Lookup<JsStr, usize>,
     /// Distinct undirected neighbour pairs (a, b) with a < b, in first-seen edge order.
     pub pairs: Vec<(usize, usize)>,
@@ -59,29 +60,15 @@ pub(crate) fn build_adjacency(n: usize, pairs: &[(usize, usize)]) -> (Vec<usize>
     (offsets, adjacency)
 }
 
-/// `items` in id order: as given when already sorted (union nodes and edges of a diff are), else
-/// sorted by id.
-fn sorted_by_id<T>(items: &[T], id: impl Fn(&T) -> &JsStr) -> Vec<&T> {
-    let mut out: Vec<&T> = items.iter().collect();
-    if out.windows(2).any(|w| id(w[0]) > id(w[1])) {
-        out.sort_by(|a, b| id(a).cmp(id(b)));
-    }
-    out
-}
-
-pub(crate) fn build_union_graph<'a>(nodes: &'a [UnionNode], edges: &[UnionEdge]) -> UnionGraph<'a> {
-    let nodes = sorted_by_id(nodes, |n| &n.id);
+pub(crate) fn build_union_graph(table: &LayoutTable) -> UnionGraph<'_> {
+    let nodes = &table.nodes[..];
     let n = nodes.len();
     let mut index_of = Lookup::with_capacity(n);
     for (i, node) in nodes.iter().enumerate() {
         index_of.insert(node.id.clone(), i);
     }
-    let lookup = |id: &JsStr| index_of.get(id.as_str()).copied();
 
-    let mut changed: Vec<bool> = nodes
-        .iter()
-        .map(|node| node.status != ChangeStatus::Unchanged)
-        .collect();
+    let mut changed: Vec<bool> = nodes.iter().map(|node| node.changed).collect();
 
     let mut seen: Lookup<u64, ()> = Lookup::new();
     let mut pairs = Vec::new();
@@ -100,16 +87,14 @@ pub(crate) fn build_union_graph<'a>(nodes: &'a [UnionNode], edges: &[UnionEdge])
         pairs.push((lo, hi));
     };
 
-    for edge in sorted_by_id(edges, |e| &e.id) {
-        let s = lookup(&edge.source);
-        let t = lookup(&edge.target);
+    for edge in &table.edges {
+        let (s, t) = (edge.source, edge.target);
         add_pair(s, t);
-        let sb = edge.source_before.as_ref().map_or(s, lookup);
-        let tb = edge.target_before.as_ref().map_or(t, lookup);
+        let (sb, tb) = (edge.source_before, edge.target_before);
         if sb != s || tb != t {
             add_pair(sb, tb);
         }
-        if edge.status != ChangeStatus::Unchanged {
+        if edge.changed {
             for end in [s, t, sb, tb].into_iter().flatten() {
                 changed[end] = true;
             }
@@ -120,38 +105,16 @@ pub(crate) fn build_union_graph<'a>(nodes: &'a [UnionNode], edges: &[UnionEdge])
 
     let mut partners = Vec::new();
     let mut partner_keys: Lookup<u64, ()> = Lookup::new();
-    let mut add_partner = |mover: Option<usize>, anchor: Option<usize>| {
-        let (Some(mover), Some(anchor)) = (mover, anchor) else {
-            return;
-        };
+    for &(mover, anchor) in &table.partners {
         if mover == anchor {
-            return;
+            continue;
         }
         let key = mover as u64 * n64 + anchor as u64;
         if partner_keys.contains_key(&key) {
-            return;
+            continue;
         }
         partner_keys.insert(key, ());
         partners.push(Partner { mover, anchor });
-    };
-    for (i, node) in nodes.iter().enumerate() {
-        for facet in &node.facets {
-            match facet {
-                NodeFacet::MergedInto { target, .. } => add_partner(Some(i), lookup(target)),
-                NodeFacet::SplitFrom { source, .. } => add_partner(Some(i), lookup(source)),
-                NodeFacet::MergeTarget { sources } => {
-                    for source in sources {
-                        add_partner(lookup(source), Some(i));
-                    }
-                }
-                NodeFacet::SplitInto { targets } => {
-                    for target in targets {
-                        add_partner(lookup(target), Some(i));
-                    }
-                }
-                _ => {}
-            }
-        }
     }
     partners.sort_by(|a, b| a.mover.cmp(&b.mover).then(a.anchor.cmp(&b.anchor)));
 

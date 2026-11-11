@@ -2,16 +2,16 @@
 //! order, their radii and label blocks, and the links and partner springs among them.
 
 use kgdiff_core::js::{JsStr, Lookup};
-use kgdiff_core::model::{NodeFacet, UnionNode};
 
 use crate::geometry::BOX_PADDING;
 use crate::math::max;
+use crate::table::TableNode;
 use crate::text_metrics::{LABEL_GAP, label_box};
 use crate::union::{Partner, UnionGraph, build_adjacency};
 
 pub(crate) struct LayoutGraph<'a> {
     pub n: usize,
-    pub nodes: Vec<&'a UnionNode>,
+    pub nodes: Vec<&'a TableNode>,
     pub index_of: Lookup<JsStr, usize>,
     /// `node_radius(max(degree.before, degree.after))`.
     pub radius: Vec<f64>,
@@ -39,14 +39,6 @@ impl LayoutGraph<'_> {
     }
 }
 
-/// The label a renamed node had before (its struck second line).
-pub(crate) fn label_before(node: &UnionNode) -> Option<&str> {
-    node.facets.iter().find_map(|facet| match facet {
-        NodeFacet::Rename { from, .. } => Some(from.as_str()),
-        _ => None,
-    })
-}
-
 /// The subgraph of `union` induced by `visible`.
 pub(crate) fn build_layout_graph<'a>(
     union: &UnionGraph<'a>,
@@ -58,7 +50,7 @@ pub(crate) fn build_layout_graph<'a>(
     for (u, node) in union.nodes.iter().enumerate() {
         if visible[u] {
             local[u] = nodes.len();
-            nodes.push(*node);
+            nodes.push(node);
         }
     }
     let n = nodes.len();
@@ -69,8 +61,8 @@ pub(crate) fn build_layout_graph<'a>(
     let mut box_bottom = vec![0.0; n];
     for (i, node) in nodes.iter().enumerate() {
         index_of.insert(node.id.clone(), i);
-        let r = crate::node_radius(node.degree.before.max(node.degree.after) as f64);
-        let label = label_box(&node.label, label_before(node), font_size);
+        let r = crate::node_radius(node.degree as f64);
+        let label = label_box(&node.label, node.label_before.as_deref(), font_size);
         radius[i] = r;
         box_half_width[i] = max(r, label.width / 2.0);
         box_top[i] = -r;

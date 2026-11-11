@@ -634,25 +634,48 @@ route for memory is a compact graph representation in `kgdiff-core`. Revised 202
 the gates are what a user can perceive:
 
 - **Held, no worse than today:** the viewer standalone bundle < 130 kB gzip and never any
-  WebAssembly in it, and reports that are only read load no WebAssembly; `diff` in the browser
-  including the transport to `DiffResult` (< 150 ms for 10k nodes / 30k edges, < 2 s for 100k / 300k,
-  today's TypeScript budgets); the layout-only module < 45 kB gzip (it is inlined in reports that
-  lay out only their changes); the parsers module < 200 kB gzip (not measured yet, unchanged); and
-  output byte-identical to native.
-- **Relaxed:** the full engine (core and layout, no parsers) from < 250 kB to **< 350 kB gzip**
-  (original target: < 250 kB). It loads once, on demand, and is cached (the playground, comparing
-  files on a web page, an npm user calling `diff`); core alone in the phase 2 preview is already
-  306.5 KiB, and going lower would mean cutting Unicode data, which breaks byte-identical output.
+  WebAssembly in it, and reports that are only read load no WebAssembly; output byte-identical to
+  native; every corpus case passing in WebAssembly.
+- **Budget of 0.11:** the full engine (core and layout, no parsers) **< 400 kB gzip** (original
+  target: < 250 kB; relaxed to < 350 kB on 2026-11-11, then set to < 400 kB the same day from the
+  measurements on the stable toolchain, [Revision](#revision-2026-11-11) item 7). It loads once,
+  on demand, and is cached (the playground, comparing files on a web page, an npm user calling
+  `diff`); going lower would mean cutting Unicode data, which breaks byte-identical output.
+- **Measured and recorded in 0.11, optimized after it:** the layout-only module (target < 45 kB
+  gzip; it is inlined in reports that lay out only their changes), the parsers module (target
+  < 200 kB gzip), `diff` in the browser including the transport to `DiffResult` (targets
+  < 150 ms for 10k nodes / 30k edges and < 2 s for 100k / 300k, today's TypeScript budgets), and
+  the WebAssembly and native `normalize` memory (< 80 MB linear memory, < 50 MB resident growth).
+  0.11 measures them and does not gate on them; making them smaller and faster comes in patch
+  releases after 0.11 that keep the interface, and they are reviewed before 1.0. CI holds each
+  module under a limit a little above its 0.11 size, as a guard against growing by accident.
 - **Dropped as gates:** the WebAssembly speed of `diff` without the transport (original targets:
   < 80 ms for 10k / 30k, < 1 s for 100k / 300k). Users perceive the time with the transport, and
   the browser gets determinism from WebAssembly, not speed (below). The numbers stay as
-  measurements. The trade available if the held gate cannot be met: the phase 2 preview at
-  opt-level `z` takes 144 ms and 306.5 KiB; at opt-level `3`, 93 ms and 441.7 KiB, so core may
-  be built for speed, which is also a reason for the 350 kB.
-- **Numbers kept, not promised:** the native `normalize` memory target (< 50 MB resident growth)
-  and the WebAssembly one (< 80 MB linear memory). 0.11 still has to answer the memory question,
-  but both figures are scaled from native targets and are to be reviewed against measurements once
-  the compact graph representation has landed.
+  measurements.
+
+**Measured for 0.11** ([#99](https://github.com/iiwish/kgdiff/pull/99), 2026-11-11, the stable
+toolchain, Node 24 on an M-class laptop at load average 3 to 4, gzip level 9 with glue, medians;
+after the compact graph of [#98](https://github.com/iiwish/kgdiff/pull/98)):
+
+| What                                                   | 0.11                                                                           | Target             |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------ |
+| `compute.wasm` (opt-level `z`, kgdiff-core at `2`)     | 1,053.0 KiB, 389.4 KiB gzip                                                    | < 400 kB (budget)  |
+| `layout.wasm` (glue: `@kgdiff/compute/layout` bundled) | 216.4 KiB, 90.9 KiB gzip                                                       | < 45 kB, measured  |
+| `formats.wasm`                                         | 621.6 KiB, 253.1 KiB gzip                                                      | < 200 kB, measured |
+| `diff` 10k / 30k with the transport                    | 155 ms                                                                         | < 150 ms, measured |
+| `diff` 100k / 300k with the transport                  | 2.13 s                                                                         | < 2 s, measured    |
+| `diff` 10k / 30k, 100k / 300k without it               | 86 ms, 1.19 s                                                                  | dropped            |
+| `normalize` 100k / 300k, linear memory                 | 220 MiB writing the graph document; 71.5 MiB for the graph alone (`hashGraph`) | < 80 MB, measured  |
+| similarity, 5k unmatched per side                      | 139 ms                                                                         | < 800 ms           |
+| `layoutDiff`, 2k nodes                                 | 534 ms                                                                         | < 450 ms, measured |
+| parsing 50k Turtle triples                             | 171 ms                                                                         | < 250 ms           |
+
+The whole engine at opt-level `z` is 301.4 KiB gzip (before #98) and diffs 10k / 30k in 144 ms,
+207 ms with the transport; at `3`, 435.1 KiB and 90 ms / 160 ms. About 70 ms of the 10k diff and
+1 s of the 100k one are the transport (`JSON.parse` and `diffFromJSON`'s consistency checks), and
+most of the memory above the graph is the `kgdiff.graph` document built as a tree of values
+before it is written.
 
 **What WebAssembly buys in the browser is not speed.** For a large diff the transport to a
 `DiffResult` — `diff.v1` JSON text, `JSON.parse`, `diffFromJSON` with its consistency checks —
@@ -664,14 +687,14 @@ the crates and the Python package.
 Sizes in the browser, measured on `main` as of 2026-11-07 (`pnpm build`, gzip level 9; "kB" here is
 KiB, 1,024 bytes, as `packages/viewer/test/standalone.test.ts` computes it):
 
-| Artifact                                                             | Today                                                    | Budget in 0.11 (phase 5)                                                                                           |
-| -------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| viewer standalone bundle (`kgdiff-viewer.js`)                        | 374.2 kB min, 116.3 kB gzip                              | **unchanged budget: < 130 kB gzip**; no WebAssembly in it, ever                                                    |
-| compute add-on, diff + layout (`kgdiff-viewer-compute.js`)           | 97.4 kB min, 33.9 kB gzip (TypeScript)                   | split in two, below                                                                                                |
-| ↳ layout-only WebAssembly (`layout.wasm` + glue), inlined in reports | —                                                        | < 45 kB gzip                                                                                                       |
-| ↳ full engine (`compute.wasm`: core + layout, no parsers)            | —                                                        | < 350 kB gzip (original target: < 250 kB, relaxed 2026-11-11); loaded on demand (playground, `load()` with graphs) |
-| ↳ parsers (`formats.wasm`)                                           | not bundled today (`@kgdiff/formats` imported on demand) | < 200 kB gzip; loaded only for text input                                                                          |
-| HTML report overhead without data or compute add-on                  | < 135 kB gzip (budget)                                   | unchanged                                                                                                          |
+| Artifact                                                             | Today                                                    | Budget in 0.11 (phase 5)                                                                                                        |
+| -------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| viewer standalone bundle (`kgdiff-viewer.js`)                        | 374.2 kB min, 116.3 kB gzip                              | **unchanged budget: < 130 kB gzip**; no WebAssembly in it, ever                                                                 |
+| compute add-on, diff + layout (`kgdiff-viewer-compute.js`)           | 97.4 kB min, 33.9 kB gzip (TypeScript)                   | split in two, below                                                                                                             |
+| ↳ layout-only WebAssembly (`layout.wasm` + glue), inlined in reports | —                                                        | target < 45 kB gzip: measured in 0.11 (90.9 KiB), smaller after it; reviewed before 1.0                                         |
+| ↳ full engine (`compute.wasm`: core + layout, no parsers)            | —                                                        | < 400 kB gzip (original target: < 250 kB; 350 kB, then 400 kB, 2026-11-11); loaded on demand (playground, `load()` with graphs) |
+| ↳ parsers (`formats.wasm`)                                           | not bundled today (`@kgdiff/formats` imported on demand) | target < 200 kB gzip: measured in 0.11 (253.1 KiB), smaller after it; loaded only for text input                                |
+| HTML report overhead without data or compute add-on                  | < 135 kB gzip (budget)                                   | unchanged                                                                                                                       |
 
 **Why the split.** A report laid out around its changes inlines the compute add-on only so that
 collapsed groups can be expanded, which needs `extendLayout` and nothing else. Inlining the whole
@@ -1112,14 +1135,12 @@ Acceptance:
 - Every corpus case passes against the WebAssembly build in Node, and the TypeScript read path
   passes its part of the corpus (corpus ownership above).
 - The viewer bundle stays < 130 kB gzip with no WebAssembly inside; the add-on budgets of §7 hold.
-- In-browser diff of 10k nodes / 30k edges, with the module already initialized and including the
-  transport to `DiffResult`, within the TypeScript budget (< 150 ms); initialization itself
-  (compiling the module from the HTTP cache) < 100 ms.
-- The gates of §7 (revised 2026-11-11) that phase 2 did not meet ([Phase 2 results](#phase-2-results)):
-  `diff` including the transport (10k < 150 ms, 100k < 2 s), the full engine < 350 kB gzip, the
-  layout-only module < 45 kB and the parsers < 200 kB. The two memory figures (native `normalize`
-  < 50 MB resident growth, WebAssembly < 80 MB of linear memory) are reviewed against measurements
-  once the compact graph lands, and not promised beforehand.
+- The full engine < 400 kB gzip (§7). Measured and recorded, not gates of 0.11 (§7, revised
+  2026-11-11): in-browser `diff` including the transport to `DiffResult` (10k nodes / 30k edges
+  < 150 ms, 100k / 300k < 2 s) and initialization (compiling the module from the HTTP cache,
+  < 100 ms), the layout-only module (< 45 kB) and the parsers (< 200 kB), and the two memory
+  figures (native `normalize` < 50 MB resident growth, WebAssembly < 80 MB of linear memory). They
+  are optimized in patch releases after 0.11 and reviewed before 1.0.
 - The viewer, scene, renderer and G6 test suites pass unchanged; reports open without
   initializing WebAssembly unless a group is expanded.
 - Deleted: `match`, `merge-split`, `classify`, `edges`, `order`, hunk partitioning, delta
@@ -1149,9 +1170,9 @@ Conditions for 1.0:
    made, none with a breaking change.
 2. At least one real embedding host runs on 0.11
    ([RFC 0003](./0003-embedding-hosts.md)).
-3. The gates of [§7](#7-size-and-performance-budgets) as revised on 2026-11-11 (the user-perceived
-   ones, with the memory figures reviewed against measurements), which used to be "gates of
-   1.0", were met in 0.11.
+3. The gates of [§7](#7-size-and-performance-budgets) as revised on 2026-11-11, which used to be
+   "gates of 1.0", were met in 0.11, and the figures 0.11 only measures (the sizes of the layout
+   and parser modules, `diff` with the transport, memory) were reviewed.
 
 If a breaking change cannot be avoided during the stable period, it ships as 0.12 and the two
 weeks start again from there. After 1.0 the public API follows semver; the Python package, parts
@@ -1283,6 +1304,18 @@ version. The RFC changed as follows:
 6. **0.10.0** (cleanup before phase 5) is listed in phase 5; §1's kept list and the deleted list
    follow [`tests/read-path.ts`](../../tests/read-path.ts) after PR #92 found five differences
    between this RFC and the code.
+
+7. **Budgets set from measurements, 2026-11-11** (the same day, with
+   [#99](https://github.com/iiwish/kgdiff/pull/99)): the modules are built with the pinned stable
+   toolchain only (no `-Zbuild-std` or other unstable flags, which carry no stability guarantee
+   and could break the release on a toolchain upgrade). The full engine's budget becomes
+   < 400 kB gzip (it is 389.4 KiB with kgdiff-core at opt-level 2, the rest at `z`). The
+   layout-only and parser module sizes, `diff` including the transport, and the WebAssembly and
+   native `normalize` memory change from gates of 0.11 to measured and recorded in 0.11,
+   optimized in patch releases after it and reviewed before 1.0. Reason: the sizes reached are
+   acceptable, and shrinking them further is not worth delaying 0.11. The held gates (viewer
+   bundle < 130 kB without WebAssembly, byte-identical output, the corpus passing in
+   WebAssembly) are unchanged.
 
 No phase result, measurement, pull request or commit recorded above changed.
 

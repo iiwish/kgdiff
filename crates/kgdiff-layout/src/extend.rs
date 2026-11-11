@@ -9,17 +9,18 @@ use crate::graph::build_layout_graph;
 use crate::math::round2;
 use crate::result::{Assemble, assemble};
 use crate::scope::count_hidden;
+use crate::table::LayoutTable;
 use crate::union::build_union_graph;
-use crate::{LayoutInput, LayoutOptions, LayoutResult, LayoutScope};
+use crate::{LayoutOptions, LayoutResult, LayoutScope};
 
 pub(crate) fn extend(
-    input: LayoutInput<'_>,
+    table: &LayoutTable,
     layout: &LayoutResult,
     nodes: &[UnionId],
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
     let options = options.resolve()?;
-    let union = build_union_graph(input.nodes, input.edges);
+    let union = build_union_graph(table);
 
     let mut added: Vec<UnionId> = Vec::new();
     let mut is_added = vec![false; union.nodes.len()];

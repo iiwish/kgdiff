@@ -1,8 +1,7 @@
 {
   "name": "@kgdiff/compute",
-  "version": "0.7.0-preview.0",
-  "private": true,
-  "description": "kgdiff's Rust diff engine compiled to WebAssembly: the same bytes as the kgdiff CLI, in every JavaScript engine. A preview (RFC 0002, phase 2).",
+  "version": "0.10.0",
+  "description": "kgdiff's Rust engine compiled to WebAssembly: diff, parsers and layout, the same bytes as the kgdiff CLI in every JavaScript engine.",
   "keywords": [
     "kgdiff",
     "diff",
@@ -27,7 +26,13 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./kgdiff_compute_bg.wasm": "./wasm/kgdiff_compute_bg.wasm"
+    "./layout": {
+      "types": "./dist/layout.d.ts",
+      "default": "./dist/layout.js"
+    },
+    "./compute.wasm": "./wasm/compute.wasm",
+    "./layout.wasm": "./wasm/layout.wasm",
+    "./formats.wasm": "./wasm/formats.wasm"
   },
   "files": [
     "dist",
@@ -37,6 +42,10 @@
   "engines": {
     "node": ">=22"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:wasm": "tsx scripts/build-wasm.ts",
@@ -44,6 +53,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@kgdiff/core": "workspace:*"
+    "@kgdiff/core": "workspace:*",
+    "@kgdiff/formats": "workspace:*",
+    "@kgdiff/layout": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

@@ -10,8 +10,9 @@ use crate::math::round2;
 use crate::options::Resolved;
 use crate::result::{Assemble, assemble};
 use crate::scope::select_scope;
+use crate::table::LayoutTable;
 use crate::union::build_union_graph;
-use crate::{LayoutInput, LayoutOptions, LayoutResult, LayoutScope, LayoutStrategy};
+use crate::{LayoutOptions, LayoutResult, LayoutScope, LayoutStrategy};
 
 /// Known positions, by layout index.
 pub(crate) struct Known {
@@ -35,9 +36,7 @@ fn known_positions(graph: &LayoutGraph<'_>, options: &Resolved<'_>) -> Known {
         count: 0,
     };
     for (i, node) in graph.nodes.iter().enumerate() {
-        let p = finite(options.pinned.get(node.id.as_str()))
-            .or_else(|| finite(node.before.as_ref().and_then(|n| n.position()).as_ref()))
-            .or_else(|| finite(node.after.as_ref().and_then(|n| n.position()).as_ref()));
+        let p = finite(options.pinned.get(node.id.as_str())).or(node.position);
         if let Some(p) = p {
             known.fixed[i] = true;
             known.x[i] = p.x;
@@ -62,11 +61,11 @@ pub(crate) struct Plan<'a, 'o> {
 }
 
 pub(crate) fn plan<'a, 'o>(
-    input: LayoutInput<'a>,
+    table: &'a LayoutTable,
     options: &'o LayoutOptions,
 ) -> Result<Plan<'a, 'o>> {
     let options = options.resolve()?;
-    let union = build_union_graph(input.nodes, input.edges);
+    let union = build_union_graph(table);
     let scope = options.scope.unwrap_or(
         if union.nodes.len() as f64 > options.large_graph_threshold {
             LayoutScope::Changes
@@ -95,7 +94,7 @@ pub(crate) fn plan<'a, 'o>(
 }
 
 /// `layoutDiff`.
-pub(crate) fn layout(input: LayoutInput<'_>, options: &LayoutOptions) -> Result<LayoutResult> {
+pub(crate) fn layout(table: &LayoutTable, options: &LayoutOptions) -> Result<LayoutResult> {
     let Plan {
         options,
         scope,
@@ -105,7 +104,7 @@ pub(crate) fn layout(input: LayoutInput<'_>, options: &LayoutOptions) -> Result<
         strategy,
         anchored,
         ..
-    } = plan(input, options)?;
+    } = plan(table, options)?;
     let (x, y) = if anchored {
         (known.x, known.y)
     } else {

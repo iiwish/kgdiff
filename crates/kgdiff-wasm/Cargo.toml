@@ -1,6 +1,6 @@
 [package]
 name = "kgdiff-wasm"
-description = "WebAssembly bindings of kgdiff-core, published on npm as @kgdiff/compute (RFC 0002, §1)."
+description = "WebAssembly bindings of the kgdiff crates, published on npm as @kgdiff/compute (RFC 0002, §1)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,11 +14,38 @@ publish = false
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+# The three modules of @kgdiff/compute (RFC 0002, §7), one build of this crate each. Every feature
+# is on by default so that `cargo clippy` and `cargo test` of the workspace see all the code;
+# packages/compute/scripts/build-wasm.ts builds each with `--no-default-features --features …`.
+[features]
+default = ["engine", "corpus", "layout", "parsers"]
+# Diff, matching, normalization and the layout on JSON text: compute.wasm.
+engine = ["dep:kgdiff-layout"]
+# What engine does not ship, for the corpus to run in WebAssembly: the read path of kgdiff-core,
+# which stays TypeScript in the browser (RFC 0002, §1). Built only for the tests.
+corpus = ["engine"]
+# The layout on typed arrays, without a JSON reader: layout.wasm.
+layout = ["dep:kgdiff-layout"]
+# The graph file parsers: formats.wasm.
+parsers = ["dep:kgdiff-formats", "dep:getrandom", "dep:js-sys"]
+
 [dependencies]
 kgdiff-core.workspace = true
+kgdiff-formats = { workspace = true, optional = true }
+kgdiff-layout = { workspace = true, optional = true }
 # Exactly the version of the wasm-bindgen CLI that generates the JavaScript glue
 # (packages/compute/scripts/build-wasm.ts, the `compute` job of ci.yml): the two must match.
 wasm-bindgen = "=0.2.129"
+# kgdiff-core writes numbers with it. `small` computes the powers of five instead of carrying
+# 10 kB of tables, with the same digits: smaller modules, a little slower.
+ryu-js = { version = "1.0.3", features = ["small"] }
+# Calls `jsonld.documentLoader` from the parsers.
+js-sys = { version = "0.3", optional = true }
+
+# oxrdf names anonymous blank nodes with `rand` (RFC 0002, §5): on wasm32-unknown-unknown getrandom
+# needs a backend. Only `build-wasm.ts` selects it, with `--cfg getrandom_backend="wasm_js"`.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
 
 # The workspace's lints but `unsafe_code`: wasm-bindgen's generated exports are `unsafe` and
 # `#[unsafe(no_mangle)]`. This crate's own code has none.

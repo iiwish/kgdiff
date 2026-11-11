@@ -106,6 +106,16 @@ importers:
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../core
+      '@kgdiff/formats':
+        specifier: workspace:*
+        version: link:../formats
+      '@kgdiff/layout':
+        specifier: workspace:*
+        version: link:../layout
+    devDependencies:
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
 
   packages/core: {}
 

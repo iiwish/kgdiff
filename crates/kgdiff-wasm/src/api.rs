@@ -4,60 +4,38 @@
 //! code and details.
 
 use kgdiff_core::i18n::{Locale, facet_label, format_hunk};
-use kgdiff_core::js::{Object, Value, json};
+use kgdiff_core::js::{JsStr, Object, Value, json};
 use kgdiff_core::model::FacetKind;
 use kgdiff_core::options::{DanglingEdges, resolve_edge_identity, resolve_match_options};
 use kgdiff_core::{
-    ApplyOptions, Delta, ErrorCode, KgdiffError, NormalizeOptions, apply_delta, diff,
-    diff_from_json, diff_to_json, graph_to_json, hash_graph, invert_delta, match_nodes, normalize,
-    pack_diff_json, resolve_options, unpack_diff_json,
+    ApplyOptions, Delta, ErrorCode, KGraph, NormalizeOptions, apply_delta, diff, diff_from_json,
+    diff_to_json, graph_to_json, hash_graph, invert_delta, match_nodes, pack_diff_json,
+    resolve_options, unpack_diff_json,
+};
+use kgdiff_layout::{
+    LayoutOptions, extend_layout, layout_after, layout_diff, layout_diff_on, layout_from_json,
+    layout_graph, layout_to_json,
 };
 
-/// A failure, as `KgdiffError` of `@kgdiff/core` has it.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Failure {
-    pub code: &'static str,
-    pub message: String,
-    pub details: Option<Object>,
-}
-
-impl Failure {
-    fn invalid_input(message: String) -> Failure {
-        Failure {
-            code: ErrorCode::InvalidInput.as_str(),
-            message,
-            details: None,
-        }
-    }
-
-    /// `{"code": …, "message": …, "details": …}`, which the JavaScript glue turns into a
-    /// `KgdiffError`.
-    pub fn to_json(&self) -> String {
-        let mut out = Object::new();
-        out.insert("code", self.code);
-        out.insert("message", self.message.as_str());
-        if let Some(details) = &self.details {
-            out.insert("details", details.clone());
-        }
-        json::to_string(&Value::Object(out))
-    }
-}
-
-impl From<KgdiffError> for Failure {
-    fn from(error: KgdiffError) -> Failure {
-        Failure {
-            code: error.code.as_str(),
-            message: error.message,
-            details: error.details,
-        }
-    }
-}
-
-pub type Result<T> = std::result::Result<T, Failure>;
+use crate::failure::{Failure, Result};
 
 /// `text` read as JSON, `what` naming it in the message of an `invalid-input` failure.
 fn parse(text: &str, what: &str) -> Result<Value> {
     json::parse(text).map_err(|e| Failure::invalid_input(format!("{what} is not JSON: {e}")))
+}
+
+/// `normalize` of a graph given as JSON text, read as it is parsed (`normalize_json`), so that the
+/// text, a tree of values and the graph are not all in memory at once. Text that is not JSON fails
+/// as [`parse`] does, `what` naming it.
+fn normalize_text(text: &str, what: &str, options: NormalizeOptions) -> Result<KGraph> {
+    kgdiff_core::normalize_json(text, options).map_err(|error| {
+        match error.message.strip_prefix("The graph is not JSON: ") {
+            Some(rest) if error.code == ErrorCode::InvalidInput => {
+                Failure::invalid_input(format!("{what} is not JSON: {rest}"))
+            }
+            _ => Failure::from(error),
+        }
+    })
 }
 
 /// Options given as JSON text: empty text and `null` are none.
@@ -110,7 +88,7 @@ pub fn diff_json(before: &str, after: &str, options_text: &str) -> Result<String
 pub fn match_nodes_json(before: &str, after: &str, options_text: &str) -> Result<String> {
     let options = resolve_match_options(options(options_text, "the match options")?.as_ref())?;
     let graph = |text: &str, what: &str| -> Result<_> {
-        Ok(normalize(&parse(text, what)?, NormalizeOptions::default())?)
+        normalize_text(text, what, NormalizeOptions::default())
     };
     let (matches, suggestions) = match_nodes(
         &graph(before, "the before graph")?,
@@ -136,19 +114,13 @@ pub fn text_similarity(a: &str, b: &str) -> f64 {
 
 /// `graphToJSON(normalize(graph, options))`: the `kgdiff.graph` document.
 pub fn normalize_json(graph: &str, options_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(options_text)?,
-    )?;
+    let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
     Ok(json::to_string(&graph_to_json(&graph)))
 }
 
 /// `normalize(graph, options).issues`.
 pub fn graph_issues_json(graph: &str, options_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(options_text)?,
-    )?;
+    let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
     let issues = graph
         .issues()
         .iter()
@@ -159,10 +131,7 @@ pub fn graph_issues_json(graph: &str, options_text: &str) -> Result<String> {
 
 /// `hashGraph(normalize(graph, options))`.
 pub fn hash_graph_json(graph: &str, options_text: &str) -> Result<String> {
-    let graph = normalize(
-        &parse(graph, "the graph")?,
-        normalize_options(options_text)?,
-    )?;
+    let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
     Ok(hash_graph(&graph).to_owned())
 }
 
@@ -220,8 +189,9 @@ pub fn apply_delta_json(graph: &str, delta: &str, options_text: &str) -> Result<
             }
         },
     };
-    let base = normalize(
-        &parse(graph, "the graph")?,
+    let base = normalize_text(
+        graph,
+        "the graph",
         NormalizeOptions {
             edge_identity: delta.edge_identity,
             ..NormalizeOptions::default()
@@ -281,6 +251,107 @@ pub fn reformat_json(text: &str, pretty: bool) -> Result<String> {
     } else {
         json::to_string(&value)
     })
+}
+
+/// `LayoutOptions` of `@kgdiff/layout` from JSON text (`pinned` an object of `{ x, y }` points).
+fn layout_options(text: &str) -> Result<LayoutOptions> {
+    match options(text, "the layout options")? {
+        None => Ok(LayoutOptions::default()),
+        Some(value) => Ok(LayoutOptions::from_value(&value)?),
+    }
+}
+
+fn layout_text(layout: &kgdiff_layout::LayoutResult) -> String {
+    json::to_string(&layout_to_json(layout))
+}
+
+/// `diff` and `layoutDiff` in one call, without reading the diff back: `{ diff, layout }`, the
+/// `kgdiff.diff` and `kgdiff.layout` documents.
+pub fn diff_layout_json(
+    before: &str,
+    after: &str,
+    diff_options: &str,
+    layout_options_text: &str,
+) -> Result<String> {
+    let options = resolve_options(options(diff_options, "the diff options")?.as_ref())?;
+    let result = diff(
+        &parse(before, "the before graph")?,
+        &parse(after, "the after graph")?,
+        &options,
+    )?;
+    let layout = layout_diff(&result, &layout_options(layout_options_text)?)?;
+    let mut out = Object::new();
+    out.insert("diff", diff_to_json(&result));
+    out.insert("layout", layout_to_json(&layout));
+    Ok(json::to_string(&Value::Object(out)))
+}
+
+/// `layoutToJSON(layoutDiff(diffFromJSON(document), options))`.
+pub fn layout_diff_json(document: &str, options_text: &str) -> Result<String> {
+    let result = diff_from_json(&parse(document, "the diff")?)?;
+    Ok(layout_text(&layout_diff(
+        &result,
+        &layout_options(options_text)?,
+    )?))
+}
+
+/// `extendLayout`, `nodes` a JSON array of union ids.
+pub fn extend_layout_json(
+    document: &str,
+    layout: &str,
+    nodes: &str,
+    options_text: &str,
+) -> Result<String> {
+    let result = diff_from_json(&parse(document, "the diff")?)?;
+    let layout = layout_from_json(&parse(layout, "the layout")?)?;
+    let nodes = parse(nodes, "the nodes")?;
+    let nodes: Vec<JsStr> = nodes
+        .as_array()
+        .ok_or_else(|| Failure::invalid_input("nodes must be an array of ids".to_owned()))?
+        .iter()
+        .map(|id| {
+            id.as_str()
+                .map(JsStr::from)
+                .ok_or_else(|| Failure::invalid_input("nodes must be an array of ids".to_owned()))
+        })
+        .collect::<Result<_>>()?;
+    Ok(layout_text(&extend_layout(
+        &result,
+        &layout,
+        &nodes,
+        &layout_options(options_text)?,
+    )?))
+}
+
+/// `layout_graph(normalize(graph, normalize_options), options)`.
+pub fn layout_graph_json(graph: &str, options_text: &str, normalize_given: &str) -> Result<String> {
+    let graph = normalize_text(graph, "the graph", normalize_options(normalize_given)?)?;
+    Ok(layout_text(&layout_graph(
+        &graph,
+        &layout_options(options_text)?,
+    )?))
+}
+
+/// `layout_diff_on(diff, previous, options)`.
+pub fn layout_diff_on_json(document: &str, previous: &str, options_text: &str) -> Result<String> {
+    let result = diff_from_json(&parse(document, "the diff")?)?;
+    let previous = layout_from_json(&parse(previous, "the previous layout")?)?;
+    Ok(layout_text(&layout_diff_on(
+        &result,
+        &previous,
+        &layout_options(options_text)?,
+    )?))
+}
+
+/// `layout_after(diff, layout, options)`.
+pub fn layout_after_json(document: &str, layout: &str, options_text: &str) -> Result<String> {
+    let result = diff_from_json(&parse(document, "the diff")?)?;
+    let layout = layout_from_json(&parse(layout, "the layout")?)?;
+    Ok(layout_text(&layout_after(
+        &result,
+        &layout,
+        &layout_options(options_text)?,
+    )?))
 }
 
 #[cfg(test)]

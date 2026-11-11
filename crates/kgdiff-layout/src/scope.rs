@@ -1,6 +1,6 @@
 //! The layout scope: which union nodes get a position (`scope.ts`).
 
-use kgdiff_core::model::{ChangeStatus, UnionId};
+use kgdiff_core::model::UnionId;
 
 use crate::LayoutScope;
 use crate::union::UnionGraph;
@@ -36,7 +36,7 @@ pub(crate) fn select_scope(
     let mut distance: Vec<Option<usize>> = vec![None; n];
     let mut frontier = Vec::new();
     for (i, node) in graph.nodes.iter().enumerate() {
-        if node.status != ChangeStatus::Unchanged {
+        if node.changed {
             distance[i] = Some(0);
             frontier.push(i);
         }
@@ -59,8 +59,7 @@ pub(crate) fn select_scope(
             Vec::new()
         };
         for &u in &frontier {
-            let degree = graph.nodes[u].degree;
-            if degree.before.max(degree.after) as f64 > hub_degree {
+            if graph.nodes[u].degree as f64 > hub_degree {
                 continue;
             }
             for &v in graph.neighbours(u) {

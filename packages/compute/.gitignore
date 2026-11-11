@@ -1,4 +1,8 @@
-# The WebAssembly build (`pnpm build:wasm`): the module and wasm-bindgen's glue. The glue's
+# The WebAssembly build (`pnpm build:wasm`): the modules and wasm-bindgen's glue. The glue's
 # types are written by hand and kept.
 wasm/*
-!wasm/kgdiff_compute.d.ts
+!wasm/compute.d.ts
+!wasm/layout.d.ts
+!wasm/formats.d.ts
+# The build the corpus tests run the read path of kgdiff-core on; never published.
+test/wasm/
