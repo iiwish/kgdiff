@@ -1,4 +1,4 @@
-//! Locale selection and the text outputs' own strings (`locale.ts`), in English and Simplified
+//! Locale selection and the text outputs' own strings, in English and Simplified
 //! Chinese. Hunk titles come from kgdiff-core's `format_hunk`.
 
 use kgdiff_core::Locale;

@@ -1,4 +1,4 @@
-//! `packages/cli/test/args.test.ts`, ported: the command line, its defaults, optional output
+//! The command line, its defaults, optional output
 //! values, validation and suggestions.
 
 use kgdiff::args::{

@@ -1,4 +1,4 @@
-//! The terminal outputs (`summary.ts`): the default summary (header, counters, diffstat bar,
+//! The terminal outputs: the default summary (header, counters, diffstat bar,
 //! hunk list, possible matches), `--stat` and `--name-status`.
 //!
 //! Every line is laid out on plain text first (measured with `string_width`, truncated with an
@@ -93,7 +93,7 @@ fn slice16(text: &str, from: usize, to: usize) -> &str {
     &text[a..b]
 }
 
-/// `179 → 184 nodes · 351 → 353 edges` (`totalsText`).
+/// `179 → 184 nodes · 351 → 353 edges`.
 pub fn totals_text(diff: &DiffResult, m: Messages) -> String {
     let (before, after) = (diff.stats.before, diff.stats.after);
     m.totals((before.0, after.0), (before.1, after.1))
@@ -391,7 +391,7 @@ struct Columns {
     right: i64,
 }
 
-/// Column widths for a hunk list (`listColumns`).
+/// Column widths for a hunk list.
 fn list_columns(rows: &[&Row], width: i64) -> Columns {
     let room = width - len(INDENT.len()) - 2 - COLUMN_GAP;
     let max_title = rows.iter().map(|r| sw(&r.title)).max().unwrap_or(0);
@@ -477,7 +477,7 @@ fn header_natural(diff: &DiffResult, title: &str, ctx: &TextContext, ov: &Overvi
     (header + sw(&totals_text(diff, m))).max(counters + sw(&m.changes(ov.changes, ov.hunks)))
 }
 
-/// The default terminal output (`renderSummary`).
+/// The default terminal output.
 pub fn render_summary(
     diff: &DiffResult,
     title: &str,
@@ -582,7 +582,7 @@ pub fn render_summary(
     Ok(format!("{}\n", lines.join("\n")))
 }
 
-/// `--stat` (`renderStat`): header, counters and bar, the counts table and the per-type lines.
+/// `--stat`: header, counters and bar, the counts table and the per-type lines.
 pub fn render_stat(diff: &DiffResult, title: &str, ctx: &TextContext) -> String {
     let ov = overview(diff);
     let width = layout_width(header_natural(diff, title, ctx, &ov), len(ctx.width));
@@ -729,7 +729,7 @@ fn type_lines(diff: &DiffResult, ctx: &TextContext, width: i64) -> Vec<String> {
     lines
 }
 
-/// `--name-status` (`renderNameStatus`): one line per hunk in review order. Tab-separated
+/// `--name-status`: one line per hunk in review order. Tab-separated
 /// unless `aligned`, which pads the columns for a terminal.
 pub fn render_name_status(
     diff: &DiffResult,

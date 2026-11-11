@@ -1,4 +1,4 @@
-//! `packages/cli/test/hardening.test.ts`, ported: overwrite protection (in memory and on the
+//! Overwrite protection (in memory and on the
 //! real file system), escape and bidi injection, Markdown neutralization, empty and oversized
 //! inputs (gzip bombs), terminal widths and command-line corner cases.
 

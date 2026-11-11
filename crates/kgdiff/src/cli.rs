@@ -1,4 +1,4 @@
-//! The entry point (`main.ts`): parse the command line, dispatch, and turn every failure into a
+//! The entry point: parse the command line, dispatch, and turn every failure into a
 //! friendly message on stderr and an exit code.
 
 use std::panic::{AssertUnwindSafe, Location, catch_unwind};

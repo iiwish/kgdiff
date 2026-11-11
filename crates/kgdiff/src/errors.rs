@@ -1,4 +1,4 @@
-//! Error reporting (`errors.ts`): every failure becomes one friendly line on stderr, a hint
+//! Error reporting: every failure becomes one friendly line on stderr, a hint
 //! when there is one, and exit code 2; the chain of causes, where each was raised and the
 //! details of engine errors only with `DEBUG=kgdiff`.
 
@@ -76,7 +76,7 @@ pub fn usage_with(message: impl Into<String>, hint: impl Into<String>) -> Failur
 /// The hint of most usage errors.
 pub const HELP_HINT: &str = "Run `kgdiff --help` for usage.";
 
-/// Everything a command can fail with (what `main`'s `catch` sees in TypeScript).
+/// Everything a command can fail with (what the entry point catches and reports).
 #[derive(Debug)]
 pub enum Failure {
     Cli(CliError),
@@ -185,7 +185,7 @@ fn errno_name(errno: i32) -> Option<&'static str> {
     })
 }
 
-/// The short reason of a system error (`systemReason`).
+/// The short reason of a system error.
 pub fn system_reason(error: &io::Error) -> String {
     let reason = match system_error_code(error) {
         Some("ENOENT") => "no such file or directory",
@@ -248,7 +248,7 @@ fn form_encode(text: &str) -> String {
 }
 
 /// The link to the bug report form, prefilled through the form's field ids with public metadata
-/// only (`bugReportUrl`): error messages and paths can hold private data.
+/// only: error messages and paths can hold private data.
 pub fn bug_report_url(version: &str, runtime: Option<&str>) -> String {
     let mut url = format!(
         "{BUG_REPORT_FORM}?template=bug_report.yml&version={}",
@@ -261,7 +261,7 @@ pub fn bug_report_url(version: &str, runtime: Option<&str>) -> String {
     url
 }
 
-/// The message and hint the user sees for a failure (`describeError`).
+/// The message and hint the user sees for a failure.
 pub fn describe(failure: &Failure, bug_report_url: Option<&str>) -> (String, Option<String>) {
     match failure {
         Failure::Cli(e) => (e.message.clone(), e.hint.clone()),
@@ -323,7 +323,7 @@ fn trace(failure: &Failure) -> String {
     )
 }
 
-/// What stderr shows for a failure, ending with a newline (`formatError`). Messages quote user
+/// What stderr shows for a failure, ending with a newline. Messages quote user
 /// input (paths, parser excerpts): escape sequences and bidi controls never reach the terminal.
 pub fn format_error(
     failure: &Failure,
@@ -373,7 +373,7 @@ pub fn format_error(
     format!("{}\n", lines.join("\n"))
 }
 
-/// A warning line for stderr (`formatWarning`).
+/// A warning line for stderr.
 pub fn format_warning(message: &str, paint: &Painter) -> String {
     format!(
         "{} {}\n",

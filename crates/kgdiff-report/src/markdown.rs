@@ -1,4 +1,4 @@
-//! The GitHub-flavoured Markdown summary (`markdown.ts`): title, diffstat table, family legend,
+//! The GitHub-flavoured Markdown summary: title, diffstat table, family legend,
 //! the hunks that change a watched attribute, the hunk list grouped by phase and the possible
 //! matches, in `<details>` blocks.
 
@@ -315,7 +315,7 @@ pub fn render_markdown(
     Ok(format!("{}\n", out.join("\n")))
 }
 
-/// A hunk as a list item (`hunkItem`).
+/// A hunk as a list item.
 fn hunk_item(
     hunk: &Hunk,
     diff: &DiffResult,
@@ -462,7 +462,7 @@ mod tests {
             escape_markdown(" a *b* :smile: @x #1 GH-12 http://x www.y <i>&\u{202E} "),
             "a \\*b\\* :\u{200B}smile: @\u{200B}x \\#\u{200B}1 GH\u{200B}-12 http://\u{200B}x www\u{200B}.y &lt;i&gt;&amp;⟨U+202E⟩"
         );
-        // Expectations computed with the TypeScript escapeMarkdown.
+        // Expectations of the escaping rules, fixed as written.
         let cases = [
             ("a\u{0}\u{1}b\u{85}c\u{9f}d", "a bcd"),
             (

@@ -1,6 +1,6 @@
-//! `packages/cli/test/cli.test.ts`, ported: the summary, possible matches, review first,
+//! The summary, possible matches, review first,
 //! colours, every output, exit codes and errors, RDF/XML and JSON-LD inputs, help, apply, edge
-//! cases. Each test is the TypeScript test of the same name.
+//! cases.
 
 mod common;
 

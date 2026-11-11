@@ -1,4 +1,4 @@
-//! `packages/cli/test/width.test.ts`, ported: terminal widths, sanitizing, truncation, padding
+//! Terminal widths, sanitizing, truncation, padding
 //! and wrapping. The fast-check property runs over seeded pseudo-random strings.
 
 use kgdiff_report::width::{

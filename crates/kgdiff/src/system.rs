@@ -1,4 +1,4 @@
-//! The real [`CliIo`] (`node-io.ts`): the process's streams and environment, the file system,
+//! The real [`CliIo`]: the process's streams and environment, the file system,
 //! the platform's opener and the viewer bundles compiled into kgdiff.
 
 use std::borrow::Cow;
@@ -27,7 +27,7 @@ impl Env for SystemIo {
 
 fn write_all(mut out: impl Write, text: &str) {
     let result = out.write_all(text.as_bytes()).and_then(|()| out.flush());
-    // `kgdiff … | head` closes the pipe early: stop quietly, as the TypeScript CLI does.
+    // `kgdiff … | head` closes the pipe early: stop quietly, as other command-line tools do.
     if result
         .as_ref()
         .is_err_and(|e| e.kind() == io::ErrorKind::BrokenPipe)
@@ -139,7 +139,7 @@ pub fn iso_timestamp(time: SystemTime) -> String {
     format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{millis:03}Z")
 }
 
-/// The command that opens a file with the default application (`openCommand`).
+/// The command that opens a file with the default application.
 fn open_command(path: &str) -> Command {
     if cfg!(target_os = "macos") {
         let mut c = Command::new("open");

@@ -1,6 +1,6 @@
-//! `kgdiff --help` and `kgdiff apply --help` (`help.ts`): grouped options, defaults, examples
-//! and exit codes, aligned and wrapped to the terminal width. The text is the TypeScript CLI's,
-//! word for word.
+//! `kgdiff --help` and `kgdiff apply --help`: grouped options, defaults, examples
+//! and exit codes, aligned and wrapped to the terminal width. The text is part of the
+//! contract the conformance corpus pins, word for word.
 
 use kgdiff_report::width::{pad_end, string_width, wrap};
 use kgdiff_report::{Painter, Tone};
@@ -355,7 +355,7 @@ fn sub(a: usize, b: usize) -> usize {
     a.saturating_sub(b)
 }
 
-/// The help text (`renderHelp`). `width` is the terminal's: descriptions wrap to it, and below
+/// The help text. `width` is the terminal's: descriptions wrap to it, and below
 /// 60 columns they go under their flags.
 pub fn render_help(topic: HelpTopic, version: &str, paint: &Painter, width: usize) -> String {
     let sections = if topic == HelpTopic::Apply {

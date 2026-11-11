@@ -1,4 +1,4 @@
-//! `packages/cli/test/scale.test.ts`, ported: more hunks than JavaScript's call arguments allow
+//! More hunks than JavaScript's call arguments allow
 //! (which once threw there) align in `--name-status` and list in full with `--limit 0`.
 
 use kgdiff_core::js::json;

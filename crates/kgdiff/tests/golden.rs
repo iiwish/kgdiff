@@ -1,6 +1,6 @@
 //! The featured datasets' summary, `--stat`, `--name-status` and Markdown, plain, in colour and
-//! in a narrow terminal, compared byte for byte with the snapshots in `tests/snapshots/` (ported
-//! from the TypeScript CLI's golden test with its snapshots; the landing page shows them too).
+//! in a narrow terminal, compared byte for byte with the snapshots in `tests/snapshots/`
+//! (the landing page shows them too).
 //!
 //! After an intended change of these outputs, write the snapshots again and review their diff:
 //!
@@ -34,7 +34,7 @@ fn matches(name: &str, output: &str) -> bool {
 }
 
 #[test]
-fn matches_the_typescript_snapshots() {
+fn matches_the_snapshots() {
     let version = format!("kgdiff {}", kgdiff::VERSION);
     let mut failures = Vec::new();
     for (id, locale) in CASES {

@@ -1,6 +1,6 @@
-//! What the commands share for their outputs (`output.ts`): painters for stdout and stderr,
+//! What the commands share for their outputs: painters for stdout and stderr,
 //! the locale, `--quiet`, and writing output files with a short notice on stderr; and the
-//! overwrite checks (`overwrite.ts`): outputs never overwrite inputs, and two outputs never share
+//! overwrite checks: outputs never overwrite inputs, and two outputs never share
 //! a file, under any spelling.
 
 use kgdiff_core::Locale;
@@ -50,7 +50,7 @@ impl OutputContext {
     }
 }
 
-/// `1.2 MB`, `512 kB`, `90 B`: decimal units, as most file managers show them (`formatSize`).
+/// `1.2 MB`, `512 kB`, `90 B`: decimal units, as most file managers show them.
 pub fn format_size(bytes: usize) -> String {
     let n = kgdiff_core::util::count_to_f64(bytes);
     if bytes < 1000 {
@@ -113,7 +113,7 @@ pub struct PathRole<'a> {
     pub path: Option<&'a str>,
 }
 
-/// The identity of the file at `path` (`fileIdentity`): device and inode when it exists, else
+/// The identity of the file at `path`: device and inode when it exists, else
 /// the canonical directory and the case-folded name (on case-insensitive file systems `A.json`
 /// and `a.json` are one file; on others this only refuses outputs that differ in case alone).
 fn file_identity(io: &mut dyn CliIo, path: &str) -> CliResult<String> {
@@ -130,8 +130,8 @@ fn file_identity(io: &mut dyn CliIo, path: &str) -> CliResult<String> {
     Ok(format!("path:{}", kgdiff_core::text::to_lowercase(&joined)))
 }
 
-/// Refuses an output that is one of the inputs, and two outputs that are one file
-/// (`checkNoOverwrite`): `usage` errors.
+/// Refuses an output that is one of the inputs, and two outputs that are one file:
+/// `usage` errors.
 pub fn check_no_overwrite(
     io: &mut dyn CliIo,
     inputs: &[PathRole<'_>],

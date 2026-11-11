@@ -1,4 +1,4 @@
-//! Colour support detection (`style.ts`): `--color`, whether the stream is a terminal,
+//! Colour support detection: `--color`, whether the stream is a terminal,
 //! `NO_COLOR`, `FORCE_COLOR`, `COLORTERM`, `TERM`, and `COLORFGBG` for a light background.
 //! The painting itself is `kgdiff_report::Painter`.
 
@@ -51,7 +51,7 @@ fn term_256(term: &str) -> bool {
         .any(|suffix| term.ends_with(suffix))
 }
 
-/// The colour depth the terminal supports, assuming colour is wanted at all (`terminalDepth`).
+/// The colour depth the terminal supports, assuming colour is wanted at all.
 pub fn terminal_depth(env: &dyn Env) -> ColorLevel {
     let colorterm = to_lowercase(&env.var("COLORTERM").unwrap_or_default()).into_owned();
     if colorterm == "truecolor" || colorterm == "24bit" {

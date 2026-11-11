@@ -1,4 +1,4 @@
-//! `packages/cli/test/html.test.ts`, ported: the report document, its payload with the
+//! The report document, its payload with the
 //! precomputed diff and layout, escaping, compression, and when the compute add-on is inlined.
 
 mod common;

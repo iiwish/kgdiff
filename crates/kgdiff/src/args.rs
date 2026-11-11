@@ -1,7 +1,7 @@
-//! Command-line parsing and validation (`args.ts`, docs/cli.md §Usage).
+//! Command-line parsing and validation (docs/cli.md §Usage).
 //!
 //! The tokens are those of Node's `util.parseArgs` (tokens mode, `strict: false`), whose rules
-//! the TypeScript CLI builds on and whose quirks its messages show: `-ofile` and `-o file` bind a
+//! this parser follows and whose quirks its messages show: `-ofile` and `-o file` bind a
 //! value, `-o=file` binds `=file`, `-qv` is `-q -v`, a string option takes the next argument
 //! whatever it starts with. On top of them, kgdiff's own rules: known options only, string
 //! options need a value (one that starts with `-` must be attached with `=`), booleans take
@@ -244,7 +244,7 @@ fn apply_spec() -> Vec<OptionSpec> {
 // ─── Suggestions ─────────────────────────────────────────────────────────────
 
 /// Edit distance in UTF-16 units: insertions, deletions, substitutions and adjacent
-/// transpositions (`editDistance`).
+/// transpositions.
 pub fn edit_distance(a: &str, b: &str) -> usize {
     let a: Vec<u16> = a.encode_utf16().collect();
     let b: Vec<u16> = b.encode_utf16().collect();
@@ -673,7 +673,7 @@ fn parse_format(name: &str, value: Option<String>) -> CliResult<Option<Format>> 
     }
 }
 
-/// `Number(value)` within `[min, max]`, an integer when `integer` (`parseNumber`).
+/// `Number(value)` within `[min, max]`, an integer when `integer`.
 fn parse_number(name: &str, value: &str, min: f64, max: f64, integer: bool) -> CliResult<f64> {
     let n = js::number_from_str(value);
     if js::trim(value).is_empty()
@@ -816,7 +816,7 @@ fn panels_error(token: &str, parts: &[&str]) -> Failure {
     )
 }
 
-/// The diff options as the TypeScript CLI hands them to `diff`: only what was given.
+/// The diff options as the CLI hands them to `diff`: only what was given.
 fn diff_options(v: &Values) -> CliResult<Value> {
     let mut o = Object::new();
     let mut matching = Object::new();
@@ -1044,7 +1044,7 @@ pub fn parse_command_line(argv: &[String]) -> CliResult<Command> {
     }
 }
 
-/// The best guess at `--color` for an error about the command line itself (`peekColorMode`).
+/// The best guess at `--color` for an error about the command line itself.
 pub fn peek_color_mode(argv: &[String]) -> ColorMode {
     for (i, arg) in argv.iter().enumerate().rev() {
         let value = if let Some(v) = arg.strip_prefix("--color=") {

@@ -1,5 +1,5 @@
-//! The test harness of `packages/cli/test/helpers.ts`: `kgdiff::cli::run` against a
-//! [`MemoryIo`], files read through from the repository, the example datasets.
+//! The test harness: `kgdiff::cli::run` against a [`MemoryIo`],
+//! files read through from the repository, the example datasets.
 
 #![allow(dead_code)]
 
@@ -8,7 +8,7 @@ use std::path::Path;
 use kgdiff::testing::MemoryIo;
 use kgdiff_core::js::{Value, json};
 
-/// A regular expression of the TypeScript tests' assertions, kept as written. Engine code builds
+/// A regular expression of an assertion, kept as written. Engine code builds
 /// its patterns in its `re` module (RFC 0002 §4.5); tests only match output with them.
 #[allow(clippy::disallowed_methods)]
 pub fn re(pattern: &str) -> regex::Regex {

@@ -3,7 +3,7 @@
 //!
 //! It records the CLI runs of the conformance corpus, and every one is replayed against it on
 //! Linux, macOS and Windows (`conformance/replay.ts`): the same arguments, messages, outputs and
-//! exit codes the TypeScript CLI it replaced printed, byte for byte. The library is
+//! exit codes, byte for byte. The library is
 //! [`cli::run`] behind the [`io::CliIo`] trait, so that a host embeds kgdiff (the Python package
 //! does) and tests run it in memory; [`system::SystemIo`] is the real process.
 //!

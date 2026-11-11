@@ -1,4 +1,4 @@
-//! `packages/cli/test/style.test.ts`, ported: colour levels from `--color` and the environment,
+//! Colour levels from `--color` and the environment,
 //! the painter, and the xterm-256 mapping.
 
 use kgdiff::io::Env;
