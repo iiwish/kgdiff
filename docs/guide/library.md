@@ -145,7 +145,7 @@ The package READMEs show each step: [layout](../../packages/layout/README.md),
 
 `@kgdiff/compute` is kgdiff's Rust engine compiled to WebAssembly. Its results are byte for byte
 what the kgdiff CLI computes, in every JavaScript engine. It is three modules, each loaded only
-when asked for: `compute.wasm` (diff and matching, about 310 KiB gzip), `formats.wasm` (the
+when asked for: `compute.wasm` (diff and matching, about 300 KiB gzip), `formats.wasm` (the
 parsers) and `layout.wasm` (the layout of a diff, small enough to inline in a page).
 
 ```ts

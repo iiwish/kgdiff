@@ -109,9 +109,8 @@ pnpm vitest run --project compute          # the corpus and the API against the 
 feature, and once more with `corpus` for the tests (the read path of `kgdiff-core`, which the
 browser keeps in TypeScript). It needs:
 
-- the toolchain of `rust-toolchain.toml`, with its `wasm32-unknown-unknown` target and the
-  `rust-src` component (`rustup component add rust-src`): the standard library is rebuilt for size
-  with `-Zbuild-std`, which `RUSTC_BOOTSTRAP=1` allows on the pinned stable toolchain;
+- the toolchain of `rust-toolchain.toml`, with its `wasm32-unknown-unknown` target (only what the
+  stable toolchain supports: no `-Z` flags);
 - the wasm-bindgen CLI, at the exact version `crates/kgdiff-wasm` pins;
 - `wasm-opt` from binaryen.
 
@@ -123,41 +122,42 @@ tests are skipped (CI's `compute` job sets `KGDIFF_COMPUTE`, so that they fail i
 ## Size and speed
 
 Sizes are gzip level 9, in KiB (1,024 bytes), module and glue together; the glue of `layout` is
-`@kgdiff/compute/layout` bundled and minified, as a report inlines it.
+`@kgdiff/compute/layout` bundled and minified, as a report inlines it. Every module is built at
+cargo opt-level `z` on the stable toolchain.
 
-| Module         | Cargo opt-level | `.wasm`   | gzip, with glue | Budget (1.0) | CI limit |
-| -------------- | --------------- | --------- | --------------- | ------------ | -------- |
-| `layout.wasm`  | `z`             | 152.7 KiB | 69.1 KiB        | 45 KiB       | 70 KiB   |
-| `compute.wasm` | `2`             | 780.1 KiB | 307.6 KiB       | 350 KiB      | 350 KiB  |
-| `formats.wasm` | `z`             | 520.7 KiB | 222.3 KiB       | 200 KiB      | 223 KiB  |
+| Module         | `.wasm`   | gzip, with glue | Budget (1.0)          | CI limit |
+| -------------- | --------- | --------------- | --------------------- | -------- |
+| `layout.wasm`  | 216.4 KiB | 90.9 KiB        | 45 KiB, being raised  | 91 KiB   |
+| `compute.wasm` | 791.6 KiB | 303.9 KiB       | 350 KiB               | 350 KiB  |
+| `formats.wasm` | 621.8 KiB | 253.3 KiB       | 200 KiB, being raised | 254 KiB  |
 
-A CI limit above the budget sits at the module's measured size, so that a regression is noticed.
+A CI limit at a module's measured size makes a regression fail the build.
 
-Speed, measured on 2026-11-11 (macOS, Apple M-class, Node 24, load average 4 to 6), medians:
+Speed, measured on 2026-11-11 (macOS, Apple M-class, Node 24, load average 5 to 7), medians:
 
 | What                                        | Measured | Target (1.0)          |
 | ------------------------------------------- | -------- | --------------------- |
-| `diffSync` (with the transport), 10k / 30k  | 154 ms   | < 150 ms              |
-| `diffSync`, 100k / 300k                     | 2.6 s    | < 2 s                 |
-| `json.diff`, 10k / 30k                      | 86 ms    | (reported, no target) |
-| `json.diff`, 100k / 300k                    | 1.28 s   | (reported, no target) |
+| `diffSync` (with the transport), 10k / 30k  | 227 ms   | < 150 ms              |
+| `diffSync`, 100k / 300k                     | 3.0 s    | < 2 s                 |
+| `json.diff`, 10k / 30k                      | 139 ms   | (reported, no target) |
+| `json.diff`, 100k / 300k                    | 1.78 s   | (reported, no target) |
 | `json.normalize` 100k / 300k, linear memory | 265 MiB  | measured only         |
-| similarity matching, 5k unmatched per side  | 144 ms   | < 800 ms              |
-| `layoutDiffSync`, 2k nodes                  | 407 ms   | < 450 ms              |
-| `parseGraphSync`, 50k Turtle triples        | 199 ms   | < 250 ms              |
+| similarity matching, 5k unmatched per side  | 269 ms   | < 800 ms              |
+| `layoutDiffSync`, 2k nodes                  | 592 ms   | < 450 ms              |
+| `parseGraphSync`, 50k Turtle triples        | 183 ms   | < 250 ms              |
 
 The transport (`JSON.parse` and `diffFromJSON` of `@kgdiff/core`) takes about 70 ms of the 10k
 diff and about 1 s of the 100k one.
 
-`compute.wasm` is built for speed, the two others for size. Alternating runs of the engine at
-each opt-level (the standard library at `3` throughout; load average about 5):
+The engine at each opt-level (alternating runs, load average about 5; gzip of the `.wasm`):
 
-| opt-level | gzip      | `json.diff` 10k | with transport | `json.diff` 100k | with transport |
-| --------- | --------- | --------------- | -------------- | ---------------- | -------------- |
-| `z`       | 244.8 KiB | 143 ms          | 212 ms         | 2.09 s           | 2.89 s         |
-| `s`       | 280.2 KiB | 113 ms          | 184 ms         | 1.59 s           | 3.05 s         |
-| `2`       | 305.1 KiB | 92 ms           | 160 ms         | 1.24 s           | 2.21 s         |
-| `3`       | 318.9 KiB | 90 ms           | 160 ms         | 1.38 s           | 2.43 s         |
+| Build of `compute.wasm` | gzip      | `json.diff` 10k | with transport | `json.diff` 100k | with transport |
+| ----------------------- | --------- | --------------- | -------------- | ---------------- | -------------- |
+| `z` (shipped)           | 301.4 KiB | 144 ms          | 207 ms         | 1.93 s           | 2.99 s         |
+| `s`                     | 363.1 KiB | 114 ms          | 181 ms         | 1.60 s           | 2.49 s         |
+| `z`, kgdiff-core at `s` | 355.5 KiB | 115 ms          | 183 ms         | 1.51 s           | 2.83 s         |
+| `z`, kgdiff-core at `2` | 370.6 KiB | 91 ms           | 158 ms         | 1.38 s           | 2.37 s         |
+| `2`                     | 389.1 KiB | 90 ms           | 160 ms         | 1.26 s           | 2.20 s         |
+| `3`                     | 435.1 KiB | 90 ms           | 160 ms         | 1.19 s           | 2.13 s         |
 
-`2` is as fast as `3` and smaller. The standard library at `z` instead of `3` saves 2% of size
-and costs 15% of speed.
+Only `z` is within the 350 KiB budget.

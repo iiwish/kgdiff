@@ -249,11 +249,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # rust-src: build-wasm.ts rebuilds the standard library for size (-Zbuild-std).
-      - name: Install the toolchain of rust-toolchain.toml, with rust-src
-        run: |
-          rustup toolchain install
-          rustup component add rust-src
+      - name: Install the toolchain of rust-toolchain.toml
+        run: rustup toolchain install
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       # The exact version crates/kgdiff-wasm pins (wasm-bindgen = "=…").
       - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2

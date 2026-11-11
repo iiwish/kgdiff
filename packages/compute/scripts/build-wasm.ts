@@ -20,9 +20,7 @@
  *
  *   pnpm --filter @kgdiff/compute build:wasm
  *
- * Needs the toolchain of rust-toolchain.toml with its wasm32 target and its `rust-src` component
- * (the standard library is rebuilt for size: `-Zbuild-std`, allowed on the stable toolchain by
- * RUSTC_BOOTSTRAP), the wasm-bindgen CLI at the exact version crates/kgdiff-wasm pins, and
+ * Needs the toolchain of rust-toolchain.toml with its wasm32 target, the wasm-bindgen CLI at the exact version crates/kgdiff-wasm pins, and
  * wasm-opt (binaryen). They are looked up on PATH, or named by the WASM_BINDGEN and WASM_OPT
  * environment variables. With GITHUB_STEP_SUMMARY set, the size table is added to the job
  * summary.
@@ -68,38 +66,36 @@ const MODULES: readonly ModuleSpec[] = [
     name: 'layout',
     features: 'layout',
     out: join(PACKAGE, 'wasm'),
+    // RFC 0002 §7. The maintainer raises it after these measurements; the limit is the size.
     budget: 45 * KIB,
-    limit: 70 * KIB,
+    limit: 91 * KIB,
     entry: 'src/layout.ts',
   },
   {
     name: 'compute',
     features: 'engine',
     out: join(PACKAGE, 'wasm'),
-    // Raised from 250 for 1.0 by the maintainer (2026-11-11), so that the engine can be built
-    // for speed: the diff including the transport to a DiffResult is the gate.
+    // Raised from 250 for 1.0 by the maintainer (2026-11-11).
     budget: 350 * KIB,
     limit: 350 * KIB,
-    // Measured against `z` and `3` (README, "Size and speed"): as fast as `3`, 4% smaller.
-    optLevel: '2',
+    // Every faster opt-level is above the budget on the stable toolchain (README, "Size and
+    // speed"), so the engine is built for size like the others.
   },
-  { name: 'corpus', features: 'corpus', out: join(PACKAGE, 'test/wasm'), optLevel: '2' },
+  { name: 'corpus', features: 'corpus', out: join(PACKAGE, 'test/wasm') },
   {
     name: 'formats',
     features: 'parsers',
     out: join(PACKAGE, 'wasm'),
+    // As for `layout`: to be raised, the limit is the size.
     budget: 200 * KIB,
-    limit: 223 * KIB,
+    limit: 254 * KIB,
   },
 ];
 
 /**
- * The cargo profile and flags: release, optimized for size unless a module says otherwise
- * (`optLevel`), one codegen unit, LTO; the standard
- * library rebuilt with `optimize_for_size` and panics that abort at once (a panic in WebAssembly
- * traps either way; this leaves out the formatting of its message). The standard library itself
- * keeps opt-level 3, as the prebuilt one has it: at `z` the diff is about 15% slower, for 2% of
- * size.
+ * The cargo profile: release, optimized for size unless a module says otherwise (`optLevel`), one
+ * codegen unit, LTO. Only what the pinned stable toolchain supports: no `-Z` flag, no rebuilt
+ * standard library (it comes prebuilt at opt-level 3).
  */
 const CARGO = [
   '--config',
@@ -108,20 +104,11 @@ const CARGO = [
   'profile.compute.lto=true',
   '--config',
   'profile.compute.codegen-units=1',
-  '--config',
-  'profile.compute.panic="immediate-abort"',
-  ...['core', 'alloc', 'std'].flatMap((name) => [
-    '--config',
-    `profile.compute.package.${name}.opt-level=3`,
-  ]),
   '--profile',
   'compute',
-  '-Zpanic-immediate-abort',
-  '-Zbuild-std=std,panic_abort',
-  '-Zbuild-std-features=optimize_for_size',
 ];
 // getrandom's backend for oxrdf's blank-node names (formats only; the others never call it).
-const RUSTFLAGS = '-Zunstable-options -Cpanic=immediate-abort --cfg getrandom_backend="wasm_js"';
+const RUSTFLAGS = '--cfg getrandom_backend="wasm_js"';
 const TARGET_DIR = join(ROOT, 'target/compute');
 
 function run(command: string, args: readonly string[], env?: NodeJS.ProcessEnv): string {
@@ -216,7 +203,7 @@ for (const spec of MODULES) {
       '--config',
       `profile.compute.opt-level=${/^\d$/.test(spec.optLevel ?? 'z') ? spec.optLevel : `"${spec.optLevel ?? 'z'}"`}`,
     ],
-    { RUSTC_BOOTSTRAP: '1', RUSTFLAGS },
+    { RUSTFLAGS },
   );
   const built = join(TARGET_DIR, 'wasm32-unknown-unknown/compute/kgdiff_wasm.wasm');
   mkdirSync(spec.out, { recursive: true });
