@@ -171,9 +171,9 @@ as `@kgdiff/compute/compute.wasm`, `/formats.wasm` and `/layout.wasm`.
 **Content Security Policy.** Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`,
 for example `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`.
 
-In kgdiff 1.0, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
+In kgdiff 0.11, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
 `@kgdiff/layout` become asynchronous and run on this package
-([RFC 0002, §6](../rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
+([RFC 0002, §6](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
 
 ## Errors
 

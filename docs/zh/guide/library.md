@@ -135,7 +135,7 @@ const layout = layoutDiffSync(result); // LayoutResult，与 layoutDiff() 相同
 
 **内容安全策略。** 编译 WebAssembly 需要在 `script-src` 中加入 `'wasm-unsafe-eval'`，例如 `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`。
 
-到 kgdiff 1.0，`@kgdiff/core` 的 `diff`、`@kgdiff/formats` 的 `parseGraph` 和 `@kgdiff/layout` 的 `layoutDiff` 会改成异步，并在这个包上运行（[RFC 0002 第 6 节](../../rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)，英文）。
+到 kgdiff 0.11，`@kgdiff/core` 的 `diff`、`@kgdiff/formats` 的 `parseGraph` 和 `@kgdiff/layout` 的 `layoutDiff` 会改成异步，并在这个包上运行（[RFC 0002 第 6 节](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)，英文）。
 
 ## 错误
 

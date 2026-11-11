@@ -12,7 +12,7 @@ The engine is three modules, and each is loaded only when it is asked for
 | `formats.wasm` | the parsers: kgdiff JSON and five other JSON shapes, RDF, OBO                        | `parseGraphSync`, `detectFormatSync`               |
 | `layout.wasm`  | the layout of a `DiffResult`, on typed arrays, without JSON or Unicode normalization | `layoutDiffSync`, `extendLayoutSync`…              |
 
-The other kgdiff packages do not use it yet: in kgdiff 1.0, `diff` of `@kgdiff/core`,
+The other kgdiff packages do not use it yet: in kgdiff 0.11, `diff` of `@kgdiff/core`,
 `parseGraph` of `@kgdiff/formats` and `layoutDiff` of `@kgdiff/layout` become asynchronous and
 delegate to it ([RFC 0002, §6](../../docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
 
