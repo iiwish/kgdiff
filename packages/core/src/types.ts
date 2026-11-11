@@ -517,7 +517,8 @@ export interface Hunk {
   readonly context: readonly UnionId[];
   /**
    * Indices into `delta.ops` that implement this hunk (ascending). Ops that belong to no hunk
-   * (id-only rekeys under strategy `similarity`) come first in the delta.
+   * (changes of ignored attributes, id-only rekeys under strategy `similarity`) come first in
+   * the delta.
    */
   readonly ops: readonly number[];
   /**

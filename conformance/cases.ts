@@ -341,6 +341,18 @@ export const CASES: readonly CaseDefinition[] = [
     locale: 'en',
   },
   {
+    id: 'ignore-attrs-delta',
+    description:
+      'Ignored attributes in the delta, under similarity matching: on an unchanged node, on a node renamed alone and on one renamed in a hunk, on an unchanged edge whose endpoint a hunk renames, on a modified edge, on a parallel copy; none of them shown as a change.',
+    covers: ['kgdiff-json', 'ignore-attr', 'similarity', 'parallel-edges'],
+    inputs: { before: 'before.json', after: 'after.json' },
+    options: {
+      match: { strategy: 'similarity' },
+      ignoreAttrs: ['etag', 'ts'],
+    },
+    locale: 'en',
+  },
+  {
     id: 'identical',
     description:
       'The same graph twice, with nodes, edges, attribute keys and set members in another order and a label in another normalization form: no change, an empty delta, exit code 0 with --exit-code.',

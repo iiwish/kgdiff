@@ -1,0 +1,118 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "m1",
+        "label": "Alpha concept",
+        "attrs": {
+          "definition": "Changed.",
+          "ts": 2
+        }
+      },
+      {
+        "id": "m2",
+        "label": "Beta concept",
+        "attrs": {
+          "ts": 2
+        }
+      },
+      {
+        "id": "n3",
+        "label": "Gamma concept",
+        "attrs": {
+          "ts": 2
+        }
+      },
+      {
+        "id": "n4",
+        "label": "Delta concept",
+        "attrs": {
+          "etag": "y"
+        }
+      },
+      {
+        "id": "n6",
+        "label": "Zeta thing",
+        "attrs": {
+          "ts": 2
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "m1",
+        "target": "n3",
+        "predicate": "rel",
+        "attrs": {
+          "ts": 2
+        }
+      },
+      {
+        "source": "m2",
+        "target": "n4",
+        "predicate": "rel",
+        "attrs": {
+          "ts": 2
+        }
+      },
+      {
+        "source": "n3",
+        "target": "n4",
+        "predicate": "par",
+        "attrs": {
+          "tag": "a",
+          "ts": 3
+        }
+      },
+      {
+        "source": "n3",
+        "target": "n4",
+        "predicate": "par",
+        "attrs": {
+          "tag": "b",
+          "ts": 2
+        }
+      },
+      {
+        "source": "n3",
+        "target": "n4",
+        "predicate": "rel",
+        "attrs": {
+          "ts": 2,
+          "weight": 2
+        }
+      },
+      {
+        "source": "n4",
+        "target": "n6",
+        "predicate": "rel",
+        "attrs": {
+          "ts": 2
+        }
+      }
+    ],
+    "meta": {
+      "name": "ignored",
+      "source": "after.json",
+      "version": "2"
+    }
+  },
+  "format": "json",
+  "dialect": "kgdiff",
+  "prefixes": {
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "obo": "http://purl.obolibrary.org/obo/",
+    "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "schema": "https://schema.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "predicateLabels": {},
+  "warnings": []
+}

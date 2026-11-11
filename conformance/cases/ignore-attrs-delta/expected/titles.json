@@ -1,0 +1,56 @@
+{
+  "en": [
+    {
+      "id": "relations:n3",
+      "title": "Edited “Gamma concept” —rel→ “Delta concept”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "modify:m1",
+      "title": "Updated attributes of “Alpha concept”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:n6",
+      "title": "Added “Zeta thing”",
+      "subtitle": "standalone"
+    },
+    {
+      "id": "relations:n4",
+      "title": "“Delta concept”: rel now points to “Zeta thing” (was “Epsilon concept”)",
+      "subtitle": "relation retargeted"
+    },
+    {
+      "id": "remove:n5",
+      "title": "Removed “Epsilon concept”",
+      "subtitle": "standalone"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "relations:n3",
+      "title": "修改关系「Gamma concept」—rel→「Delta concept」",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "modify:m1",
+      "title": "修改「Alpha concept」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:n6",
+      "title": "新增「Zeta thing」",
+      "subtitle": "无外部关联"
+    },
+    {
+      "id": "relations:n4",
+      "title": "「Delta concept」的「rel」改为指向「Zeta thing」（原为「Epsilon concept」）",
+      "subtitle": "关系改为指向新节点"
+    },
+    {
+      "id": "remove:n5",
+      "title": "删除「Epsilon concept」",
+      "subtitle": "无外部关联"
+    }
+  ]
+}

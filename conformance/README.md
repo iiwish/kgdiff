@@ -225,6 +225,7 @@ belongs to the layout (RFC 0002 phase 4); the others to the core (phase 2).
 | `dangling-and-duplicates`                                     | numeric ids, duplicate nodes, an empty id, dangling endpoints, parallel edges                                                                                                                                                                            |
 | `edge-identity-id`                                            | `--edge-identity id`                                                                                                                                                                                                                                     |
 | `options-ignore-watch`                                        | every CLI diff option, `--watch-attr`                                                                                                                                                                                                                    |
+| `ignore-attrs-delta`                                          | ignored attributes in the delta: on renamed nodes, an edge whose endpoint a hunk renames, a parallel copy                                                                                                                                                |
 | `identical`, `empty-before`, `similarity-rekey-preamble`      | no change; `--allow-empty`; an identical diff whose delta renames ids, in a cycle                                                                                                                                                                        |
 | `rdf-turtle-ntriples`, `rdf-nquads-trig`, `rdf-xml`, `jsonld` | the RDF syntaxes, typed literals, languages, blank nodes, named graphs, DTD entities, XML literals, annotations, JSON-LD contexts                                                                                                                        |
 | `obo-variants`                                                | OBO with CRLF line endings, alt_id, obsoletion, typedefs, and every lenient-parse warning                                                                                                                                                                |
@@ -232,11 +233,6 @@ belongs to the layout (RFC 0002 phase 4); the others to the core (phase 2).
 | `encodings`, `encodings-be`                                   | UTF-16LE with a byte order mark and CRLF, gzip; UTF-16BE, UTF-8 with a byte order mark and CRLF                                                                                                                                                          |
 | `cli-errors`                                                  | exit code 2 and kgdiff's messages: invalid JSON, lone surrogate escapes in a graph and a delta, an OBO line clipped inside a surrogate pair, undetectable, empty, missing and oversized inputs, usage errors, `apply` on the wrong base, lenient `apply` |
 | `synthetic-600`                                               | 600 synthetic nodes with CJK labels (`scripts/gen-synthetic.ts --nodes 600 --seed 7 --cjk`); a changes-only layout scope                                                                                                                                 |
-
-One recorded behaviour is worth knowing, since a port might "fix" it by accident; it is a known
-issue of the reference (RFC 0002, §11): with `ignoreAttrs` (`options-ignore-watch`), the delta
-leaves the changes of ignored attributes out while `hashGraph` covers them, so `kgdiff apply`
-warns that its result differs from the delta's target.
 
 ## Unicode
 

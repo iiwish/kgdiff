@@ -193,6 +193,15 @@
       ]
     },
     {
+      "id": "ignore-attrs-delta",
+      "covers": [
+        "kgdiff-json",
+        "ignore-attr",
+        "similarity",
+        "parallel-edges"
+      ]
+    },
+    {
       "id": "identical",
       "covers": [
         "kgdiff-json",

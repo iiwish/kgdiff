@@ -52,7 +52,8 @@ canonical JSON equality (object keys sorted).
 `node.rekey` → `edge.remove` → `node.remove` → `node.set` → `node.attr` → `node.add` →
 `edge.add` → `edge.set` → `edge.attr`, each group sorted as specified in
 [algorithms.md §8](algorithms.md#8-delta). Deltas produced by `diff` are always canonical;
-`applyDelta` accepts any order that satisfies the preconditions.
+`applyDelta` accepts any order that satisfies the preconditions. Changes of
+[ignored attributes](#ignored-attributes), when there are any, come before all of these.
 
 ## Guarantees
 
@@ -65,13 +66,18 @@ canonical JSON equality (object keys sorted).
   order, with the same `reason` text strict mode would raise. Malformed ops (unknown kind,
   ill-typed fields) are input errors in both modes: `KgdiffError('invalid-input')`.
 
-## Known limitation: ignored attributes
+## Ignored attributes
 
-With `ignoreAttrs` (`--ignore-attr`), changes to the ignored attributes do not enter the delta,
-but `target.hash` is the hash of the whole after graph, attributes included. Applying such a
-delta to the before graph therefore gives a graph whose hash differs from `target.hash`, and
-`kgdiff apply` warns that the result differs from the delta's target. The guarantee above holds
-for deltas made without ignored attributes.
+`ignoreAttrs` (`--ignore-attr`) only narrows what the diff matches on and shows: the ignored
+attributes take no part in similarity and their changes produce no facet, status, count or
+summary line. The delta still carries those changes, so the guarantees above hold with any
+`ignoreAttrs`, and `target.hash` is the hash of the whole after graph.
+
+These ops belong to no hunk and head the delta, ahead of `node.rekey`, each addressing the base
+graph: `node.attr`, then `edge.remove` and `edge.add` for a parallel copy (which has no locator
+of its own), then `edge.attr`. Added, removed and replaced elements need none of them: their
+snapshots hold every attribute. Deltas from earlier versions, which left these changes out, still
+apply; their result differs from their `target.hash` as it always did.
 
 ## Relation to other formats
 

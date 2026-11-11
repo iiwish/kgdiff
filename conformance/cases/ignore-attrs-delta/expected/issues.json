@@ -1,0 +1,16 @@
+{
+  "before": [
+    {
+      "code": "duplicate-edge",
+      "message": "Edge [\"n3\",\"par\",\"n4\"] has 2 parallel copies; they are keyed #2, #3…",
+      "ref": "[\"n3\",\"par\",\"n4\"]"
+    }
+  ],
+  "after": [
+    {
+      "code": "duplicate-edge",
+      "message": "Edge [\"n3\",\"par\",\"n4\"] has 2 parallel copies; they are keyed #2, #3…",
+      "ref": "[\"n3\",\"par\",\"n4\"]"
+    }
+  ]
+}

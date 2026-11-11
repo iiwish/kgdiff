@@ -39,7 +39,7 @@
 
 ## 规范顺序
 
-`node.rekey` → `edge.remove` → `node.remove` → `node.set` → `node.attr` → `node.add` → `edge.add` → `edge.set` → `edge.attr`，每组内部按 [algorithms.md §8](../algorithms.md#8-delta)（英文）的规定排序。`diff` 生成的增量总是规范的；`applyDelta` 接受任何满足前置条件的顺序。
+`node.rekey` → `edge.remove` → `node.remove` → `node.set` → `node.attr` → `node.add` → `edge.add` → `edge.set` → `edge.attr`，每组内部按 [algorithms.md §8](../algorithms.md#8-delta)（英文）的规定排序。`diff` 生成的增量总是规范的；`applyDelta` 接受任何满足前置条件的顺序。如果有[被忽略属性](#被忽略的属性)的改动，它们排在所有这些操作之前。
 
 ## 保证
 
@@ -47,9 +47,11 @@
 - 严格模式下，遇到第一个不满足的前置条件就立即失败，抛出 `KgdiffError('delta-conflict', …, { opIndex, op, reason })`；基准哈希不一致时抛出 `KgdiffError('delta-base-mismatch')`。
 - 非严格模式（`strict: false`）跳过基准哈希检查和所有前置条件不成立的操作，并按操作顺序把每个被跳过的操作报告给 `ApplyOptions.onSkip({ index, op, reason })`，其中的 `reason` 和严格模式会抛出的文字相同。格式不正确的操作（未知类型、字段类型错误）在两种模式下都是输入错误：`KgdiffError('invalid-input')`。
 
-## 已知限制：被忽略的属性
+## 被忽略的属性
 
-使用 `ignoreAttrs`（`--ignore-attr`）时，被忽略属性的改动不会进入增量，但 `target.hash` 是整个 after 图（含这些属性）的哈希。因此把这样的增量应用到 before 图上，得到的图的哈希与 `target.hash` 对不上，`kgdiff apply` 会警告结果与增量的目标不一致。上面的保证只对没有忽略属性时生成的增量成立。
+`ignoreAttrs`（`--ignore-attr`）只收窄差异匹配和展示的内容：被忽略的属性不参与相似度计算，它们的改动不产生 facet，不影响状态、统计和摘要。增量仍然带上这些改动，所以上面的保证对任意 `ignoreAttrs` 都成立，`target.hash` 也是整个 after 图的哈希。
+
+这些操作不属于任何变更组，排在增量的最前面（在 `node.rekey` 之前），都针对基准图：先是 `node.attr`，然后是平行副本的 `edge.remove` 和 `edge.add`（平行副本没有自己的定位方式），最后是 `edge.attr`。新增、删除和被替换的元素不需要这些操作，它们的快照本来就包含全部属性。早期版本生成的增量没有这些改动，仍然可以应用，应用结果和它的 `target.hash` 对不上，这一点和以前一样。
 
 ## 与其他格式的关系
 

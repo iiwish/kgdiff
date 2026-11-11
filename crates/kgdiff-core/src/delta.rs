@@ -6,6 +6,7 @@ use std::sync::Arc;
 use crate::js::IndexMap;
 
 use crate::canonical::{attr_value_equals, attrs_equal, canonical_json, triple_key};
+use crate::classify::ignored_attr_changes;
 use crate::error::{ErrorCode, KgdiffError, Result};
 use crate::graph_json::{edge_to_json, hash_graph, node_content_equals, node_to_json};
 use crate::js::{self, JsStr, Lookup, Object, OrderedMap, Value, json};
@@ -400,6 +401,85 @@ fn attr_ops<'a>(
         .collect()
 }
 
+/// A matched edge the delta removes and adds again, instead of updating it (`replaced`).
+fn replaced(e: &UnionEdge) -> bool {
+    e.status == ChangeStatus::Modified && !e.in_place
+}
+
+/// The changes of ignored attributes, which head the delta and belong to no hunk
+/// (`ignoredAttrOps`): they are not changes the diff shows, yet applying the delta must reach the
+/// after graph. They address the before graph, ahead of every rename, so they never depend on a
+/// hunk (an unchanged edge can have an endpoint a hunk renames) and no hunk depends on them.
+/// Snapshots already carry the attributes of what is added, removed or replaced. A parallel copy
+/// has no locator of its own, so it is replaced.
+fn ignored_attr_ops(ctx: &Ctx<'_>, nodes: &[UnionNode], edges: &[UnionEdge]) -> Vec<Emitted> {
+    let ignored = &ctx.options.ignore_attrs;
+    if ignored.is_empty() {
+        return Vec::new();
+    }
+    let mode = ctx.options.edge_identity;
+    let mut ops: Vec<Emitted> = Vec::new();
+    for n in nodes {
+        let (Some(before), Some(after)) = (&n.before, &n.after) else {
+            continue;
+        };
+        let changes = ignored_attr_changes(&before.attrs, &after.attrs, ignored);
+        for (key, from, to) in attr_ops(std::iter::once(changes.as_slice())) {
+            ops.push(Emitted {
+                op: DeltaOp::NodeAttr {
+                    id: before.id.clone(),
+                    key,
+                    from,
+                    to,
+                },
+                hunk: None,
+            });
+        }
+    }
+    let mut removals = Vec::new();
+    let mut additions = Vec::new();
+    let mut updates = Vec::new();
+    for e in edges {
+        let (Some(before), Some(after)) = (&e.before, &e.after) else {
+            continue;
+        };
+        if replaced(e) {
+            continue;
+        }
+        let changes = ignored_attr_changes(&before.attrs, &after.attrs, ignored);
+        if changes.is_empty() {
+            continue;
+        }
+        if e.in_place {
+            let locator = edge_locator(before, mode);
+            let key = identity_key(&locator, mode);
+            updates.push((locator, changes, key));
+            continue;
+        }
+        let old = edge_to_json(before, None, None);
+        let next = edge_to_json(after, Some(&before.source), Some(&before.target));
+        removals.push((DeltaOp::EdgeRemove { edge: old.clone() }, old, None));
+        additions.push((DeltaOp::EdgeAdd { edge: next.clone() }, next, None));
+    }
+    ops.extend(sort_edges(removals, mode));
+    ops.extend(sort_edges(additions, mode));
+    updates.sort_by(|a, b| js::cmp_utf16(&a.2, &b.2));
+    for (locator, changes, _) in updates {
+        for (key, from, to) in attr_ops(std::iter::once(changes.as_slice())) {
+            ops.push(Emitted {
+                op: DeltaOp::EdgeAttr {
+                    edge: locator.clone(),
+                    key,
+                    from,
+                    to,
+                },
+                hunk: None,
+            });
+        }
+    }
+    ops
+}
+
 /// Builds the canonical delta of a classified union, with the hunk of each op (`buildDelta`).
 pub(crate) fn build_delta(
     ctx: &Ctx<'_>,
@@ -454,7 +534,7 @@ pub(crate) fn build_delta(
     planner.run(&preamble);
     let preamble_length = planner.plan.len();
     planner.run(&owned);
-    let mut ops: Vec<Emitted> = Vec::new();
+    let mut ops = ignored_attr_ops(ctx, nodes, edges);
     let mut union_of_renamed: Lookup<Id, UnionId> = Lookup::new();
     for (i, (from, to)) in planner.plan.iter().enumerate() {
         let origin = union_of_renamed
@@ -475,8 +555,6 @@ pub(crate) fn build_delta(
             hunk,
         });
     }
-
-    let replaced = |e: &UnionEdge| e.status == ChangeStatus::Modified && !e.in_place;
 
     // 2. edge.remove
     let mut removals = Vec::new();

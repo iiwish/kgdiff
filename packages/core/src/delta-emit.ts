@@ -2,11 +2,13 @@
  * Delta emission in canonical op order (docs/delta-format.md, docs/algorithms.md §8).
  */
 import { tripleKey } from './canonical.js';
+import { ignoredAttrChanges } from './classify.js';
 import { fieldValuesEqual, NODE_FIELDS } from './delta.js';
 import { edgeToJSON, hashGraph, nodeToJSON } from './graph-json.js';
 import type { EdgeRecord, NodeRecord } from './model.js';
 import type { PipelineContext } from './pipeline.js';
 import type {
+  AttrChange,
   Delta,
   DeltaOp,
   EdgeIdentity,
@@ -140,6 +142,82 @@ interface Emitted {
   readonly hunk: string | undefined;
 }
 
+type EdgeOp = { op: DeltaOp; edge: EdgeJSON; hunk: string | undefined };
+
+function sortEdges(list: EdgeOp[], mode: EdgeIdentity): Emitted[] {
+  return list
+    .map((x) => ({ ...x, key: `${identityKey(x.edge, mode)}\u0000${JSON.stringify(x.edge)}` }))
+    .sort((a, b) => compareStrings(a.key, b.key))
+    .map(({ op, hunk }) => ({ op, hunk }));
+}
+
+/** A matched edge the delta removes and adds again, instead of updating it. */
+const replaced = (e: EdgeRecord): boolean => e.status === 'modified' && !e.inPlace;
+
+/** The `key`, `from` and `to` of an attribute op. */
+function attrFields(c: AttrChange): {
+  key: string;
+  from?: AttrChange['before'];
+  to?: AttrChange['after'];
+} {
+  return {
+    key: c.key,
+    ...(c.before === undefined ? {} : { from: c.before }),
+    ...(c.after === undefined ? {} : { to: c.after }),
+  };
+}
+
+/**
+ * The changes of ignored attributes, which head the delta and belong to no hunk: they are not
+ * changes the diff shows, yet applying the delta must reach the after graph. They address the
+ * before graph, ahead of every rename, so they never depend on a hunk (an unchanged edge can
+ * have an endpoint a hunk renames) and no hunk depends on them: `requires` and the hunks are the
+ * same with or without them. Snapshots already carry the attributes of what is added, removed or
+ * replaced. A parallel copy has no locator of its own, so it is replaced.
+ */
+function ignoredAttrOps(
+  ctx: PipelineContext,
+  nodes: readonly NodeRecord[],
+  edges: readonly EdgeRecord[],
+): Emitted[] {
+  const ignored = ctx.options.ignoreAttrs;
+  if (ignored.length === 0) return [];
+  const mode = ctx.options.edgeIdentity;
+  const ops: Emitted[] = [];
+  for (const n of nodes) {
+    if (!n.before || !n.after) continue;
+    for (const c of ignoredAttrChanges(n.before.attrs, n.after.attrs, ignored)) {
+      ops.push({ op: { op: 'node.attr', id: n.before.id, ...attrFields(c) }, hunk: undefined });
+    }
+  }
+  const removals: EdgeOp[] = [];
+  const additions: EdgeOp[] = [];
+  const updates: { locator: EdgeJSON; changes: AttrChange[]; key: string }[] = [];
+  for (const e of edges) {
+    if (!e.before || !e.after || replaced(e)) continue;
+    const changes = ignoredAttrChanges(e.before.attrs, e.after.attrs, ignored);
+    if (changes.length === 0) continue;
+    if (e.inPlace) {
+      const locator = edgeLocator(e.before, mode);
+      updates.push({ locator, changes, key: identityKey(locator, mode) });
+      continue;
+    }
+    const old = edgeToJSON(e.before);
+    const next = edgeToJSON(e.after, e.before.source, e.before.target);
+    removals.push({ op: { op: 'edge.remove', edge: old }, edge: old, hunk: undefined });
+    additions.push({ op: { op: 'edge.add', edge: next }, edge: next, hunk: undefined });
+  }
+  for (const x of sortEdges(removals, mode)) ops.push(x);
+  for (const x of sortEdges(additions, mode)) ops.push(x);
+  updates.sort((a, b) => compareStrings(a.key, b.key));
+  for (const { locator, changes } of updates) {
+    for (const c of changes) {
+      ops.push({ op: { op: 'edge.attr', edge: locator, ...attrFields(c) }, hunk: undefined });
+    }
+  }
+  return ops;
+}
+
 /**
  * Builds the canonical delta of a classified union. Returns, per op, the hunk of the union
  * element the op implements.
@@ -179,7 +257,7 @@ export function buildDelta(
   planner.run(preamble);
   const preambleLength = planner.plan.length;
   planner.run(owned);
-  const ops: Emitted[] = [];
+  const ops: Emitted[] = ignoredAttrOps(ctx, nodes, edges);
   const unionOfRenamed = new Map<Id, UnionId>();
   planner.plan.forEach(([from, to], i) => {
     const origin = unionOfRenamed.get(from) ?? ub(from);
@@ -188,24 +266,15 @@ export function buildDelta(
     ops.push({ op: { op: 'node.rekey', from, to }, hunk });
   });
 
-  const replaced = (e: EdgeRecord): boolean => e.status === 'modified' && !e.inPlace;
-  const sortEdges = (
-    list: { op: DeltaOp; edge: EdgeJSON; hunk: string | undefined }[],
-  ): Emitted[] =>
-    list
-      .map((x) => ({ ...x, key: `${identityKey(x.edge, mode)}\u0000${JSON.stringify(x.edge)}` }))
-      .sort((a, b) => compareStrings(a.key, b.key))
-      .map(({ op, hunk }) => ({ op, hunk }));
-
   // 2. edge.remove
-  const removals: { op: DeltaOp; edge: EdgeJSON; hunk: string | undefined }[] = [];
+  const removals: EdgeOp[] = [];
   for (const e of edges) {
     if (!e.before || !(e.status === 'removed' || replaced(e))) continue;
     const edge = edgeToJSON(e.before, ub(e.before.source), ub(e.before.target));
     removals.push({ op: { op: 'edge.remove', edge }, edge, hunk: e.hunk });
   }
   // Appended one at a time: spreading 10^5+ elements into a call overflows the stack.
-  for (const x of sortEdges(removals)) ops.push(x);
+  for (const x of sortEdges(removals, mode)) ops.push(x);
 
   // 3. node.remove (records are sorted by union id)
   for (const n of nodes) {
@@ -227,14 +296,7 @@ export function buildDelta(
     for (const f of n.facets) {
       if (f.kind !== 'attrs') continue;
       for (const c of f.changes) {
-        const op: DeltaOp = {
-          op: 'node.attr',
-          id: n.id,
-          key: c.key,
-          ...(c.before === undefined ? {} : { from: c.before }),
-          ...(c.after === undefined ? {} : { to: c.after }),
-        };
-        attrOps.push({ op, hunk: n.hunk });
+        attrOps.push({ op: { op: 'node.attr', id: n.id, ...attrFields(c) }, hunk: n.hunk });
       }
     }
   }
@@ -245,13 +307,13 @@ export function buildDelta(
       ops.push({ op: { op: 'node.add', node: nodeToJSON(n.after) }, hunk: n.hunk });
   }
   // 7. edge.add
-  const additions: { op: DeltaOp; edge: EdgeJSON; hunk: string | undefined }[] = [];
+  const additions: EdgeOp[] = [];
   for (const e of edges) {
     if (!e.after || !(e.status === 'added' || replaced(e))) continue;
     const edge = edgeToJSON(e.after);
     additions.push({ op: { op: 'edge.add', edge }, edge, hunk: e.hunk });
   }
-  for (const x of sortEdges(additions)) ops.push(x);
+  for (const x of sortEdges(additions, mode)) ops.push(x);
   // 8. edge.set, then edge.attr
   const inPlace = edges
     .filter((e) => e.status === 'modified' && e.inPlace && e.before && e.after)
@@ -272,14 +334,7 @@ export function buildDelta(
     for (const f of e.facets) {
       if (f.kind !== 'attrs') continue;
       for (const c of f.changes) {
-        const op: DeltaOp = {
-          op: 'edge.attr',
-          edge: locator,
-          key: c.key,
-          ...(c.before === undefined ? {} : { from: c.before }),
-          ...(c.after === undefined ? {} : { to: c.after }),
-        };
-        ops.push({ op, hunk: e.hunk });
+        ops.push({ op: { op: 'edge.attr', edge: locator, ...attrFields(c) }, hunk: e.hunk });
       }
     }
   }

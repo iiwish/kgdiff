@@ -1,0 +1,5 @@
+E	n3	Edited “Gamma concept” —rel→ “Delta concept”
+M	m1	Updated attributes of “Alpha concept”
+A	n6	Added “Zeta thing”
+E	n4	“Delta concept”: rel now points to “Zeta thing” (was “Epsilon concept”)
+D	n5	Removed “Epsilon concept”

@@ -3,7 +3,7 @@
 
 mod support;
 
-use kgdiff_core::js::{Lookup, json};
+use kgdiff_core::js::{JsStr, Lookup, json};
 use kgdiff_core::model::ChangeStatus;
 use kgdiff_core::{
     ApplyOptions, DeltaOp, DiffOptions, DiffResult, EdgeIdentity, MatchStrategy, apply_delta, diff,
@@ -22,8 +22,14 @@ fn config() -> ProptestConfig {
     }
 }
 
+/// `IGNORED`: keys `support::graph` and its mutations use on nodes and on edges, sorted.
+fn ignored() -> Vec<JsStr> {
+    ["k1", "w", "名称"].map(JsStr::from).to_vec()
+}
+
 /// `VARIANTS`: default options, similarity matching, id edge identity, id matching without
-/// restructuring.
+/// restructuring, and ignored attributes with default options and with similarity matching and
+/// id edge identity.
 fn variant() -> impl Strategy<Value = DiffOptions> {
     let mut similarity = DiffOptions::default();
     similarity.r#match.strategy = MatchStrategy::Similarity;
@@ -37,7 +43,24 @@ fn variant() -> impl Strategy<Value = DiffOptions> {
         ..DiffOptions::default()
     };
     plain.r#match.strategy = MatchStrategy::Id;
-    prop::sample::select(vec![DiffOptions::default(), similarity, edge_id, plain])
+    let ignoring = DiffOptions {
+        ignore_attrs: ignored(),
+        ..DiffOptions::default()
+    };
+    let mut ignoring_similarity = DiffOptions {
+        ignore_attrs: ignored(),
+        edge_identity: EdgeIdentity::Id,
+        ..DiffOptions::default()
+    };
+    ignoring_similarity.r#match.strategy = MatchStrategy::Similarity;
+    prop::sample::select(vec![
+        DiffOptions::default(),
+        similarity,
+        edge_id,
+        plain,
+        ignoring,
+        ignoring_similarity,
+    ])
 }
 
 fn bytes(d: &DiffResult) -> String {
@@ -113,10 +136,17 @@ fn check_partition(d: &DiffResult) -> Result<(), TestCaseError> {
         if op_owner.contains_key(&i) {
             continue;
         }
-        // Only the id changes of `similarity` matches, which are not changes, live outside hunks.
-        let is_rekey = matches!(op, DeltaOp::NodeRekey { .. });
-        prop_assert!(is_rekey, "op {} belongs to no hunk", i);
-        prop_assert_eq!(d.options.r#match.strategy, MatchStrategy::Similarity);
+        // Only what the diff does not show as a change lives outside hunks: the id changes of
+        // `similarity` matches and the changes of ignored attributes.
+        if matches!(op, DeltaOp::NodeRekey { .. }) {
+            prop_assert_eq!(d.options.r#match.strategy, MatchStrategy::Similarity);
+        } else {
+            prop_assert!(
+                !d.options.ignore_attrs.is_empty(),
+                "op {} belongs to no hunk",
+                i
+            );
+        }
     }
     prop_assert!(d.hunks.iter().enumerate().all(|(i, h)| h.order == i));
     Ok(())
