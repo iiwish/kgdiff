@@ -2,10 +2,22 @@
  * Review progress: which hunks were marked reviewed, persisted in `localStorage` per diff
  * (`kgdiff:review:<base hash>→<target hash>`). Storage failures (private mode, quota, sandboxed
  * iframes) never break the viewer: the state simply stays in memory.
+ *
+ * Stored value: `{ "v": 1, "reviewed": [<hunk id>, ...] }`. The version lives in the value, not the
+ * key, so the key (and every progress already saved under it) stays valid. Rules for readers:
+ * - no version (a bare id array, or an object without a numeric `v`): the format before
+ *   versions, read as is and rewritten as version 1 on the next write;
+ * - version <= `STORAGE_VERSION`: read, and written back as `STORAGE_VERSION`;
+ * - version > `STORAGE_VERSION` (written by a newer viewer): the state stays in memory, shows
+ *   what it can read, and is never written back, so the newer data is not overwritten or
+ *   destroyed. Only a newer viewer may change the structure; it must keep the key prefix.
  */
 import type { ReviewState } from './index.js';
 
 export const STORAGE_PREFIX = 'kgdiff:review:';
+
+/** The version this viewer writes. Bump only for a structure change older readers cannot read. */
+export const STORAGE_VERSION = 1;
 
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
@@ -31,6 +43,8 @@ export class ReviewStore {
   readonly #storage: StorageLike | null;
   readonly #key: string | null;
   readonly #valid: readonly string[];
+  /** The stored value is from a newer viewer: never write it back. */
+  #newer = false;
 
   /**
    * @param key storage key (`reviewKey`), or null to keep the state in memory only.
@@ -48,6 +62,7 @@ export class ReviewStore {
     this.#reviewed = [];
     this.#set = new Set();
     this.#foreign = [];
+    this.#newer = false;
     for (const id of this.#read()) {
       if (this.#set.has(id) || this.#foreign.includes(id)) continue;
       if (this.#known.has(id)) {
@@ -101,11 +116,13 @@ export class ReviewStore {
       const raw = this.#storage.getItem(this.#key);
       if (!raw) return [];
       const parsed: unknown = JSON.parse(raw);
-      const list = Array.isArray(parsed)
-        ? parsed
-        : typeof parsed === 'object' && parsed !== null && 'reviewed' in parsed
-          ? (parsed as { reviewed: unknown }).reviewed
-          : [];
+      let list: unknown = [];
+      if (Array.isArray(parsed)) list = parsed;
+      else if (typeof parsed === 'object' && parsed !== null) {
+        const { v, reviewed } = parsed as { v?: unknown; reviewed?: unknown };
+        if (typeof v === 'number' && v > STORAGE_VERSION) this.#newer = true;
+        list = reviewed;
+      }
       return Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : [];
     } catch {
       return [];
@@ -113,11 +130,11 @@ export class ReviewStore {
   }
 
   #write(): void {
-    if (!this.#storage || !this.#key) return;
+    if (!this.#storage || !this.#key || this.#newer) return;
     try {
       const all = [...this.#reviewed, ...this.#foreign];
       if (all.length === 0) this.#storage.removeItem(this.#key);
-      else this.#storage.setItem(this.#key, JSON.stringify({ v: 1, reviewed: all }));
+      else this.#storage.setItem(this.#key, JSON.stringify({ v: STORAGE_VERSION, reviewed: all }));
     } catch {
       // Quota exceeded or storage blocked: keep the in-memory state.
     }

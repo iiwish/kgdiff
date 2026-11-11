@@ -102,6 +102,38 @@ describe('review store', () => {
     expect(store.reload(null)).toBe(false);
   });
 
+  it('upgrades the unversioned format on the next write', () => {
+    const storage = new MemoryStorage();
+    storage.setItem('k', '["a","gone"]');
+    const store = new ReviewStore(storage, 'k', ['a', 'b']);
+    expect(store.state().reviewed).toEqual(['a']);
+    store.setReviewed('b', true);
+    expect(JSON.parse(storage.getItem('k') ?? '')).toEqual({ v: 1, reviewed: ['a', 'b', 'gone'] });
+    storage.setItem('k', JSON.stringify({ reviewed: ['a'] }));
+    const bare = new ReviewStore(storage, 'k', ['a', 'b']);
+    bare.setReviewed('b', true);
+    expect(JSON.parse(storage.getItem('k') ?? '').v).toBe(1);
+  });
+
+  it('round-trips the versioned format', () => {
+    const storage = new MemoryStorage();
+    new ReviewStore(storage, 'k', ['a', 'b']).setReviewed('b', true);
+    expect(JSON.parse(storage.getItem('k') ?? '')).toEqual({ v: 1, reviewed: ['b'] });
+    expect(new ReviewStore(storage, 'k', ['a', 'b']).state().reviewed).toEqual(['b']);
+  });
+
+  it('never overwrites a value from a newer version', () => {
+    const storage = new MemoryStorage();
+    const raw = JSON.stringify({ v: 2, reviewed: ['a'], extra: { seen: 1 } });
+    storage.setItem('k', raw);
+    const store = new ReviewStore(storage, 'k', ['a', 'b']);
+    expect(store.state().reviewed).toEqual(['a']);
+    expect(store.setReviewed('b', true)).toBe(true);
+    expect(store.has('b')).toBe(true);
+    store.setReviewed('a', false);
+    expect(storage.getItem('k')).toBe(raw);
+  });
+
   it('accepts a plain array, ignores garbage and works without storage', () => {
     const storage = new MemoryStorage();
     storage.setItem('k', '["a"]');

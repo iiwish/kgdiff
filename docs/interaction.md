@@ -153,6 +153,12 @@ within the focus. Default for graphs above the large-graph threshold.
   `Home` / `End`. The list is a `listbox` with `aria-activedescendant`.
 - Review progress bar under the header: "7 of 23 reviewed". Review state persists in
   `localStorage` keyed by `base.hash → target.hash` (wrapped in try/catch).
+  The value is `{ "v": 1, "reviewed": [<hunk id>, ...] }` ([hunk ids](algorithms.md) are a stable
+  contract). The version is in the value, so the key and saved progress never change. A value
+  without a version (a bare array of ids, the older format) is read as is and rewritten as
+  version 1 on the next change. Ids this diff does not have are kept and never shown. A value
+  with a newer version than the viewer knows is read but never written back: the progress stays
+  in memory for that session and the newer data is left alone.
 
 ## Detail panel
 
