@@ -153,6 +153,45 @@ pub fn layout_graph(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutRes
 - **TypeScript.** Not added to `@kgdiff/layout`, whose engine phase 5 deletes.
   `@kgdiff/compute` exports `layoutGraph` with the rest of the layout in phase 5.
 
+**The next version** (added once an end-to-end test had walked the chain; see
+[0.9 results](#09-results)). Known positions are known by id, so `layout_graph` with the
+previous positions keeps the previous version's map only for the nodes whose id is the same in
+both versions. Two functions carry the map through the diff instead, which is what knows which
+node continues which:
+
+```rust
+/// The layout of a diff on the map of its before version: every node `previous` places stays
+/// exactly where it is, and only the other nodes are placed.
+pub fn layout_diff_on<'a>(
+    input: impl Into<LayoutInput<'a>>,
+    previous: &LayoutResult,
+    options: &LayoutOptions,
+) -> Result<LayoutResult>;
+
+/// The layout of the after version of a diff on the map of the diff: every node is where
+/// `layout` has it, and nothing is computed.
+pub fn layout_after(
+    diff: &DiffResult,
+    layout: &LayoutResult,
+    options: &LayoutOptions,
+) -> Result<LayoutResult>;
+```
+
+- **Through the diff, not by id.** A union node with a `before_id` takes the position the
+  previous layout has for that id, under its union id, and the after version reads it back
+  under its `after_id`. By id, a node that continues under another id (a `replaces` hint, a
+  match by similarity) is a new node to the layout of one graph and is placed again, and an id
+  given to another node pins that node where the old one was.
+- **The diff first, then the after version.** The layout of the after version alone cannot see
+  the removed nodes, and may place a new node on one of them. On the diff the removed nodes
+  are in place and the new ones are placed clear of them; the after version then takes its
+  positions from the diff.
+- **Contracts.** `layout_diff_on` is `layout_diff` with scope `All` and the previous positions
+  as pins keyed by union id (a pin of the caller wins); `layout_after` is `layout_graph` of
+  the after version with the diff's positions as pins keyed by `after_id`. Both are tests
+  against those pins written by hand, byte for byte, on every corpus case. Scope `Changes` is
+  `invalid-input`, as for `layout_graph`.
+
 ### 2. Reports with the caller's layout (0.9)
 
 ```rust
@@ -459,6 +498,17 @@ all three (a layout, the next version, a diff, a report with that layout).
   the fixture graphs; the same graph in another order gives the same bytes. A 3,500-node
   graph, above the default threshold, is laid out whole. The crate's documentation has the
   tested example and states the 0.01 grid.
+- **Part 1, the next version.** The test that takes one graph through all three parts came
+  with the embedding guide (4ef67c0, `crates/kgdiff-report/tests/mental_map.rs`), and found
+  that "how the next version of a graph keeps the previous version's map" needs more than
+  the previous positions as pins. By id, every node the diff matched under another id moves:
+  53 nodes in 9 of the 29 corpus cases. And laid out before the diff, the after version put a
+  new node on a removed one once in the corpus (`dataset-data-lineage`, discs overlapping by
+  0.16). `layout_diff_on` and `layout_after` are the way that holds, in `kgdiff-layout`
+  instead of in every host: on all 29 cases, in both directions, every node the previous
+  layout places stays bit for bit, no added node overlaps a removed one, and the after
+  version is where its diff has it with no simulation run. The guide and its example use
+  them.
 - **Part 2, reports.** `ReportLayout`, `report_payload_with` and `build_report_html_with` as
   written; `Default` equals `report_payload` byte for byte. A given layout is refused with
   `invalid-input` (details: `node`) by the two rules of the design. `report.v1.json` is in
@@ -475,6 +525,13 @@ all three (a layout, the next version, a diff, a report with that layout).
   `kgdiff-layout` does not depend on. The three options that are "not read" do not affect the
   result, but a value `layout_diff` rejects (`hub_degree: -1`) is still rejected, so that one
   `LayoutOptions` is not valid for one function and invalid for the other.
+- Part 1, the next version: besides scope `Changes`, both functions refuse strategy `Union`,
+  which ignores known positions and would compute the whole map again. `layout_after` takes
+  the layout options too (the font size is in the bounds), and refuses a layout that has no
+  position for a node of the after version instead of placing that node. A host that stores
+  one layout per version lays out a diff of two stored versions with `layout_diff_on` and the
+  after version's positions as pins; no third function was added for the after version laid
+  out before its diff.
 - Part 2: the schema accepts a layout document of version 1 as well as 2, as the viewer's
   `ReportPayload` does, and a given layout read from a version 1 document is written back as
   version 1. Only `positions` is checked against the diff, not the keys of `radii`, `hidden`

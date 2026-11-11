@@ -1,7 +1,8 @@
 //! What an application that embeds kgdiff's crates does with two versions of a graph, in the
-//! order it does it: lay out the first version and store the layout; lay out the next version on
-//! the same map; diff the two and lay the diff out on that map as well; write the summaries and
-//! the report with that layout. Going from a version to the diff then moves no node.
+//! order it does it: lay out the first version and store the layout; diff the next version
+//! against it and lay the diff out on the stored map; give the next version the positions of
+//! its diff, and store them; write the summaries and the report with the diff's layout. Going
+//! from a version to the next one, and from either to the diff, then moves no node.
 //!
 //! ```sh
 //! cargo run -p kgdiff-report --example embedding
@@ -13,13 +14,12 @@
 
 use std::error::Error;
 
-use kgdiff_core::js::{IndexMap, Value, json};
-use kgdiff_core::model::{Point, UnionId};
+use kgdiff_core::js::{Value, json};
 use kgdiff_core::{
     DiffOptions, DiffResult, KGraph, Locale, NormalizeOptions, Result, diff_graphs, normalize,
 };
 use kgdiff_layout::{
-    LayoutOptions, LayoutResult, LayoutScope, layout_diff, layout_from_json, layout_graph,
+    LayoutOptions, LayoutResult, layout_after, layout_diff_on, layout_from_json, layout_graph,
     layout_to_json,
 };
 use kgdiff_report::{
@@ -53,83 +53,37 @@ pub fn changes(before: &KGraph, after: &KGraph) -> Result<DiffResult> {
     diff_graphs(before.clone(), after.clone(), DiffOptions::default())
 }
 
-/// The next version on the previous version's map: a node that continues a node of the previous
-/// version stays exactly where that node was, and only the new nodes are placed.
+/// The diff on the previous version's map: a node the previous version had stays exactly where
+/// it was, whether it continues or was removed, and only the new nodes are placed, clear of
+/// the removed ones.
 ///
 /// The positions are carried through the diff, not by id: a node the diff matched under another
 /// id (a `replaces` hint, a similarity match) is the same node on the map.
-pub fn next_map(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        if let (Some(before), Some(after)) = (&node.before_id, &node.after_id)
-            && let Some(position) = previous.positions.get(before.as_str())
-        {
-            pinned.insert(after.clone(), *position);
-        }
-    }
-    let options = LayoutOptions {
-        pinned,
-        ..LayoutOptions::default()
-    };
-    layout_graph(&diff.after, &options)
+pub fn diff_map_first(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
+    layout_diff_on(diff, previous, &LayoutOptions::default())
 }
 
-/// The layout of the diff on the maps of its two versions: a node of the after version is where
-/// the after version has it, and a removed node stays where the before version had it. Every
-/// node has a known position, so nothing is computed and nothing moves.
+/// The next version on the map of its diff: every node is where the diff has it, and nothing
+/// is computed. This is the layout to store with the next version.
+pub fn next_map_of(diff: &DiffResult, both: &LayoutResult) -> Result<LayoutResult> {
+    layout_after(diff, both, &LayoutOptions::default())
+}
+
+/// The layout of a diff whose two versions both have a map already: a node of the after version
+/// is where the after version has it, and a removed node stays where the before version had it.
+/// Every node has a known position, so nothing is computed and nothing moves.
 pub fn diff_map(
     diff: &DiffResult,
     before: &LayoutResult,
     after: &LayoutResult,
 ) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        let in_after = node.after_id.as_ref();
-        let in_before = node.before_id.as_ref();
-        let position = in_after
-            .and_then(|id| after.positions.get(id.as_str()))
-            .or_else(|| in_before.and_then(|id| before.positions.get(id.as_str())));
-        if let Some(position) = position {
-            // Keyed by the union id, which is not always an id of either version.
-            pinned.insert(node.id.clone(), *position);
-        }
-    }
     let options = LayoutOptions {
-        pinned,
-        // Above 3,000 nodes the default scope is the changes only.
-        scope: Some(LayoutScope::All),
+        // Pins are keyed by union id, which is its own id for a node of the after version.
+        // They win over the before version's positions, which are left for the removed nodes.
+        pinned: after.positions.clone(),
         ..LayoutOptions::default()
     };
-    layout_diff(diff, &options)
-}
-
-/// The other order, for versions that remove nodes: the diff first, on the previous version's
-/// map. The layout of the after version alone cannot see the removed nodes, and may put a new
-/// node where one of them was; here the new nodes are placed clear of them too.
-pub fn diff_map_first(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        let in_before = node.before_id.as_ref();
-        if let Some(position) = in_before.and_then(|id| previous.positions.get(id.as_str())) {
-            pinned.insert(node.id.clone(), *position);
-        }
-    }
-    let options = LayoutOptions {
-        pinned,
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
-    layout_diff(diff, &options)
-}
-
-/// The after version on the map of its diff: the union id of a node of the after version is
-/// its id, so the diff's positions are its pins (those of removed nodes are not read).
-pub fn next_map_of(diff: &DiffResult, both: &LayoutResult) -> Result<LayoutResult> {
-    let options = LayoutOptions {
-        pinned: both.positions.clone(),
-        ..LayoutOptions::default()
-    };
-    layout_graph(&diff.after, &options)
+    layout_diff_on(diff, before, &options)
 }
 
 /// The summary `kgdiff` prints to a terminal, and the Markdown summary for a comment or a page.
@@ -238,35 +192,33 @@ pub fn main() -> std::result::Result<(), Box<dyn Error>> {
     let (map1, stored) = first_map(&v1)?;
     assert_eq!(map1.positions.len(), 4);
 
-    // Version 2 arrives: diff it, and lay it out on the stored map.
+    // Version 2 arrives: diff it, and lay the diff out on the stored map.
     let v2 = read_graph(V2)?;
     let previous = stored_map(&stored)?;
     assert_eq!(previous.positions, map1.positions);
     let diff = changes(&v1, &v2)?;
-    let map2 = next_map(&diff, &previous)?;
-    for id in ["customer", "order"] {
-        assert_eq!(map2.positions[id], previous.positions[id]);
-    }
-    // The metric kept its place under its new id, and the new concept was placed.
-    assert_eq!(map2.positions["net-revenue"], previous.positions["revenue"]);
-    assert!(map2.positions.contains_key("refund"));
-
-    // The diff, on the same map: the removed metric is where version 1 had it.
-    let both = diff_map(&diff, &previous, &map2)?;
+    let both = diff_map_first(&diff, &previous)?;
     assert_eq!(both.positions.len(), 5);
+    for id in ["customer", "order"] {
+        assert_eq!(both.positions[id], previous.positions[id]);
+    }
+    // The metric kept its place under its new id, the removed metric is where version 1 had
+    // it, and the new concept was placed.
+    assert_eq!(both.positions["net-revenue"], previous.positions["revenue"]);
     assert_eq!(both.positions["churn"], previous.positions["churn"]);
-    assert_eq!(both.positions["net-revenue"], map2.positions["net-revenue"]);
-    assert_eq!(both.positions["refund"], map2.positions["refund"]);
+    assert!(both.positions.contains_key("refund"));
 
-    // The other order gives a map with the same promise: the diff first, then version 2.
-    let both_first = diff_map_first(&diff, &previous)?;
-    let map2_of = next_map_of(&diff, &both_first)?;
-    assert_eq!(both_first.positions["churn"], previous.positions["churn"]);
-    assert_eq!(
-        map2_of.positions["net-revenue"],
-        previous.positions["revenue"]
-    );
-    assert_eq!(map2_of.positions["refund"], both_first.positions["refund"]);
+    // Version 2 on that map, to store with version 2: every node is where the diff has it.
+    let map2 = next_map_of(&diff, &both)?;
+    assert_eq!(map2.positions.len(), 4);
+    for id in ["customer", "order", "net-revenue", "refund"] {
+        assert_eq!(map2.positions[id], both.positions[id]);
+    }
+    let stored2 = json::to_string(&layout_to_json(&map2));
+
+    // Later, the same diff from the two stored maps alone: the same positions again.
+    let again = diff_map(&diff, &previous, &stored_map(&stored2)?)?;
+    assert_eq!(again.positions, both.positions);
 
     let (text, markdown) = summaries(&diff, "sales 1 → 2")?;
     assert!(markdown.starts_with("## kgdiff · sales 1 → 2"));

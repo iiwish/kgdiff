@@ -4,7 +4,7 @@ kgdiff 的引擎是一组 Rust crate，画面是一组 npm 包。本指南跟着
 
 下面每个 Rust 函数都摘自 `kgdiff-report` 的 [`examples/embedding.rs`](../../../crates/kgdiff-report/examples/embedding.rs)（`cargo run -p kgdiff-report --example embedding`）。有一条测试在[一致性语料](../../../conformance/README.md)每个用例的两张图上运行这些函数，并检查本页对它们的说法（[`tests/mental_map.rs`](../../../crates/kgdiff-report/tests/mental_map.rs)）。
 
-`layout_graph`、`report_payload_with` 和渲染器的 `addLayer` 是 0.9 新增的，在一个次版本内为实验性（[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) 的第 1、2、4a 部分，英文）。该 RFC 的其余部分见[还没有的东西](#还没有的东西)。
+`layout_graph`、`layout_diff_on`、`layout_after`、`report_payload_with` 和渲染器的 `addLayer` 是 0.9 新增的，在一个次版本内为实验性（[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) 的第 1、2、4a 部分，英文）。该 RFC 的其余部分见[还没有的东西](#还没有的东西)。
 
 ## 依赖什么
 
@@ -35,13 +35,12 @@ kgdiff-report = "0.9"
 ```rust
 use std::error::Error;
 
-use kgdiff_core::js::{IndexMap, Value, json};
-use kgdiff_core::model::{Point, UnionId};
+use kgdiff_core::js::{Value, json};
 use kgdiff_core::{
     DiffOptions, DiffResult, KGraph, Locale, NormalizeOptions, Result, diff_graphs, normalize,
 };
 use kgdiff_layout::{
-    LayoutOptions, LayoutResult, LayoutScope, layout_diff, layout_from_json, layout_graph,
+    LayoutOptions, LayoutResult, layout_after, layout_diff_on, layout_from_json, layout_graph,
     layout_to_json,
 };
 use kgdiff_report::{
@@ -92,7 +91,7 @@ pub fn stored_map(document: &str) -> std::result::Result<LayoutResult, Box<dyn E
 
 ## 下一个版本保持地图
 
-下一个版本到来时，把它与上一个版本做 diff，再带着上一版的位置（作为固定位置 `pinned`）给它布局。被固定的节点原地不动，只有其余节点被安置：
+下一个版本到来时，把它与上一个版本做 diff，在上一版的地图上给 **diff** 布局，再把 diff 的位置交给新版本：
 
 ```rust
 pub fn changes(before: &KGraph, after: &KGraph) -> Result<DiffResult> {
@@ -101,24 +100,24 @@ pub fn changes(before: &KGraph, after: &KGraph) -> Result<DiffResult> {
 ```
 
 ```rust
-pub fn next_map(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        if let (Some(before), Some(after)) = (&node.before_id, &node.after_id)
-            && let Some(position) = previous.positions.get(before.as_str())
-        {
-            pinned.insert(after.clone(), *position);
-        }
-    }
-    let options = LayoutOptions {
-        pinned,
-        ..LayoutOptions::default()
-    };
-    layout_graph(&diff.after, &options)
+pub fn diff_map_first(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
+    layout_diff_on(diff, previous, &LayoutOptions::default())
 }
 ```
 
-位置是**经由 diff** 带过去的，从并集节点的 `before_id` 到它的 `after_id`，而不是按 id：
+```rust
+pub fn next_map_of(diff: &DiffResult, both: &LayoutResult) -> Result<LayoutResult> {
+    layout_after(diff, both, &LayoutOptions::default())
+}
+```
+
+- `layout_diff_on` 让上一版地图上的每个节点都留在原位，不论它继续存在还是被删除，只安置新增的节点。范围总是全部节点，不论 diff 有多大。
+- `layout_after` 不做任何计算：新版本的每个节点就在 diff 里的位置上。结果以新版本的 id 为键，就是要和这个版本一起保存的布局，也是再下一个版本的“上一版地图”。
+- diff 的布局以**并集 id** 为键。新版本里的节点，并集 id 就是它自己的 id；被删除的节点用旧版本的 id，如果新版本把这个 id 用在了别的节点上，则在后面加上 `@before`。两个函数都通过并集节点的 `before_id` 和 `after_id` 取位置，所以你不用自己换算 id。
+
+这就是那条承诺的全部内容：从一个版本切到下一个版本，或者从任一版本切到两者的 diff，节点都不动。测试在语料的每个用例上逐位检查它，其中包括合并、拆分和换 id。
+
+位置是**经由 diff** 带过去的，而不是按 id。用 `layout_graph` 加上一版的位置（作为固定位置 `pinned`）给新版本布局是一种简写，但它并不等价：
 
 | 两个版本之间                                          | 经由 diff 带位置 | 按 id 带位置（`pinned: previous.positions.clone()`） |
 | ----------------------------------------------------- | ---------------- | ---------------------------------------------------- |
@@ -126,13 +125,15 @@ pub fn next_map(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResu
 | 节点换了 id 继续存在（`replaces` 提示、按相似度匹配） | 不动             | 被当成新节点重新安置                                 |
 | 一个 id 被另一个节点占用（没有稳定 id 的图）          | 各自留在原位     | 另一个节点被固定在旧节点的位置上                     |
 
-id 稳定时（按 id 匹配，没有替换提示），按 id 的简写是对的：两种做法得到同一个布局。在一致性语料上，按 id 带位置会让每一个换了 id 的节点移动：撰写本文时，29 个用例中有 9 个、共 53 个节点，其中 37 个在一张由语言模型抽取的图里。
+在一致性语料上，按 id 带位置会让每一个换了 id 的节点移动：撰写本文时，29 个用例中有 9 个、共 53 个节点，其中 37 个在一张由语言模型抽取的图里。
 
-位置也可以放在你的导出里，即节点的 `position` 成员（[`graph.v1.json`](../../../packages/core/schema/graph.v1.json)）：布局把它当作固定位置（`pinned` 优先于它），它永远不属于 diff。把带过去的位置写在新版本的节点上，与固定它们得到的布局相同。
+**先给 diff 布局**，是为了被删除的节点。新版本自己的布局看不到它们，所以可能把新节点放到它们原来的位置上（撰写本文时语料里有一处：按那种顺序布局，`dataset-data-lineage` 中一个新增节点和一个被删除节点的圆盘重叠 0.16 个世界单位）。在 diff 上，新节点会避开被删除的节点，语料的任何用例里都没有一对重叠。
 
-## 在同一张地图上给 diff 布局
+位置也可以放在你的导出里，即节点的 `position` 成员（[`graph.v1.json`](../../../packages/core/schema/graph.v1.json)）：布局把它当作已知位置，它永远不属于 diff。上一版地图没有安置的节点，`layout_diff_on` 会读它的 `position`；上一版地图优先于它，`options.pinned` 里的固定位置（以并集 id 为键）优先于两者。
 
-diff 的布局以**并集 id** 为键。新版本里的节点，并集 id 就是它自己的 id；被删除的节点用旧版本的 id，如果新版本把这个 id 用在了别的节点上，则在后面加上 `@before`。所以这里同样要通过 `before_id` 和 `after_id` 取位置：
+## 给两个都有地图的版本的 diff 布局
+
+每个版本存一份布局，diff 就不需要自己的布局。任何时候要展示两个已保存版本的 diff，不论还是刚才那两个，还是相隔更远的两个，每个节点都已经有位置：
 
 ```rust
 pub fn diff_map(
@@ -140,65 +141,21 @@ pub fn diff_map(
     before: &LayoutResult,
     after: &LayoutResult,
 ) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        let in_after = node.after_id.as_ref();
-        let in_before = node.before_id.as_ref();
-        let position = in_after
-            .and_then(|id| after.positions.get(id.as_str()))
-            .or_else(|| in_before.and_then(|id| before.positions.get(id.as_str())));
-        if let Some(position) = position {
-            // Keyed by the union id, which is not always an id of either version.
-            pinned.insert(node.id.clone(), *position);
-        }
-    }
     let options = LayoutOptions {
-        pinned,
-        // Above 3,000 nodes the default scope is the changes only.
-        scope: Some(LayoutScope::All),
+        // Pins are keyed by union id, which is its own id for a node of the after version.
+        // They win over the before version's positions, which are left for the removed nodes.
+        pinned: after.positions.clone(),
         ..LayoutOptions::default()
     };
-    layout_diff(diff, &options)
+    layout_diff_on(diff, before, &options)
 }
 ```
 
-现在每个并集节点都有已知位置：不做任何模拟，新版本里的节点就在新版本的位置上，被删除的节点留在旧版本的位置上。这就是那条承诺的全部内容，测试在语料的每个用例上逐位检查它，其中包括合并、拆分和换 id。
+新版本里的节点就在新版本的位置上，被删除的节点留在旧版本的位置上，不做任何模拟。
 
-如果两份导出都用 `position` 带着各自的位置，默认的 `layout_diff`（因而 `report_payload` 和 `kgdiff` 命令行也是）不需要任何固定位置就会把 diff 布局在这些位置上：同样的布局，逐字节相同的报告。这在大图阈值 3000 个节点以内成立；超过之后默认布局只覆盖变化，需要像上面那样指明范围。
-
-### 版本删除了节点时
-
-新版本自己的布局看不到被删除的节点，所以可能把新节点放到它们原来的位置上。这很少见（撰写本文时语料里有一处：`dataset-data-lineage` 中一个新增节点和一个被删除节点的圆盘重叠了 0.16 个世界单位），渲染器也会把标签错开；不过换一个顺序就能避免：先在上一版的地图上给 diff 布局，再把 diff 的位置交给新版本。
-
-```rust
-pub fn diff_map_first(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        let in_before = node.before_id.as_ref();
-        if let Some(position) = in_before.and_then(|id| previous.positions.get(id.as_str())) {
-            pinned.insert(node.id.clone(), *position);
-        }
-    }
-    let options = LayoutOptions {
-        pinned,
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
-    layout_diff(diff, &options)
-}
-```
-
-```rust
-pub fn next_map_of(diff: &DiffResult, both: &LayoutResult) -> Result<LayoutResult> {
-    let options = LayoutOptions {
-        pinned: both.positions.clone(),
-        ..LayoutOptions::default()
-    };
-    layout_graph(&diff.after, &options)
-}
-```
-
-两种顺序都保持地图，区别只在新节点放在哪里，所以选定一种后不要再换。
+- 对相邻的两个版本，这样得到的位置就是新版本到来时 `layout_diff_on` 给出的位置，所以不必保存 diff 的布局。
+- 相隔更远的两个版本之间同样没有节点移动，但一个被删除的节点和一个后来新增的节点从未在同一个画面里一起安置过，可能靠得很近。
+- 如果两份导出都用 `position` 带着各自的位置，默认的 `layout_diff`（因而 `report_payload` 和 `kgdiff` 命令行也是）不需要任何固定位置就会把 diff 布局在这些位置上：同样的布局，逐字节相同的报告。这在大图阈值 3000 个节点以内成立；超过之后默认布局只覆盖变化。
 
 ## 摘要和报告
 
@@ -381,4 +338,4 @@ const removeMarks = renderer.addLayer({
 | 4c   | 朴素视图：在查看器里看单张图，按你的类别着色                   | 0.10，或 1.0 之后 | 场景和渲染器用中性色画没有变化的 diff；`<kgdiff-viewer>` 显示“没有差异”卡片；着色通过图层完成 |
 | 4d   | 分组：每组一块背景，以及让同组节点靠在一起的布局               | 1.0 之后          | 根据位置在 `under` 图层上画背景；布局不知道分组                                               |
 
-同样还没有的：TypeScript 里的 `layout_graph`。`@kgdiff/layout` 没有 `layoutGraph`，它计划随布局的其余部分一起放进 `@kgdiff/compute`。在浏览器里可以给一张图与它自己的 diff 布局；更好的做法是像上面那样在服务端计算布局。
+同样还没有的：TypeScript 里的 `layout_graph`、`layout_diff_on` 和 `layout_after`。`@kgdiff/layout` 没有与它们对应的函数；`layoutGraph` 计划随布局的其余部分一起放进 `@kgdiff/compute`。在浏览器里可以给一张图与它自己的 diff 布局；更好的做法是像上面那样在服务端计算布局。

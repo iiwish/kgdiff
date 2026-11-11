@@ -232,17 +232,44 @@ impl LayoutOptions {
     ///
     /// `invalid-input` for scope `Changes`: one graph has no changes to select.
     pub(crate) fn for_graph(&self) -> Result<LayoutOptions> {
+        self.with_every_node("the layout of one graph has no changes to select")
+    }
+
+    /// These options with every node in scope.
+    ///
+    /// # Errors
+    ///
+    /// `invalid-input` for scope `Changes`, with `why` it cannot be asked for.
+    pub(crate) fn with_every_node(&self, why: &str) -> Result<LayoutOptions> {
         if self.scope == Some(LayoutScope::Changes) {
             return Err(invalid(
                 "scope",
                 Value::from(LayoutScope::Changes.as_str()),
-                "'all' (the layout of one graph has no changes to select)",
+                &format!("'all' ({why})"),
             ));
         }
         Ok(LayoutOptions {
             scope: Some(LayoutScope::All),
             ..self.clone()
         })
+    }
+
+    /// Checks that these options keep known positions, for the layouts that are defined by the
+    /// positions they keep.
+    ///
+    /// # Errors
+    ///
+    /// `invalid-input` for strategy `Union`, which ignores every known position, with `why` it
+    /// cannot be asked for.
+    pub(crate) fn keeps_positions(&self, why: &str) -> Result<()> {
+        if self.strategy == Some(LayoutStrategy::Union) {
+            return Err(invalid(
+                "strategy",
+                Value::from(LayoutStrategy::Union.as_str()),
+                &format!("'anchored' ({why})"),
+            ));
+        }
+        Ok(())
     }
 
     /// The options of a JSON object, as `@kgdiff/layout` reads a `LayoutOptions` object
