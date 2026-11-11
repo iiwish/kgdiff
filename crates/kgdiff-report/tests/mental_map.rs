@@ -3,7 +3,10 @@
 //! node. `layout_graph`, the layout document, `layout_diff` and `report_payload_with` each have
 //! their own tests; this one walks the chain an embedding application walks, with the functions
 //! of `examples/embedding.rs` (which `docs/guide/embedding.md` quotes), on both graphs of every
-//! corpus case and on a pair whose ids are reused:
+//! corpus case and on a pair whose ids are reused. The chain is walked version by version, the
+//! after version before the diff (step 2 is `next_map` below, which the example had until
+//! kgdiff-layout got `layout_diff_on` and `layout_after`); the order the example and the guide
+//! give now, the diff before the after version, is held to the same promise further down:
 //!
 //! 1. the before version is laid out, and its layout stored as a document and read back;
 //! 2. the after version is laid out with those positions: a node that continues a before node
@@ -25,7 +28,7 @@ mod schema;
 use std::path::{Path, PathBuf};
 
 use kgdiff_core::js::{IndexMap, JsStr, Object, Value, json};
-use kgdiff_core::model::{HunkKind, Point};
+use kgdiff_core::model::{HunkKind, Point, UnionId};
 use kgdiff_core::{
     DiffOptions, DiffResult, KGraph, MatchStrategy, NormalizeOptions, diff_from_json, diff_graphs,
     graph_to_json, hash_graph, normalize, resolve_options, unpack_diff_json,
@@ -164,6 +167,26 @@ fn written(document: &Value, id: &str) -> String {
 
 // ─── The chain ──────────────────────────────────────────────────────────────────────────────
 
+/// The after version alone on the previous version's map, with the positions carried through
+/// the diff by hand: a node that continues a node of the previous version is pinned where that
+/// node was, and only the new nodes are placed. It cannot see the removed nodes, which is why
+/// the example lays the diff out first (`diff_map_first`, then `next_map_of`).
+fn next_map(diff: &DiffResult, previous: &LayoutResult) -> kgdiff_core::Result<LayoutResult> {
+    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
+    for node in &diff.nodes {
+        if let (Some(before), Some(after)) = (&node.before_id, &node.after_id)
+            && let Some(position) = previous.positions.get(before.as_str())
+        {
+            pinned.insert(after.clone(), *position);
+        }
+    }
+    let options = LayoutOptions {
+        pinned,
+        ..LayoutOptions::default()
+    };
+    layout_graph(&diff.after, &options)
+}
+
 /// What a walk of the chain saw, to check that the pairs cover what they are meant to.
 #[derive(Default)]
 struct Seen {
@@ -235,7 +258,7 @@ fn walk(pair: &Pair, schemas: &Schemas) -> (Maps, Seen) {
         pair.options.clone(),
     )
     .unwrap_or_else(|e| panic!("{what}: {e}"));
-    let next = host::next_map(&diff, &previous).unwrap_or_else(|e| panic!("{what}: {e}"));
+    let next = next_map(&diff, &previous).unwrap_or_else(|e| panic!("{what}: {e}"));
     assert_eq!(next.scope, LayoutScope::All, "{what}");
     assert_eq!(
         sorted(next.positions.keys()),
@@ -450,7 +473,7 @@ fn ids_reused_for_other_nodes_keep_the_map_too() {
 // ─── What carrying positions by id does ─────────────────────────────────────────────────────
 
 /// The after version laid out with the stored positions as they are, keyed by the before
-/// version's ids: the short form in kgdiff-layout's README, right when ids are stable.
+/// version's ids: the short form, right when ids are stable.
 fn by_id(pair: &Pair, previous: &LayoutResult) -> LayoutResult {
     let options = LayoutOptions {
         pinned: previous.positions.clone(),
@@ -550,7 +573,7 @@ fn the_diff_laid_out_first_keeps_the_map_and_clears_the_removed_nodes() {
                 );
             }
             if let Some(after) = &node.after_id {
-                // What `next_map_of` relies on.
+                // What `diff_map` relies on: its pins are the after version's positions.
                 assert_eq!(&node.id, after, "{what}: the union id of an after node");
                 assert!(
                     same(next.positions[after.as_str()], at),
@@ -577,6 +600,10 @@ fn the_diff_laid_out_first_keeps_the_map_and_clears_the_removed_nodes() {
             Vec::<String>::new(),
             "{what}"
         );
+        // The two versions' layouts are enough to lay the diff out again, where it was.
+        let again = host::diff_map(diff, previous, &next).unwrap();
+        assert_eq!(again.positions, both.positions, "{what}: from both maps");
+        assert_eq!(again.stats.iterations, 0, "{what}");
     }
     assert!(
         checked >= 100,

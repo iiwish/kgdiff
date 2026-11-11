@@ -39,9 +39,11 @@
 //!
 //! [`layout_graph`] gives one graph the positions [`layout_diff`] gives the diff of that graph
 //! with itself, with every node in scope, so that going from a graph to a diff of it moves
-//! nothing. The next version of a graph keeps the map of the previous one when it is laid out
-//! with the previous positions: the nodes that have one stay exactly where they are, and only
-//! the new nodes are placed.
+//! nothing. A graph laid out with known positions keeps them: the nodes that have one stay
+//! exactly where they are, and only the others are placed. Positions are known by id, so this
+//! keeps the map of a previous version only for the nodes whose id is the same in both; when ids
+//! can change, carry the positions through the diff
+//! ([the next section](crate#the-next-version-on-the-same-map)).
 //!
 //! ```
 //! use kgdiff_core::js::json;
@@ -62,7 +64,8 @@
 //! let previous = layout_from_json(&json::parse(&stored)?)?;
 //! assert_eq!(previous.positions, layout.positions);
 //!
-//! // The next version has a new node: a and b do not move, c is placed beside them.
+//! // The next version has a new node, and a and b keep their ids: they do not move, and c is
+//! // placed beside them.
 //! let next = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"},{"id":"c"}],
 //!     "edges":[{"source":"a","target":"b","predicate":"p"},
 //!              {"source":"b","target":"c","predicate":"p"}]}"#)?;
@@ -89,6 +92,51 @@
 //! positions read back from a layout document are kept as they are, through any number of
 //! versions. A position from elsewhere is kept exactly in the [`LayoutResult`] and rounded when
 //! the document is written, so it is not the same number after a round trip.
+//!
+//! # The next version on the same map
+//!
+//! A position belongs to a node, not to an id, and the diff is what knows which node of the next
+//! version continues which node of the previous one. [`layout_diff_on`] lays the diff out on the
+//! previous version's map: every node that map has stays exactly where it is, under whatever id
+//! it has now, removed nodes included, and only the new nodes are placed. [`layout_after`] then
+//! gives the next version the positions of its diff, without computing any. Going from a
+//! version to the next one, and from either to their diff, moves no node.
+//!
+//! ```
+//! use kgdiff_core::js::json;
+//! use kgdiff_core::{DiffOptions, NormalizeOptions, diff_graphs, normalize};
+//! use kgdiff_layout::{LayoutOptions, layout_after, layout_diff_on, layout_graph};
+//!
+//! let v1 = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"},{"id":"c"}],
+//!     "edges":[{"source":"a","target":"b","predicate":"p"},
+//!              {"source":"b","target":"c","predicate":"p"}]}"#)?;
+//! let v1 = normalize(&v1, NormalizeOptions::default())?;
+//! let previous = layout_graph(&v1, &LayoutOptions::default())?;
+//!
+//! // Version 2: b continues under another id, c is gone and d is new.
+//! let v2 = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b2","replaces":["b"]},{"id":"d"}],
+//!     "edges":[{"source":"a","target":"b2","predicate":"p"},
+//!              {"source":"b2","target":"d","predicate":"p"}]}"#)?;
+//! let v2 = normalize(&v2, NormalizeOptions::default())?;
+//! let diff = diff_graphs(v1, v2, DiffOptions::default())?;
+//!
+//! // The diff first, on the previous map: b2 is where b was, c stays, and d is placed.
+//! let both = layout_diff_on(&diff, &previous, &LayoutOptions::default())?;
+//! assert_eq!(both.positions["a"], previous.positions["a"]);
+//! assert_eq!(both.positions["b2"], previous.positions["b"]);
+//! assert_eq!(both.positions["c"], previous.positions["c"]);
+//!
+//! // Then version 2, where its diff has it: the layout to store with version 2.
+//! let next = layout_after(&diff, &both, &LayoutOptions::default())?;
+//! assert_eq!(next.positions.len(), 3);
+//! assert_eq!(next.positions["b2"], previous.positions["b"]);
+//! assert_eq!(next.positions["d"], both.positions["d"]);
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! The order matters. The layout of the next version alone cannot see the nodes that were
+//! removed, and may put a new node where one of them was; laid out first, the diff places the
+//! new nodes clear of them.
 //!
 //! # Expanding a changes-only layout
 //!
@@ -117,6 +165,7 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+mod carry;
 mod components;
 mod engine;
 mod extend;
@@ -234,8 +283,11 @@ pub fn layout_diff<'a>(
 ///   rejects is still rejected).
 /// - Known positions work as in [`layout_diff`]: a pin in `options.pinned`, or a `position` on a
 ///   node of the graph, makes the layout `Anchored`. Those nodes stay exactly where they are and
-///   only the others are placed, which is how the next version of a graph keeps the previous
-///   version's map (see the [crate documentation](crate#laying-out-one-graph)).
+///   only the others are placed. Positions are known by id: the previous version's positions
+///   keep its map for the nodes whose id is the same in both versions, and no others. When ids
+///   can change (a `replaces` hint, a match by similarity, an id given to another node), lay
+///   out the diff with [`layout_diff_on`] and take the next version from it with
+///   [`layout_after`] (see the [crate documentation](crate#the-next-version-on-the-same-map)).
 ///
 /// The graph is diffed with itself to build the union, which costs about 30 ms for 10k nodes and
 /// 30k edges.
@@ -247,7 +299,11 @@ pub fn layout_diff<'a>(
 /// `invalid-input` for scope `Changes` (one graph has no changes to select) and for the options
 /// [`layout_diff`] rejects.
 pub fn layout_graph(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutResult> {
-    let options = options.for_graph()?;
+    of_the_identical_diff(graph, &options.for_graph()?)
+}
+
+/// The layout of the diff of `graph` with itself.
+fn of_the_identical_diff(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutResult> {
     let identical = diff_graphs(
         graph.clone(),
         graph.clone(),
@@ -256,7 +312,88 @@ pub fn layout_graph(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutRes
             ..DiffOptions::default()
         },
     )?;
-    pipeline::layout(LayoutInput::from(&identical), &options)
+    pipeline::layout(LayoutInput::from(&identical), options)
+}
+
+/// The layout of a diff on the map of its before version: every node `previous` places stays
+/// exactly where it is, and only the other nodes are placed.
+///
+/// `previous` is a layout of the before version: of [`layout_graph`] or [`layout_after`], or
+/// one read back from a layout document. Its positions are carried through the diff, not by id:
+/// a union node with a `before_id` takes the position `previous` has for that id, under whatever
+/// union id it has. So, bit for bit:
+///
+/// - a node that continues stays where it was, also under another id (a `replaces` hint, a
+///   match by similarity);
+/// - a removed node stays where it was, also when its id now names another node and its union
+///   id ends in `@before`;
+/// - a new node is placed, also when it took over an id of the before version; it is placed
+///   clear of the removed nodes, which the layout of the after version alone could not see.
+///
+/// It is [`layout_diff`] with those positions as pins and every node in scope:
+///
+/// - A pin in `options.pinned` (keyed by union id) wins over `previous`, and `previous` wins
+///   over a `position` on a node of either graph, which is still read for a node `previous`
+///   does not place.
+/// - A node without a known position is placed. `previous` need not cover the before version;
+///   when nothing is known at all, the result is the `Union` layout of the diff.
+/// - The scope is always `All`, whatever the size of the diff, as in [`layout_graph`].
+/// - Kept positions are not rounded. Those of a layout this crate computed, or of a layout
+///   document, are on the document's 0.01 grid already, and stay as written through any number
+///   of versions.
+///
+/// [`layout_after`] then gives the after version its layout from this one. In that order a
+/// version, the next one and their diff share one map; `LayoutOptions { pinned:
+/// previous.positions.clone(), .. }` on [`layout_graph`] gives that only when no id changes.
+///
+/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+///
+/// # Errors
+///
+/// `invalid-input` for scope `Changes` (the map has every node), for strategy `Union` (it would
+/// ignore `previous`) and for the options [`layout_diff`] rejects.
+pub fn layout_diff_on<'a>(
+    input: impl Into<LayoutInput<'a>>,
+    previous: &LayoutResult,
+    options: &LayoutOptions,
+) -> Result<LayoutResult> {
+    carry::diff_on(input.into(), previous, options)
+}
+
+/// The layout of the after version of a diff on the map of the diff: every node is where
+/// `layout` has it, and nothing is computed.
+///
+/// `layout` is a layout of `diff` that places every node of the after version, such as the
+/// result of [`layout_diff_on`]. The result is keyed by the ids of the after version: a position
+/// is read from `layout` by union id and written under the node's `after_id`, bit for bit. The
+/// positions of removed nodes are not read.
+///
+/// It is [`layout_graph`] of `diff.after` with those positions as pins, so everything but the
+/// positions is what the after version has on its own: the radii are of its own degrees (the
+/// diff's are the larger of both versions'), and the bounds and components are its own. It can
+/// be stored with the version and be `previous` for the version after it.
+///
+/// - `options` are those `layout` was computed with; of them only `font_size` shows in the
+///   result (the bounds include the labels). `options.pinned` is not read.
+/// - `stats.iterations` is 0, and `stats.strategy` is `Anchored` unless the after version is
+///   empty.
+///
+/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+///
+/// # Errors
+///
+/// `invalid-input` when `layout` has no position for a node of the after version (a layout of
+/// scope `Changes`, or of another diff; details: `node`, the union id), for scope `Changes`,
+/// for strategy `Union` and for the options [`layout_diff`] rejects.
+pub fn layout_after(
+    diff: &DiffResult,
+    layout: &LayoutResult,
+    options: &LayoutOptions,
+) -> Result<LayoutResult> {
+    options.keeps_positions("the positions of the diff's layout are kept")?;
+    let mut options = options.for_graph()?;
+    options.pinned = carry::after_pins(diff, layout)?;
+    of_the_identical_diff(&diff.after, &options)
 }
 
 /// Adds `nodes` (currently outside the layout) next to their placed neighbours without moving

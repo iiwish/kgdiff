@@ -12,8 +12,8 @@ Every Rust function below is quoted from
 of every case of the [conformance corpus](../../conformance/README.md) and checks the claims
 this page makes about them ([`tests/mental_map.rs`](../../crates/kgdiff-report/tests/mental_map.rs)).
 
-`layout_graph`, `report_payload_with` and the renderer's `addLayer` are new in 0.9 and
-experimental for one minor release
+`layout_graph`, `layout_diff_on`, `layout_after`, `report_payload_with` and the renderer's
+`addLayer` are new in 0.9 and experimental for one minor release
 ([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), parts
 1, 2 and 4a). [What is not there yet](#what-is-not-there-yet) lists the rest of that RFC.
 
@@ -54,13 +54,12 @@ The functions on this page share these imports:
 ```rust
 use std::error::Error;
 
-use kgdiff_core::js::{IndexMap, Value, json};
-use kgdiff_core::model::{Point, UnionId};
+use kgdiff_core::js::{Value, json};
 use kgdiff_core::{
     DiffOptions, DiffResult, KGraph, Locale, NormalizeOptions, Result, diff_graphs, normalize,
 };
 use kgdiff_layout::{
-    LayoutOptions, LayoutResult, LayoutScope, layout_diff, layout_from_json, layout_graph,
+    LayoutOptions, LayoutResult, layout_after, layout_diff_on, layout_from_json, layout_graph,
     layout_to_json,
 };
 use kgdiff_report::{
@@ -123,9 +122,8 @@ pub fn stored_map(document: &str) -> std::result::Result<LayoutResult, Box<dyn E
 
 ## Keep the map for the next version
 
-When the next version arrives, diff it against the previous one and lay it out with the
-previous positions as pins. A pinned node stays exactly where it is, and only the others are
-placed:
+When the next version arrives, diff it against the previous one, lay the **diff** out on the
+previous version's map, and give the next version the positions of its diff:
 
 ```rust
 pub fn changes(before: &KGraph, after: &KGraph) -> Result<DiffResult> {
@@ -134,25 +132,35 @@ pub fn changes(before: &KGraph, after: &KGraph) -> Result<DiffResult> {
 ```
 
 ```rust
-pub fn next_map(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        if let (Some(before), Some(after)) = (&node.before_id, &node.after_id)
-            && let Some(position) = previous.positions.get(before.as_str())
-        {
-            pinned.insert(after.clone(), *position);
-        }
-    }
-    let options = LayoutOptions {
-        pinned,
-        ..LayoutOptions::default()
-    };
-    layout_graph(&diff.after, &options)
+pub fn diff_map_first(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
+    layout_diff_on(diff, previous, &LayoutOptions::default())
 }
 ```
 
-The positions are carried **through the diff**, from a union node's `before_id` to its
-`after_id`, and not by id:
+```rust
+pub fn next_map_of(diff: &DiffResult, both: &LayoutResult) -> Result<LayoutResult> {
+    layout_after(diff, both, &LayoutOptions::default())
+}
+```
+
+- `layout_diff_on` keeps every node the previous map has exactly where it is, whether the node
+  continues or was removed, and places only the new nodes. The scope is every node, whatever
+  the size of the diff.
+- `layout_after` computes nothing: every node of the next version is where the diff has it. Its
+  result is keyed by the next version's ids and is the layout to store with that version, as
+  the previous map of the version after it.
+- The diff's layout is keyed by **union id**. A node of the after version has its own id as
+  union id; a removed node has its before id, or that id with `@before` appended when the after
+  version uses the id for something else. Both functions read positions through a union
+  node's `before_id` and `after_id`, so you never translate ids yourself.
+
+That is the whole promise: going from a version to the next one, and from either to their diff,
+moves no node. The test checks it bit for bit on every corpus case, with merges, splits and
+changed ids among them.
+
+The positions are carried **through the diff**, and not by id. Laying the next version out with
+`layout_graph` and the previous positions as pins is the short form, and it is not the same
+thing:
 
 | Between the versions                                                         | Carried through the diff  | Carried by id (`pinned: previous.positions.clone()`) |
 | ---------------------------------------------------------------------------- | ------------------------- | ---------------------------------------------------- |
@@ -160,22 +168,26 @@ The positions are carried **through the diff**, from a union node's `before_id` 
 | a node continues under another id (a `replaces` hint, a match by similarity) | stays                     | is placed again, as if it were new                   |
 | an id is reused for another node (graphs without stable ids)                 | each node keeps its place | the other node is pinned where the old one was       |
 
-The short form, by id, is right when ids are stable (matching by id and no replacement hints):
-the two then give the same layout. On the conformance corpus, carrying by id moves every node
-whose id changes: 53 nodes in 9 of its 29 cases when this was written, 37 of them in one graph
-extracted by a language model.
+On the conformance corpus, carrying by id moves every node whose id changes: 53 nodes in 9 of
+its 29 cases when this was written, 37 of them in one graph extracted by a language model.
+
+**The diff comes first** for the sake of the removed nodes. The layout of the next version alone
+cannot see them, so it may place a new node where one of them was (once in the corpus when this
+was written: laid out that way, the discs of an added and a removed node of
+`dataset-data-lineage` overlap by 0.16 world units). On the diff, the new nodes are placed clear
+of the removed ones, and no pair of them overlaps on any corpus case.
 
 Positions can also live in your export, as the `position` member of a node
-([`graph.v1.json`](../../packages/core/schema/graph.v1.json)): a layout treats it like a pin
-(a pin wins over it), and it is never part of the diff. Writing the carried positions on the
-after version's nodes gives the same layout as pinning them.
+([`graph.v1.json`](../../packages/core/schema/graph.v1.json)): a layout treats it as a known
+position, and it is never part of the diff. `layout_diff_on` reads it for a node the previous
+map does not place; the previous map wins over it, and a pin in `options.pinned` (keyed by union
+id) wins over both.
 
-## Lay out the diff on the same map
+## Lay out a diff of two versions that have their maps
 
-The diff's layout is keyed by **union id**. A node of the after version has its own id as union
-id; a removed node has its before id, or that id with `@before` appended when the after version
-uses the id for something else. So read the positions through `before_id` and `after_id` here
-too:
+With one layout stored per version, a diff needs no layout of its own. Whenever a diff of two
+stored versions is shown, the same two as before or two that are further apart, every node
+already has its position:
 
 ```rust
 pub fn diff_map(
@@ -183,76 +195,27 @@ pub fn diff_map(
     before: &LayoutResult,
     after: &LayoutResult,
 ) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        let in_after = node.after_id.as_ref();
-        let in_before = node.before_id.as_ref();
-        let position = in_after
-            .and_then(|id| after.positions.get(id.as_str()))
-            .or_else(|| in_before.and_then(|id| before.positions.get(id.as_str())));
-        if let Some(position) = position {
-            // Keyed by the union id, which is not always an id of either version.
-            pinned.insert(node.id.clone(), *position);
-        }
-    }
     let options = LayoutOptions {
-        pinned,
-        // Above 3,000 nodes the default scope is the changes only.
-        scope: Some(LayoutScope::All),
+        // Pins are keyed by union id, which is its own id for a node of the after version.
+        // They win over the before version's positions, which are left for the removed nodes.
+        pinned: after.positions.clone(),
         ..LayoutOptions::default()
     };
-    layout_diff(diff, &options)
+    layout_diff_on(diff, before, &options)
 }
 ```
 
-Every union node now has a known position: nothing is simulated, a node of the after version is
-where the after version has it, and a removed node stays where the before version had it. That
-is the whole promise, and the test checks it bit for bit on every corpus case, with merges,
-splits and changed ids among them.
+A node of the after version is where the after version has it, and a removed node stays where
+the before version had it. Nothing is simulated.
 
-If both exports carry their positions as `position`, the default `layout_diff` (and so
-`report_payload`, and the `kgdiff` command line) lays the diff out on them without any pins: the
-same layout, and the same report, byte for byte. That holds up to the large-graph threshold of
-3,000 nodes; above it the default layout covers the changes only, and the scope has to be said
-as above.
-
-### When a version removes nodes
-
-The layout of the after version cannot see the nodes that were removed, so it may place a new
-node where one of them was. It is rare (once in the corpus when this was written: the discs of an
-added and a removed node overlap by 0.16 world units in `dataset-data-lineage`) and the renderer
-moves labels apart, but the other order avoids it: lay the diff out first, on the previous map, and give the after
-version the positions of its diff.
-
-```rust
-pub fn diff_map_first(diff: &DiffResult, previous: &LayoutResult) -> Result<LayoutResult> {
-    let mut pinned: IndexMap<UnionId, Point> = IndexMap::default();
-    for node in &diff.nodes {
-        let in_before = node.before_id.as_ref();
-        if let Some(position) = in_before.and_then(|id| previous.positions.get(id.as_str())) {
-            pinned.insert(node.id.clone(), *position);
-        }
-    }
-    let options = LayoutOptions {
-        pinned,
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
-    layout_diff(diff, &options)
-}
-```
-
-```rust
-pub fn next_map_of(diff: &DiffResult, both: &LayoutResult) -> Result<LayoutResult> {
-    let options = LayoutOptions {
-        pinned: both.positions.clone(),
-        ..LayoutOptions::default()
-    };
-    layout_graph(&diff.after, &options)
-}
-```
-
-Both orders keep the map. They differ only in where new nodes go, so pick one and keep it.
+- For a version and the next one this gives the positions `layout_diff_on` gave when the next
+  version arrived, so there is no need to store the diff's layout.
+- Between versions further apart nothing moves either, but a removed node and a node added
+  since were never placed with each other in view, and may sit close together.
+- If both exports carry their positions as `position`, the default `layout_diff` (and so
+  `report_payload`, and the `kgdiff` command line) lays the diff out on them without any pins:
+  the same layout, and the same report, byte for byte. That holds up to the large-graph
+  threshold of 3,000 nodes; above it the default layout covers the changes only.
 
 ## Summaries and reports
 
@@ -466,6 +429,7 @@ change.
 | 4c   | The plain view: one graph in the viewer, colored by your categories      | 0.10, or after 1.0 | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
 | 4d   | Groups: a background per group, and a layout that keeps a group together | after 1.0          | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
 
-Also not there: `layout_graph` in TypeScript. `@kgdiff/layout` has no `layoutGraph`; it is
-planned for `@kgdiff/compute`, with the rest of the layout. In the browser, lay out the diff of a
-graph with itself, or better, compute layouts on the server as above.
+Also not there: `layout_graph`, `layout_diff_on` and `layout_after` in TypeScript.
+`@kgdiff/layout` has no counterpart of them; `layoutGraph` is planned for `@kgdiff/compute`,
+with the rest of the layout. In the browser, lay out the diff of a graph with itself, or better,
+compute layouts on the server as above.

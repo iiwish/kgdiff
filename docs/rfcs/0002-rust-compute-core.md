@@ -154,13 +154,13 @@ Cargo's `target/` is git-ignored; pnpm ignores the Rust crates and Cargo ignores
 
 #### Crates
 
-| Crate            | Contents                                                                                                                           | Depends on                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| `kgdiff-core`    | `normalize`, `diff`, `match_nodes`, `apply_delta`, `invert_delta`, `hash_graph`, JSON transports, `format_hunk`, `text_similarity` | indexmap, ryu-js, ICU4X; serde (optional) |
-| `kgdiff-formats` | `parse_graph`, `detect_format`, `compact_iri`                                                                                      | core, oxttl (D-9)                         |
-| `kgdiff-layout`  | `layout_diff`, `layout_graph`, `extend_layout`, `node_radius`, `estimate_label_width`, layout JSON                                 | core                                      |
-| `kgdiff-report`  | the text outputs of the CLI and the HTML report (payload, escaping, inlining), no I/O                                              | core, layout                              |
-| `kgdiff`         | argument parsing, inputs (gzip, UTF-16, size limits), atomic outputs, overwrite checks, colors, `apply`                            | all of the above                          |
+| Crate            | Contents                                                                                                                             | Depends on                                |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `kgdiff-core`    | `normalize`, `diff`, `match_nodes`, `apply_delta`, `invert_delta`, `hash_graph`, JSON transports, `format_hunk`, `text_similarity`   | indexmap, ryu-js, ICU4X; serde (optional) |
+| `kgdiff-formats` | `parse_graph`, `detect_format`, `compact_iri`                                                                                        | core, oxttl (D-9)                         |
+| `kgdiff-layout`  | `layout_diff`, `layout_graph`, `layout_diff_on`, `layout_after`, `extend_layout`, `node_radius`, `estimate_label_width`, layout JSON | core                                      |
+| `kgdiff-report`  | the text outputs of the CLI and the HTML report (payload, escaping, inlining), no I/O                                                | core, layout                              |
+| `kgdiff`         | argument parsing, inputs (gzip, UTF-16, size limits), atomic outputs, overwrite checks, colors, `apply`                              | all of the above                          |
 
 `kgdiff-report` is a crate of its own so that an application embedding the engine renders the same
 summary and Markdown as `kgdiff` without pulling in argument parsing and file I/O.

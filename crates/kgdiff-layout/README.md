@@ -43,45 +43,75 @@ two to the same `kgdiff.layout` bytes on both graphs of every corpus case: going
 a diff of it moves nothing. Scope `Changes` is `invalid-input`, since one graph has no changes
 to select.
 
-The next version of a graph keeps the previous version's map when it is laid out with the
-previous positions, as pins or as `position` on its nodes: those nodes stay exactly where they
-are, and only the new ones are placed.
+Known positions, as pins or as `position` on the nodes, are kept: those nodes stay exactly where
+they are, and only the others are placed. A layout keeps a known position exactly, and a layout
+document rounds coordinates to 0.01. Computed positions are on that grid already, so positions
+read back from a layout document stay as they are through any number of versions; a position
+from elsewhere (`300.125`) is kept exactly in the `LayoutResult` and written as `300.13`.
+
+## The next version on the same map
+
+A position belongs to a node, not to an id, and the diff is what knows which node of the next
+version continues which node of the previous one. `layout_diff_on` lays the diff out on the
+previous version's map: every node that map has stays exactly where it is, under whatever id it
+has now, removed nodes included, and only the new nodes are placed. `layout_after` then gives
+the next version the positions of its diff, without computing any. Going from a version to the
+next one, and from either to their diff, moves no node.
 
 ```rust
 use kgdiff_core::js::json;
-use kgdiff_core::{NormalizeOptions, normalize};
-use kgdiff_layout::{LayoutOptions, layout_from_json, layout_graph, layout_to_json};
+use kgdiff_core::{DiffOptions, NormalizeOptions, diff_graphs, normalize};
+use kgdiff_layout::{LayoutOptions, layout_after, layout_diff_on, layout_from_json, layout_graph, layout_to_json};
 
-let first = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[{"source":"a","target":"b","predicate":"p"}]}"#)?;
-let first = normalize(&first, NormalizeOptions::default())?;
-let layout = layout_graph(&first, &LayoutOptions::default())?;
+let v1 = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"},{"id":"c"}],"edges":[{"source":"a","target":"b","predicate":"p"},{"source":"b","target":"c","predicate":"p"}]}"#)?;
+let v1 = normalize(&v1, NormalizeOptions::default())?;
+let layout = layout_graph(&v1, &LayoutOptions::default())?;
 
 // Stored as a layout document, and read back when the next version arrives.
 let stored = json::to_string(&layout_to_json(&layout));
 let previous = layout_from_json(&json::parse(&stored)?)?;
 
-let next = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b"},{"id":"c"}],"edges":[{"source":"a","target":"b","predicate":"p"},{"source":"b","target":"c","predicate":"p"}]}"#)?;
-let next = normalize(&next, NormalizeOptions::default())?;
-let pinned = LayoutOptions { pinned: previous.positions.clone(), ..LayoutOptions::default() };
-let grown = layout_graph(&next, &pinned)?;
-assert_eq!(grown.positions["a"], previous.positions["a"]); // a and b do not move
-assert!(grown.positions.contains_key("c")); // c is placed beside them
+// Version 2: b continues under another id, c is gone and d is new.
+let v2 = json::parse(r#"{"nodes":[{"id":"a"},{"id":"b2","replaces":["b"]},{"id":"d"}],"edges":[{"source":"a","target":"b2","predicate":"p"},{"source":"b2","target":"d","predicate":"p"}]}"#)?;
+let v2 = normalize(&v2, NormalizeOptions::default())?;
+let diff = diff_graphs(v1, v2, DiffOptions::default())?;
+
+// The diff first, on the previous map: b2 is where b was, c stays, and d is placed.
+let both = layout_diff_on(&diff, &previous, &LayoutOptions::default())?;
+assert_eq!(both.positions["b2"], previous.positions["b"]);
+assert_eq!(both.positions["c"], previous.positions["c"]);
+
+// Then version 2, where its diff has it: the layout to store with version 2.
+let next = layout_after(&diff, &both, &LayoutOptions::default())?;
+assert_eq!(next.positions["b2"], previous.positions["b"]);
+assert_eq!(next.positions["d"], both.positions["d"]);
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-A layout keeps a known position exactly, and a layout document rounds coordinates to 0.01.
-Computed positions are on that grid already, so positions read back from a layout document stay
-as they are through any number of versions; a position from elsewhere (`300.125`) is kept exactly
-in the `LayoutResult` and written as `300.13`.
+- The positions are carried through the diff, from a union node's `before_id` to its union id
+  and its `after_id`. Laying the next version out with `layout_graph` and
+  `pinned: previous.positions.clone()` carries them by id, which is the same only when no id
+  changes: a node that continues under another id (a `replaces` hint, a match by similarity) is
+  placed again as if it were new, and an id given to another node pins that node where the old
+  one was.
+- The diff comes first because the layout of the next version alone cannot see the removed
+  nodes, and may put a new node where one of them was. On the diff, the new nodes are placed
+  clear of them.
+- The scope is every node, as for `layout_graph`. A pin in `options.pinned` wins over the
+  previous layout, which wins over a `position` on a node. Scope `Changes` and strategy `Union`
+  (which ignores known positions) are `invalid-input`, and so is, for `layout_after`, a layout
+  that does not place every node of the after version.
 
-A node that continues under another id is the same node only to the diff, so an application
-whose ids can change carries the positions through the diff instead of by id. The guide
+The tests hold both functions to the `kgdiff.layout` bytes of the same pins written by hand, on
+both graphs of every corpus case and on pairs whose ids change or are given to other nodes. The
+guide
 [Embed kgdiff in a Rust application](https://github.com/iiwish/kgdiff/blob/main/docs/guide/embedding.md)
 walks through it, from the first layout to a report and the browser, with code that is tested
 on the conformance corpus.
 
-`layout_graph` is new in 0.9 ([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), part 1) and
+`layout_graph`, `layout_diff_on` and `layout_after` are new in 0.9
+([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), part 1) and
 experimental for one minor release. The TypeScript package `@kgdiff/layout` has no counterpart;
-`@kgdiff/compute` will export it with the rest of the layout (RFC 0002, phase 5).
+`@kgdiff/compute` will export them with the rest of the layout (RFC 0002, phase 5).
 
 Licensed under the MIT license.
