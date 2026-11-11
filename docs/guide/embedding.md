@@ -399,24 +399,19 @@ For an interface of your own, read the diff and the layout out of the payload, b
 give its frames to the renderer (`buildScene` takes the same map as its `shapes` option):
 
 ```ts
-import { diffFromJSON, unpackDiffJSON } from "@kgdiff/core";
-import { layoutFromJSON } from "@kgdiff/layout";
-import { createRenderer } from "@kgdiff/renderer";
-import {
-  buildScene,
-  createViewState,
-  createVisualResolver,
-  getTheme,
-} from "@kgdiff/scene";
+import { diffFromJSON, unpackDiffJSON } from '@kgdiff/core';
+import { layoutFromJSON } from '@kgdiff/layout';
+import { createRenderer } from '@kgdiff/renderer';
+import { buildScene, createViewState, createVisualResolver, getTheme } from '@kgdiff/scene';
 
-const payload = await (await fetch("/changes/42/report.json")).json();
+const payload = await (await fetch('/changes/42/report.json')).json();
 const result = diffFromJSON(unpackDiffJSON(payload.diff)); // kgdiff-report packs the diff
 const layout = layoutFromJSON(payload.layout);
 
-const scene = buildScene(result, layout, { theme: "light" });
+const scene = buildScene(result, layout, { theme: 'light' });
 const resolver = createVisualResolver(scene);
-const container = document.getElementById("graph") as HTMLElement; // give it a size
-const renderer = createRenderer(container, { theme: getTheme("light") });
+const container = document.getElementById('graph') as HTMLElement; // give it a size
+const renderer = createRenderer(container, { theme: getTheme('light') });
 renderer.setFrame(resolver.resolve(createViewState()));
 ```
 
@@ -435,20 +430,14 @@ positions you already have:
 ```ts
 // Under the graph: after the background and the dot grid, before everything else.
 renderer.addLayer({
-  order: "under",
+  order: 'under',
   draw(ctx, view) {
     const k = view.camera.k;
-    ctx.fillStyle = "rgba(56, 189, 248, 0.10)"; // keep it soft, see below
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.10)'; // keep it soft, see below
     for (const domain of domains) {
       const corner = view.worldToScreen(domain); // { x, y, width, height } in world units
       ctx.beginPath();
-      ctx.roundRect(
-        corner.x,
-        corner.y,
-        domain.width * k,
-        domain.height * k,
-        12,
-      );
+      ctx.roundRect(corner.x, corner.y, domain.width * k, domain.height * k, 12);
       ctx.fill();
     }
   },
@@ -456,9 +445,9 @@ renderer.addLayer({
 
 // Over the graph: after the labels.
 const removeMarks = renderer.addLayer({
-  order: "over",
+  order: 'over',
   draw(ctx, view) {
-    ctx.fillStyle = "#16a34a";
+    ctx.fillStyle = '#16a34a';
     for (const id of certified) {
       const position = layout.positions.get(id);
       if (!position) continue;

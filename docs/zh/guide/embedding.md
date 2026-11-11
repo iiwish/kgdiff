@@ -312,24 +312,19 @@ shapes: Some(vec![
 要做自己的界面，就从载荷里读出 diff 和布局，构建场景，把它的帧交给渲染器：
 
 ```ts
-import { diffFromJSON, unpackDiffJSON } from "@kgdiff/core";
-import { layoutFromJSON } from "@kgdiff/layout";
-import { createRenderer } from "@kgdiff/renderer";
-import {
-  buildScene,
-  createViewState,
-  createVisualResolver,
-  getTheme,
-} from "@kgdiff/scene";
+import { diffFromJSON, unpackDiffJSON } from '@kgdiff/core';
+import { layoutFromJSON } from '@kgdiff/layout';
+import { createRenderer } from '@kgdiff/renderer';
+import { buildScene, createViewState, createVisualResolver, getTheme } from '@kgdiff/scene';
 
-const payload = await (await fetch("/changes/42/report.json")).json();
+const payload = await (await fetch('/changes/42/report.json')).json();
 const result = diffFromJSON(unpackDiffJSON(payload.diff)); // kgdiff-report 写出的 diff 是压缩形式
 const layout = layoutFromJSON(payload.layout);
 
-const scene = buildScene(result, layout, { theme: "light" });
+const scene = buildScene(result, layout, { theme: 'light' });
 const resolver = createVisualResolver(scene);
-const container = document.getElementById("graph") as HTMLElement; // 要有尺寸
-const renderer = createRenderer(container, { theme: getTheme("light") });
+const container = document.getElementById('graph') as HTMLElement; // 要有尺寸
+const renderer = createRenderer(container, { theme: getTheme('light') });
 renderer.setFrame(resolver.resolve(createViewState()));
 ```
 
@@ -342,20 +337,14 @@ renderer.setFrame(resolver.resolve(createViewState()));
 ```ts
 // 在图的下面：背景和点阵之后，其他一切之前。
 renderer.addLayer({
-  order: "under",
+  order: 'under',
   draw(ctx, view) {
     const k = view.camera.k;
-    ctx.fillStyle = "rgba(56, 189, 248, 0.10)"; // 颜色要淡，原因见下
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.10)'; // 颜色要淡，原因见下
     for (const domain of domains) {
       const corner = view.worldToScreen(domain); // 世界坐标下的 { x, y, width, height }
       ctx.beginPath();
-      ctx.roundRect(
-        corner.x,
-        corner.y,
-        domain.width * k,
-        domain.height * k,
-        12,
-      );
+      ctx.roundRect(corner.x, corner.y, domain.width * k, domain.height * k, 12);
       ctx.fill();
     }
   },
@@ -363,9 +352,9 @@ renderer.addLayer({
 
 // 在图的上面：标签之后。
 const removeMarks = renderer.addLayer({
-  order: "over",
+  order: 'over',
   draw(ctx, view) {
-    ctx.fillStyle = "#16a34a";
+    ctx.fillStyle = '#16a34a';
     for (const id of certified) {
       const position = layout.positions.get(id);
       if (!position) continue;
