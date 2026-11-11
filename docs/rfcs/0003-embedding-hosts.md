@@ -504,11 +504,12 @@ all three (a layout, the next version, a diff, a report with that layout).
   the previous positions as pins. By id, every node the diff matched under another id moves:
   53 nodes in 9 of the 29 corpus cases. And laid out before the diff, the after version put a
   new node on a removed one once in the corpus (`dataset-data-lineage`, discs overlapping by
-  0.16). `layout_diff_on` and `layout_after` are the way that holds, in `kgdiff-layout`
-  instead of in every host: on all 29 cases, in both directions, every node the previous
-  layout places stays bit for bit, no added node overlaps a removed one, and the after
-  version is where its diff has it with no simulation run. The guide and its example use
-  them.
+  0.16). `layout_diff_on` and `layout_after`
+  ([#86](https://github.com/iiwish/kgdiff/pull/86)) are the way that holds, in
+  `kgdiff-layout` instead of in every host: on all 29 cases, in both directions, every node
+  the previous layout places stays bit for bit, no added node overlaps a removed one, and the
+  after version is where its diff has it with no simulation run. The guide and its example
+  use them.
 - **Part 2, reports.** `ReportLayout`, `report_payload_with` and `build_report_html_with` as
   written; `Default` equals `report_payload` byte for byte. A given layout is refused with
   `invalid-input` (details: `node`) by the two rules of the design. `report.v1.json` is in
