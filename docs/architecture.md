@@ -28,7 +28,7 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 - **Deterministic.** Same input + same options → byte-identical output (diff JSON, layout,
   hunk order). Seeded PRNGs only; no `Math.random`, no `Date.now()` in results.
 - **Pure core, thin shells.** Algorithms are pure functions over immutable data. I/O, DOM and
-  timers live only in `renderer`, `viewer` and `cli`.
+  timers live only in `renderer` and `viewer` (and in the native `kgdiff` command line).
 - **Contracts first.** Each package exposes a small typed API (`src/index.ts`). Internals are
   free to change; contracts change only with this document.
 - **Zero-config, fully configurable.** Good defaults for every option, every default documented.
@@ -49,6 +49,9 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 @kgdiff/viewer     <kgdiff-viewer> web component and its elements: modes, change list, details, review (DOM)
 @kgdiff/g6         AntV G6 v5 adapter: render a kgdiff scene inside a G6 graph   (peer: @antv/g6)
 kgdiff             CLI: terminal diff, JSON / delta / Markdown, single-file HTML report
+                   (`@kgdiff/cli`: an npm launcher of the native Rust binary, no TypeScript compute)
+crates/            Rust: kgdiff-core, -formats, -layout, -report, the `kgdiff` binary, kgdiff-wasm
+                   (`@kgdiff/compute`, a preview)
 apps/site          landing page + playground (drag two files in, get a diff)
 ```
 
@@ -56,10 +59,16 @@ Dependency graph (arrows point at dependencies):
 
 ```
 core ◀── formats
-core ◀── layout ◀── scene ◀── renderer ◀── viewer ◀── cli
-                    scene ◀── g6                      ▲
-          formats ◀──────────────────────── viewer ───┘
+core ◀── layout ◀── scene ◀── renderer ◀── viewer
+                    scene ◀── g6               ▲
+          formats ◀─────────────────── viewer ─┘
 ```
+
+`@kgdiff/cli` is not in the graph: it holds no TypeScript compute, only a launcher of the Rust
+`kgdiff` binary. The Rust crates (`kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`,
+`kgdiff-report`) implement the same contracts as `core`, `formats` and `layout`; the
+[conformance corpus](https://github.com/iiwish/kgdiff/blob/main/conformance/README.md) keeps both
+byte-identical (RFC 0002, `docs/rfcs/0002-rust-compute-core.md`).
 
 ## Data flow
 
@@ -72,7 +81,7 @@ text ──formats.parseGraph──▶ GraphInput ×2
      ──renderer.setFrame──▶ pixels
 ```
 
-The CLI runs everything up to `layoutDiff` in Node and embeds `packDiffJSON(diffToJSON(…))` +
+The CLI (the Rust `kgdiff-report`) runs everything up to `layoutDiff` natively and embeds `packDiffJSON(diffToJSON(…))` +
 `layoutToJSON` in the HTML report (`ReportPayload`), so the browser only builds the scene and
 renders. Reports are reproducible and open instantly. A payload may also leave the layout out
 (an application that computed the diff itself): the viewer then runs `layoutDiff` with its
@@ -210,6 +219,9 @@ and D-11).
 ## Engineering conventions
 
 - TypeScript 7, strict, `noUncheckedIndexedAccess`, ESM only, Node ≥ 22, evergreen browsers.
+- Rust (`crates/`, one Cargo workspace): `cargo test --workspace`, `cargo clippy`, `cargo fmt`; the
+  crates and the TypeScript packages share one version number and are checked against the same
+  conformance corpus (`pnpm conformance:update`, `pnpm conformance:replay`).
 - Relative imports use `.js` extensions (NodeNext). Cross-package imports use the package name;
   in development `@kgdiff/*` resolves to `packages/*/src/index.ts` (see `tsconfig.base.json`,
   `vitest.shared.ts`), so nothing needs building before tests.

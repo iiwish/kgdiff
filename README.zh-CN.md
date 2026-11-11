@@ -44,7 +44,7 @@ npx @kgdiff/cli before.ttl after.ttl -o report.html --open
 
 - **`<kgdiff-viewer>`**：与框架无关的 Web 组件，三种对比方式——**叠加**、**滑动对比**（拖动分隔线对照前后）、**回放**（旧图按变更组逐步演变成新图），每种都可以叠加**仅看变更**（大图默认打开）；外加可搜索、可筛选的变更列表，带字符级差异的详情面板，审阅进度，深链接，键盘快捷键，深浅主题，中英文界面。
 - **`kgdiff` 命令行**：彩色终端摘要，`--stat`、`--name-status`、`--json`、`--delta`，适合 PR 评论的 `--markdown`，供 CI 使用的 `--exit-code`，应用补丁的 `apply`，以及可离线打开的单文件 HTML 报告（`-o report.html`，加 `--reproducible` 时逐字节可复现）。
-- **库**：零依赖的差异引擎、解析器、稳定布局引擎、与渲染器无关的视觉模型、Canvas 渲染器，以及 AntV G6 适配器。
+- **库**：零依赖的差异引擎、解析器（RDF 用 `n3`）、稳定布局引擎、与渲染器无关的视觉模型、Canvas 渲染器，以及 AntV G6 适配器。
 
 ## 快速开始
 
@@ -167,7 +167,7 @@ for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'zh-CN').t
 
 ## 示例数据
 
-[`examples/datasets`](examples/datasets) 有 5 组真实感的前后版本，并附带 kgdiff 应当报告的精确变化：企业信用知识图谱本体（中文）、一次 OBO 疾病本体发布、两次 id 随机的 LLM 抽取、dbt 风格的数据血缘、类 schema.org 的 Turtle 词表。`scripts/gen-synthetic.ts` 可生成大规模合成数据。
+[`examples/datasets`](examples/datasets) 有 6 组真实感的前后版本，并附带 kgdiff 应当报告的精确变化：企业信用知识图谱本体（中、英文各一份）、一次 OBO 疾病本体发布、两次 id 随机的 LLM 抽取、dbt 风格的数据血缘、类 schema.org 的 Turtle 词表。`scripts/gen-synthetic.ts` 可生成大规模合成数据。
 
 ## 开发
 
@@ -186,7 +186,7 @@ cargo run -p kgdiff -- examples/datasets/enterprise-kg/before.json \
 
 ## 路线图
 
-导出 KGCL 和 RDF Patch · 按变更组接受 / 拒绝并导出过滤后的补丁 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器 · Cytoscape.js 与 Sigma.js 适配器 · Python 绑定。
+1.0：`@kgdiff/compute` 取代浏览器里的 TypeScript 计算模块（[RFC 0002](docs/rfcs/0002-rust-compute-core.md) 第 5 阶段）· [RFC 0003](docs/rfcs/0003-embedding-hosts.md)（嵌入宿主）的其余部分 · 导出 KGCL 和 RDF Patch · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器 · Cytoscape.js 与 Sigma.js 适配器 · Python 绑定。
 
 ## 许可证
 

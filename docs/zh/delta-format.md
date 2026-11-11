@@ -47,6 +47,10 @@
 - 严格模式下，遇到第一个不满足的前置条件就立即失败，抛出 `KgdiffError('delta-conflict', …, { opIndex, op, reason })`；基准哈希不一致时抛出 `KgdiffError('delta-base-mismatch')`。
 - 非严格模式（`strict: false`）跳过基准哈希检查和所有前置条件不成立的操作，并按操作顺序把每个被跳过的操作报告给 `ApplyOptions.onSkip({ index, op, reason })`，其中的 `reason` 和严格模式会抛出的文字相同。格式不正确的操作（未知类型、字段类型错误）在两种模式下都是输入错误：`KgdiffError('invalid-input')`。
 
+## 已知限制：被忽略的属性
+
+使用 `ignoreAttrs`（`--ignore-attr`）时，被忽略属性的改动不会进入增量，但 `target.hash` 是整个 after 图（含这些属性）的哈希。因此把这样的增量应用到 before 图上，得到的图的哈希与 `target.hash` 对不上，`kgdiff apply` 会警告结果与增量的目标不一致。上面的保证只对没有忽略属性时生成的增量成立。
+
 ## 与其他格式的关系
 
 | kgdiff                               | KGCL（INCAtools）             | RDF Patch                |

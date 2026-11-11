@@ -65,6 +65,14 @@ canonical JSON equality (object keys sorted).
   order, with the same `reason` text strict mode would raise. Malformed ops (unknown kind,
   ill-typed fields) are input errors in both modes: `KgdiffError('invalid-input')`.
 
+## Known limitation: ignored attributes
+
+With `ignoreAttrs` (`--ignore-attr`), changes to the ignored attributes do not enter the delta,
+but `target.hash` is the hash of the whole after graph, attributes included. Applying such a
+delta to the before graph therefore gives a graph whose hash differs from `target.hash`, and
+`kgdiff apply` warns that the result differs from the delta's target. The guarantee above holds
+for deltas made without ignored attributes.
+
 ## Relation to other formats
 
 | kgdiff                               | KGCL (INCAtools)              | RDF Patch                       |
