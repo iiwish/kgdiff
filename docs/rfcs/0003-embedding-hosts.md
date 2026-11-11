@@ -1,8 +1,10 @@
 # RFC 0003: Embedding hosts and the plain view
 
 - **Status:** Draft, proposed. The parts planned for 0.9 are merged, for release as 0.9.0:
-  part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d); part 2,
-  reports with the caller's layout and `report.v1.json`
+  part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d), and
+  with it `layout_diff_on` and `layout_after`, which carry a layout to the next version
+  through the diff ([#86](https://github.com/iiwish/kgdiff/pull/86)); part 2, reports with
+  the caller's layout and `report.v1.json`
   ([#79](https://github.com/iiwish/kgdiff/pull/79), 6c3a764); part 4a, renderer layers
   ([#80](https://github.com/iiwish/kgdiff/pull/80), d3e1dac). See [0.9 results](#09-results).
   Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges; the
@@ -143,9 +145,11 @@ pub fn layout_graph(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutRes
   changes); `large_graph_threshold`, `context_hops` and `hub_degree` are not read.
 - **Known positions** work as in `layout_diff`: a node's `position`, or `pinned`, makes the
   layout anchored; those nodes stay exactly where they are and only the others are placed.
-  That is how the next version of a graph keeps the previous version's map. The crate's
-  documentation gains this as a tested example, with the 0.01 grid of the layout document
-  (see [Motivation](#motivation)) stated.
+  That is how the next version of a graph keeps the previous version's map for the nodes
+  whose id is the same in both versions, and only for those: positions are known by id (for
+  the others, see "The next version" below). The crate's documentation gains this as a
+  tested example, with the 0.01 grid of the layout document (see [Motivation](#motivation))
+  stated.
 - **Implementation.** It may start as the definition, literally: diffing 10k nodes / 30k
   edges with itself costs about 30 ms natively. Building the unchanged union directly, without
   running matching, classification and delta emission, comes when a host needs it for large
@@ -488,8 +492,10 @@ Merged on 2026-11-10, in three pull requests that touch no file in common:
 [#78](https://github.com/iiwish/kgdiff/pull/78) (part 1, 0a52a4d),
 [#79](https://github.com/iiwish/kgdiff/pull/79) (part 2, 6c3a764) and
 [#80](https://github.com/iiwish/kgdiff/pull/80) (part 4a, d3e1dac). No corpus file, layout byte
-or CLI report changed. Each is checked by its own tests; no test yet takes one graph through
-all three (a layout, the next version, a diff, a report with that layout).
+or CLI report changed. Each is checked by its own tests, and
+`crates/kgdiff-report/tests/mental_map.rs` (4ef67c0, with the embedding guide) takes both
+graphs of every corpus case through all three: a layout, the next version, a diff, a report
+with that layout.
 
 - **Part 1, `layout_graph`.** Implemented as the definition, literally: the graph is diffed
   with itself and the result laid out with scope `All`; `LayoutInput` is untouched. The
@@ -498,10 +504,9 @@ all three (a layout, the next version, a diff, a report with that layout).
   the fixture graphs; the same graph in another order gives the same bytes. A 3,500-node
   graph, above the default threshold, is laid out whole. The crate's documentation has the
   tested example and states the 0.01 grid.
-- **Part 1, the next version.** The test that takes one graph through all three parts came
-  with the embedding guide (4ef67c0, `crates/kgdiff-report/tests/mental_map.rs`), and found
-  that "how the next version of a graph keeps the previous version's map" needs more than
-  the previous positions as pins. By id, every node the diff matched under another id moves:
+- **Part 1, the next version.** That end-to-end test found that "how the next version of a
+  graph keeps the previous version's map" needs more than the previous positions as pins.
+  By id, every node the diff matched under another id moves:
   53 nodes in 9 of the 29 corpus cases. And laid out before the diff, the after version put a
   new node on a removed one once in the corpus (`dataset-data-lineage`, discs overlapping by
   0.16). `layout_diff_on` and `layout_after`
