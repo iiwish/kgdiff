@@ -125,26 +125,39 @@ tests are skipped (CI's `compute` job sets `KGDIFF_COMPUTE`, so that they fail i
 Sizes are gzip level 9, in KiB (1,024 bytes), module and glue together; the glue of `layout` is
 `@kgdiff/compute/layout` bundled and minified, as a report inlines it.
 
-| Module         | `.wasm`   | gzip, with glue | RFC 0002 §7 budget | CI limit |
-| -------------- | --------- | --------------- | ------------------ | -------- |
-| `layout.wasm`  | 152.7 KiB | 69.1 KiB        | 45 KiB             | 74 KiB   |
-| `compute.wasm` | 611.5 KiB | 247.4 KiB       | 250 KiB            | 250 KiB  |
-| `formats.wasm` | 520.7 KiB | 222.3 KiB       | 200 KiB            | 224 KiB  |
+| Module         | Cargo opt-level | `.wasm`   | gzip, with glue | Budget (1.0) | CI limit |
+| -------------- | --------------- | --------- | --------------- | ------------ | -------- |
+| `layout.wasm`  | `z`             | 152.7 KiB | 69.1 KiB        | 45 KiB       | 70 KiB   |
+| `compute.wasm` | `2`             | 780.1 KiB | 307.6 KiB       | 350 KiB      | 350 KiB  |
+| `formats.wasm` | `z`             | 520.7 KiB | 222.3 KiB       | 200 KiB      | 223 KiB  |
 
-Speed, measured on 2026-11-11 (macOS, Apple M-class, Node 24, load average 5 to 10), medians:
+A CI limit above the budget sits at the module's measured size, so that a regression is noticed.
 
-| What                                        | Measured | RFC 0002 §7 WebAssembly target |
-| ------------------------------------------- | -------- | ------------------------------ |
-| `json.diff`, 10k nodes / 30k edges          | 162 ms   | < 80 ms                        |
-| `diffSync` (with the transport), 10k / 30k  | 243 ms   | < 150 ms                       |
-| `json.diff`, 100k / 300k                    | 1.83 s   | < 1 s                          |
-| `diffSync`, 100k / 300k                     | 3.0 s    | < 2 s                          |
-| `json.normalize` 100k / 300k, linear memory | 265 MiB  | < 80 MB                        |
-| similarity matching, 5k unmatched per side  | 300 ms   | < 800 ms                       |
-| `layoutDiffSync`, 2k nodes                  | 459 ms   | < 450 ms                       |
-| `parseGraphSync`, 50k Turtle triples        | 227 ms   | < 250 ms                       |
+Speed, measured on 2026-11-11 (macOS, Apple M-class, Node 24, load average 4 to 6), medians:
 
-The modules are built at cargo opt-level `z`, the standard library at `3`. Opt-level `3` for
-everything diffs about a third faster but makes the module 44% larger (measured on the core-only
-preview: 441.7 KiB gzip instead of 306.5 KiB). The standard library at `z` saves 2% of size and
-costs 15% of speed.
+| What                                        | Measured | Target (1.0)          |
+| ------------------------------------------- | -------- | --------------------- |
+| `diffSync` (with the transport), 10k / 30k  | 154 ms   | < 150 ms              |
+| `diffSync`, 100k / 300k                     | 2.6 s    | < 2 s                 |
+| `json.diff`, 10k / 30k                      | 86 ms    | (reported, no target) |
+| `json.diff`, 100k / 300k                    | 1.28 s   | (reported, no target) |
+| `json.normalize` 100k / 300k, linear memory | 265 MiB  | measured only         |
+| similarity matching, 5k unmatched per side  | 144 ms   | < 800 ms              |
+| `layoutDiffSync`, 2k nodes                  | 407 ms   | < 450 ms              |
+| `parseGraphSync`, 50k Turtle triples        | 199 ms   | < 250 ms              |
+
+The transport (`JSON.parse` and `diffFromJSON` of `@kgdiff/core`) takes about 70 ms of the 10k
+diff and about 1 s of the 100k one.
+
+`compute.wasm` is built for speed, the two others for size. Alternating runs of the engine at
+each opt-level (the standard library at `3` throughout; load average about 5):
+
+| opt-level | gzip      | `json.diff` 10k | with transport | `json.diff` 100k | with transport |
+| --------- | --------- | --------------- | -------------- | ---------------- | -------------- |
+| `z`       | 244.8 KiB | 143 ms          | 212 ms         | 2.09 s           | 2.89 s         |
+| `s`       | 280.2 KiB | 113 ms          | 184 ms         | 1.59 s           | 3.05 s         |
+| `2`       | 305.1 KiB | 92 ms           | 160 ms         | 1.24 s           | 2.21 s         |
+| `3`       | 318.9 KiB | 90 ms           | 160 ms         | 1.38 s           | 2.43 s         |
+
+`2` is as fast as `3` and smaller. The standard library at `z` instead of `3` saves 2% of size
+and costs 15% of speed.

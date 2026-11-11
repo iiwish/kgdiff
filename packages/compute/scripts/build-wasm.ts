@@ -59,6 +59,8 @@ interface ModuleSpec {
   readonly limit?: number;
   /** For `layout`, inlined in reports: the entry whose bundled JavaScript counts as glue. */
   readonly entry?: string;
+  /** The cargo opt-level of the module's own code; default `"z"`, optimized for size. */
+  readonly optLevel?: string;
 }
 
 const MODULES: readonly ModuleSpec[] = [
@@ -74,9 +76,14 @@ const MODULES: readonly ModuleSpec[] = [
     name: 'compute',
     features: 'engine',
     out: join(PACKAGE, 'wasm'),
-    budget: 250 * KIB,
-    limit: 250 * KIB,
+    // Raised from 250 for 1.0 by the maintainer (2026-11-11), so that the engine can be built
+    // for speed: the diff including the transport to a DiffResult is the gate.
+    budget: 350 * KIB,
+    limit: 350 * KIB,
+    // Measured against `z` and `3` (README, "Size and speed"): as fast as `3`, 4% smaller.
+    optLevel: '2',
   },
+  { name: 'corpus', features: 'corpus', out: join(PACKAGE, 'test/wasm'), optLevel: '2' },
   {
     name: 'formats',
     features: 'parsers',
@@ -84,22 +91,19 @@ const MODULES: readonly ModuleSpec[] = [
     budget: 200 * KIB,
     limit: 223 * KIB,
   },
-  { name: 'corpus', features: 'corpus', out: join(PACKAGE, 'test/wasm') },
 ];
 
 /**
- * The cargo profile and flags: release, optimized for size, one codegen unit, LTO; the standard
+ * The cargo profile and flags: release, optimized for size unless a module says otherwise
+ * (`optLevel`), one codegen unit, LTO; the standard
  * library rebuilt with `optimize_for_size` and panics that abort at once (a panic in WebAssembly
  * traps either way; this leaves out the formatting of its message). The standard library itself
  * keeps opt-level 3, as the prebuilt one has it: at `z` the diff is about 15% slower, for 2% of
- * size. Opt-level 3 for everything diffs about a third faster but makes the module 44% larger
- * (README, "Why opt-level `z`").
+ * size.
  */
 const CARGO = [
   '--config',
   'profile.compute.inherits="release"',
-  '--config',
-  'profile.compute.opt-level="z"',
   '--config',
   'profile.compute.lto=true',
   '--config',
@@ -209,6 +213,8 @@ for (const spec of MODULES) {
       TARGET_DIR,
       '--locked',
       ...CARGO,
+      '--config',
+      `profile.compute.opt-level=${/^\d$/.test(spec.optLevel ?? 'z') ? spec.optLevel : `"${spec.optLevel ?? 'z'}"`}`,
     ],
     { RUSTC_BOOTSTRAP: '1', RUSTFLAGS },
   );

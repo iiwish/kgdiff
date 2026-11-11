@@ -119,7 +119,7 @@ const updated = applyDelta(graph, delta);
 
 ## 浏览器里的 Rust 引擎
 
-`@kgdiff/compute` 是编译成 WebAssembly 的 kgdiff Rust 引擎，在任何 JavaScript 引擎里算出的结果都与 kgdiff 命令行逐字节相同。它分成三个模块，各自只在用到时加载：`compute.wasm`（diff 与匹配，gzip 后约 250 KiB）、`formats.wasm`（解析器）和 `layout.wasm`（diff 的布局，小到可以内联进页面）。
+`@kgdiff/compute` 是编译成 WebAssembly 的 kgdiff Rust 引擎，在任何 JavaScript 引擎里算出的结果都与 kgdiff 命令行逐字节相同。它分成三个模块，各自只在用到时加载：`compute.wasm`（diff 与匹配，gzip 后约 310 KiB）、`formats.wasm`（解析器）和 `layout.wasm`（diff 的布局，小到可以内联进页面）。
 
 ```ts
 import { init, diffSync, layoutDiffSync } from '@kgdiff/compute';
