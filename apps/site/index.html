@@ -662,8 +662,8 @@ import { layoutDiff } from '@kgdiff/layout';
 import { buildScene } from '@kgdiff/scene';
 import { createDiffGraph } from '@kgdiff/g6';
 
-const result = diff(before, after, { hierarchyPredicates: ['is_a'] });
-const scene = buildScene(result, layoutDiff(result), { theme: 'light' });
+const result = await diff(before, after, { hierarchyPredicates: ['is_a'] });
+const scene = buildScene(result, await layoutDiff(result), { theme: 'light' });
 
 // A G6 v5 Graph with kgdiff's encodings, hover and click-to-select.
 const view = await createDiffGraph('#container', scene);

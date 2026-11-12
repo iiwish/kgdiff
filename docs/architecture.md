@@ -56,16 +56,21 @@ crates/            Rust: kgdiff-core, -formats, -layout, -report, the `kgdiff` b
 apps/site          landing page + playground (drag two files in, get a diff)
 ```
 
-Dependency graph (arrows point at dependencies):
+Dependency graph (arrows point at dependencies; each package also depends on `core` directly, and
+`viewer` on `layout` and `scene` as well):
 
 ```
 core ◀── layout ◀── scene ◀── renderer ◀── viewer
                     scene ◀── g6
 ```
 
-`@kgdiff/compute` is not in the graph: `core` and `layout` load it with a dynamic `import()` when
-a function that computes is first called (it depends on them for their types and read path), and
-the viewer loads it on demand too (layouts, diffs, and the parsers for text sources), so a bundle
+`@kgdiff/compute` is not in the graph, although `core`, `layout` and `viewer` list it in their
+`dependencies`: installing any of them installs it, and `compute` and the two model packages
+depend on each other in `package.json`. No module imports the other back when it loads: `compute`
+imports `core` and `layout` (their types and read path), while `core` and `layout` load `compute`
+only with a dynamic `import()` when a function that computes is first called, and declare the
+few functions they call instead of importing its types (`compute`'s tests check them). The
+viewer loads it on demand too (layouts, diffs, and the parsers for text sources), so a bundle
 that only reads reports contains no WebAssembly. The parsers' types (`ParseOptions`,
 `ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are defined by `@kgdiff/core` and
 re-exported by `@kgdiff/compute`. `@kgdiff/formats` (deprecated, not published from 1.0 on) is not
