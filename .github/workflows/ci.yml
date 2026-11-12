@@ -126,7 +126,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: cargo build -p kgdiff-core -p kgdiff-layout --target wasm32-unknown-unknown --locked
 
-  # Licenses, advisories, duplicate crates and sources of every Rust dependency (deny.toml).
+  # Licenses, advisories, duplicate crates and sources of every Rust dependency (.cargo/deny.toml).
   cargo-deny:
     name: cargo deny
     runs-on: ubuntu-latest

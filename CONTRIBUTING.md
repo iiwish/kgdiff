@@ -43,7 +43,7 @@ cargo test --workspace                          # the crates' tests and the conf
 cargo test -p kgdiff-core --test conformance    # which parts of the corpus kgdiff-core passes
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all
-cargo deny check                                # licenses, advisories, duplicates (deny.toml)
+cargo deny check                                # licenses, advisories, duplicates (.cargo/deny.toml)
 cargo bench -p kgdiff-core                      # the native targets of RFC 0002 §7
 pnpm build:viewer-assets                        # the viewer bundles the Rust HTML reports embed
 cargo test -p kgdiff-report --features embed-viewer

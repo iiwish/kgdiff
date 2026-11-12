@@ -209,13 +209,13 @@ the same version.
 ## One-time setup
 
 The repository is `iiwish/kgdiff` (package metadata, `release.yml`, `CITATION.cff`,
-`SECURITY.md`, the issue and pull request templates); security reports and conduct issues go to
+`.github/SECURITY.md`, the issue and pull request templates); security reports and conduct issues go to
 num2048@163.com.
 
 1. **GitHub.** Create the repository. Under Settings → Actions → General, allow GitHub Actions to
    create and approve pull requests. Under Settings → Environments, create `npm` with deployment
    branches limited to `main` (add required reviewers if releases should wait for a click).
-   Under Settings → Code security, enable private vulnerability reporting (see `SECURITY.md`).
+   Under Settings → Code security, enable private vulnerability reporting (see `.github/SECURITY.md`).
 2. **npm.** Create the `kgdiff` organization, which owns the `@kgdiff` scope, and turn on 2FA.
 3. **First publish, by hand.** Trusted publishing can only be configured for a package that
    already exists, so the first version is published from a maintainer's machine (it has no

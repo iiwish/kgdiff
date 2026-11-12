@@ -8,4 +8,4 @@ contact_links:
     about: An idea that is not a concrete proposal yet? Start it in Discussions.
   - name: Report a security vulnerability
     url: https://github.com/iiwish/kgdiff/security/advisories/new
-    about: Please report vulnerabilities privately (see SECURITY.md), not in a public issue.
+    about: Please report vulnerabilities privately (see .github/SECURITY.md), not in a public issue.
