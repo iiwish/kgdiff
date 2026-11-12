@@ -22,7 +22,7 @@ kgdiff 0.11 在浏览器和 Node 里的所有计算都改由编译成 WebAssembl
 和 `layoutAfter(diff, layout, options?)`，用来在多个版本之间保持同一张地图（含义见[在 Rust 应用中嵌入](./embedding.md)，
 TypeScript 版相同）。
 
-`@kgdiff/core` 的 `log2` 已弃用，会在 0.11.0 发布前随使用它的 TypeScript 引擎一起移除；请改用 `Math.log2`。
+`@kgdiff/core` 的 `log2` 已随使用它的 TypeScript 引擎一起移除；请改用 `Math.log2`。`@kgdiff/formats` 保留 `FORMAT_EXTENSIONS`（同步）和它的类型；它的 TypeScript 解析器已移除，三个函数都由 kgdiff 的解析器执行（见上）。
 
 ### 两种迁移方式
 

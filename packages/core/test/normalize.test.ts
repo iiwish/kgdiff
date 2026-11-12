@@ -9,7 +9,7 @@ import {
   normalize,
 } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { diff } from '../src/sync.js';
+import { diff } from './support/engine.js';
 
 function deepFreeze<T>(value: T): T {
   if (value && typeof value === 'object') {

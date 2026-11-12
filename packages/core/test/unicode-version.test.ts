@@ -22,7 +22,8 @@ import {
 } from '@kgdiff/core';
 import { describe, expect, it, vi } from 'vitest';
 import { canonicalGraphs } from '../src/json.js';
-import { diff } from '../src/sync.js';
+import { diff } from './support/engine.js';
+import otherWriter from './support/other-unicode.json' with { type: 'json' };
 
 const nativeNormalize = String.prototype.normalize;
 
@@ -138,11 +139,10 @@ describe.each(CASES)('diffFromJSON on another Unicode version: %s', (_name, b, a
   });
 
   it('opens what a runtime with other tables wrote', () => {
-    // Written where NFC is the real NFD, read here: the text stays as that writer made it.
-    const { result: there } = onOtherUnicode(() => {
-      const other = diff(b, a);
-      return { json: JSON.stringify(diffToJSON(other)), hash: hashGraph(other.after) };
-    });
+    // Written where NFC is the real NFD, read here: the text stays as that writer made it. The
+    // writer ran in this process with `String.prototype.normalize` stubbed, which only the
+    // TypeScript engine (deleted in 0.11) could: what it wrote for each case is kept as data.
+    const there = otherWriter[_name];
     const back = diffFromJSON(JSON.parse(there.json) as DiffJSON);
     expect(hashGraph(back.after)).toBe(there.hash);
     expect(back.after.nodes.get('cafe')?.label).toBe(nativeNormalize.call('Café Zürich', 'NFD'));

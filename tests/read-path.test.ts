@@ -1,6 +1,7 @@
 /**
- * Pins the boundary between the read path and the compute code phase 5 deletes
- * (`read-path.ts`): deleting the `remove` files must not break any `keep` file.
+ * Pins what stays in TypeScript (`read-path.ts`): the source files of the packages are exactly
+ * the listed ones, so compute code cannot come back unnoticed, and the read path takes only
+ * types from the entry, whose compute functions load WebAssembly.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, posix, relative } from 'node:path';
@@ -38,29 +39,28 @@ function resolve(from: string, specifier: string): string {
   return posix.normalize(posix.join(posix.dirname(from), specifier.replace(/\.js$/, '.ts')));
 }
 
-describe.each(READ_PATH)('read path of $dir', ({ dir, entry, keep, remove }) => {
-  it('assigns every source file to exactly one group', () => {
-    const listed = [...entry, ...keep, ...remove];
+describe.each(READ_PATH)('what stays in TypeScript of $dir', ({ dir, entry, keep }) => {
+  it('has exactly the listed source files', () => {
+    const listed = [...entry, ...keep];
     expect(new Set(listed).size, 'a file is listed twice').toBe(listed.length);
     expect([...listed].sort()).toEqual(sourceFiles(dir));
   });
 
-  it('keeps every file of the read path free of imports of the compute code', () => {
-    const removed = new Set(remove);
+  it('keeps the read path to itself and the types of the entry', () => {
+    const kept = new Set(keep);
     const entries = new Set(entry);
     const crossings: string[] = [];
     for (const file of keep) {
       const source = readFileSync(join(root, dir, file), 'utf8');
       for (const { specifier, typeOnly } of relativeImports(source)) {
         const target = resolve(file, specifier);
-        if (removed.has(target)) crossings.push(`${file} imports ${target}`);
-        else if (entries.has(target) && !typeOnly) {
-          crossings.push(`${file} imports the entry ${target} for values (use \`import type\`)`);
-        }
+        if (entries.has(target)) {
+          if (!typeOnly) {
+            crossings.push(`${file} imports the entry ${target} for values (use \`import type\`)`);
+          }
+        } else if (!kept.has(target)) crossings.push(`${file} imports ${target}, not listed`);
       }
     }
-    // Every keep file is checked, so the transitive closure of `keep` stays inside `keep` and
-    // the entry's types: no chain of imports reaches a removed file.
     expect(crossings, relative(root, join(root, dir))).toEqual([]);
   });
 });

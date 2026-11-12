@@ -15,9 +15,6 @@
  * multi-valued fields as sorted arrays.
  */
 import type { GraphInput } from '@kgdiff/core';
-import { FORMAT_EXTENSIONS } from './detect.js';
-
-export { FORMAT_EXTENSIONS };
 
 export type FormatId =
   /** kgdiff native JSON and the common JSON graph shapes (auto-detected). */
@@ -31,6 +28,18 @@ export type FormatId =
   /** RDF/XML, including OWL ontologies saved by Protégé, the OWL API or ROBOT (`.owl`). */
   | 'rdfxml'
   | 'obo';
+
+/** File extensions understood by `detectFormat` (matched case-insensitively, longest first). */
+export const FORMAT_EXTENSIONS: Readonly<Record<FormatId, readonly string[]>> = {
+  json: ['.json', '.kgdiff.json'],
+  jsonld: ['.jsonld'],
+  turtle: ['.ttl', '.turtle'],
+  ntriples: ['.nt'],
+  nquads: ['.nq'],
+  trig: ['.trig'],
+  rdfxml: ['.rdf', '.owl'],
+  obo: ['.obo'],
+};
 
 /** JSON graph shapes recognised by the `json` format (reported as `ParseResult.dialect`). */
 export type JsonDialect = 'kgdiff' | 'd3' | 'cytoscape' | 'g6' | 'graphology' | 'vis';

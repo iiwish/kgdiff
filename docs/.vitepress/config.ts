@@ -10,9 +10,6 @@
  *   KGDIFF_SITE_BASE   public base path of the whole site, e.g. `/kgdiff/` on GitHub Pages
  *   KGDIFF_SITE_URL    absolute URL of the deployed site, for canonical and Open Graph tags
  *   KGDIFF_REPO_URL    GitHub repository (source, edit links)
- *
- * On Vercel, the production domain (VERCEL_PROJECT_PRODUCTION_URL) and the GitHub repository
- * (VERCEL_GIT_REPO_OWNER / VERCEL_GIT_REPO_SLUG) stand in for the last two when unset.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { cp, rm } from 'node:fs/promises';
@@ -21,23 +18,11 @@ import { type DefaultTheme, defineConfig } from 'vitepress';
 
 const withSlash = (s: string): string => (s.endsWith('/') ? s : `${s}/`);
 const base = withSlash(process.env.KGDIFF_SITE_BASE ?? '/');
-const { VERCEL_PROJECT_PRODUCTION_URL: vercelDomain, VERCEL_GIT_PROVIDER: gitProvider } =
-  process.env;
-const { VERCEL_GIT_REPO_OWNER: gitOwner, VERCEL_GIT_REPO_SLUG: gitRepo } = process.env;
-const vercelRepo =
-  gitProvider === 'github' && gitOwner && gitRepo
-    ? `https://github.com/${gitOwner}/${gitRepo}`
-    : undefined;
-const siteUrl = process.env.KGDIFF_SITE_URL
-  ? withSlash(process.env.KGDIFF_SITE_URL)
-  : vercelDomain
-    ? `https://${vercelDomain}/`
-    : undefined;
-const repoUrl = (
-  process.env.KGDIFF_REPO_URL ??
-  vercelRepo ??
-  'https://github.com/iiwish/kgdiff'
-).replace(/\/+$/, '');
+const siteUrl = process.env.KGDIFF_SITE_URL ? withSlash(process.env.KGDIFF_SITE_URL) : undefined;
+const repoUrl = (process.env.KGDIFF_REPO_URL ?? 'https://github.com/iiwish/kgdiff').replace(
+  /\/+$/,
+  '',
+);
 const repo = resolve(import.meta.dirname, '../..');
 const docs = join(repo, 'docs');
 // All packages share one version (a Changesets "fixed" group).

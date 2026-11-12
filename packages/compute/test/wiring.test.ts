@@ -1,8 +1,9 @@
 /**
  * How `@kgdiff/core`, `@kgdiff/formats` and `@kgdiff/layout` run on this package since 0.11:
  *
- * - their asynchronous functions give what the TypeScript engine they replace gave (until it is
- *   deleted), and what the `*Sync` functions here give;
+ * - their asynchronous functions give what the `*Sync` functions here give, and what the
+ *   TypeScript engine they replaced gave (the corpus, and `typescript-engine.json` for inputs it
+ *   does not have);
  * - the trusted path: a diff the engine has just written is read back without `diffFromJSON`'s
  *   checks, and the object is the one `diffFromJSON` builds;
  * - node positions survive the read-back, so a diff of graphs with positions is laid out
@@ -32,8 +33,6 @@ import {
   layoutToJSON,
 } from '@kgdiff/layout';
 import { beforeAll, describe, expect, it } from 'vitest';
-import * as engineTS from '../../core/src/sync.js';
-import * as parsersTS from '../../formats/src/sync.js';
 import {
   compactIriSync,
   detectFormatSync,
@@ -51,6 +50,7 @@ import {
   textSimilaritySync,
 } from '../src/index.js';
 import { enabled } from './support.js';
+import typescript from './typescript-engine.json' with { type: 'json' };
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const read = (path: string): string => readFileSync(`${ROOT}${path}`, 'utf8');
@@ -103,16 +103,22 @@ describe.runIf(enabled)('the TypeScript packages on @kgdiff/compute', () => {
       expect(JSON.stringify(diffToJSON(trusted))).toBe(text);
     });
 
-    it('diff of @kgdiff/core: the TypeScript engine’s result, positions included', async () => {
+    it('diff of @kgdiff/core: the engine’s document, and the graphs’ nodes, positions included', async () => {
       const [b, a] = [JSON.parse(before) as GraphInput, JSON.parse(after) as GraphInput];
       const result = await diff(b, a, options);
-      const ts = engineTS.diff(b, a, options);
-      expect(JSON.stringify(diffToJSON(result))).toBe(JSON.stringify(diffToJSON(ts)));
-      // Every node as the TypeScript engine had it, its position included (the graphs' maps are
-      // in the document's order, as `diffFromJSON` reads them).
+      // The document the corpus checks (diff.json), read back.
+      expect(JSON.stringify(diffToJSON(result))).toBe(json.diff(before, after, options));
+      // Every node as `normalize` makes it (graph.*.json of the corpus), its position included:
+      // what the TypeScript engine (deleted in 0.11) had (the graphs' maps are in the document's
+      // order, as `diffFromJSON` reads them).
+      const normalizeOptions = { edgeIdentity: options.edgeIdentity ?? 'structure' };
+      const graphs = {
+        before: normalize(b, normalizeOptions),
+        after: normalize(a, normalizeOptions),
+      };
       for (const side of ['before', 'after'] as const) {
-        expect(result[side].nodes.size).toBe(ts[side].nodes.size);
-        for (const node of ts[side].nodes.values()) {
+        expect(result[side].nodes.size).toBe(graphs[side].nodes.size);
+        for (const node of graphs[side].nodes.values()) {
           expect(result[side].nodes.get(node.id)).toEqual(node);
         }
       }
@@ -132,7 +138,9 @@ describe.runIf(enabled)('the TypeScript packages on @kgdiff/compute', () => {
 
   it('keeps node positions: json-dialects-c is laid out anchored, as in 0.10', async () => {
     const { before, after, options } = caseOf('json-dialects-c');
-    const ts = engineTS.diff(JSON.parse(before), JSON.parse(after), options);
+    // The graphs as `normalize` makes them: their nodes are what the TypeScript engine (deleted
+    // in 0.11) had, positions included.
+    const ts = { before: normalize(JSON.parse(before)), after: normalize(JSON.parse(after)) };
     const result = await diff(JSON.parse(before), JSON.parse(after), options);
     // Its after version has positions (G6 x / y), its before version none.
     expect([...ts.after.nodes.values()].some((n) => n.position)).toBe(true);
@@ -166,25 +174,25 @@ describe.runIf(enabled)('the TypeScript packages on @kgdiff/compute', () => {
     expect(await parseGraph(text, { filename: 'before.json' })).toEqual(
       parseGraphSync(text, { filename: 'before.json' }),
     );
-    expect(await parseGraph(text, { filename: 'before.json' })).toEqual(
-      parsersTS.parseGraph(text, { filename: 'before.json' }),
-    );
     expect(await detectFormat('@prefix ex: <http://e.x/> .')).toBe(
       detectFormatSync('@prefix ex: <http://e.x/> .'),
     );
     const iri = 'http://purl.obolibrary.org/obo/GO_0008150';
     expect(await compactIri(iri)).toBe(compactIriSync(iri));
-    expect(await compactIri(iri)).toBe(parsersTS.compactIri(iri));
+    expect([iri, await compactIri(iri)]).toEqual(typescript.compactIri[0]);
     expect(await textSimilarity('Ada Lovelace', 'Lovelace, Ada')).toBe(
       textSimilaritySync('Ada Lovelace', 'Lovelace, Ada'),
     );
-    expect(await textSimilarity('Ada Lovelace', 'Lovelace, Ada')).toBe(
-      engineTS.textSimilarity('Ada Lovelace', 'Lovelace, Ada'),
-    );
+    expect([
+      'Ada Lovelace',
+      'Lovelace, Ada',
+      await textSimilarity('Ada Lovelace', 'Lovelace, Ada'),
+    ]).toEqual(typescript.textSimilarity[3]);
 
     const { before, after, options } = caseOf('json-dialects-c');
     const [b, a] = [normalize(JSON.parse(before)), normalize(JSON.parse(after))];
-    expect(await matchNodes(b, a, options.match)).toEqual(engineTS.matchNodes(b, a, options.match));
+    expect(typescript.matchNodes.case).toBe('json-dialects-c');
+    expect(await matchNodes(b, a, options.match)).toEqual(typescript.matchNodes.result);
     expect(await matchNodes(b, a, options.match)).toEqual(matchNodesSync(b, a, options.match));
 
     const result = diffSync(before, after, options);

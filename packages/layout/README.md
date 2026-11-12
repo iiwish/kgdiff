@@ -36,13 +36,13 @@ Options worth knowing:
 - `extendLayout(result, layout, ids)` adds nodes next to their neighbours without moving any node
   already placed, e.g. when a user expands a collapsed group.
 
-`layoutFromJSON` reads a stored layout back. It reads version 1 of the document, which
-`layoutToJSON` writes for this package's layouts, and version 2, which kgdiff's Rust layout engine
-writes (the `kgdiff` CLI's reports carry it): the same members plus `generator` (for example
-`"kgdiff-layout/1"`), which names the engine generation that computed the positions and becomes
-`layout.generator`. Positions from either version can be `pinned`. `layoutToJSON` writes a layout
-with a `generator` back as version 2, so a stored layout keeps saying which engine computed it;
-once `extendLayout` places a node, the layout is this package's and is written as version 1.
+`layoutFromJSON` reads a stored layout back. It reads version 2 of the document, which kgdiff's
+Rust layout engine writes (every layout this package computes since 0.11, and the `kgdiff` CLI's
+reports): version 1's members plus `generator` (for example `"kgdiff-layout/1"`), which names
+the engine generation that computed the positions and becomes `layout.generator`. It also reads
+version 1, which 0.x wrote for the layouts of its TypeScript engine. Positions from either version
+can be `pinned`. `layoutToJSON` writes a layout with a `generator` as version 2 and one without as
+version 1, so a stored layout keeps saying which engine computed it.
 
 ## Learn more
 

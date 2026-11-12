@@ -1,6 +1,6 @@
 /**
  * Text helpers of the read path: NFC and predicate labels (docs/algorithms.md §1). Similarity
- * and blocking keys, which only matching uses, are in `similarity.ts`.
+ * and blocking keys, which only matching uses, are computed by kgdiff's engine (`kgdiff-core`).
  */
 
 // ─── Normalization ───────────────────────────────────────────────────────────

@@ -1,39 +1,29 @@
 /**
  * @kgdiff/core: semantic diff engine for knowledge graphs.
  *
- * Signatures and documented behaviour are final (docs/architecture.md); the bodies live in
- * dedicated modules that follow docs/algorithms.md:
+ * Signatures and documented behaviour are final (docs/architecture.md). Since 0.11 `diff`,
+ * `matchNodes` and `textSimilarity` run kgdiff's engine compiled to WebAssembly
+ * (`@kgdiff/compute`, loaded with a dynamic `import()` on first use, so a bundle that only reads
+ * diffs never contains it) and are asynchronous. What stays in TypeScript is the model and the
+ * read path, synchronous, in dedicated modules (`tests/read-path.ts` lists them):
  *
  *   options.ts       defaults and validation
  *   normalize.ts     GraphInput → KGraph (§1)
- *   text.ts          textSimilarity, predicateLabel, blocking keys (§1–2)
- *   match.ts         node matching (§2)
- *   merge-split.ts   merges and splits (§3)
- *   classify.ts      union node ids and node facets (§4, §6)
- *   edges.ts         edge pairing and facets, union edge ids (§5–6)
- *   hunks.ts         hunk partition, context, phase, order (§7)
- *   delta.ts         delta emission, application, inversion (§8)
+ *   text.ts          predicateLabel
+ *   delta.ts         delta application and inversion (§8)
  *   stats.ts         statistics (§9)
  *   graph-json.ts    compact JSON of graphs, content hash
  *   json.ts          DiffJSON transport
  *   consistency.ts   checks of diffs read from JSON
  *   packed.ts        PackedDiffJSON, the packed transport of reports
  *   i18n.ts          formatHunk, facetLabel
- *   math.ts          log2 from exactly rounded operations (identical in every engine)
- *   diff.ts          the pipeline
  *   computed.ts      reading back what @kgdiff/compute computed (`@kgdiff/core/computed`)
- *
- * Since 0.11 `diff`, `matchNodes` and `textSimilarity` run kgdiff's engine compiled to
- * WebAssembly (`@kgdiff/compute`, loaded with a dynamic `import()` on first use, so a bundle that
- * only reads diffs never contains it) and are asynchronous. The TypeScript engine above (match.ts
- * to diff.ts) is no longer called by this entry and is deleted next (`tests/read-path.ts`).
  */
 
 import { applyDelta as apply, invertDelta as invert } from './delta.js';
 import { hashGraph as hash, graphToJSON as toGraphJSON } from './graph-json.js';
 import { formatHunk as format, facetLabel as labelOfFacet } from './i18n.js';
 import { diffFromJSON as fromJSON, diffToJSON as toJSON } from './json.js';
-import { log2 as exactLog2 } from './math.js';
 import { isKGraph as isGraph, normalize as normalizeGraph } from './normalize.js';
 import { resolveOptions as resolve } from './options.js';
 import { packDiffJSON as pack, unpackDiffJSON as unpack } from './packed.js';
@@ -240,18 +230,6 @@ export async function textSimilarity(a: string, b: string): Promise<number> {
 /** Human-readable form of a predicate: `rdfs:subClassOf` → `subClassOf`, `…/part_of` → `part of`. */
 export function predicateLabel(predicate: string): string {
   return labelOfPredicate(predicate);
-}
-
-/**
- * log₂(x), computed from `+ − × ÷` alone (accurate to ~1e-15), so that it gives the same bits in
- * every JavaScript engine, unlike `Math.log2`, which engines approximate differently.
- *
- * @deprecated Only the TypeScript diff and layout engines used it, and kgdiff's engine
- *   (`@kgdiff/compute`) replaces them in 0.11: it is removed with them before 0.11.0. For a
- *   logarithm, use `Math.log2`.
- */
-export function log2(x: number): number {
-  return exactLog2(x);
 }
 
 /** Localized one-line title and subtitle for a hunk, e.g. “Merged “A” into “B”” / “+3 relations”. */

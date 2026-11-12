@@ -14,8 +14,8 @@ import {
 } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { diff, textSimilarity } from '../src/sync.js';
 import { graphArb, shuffleGraph, versionPairArb } from './support/arbitraries.js';
+import { diff } from './support/engine.js';
 
 /** Override with KGDIFF_PROPERTY_RUNS for a deeper soak run. */
 const RUNS = Number(process.env.KGDIFF_PROPERTY_RUNS ?? 300);
@@ -268,27 +268,6 @@ describe('graph invariants', () => {
         },
       ),
       { numRuns: RUNS },
-    );
-  });
-});
-
-describe('textSimilarity properties', () => {
-  const text = fc.oneof(
-    fc.string({ maxLength: 12 }),
-    fc.string({ unit: 'grapheme', maxLength: 8 }),
-    fc.constantFrom('Marie Curie', 'Univ. of Paris', '法定代表人', '法人代表', 'GO:0008150'),
-  );
-
-  it('is symmetric, bounded and reflexive', () => {
-    fc.assert(
-      fc.property(text, text, (a, b) => {
-        const s = textSimilarity(a, b);
-        expect(s).toBeGreaterThanOrEqual(0);
-        expect(s).toBeLessThanOrEqual(1);
-        expect(textSimilarity(b, a)).toBe(s);
-        expect(textSimilarity(a, a)).toBe(1);
-      }),
-      { numRuns: 1000 },
     );
   });
 });

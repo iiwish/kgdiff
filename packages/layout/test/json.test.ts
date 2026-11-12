@@ -1,19 +1,26 @@
 import { KgdiffError } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { layoutDiff } from '../../core/test/support/engine.js';
 import {
   type LayoutJSON,
   type LayoutJSONV1,
   type LayoutJSONV2,
+  type LayoutResult,
   layoutFromJSON,
   layoutToJSON,
 } from '../src/index.js';
-import { extendLayout, layoutDiff } from '../src/sync.js';
 import { makeDiff } from './support/diff-builder.js';
 import { changes, components } from './support/fixtures.js';
 
+/** A layout of the engine without its generator, as 0.x computed them: written as version 1. */
+function withoutGenerator(layout: LayoutResult): LayoutResult {
+  const { generator: _generator, ...rest } = layout;
+  return rest;
+}
+
 describe('layoutToJSON / layoutFromJSON', () => {
-  const layout = layoutDiff(makeDiff(changes()), { scope: 'changes' });
+  const layout = withoutGenerator(layoutDiff(makeDiff(changes()), { scope: 'changes' }));
   const json = layoutToJSON(layout);
 
   it('emits a versioned document without timing information', () => {
@@ -114,7 +121,7 @@ describe('layoutToJSON / layoutFromJSON', () => {
 
 describe('layout documents, version 2', () => {
   const diff = makeDiff(changes());
-  const layout = layoutDiff(diff, { scope: 'changes' });
+  const layout = withoutGenerator(layoutDiff(diff, { scope: 'changes' }));
   const round2 = (n: number): number => Math.round(n * 100) / 100;
   // Another engine's positions for the same scope (what the Rust layout writes): moved, and still
   // rounded to 0.01.
@@ -155,39 +162,11 @@ describe('layout documents, version 2', () => {
     expect(JSON.stringify(layoutToJSON(layoutFromJSON(out)))).toBe(JSON.stringify(out));
   });
 
-  it('writes its own layouts as version 1', () => {
-    expect(layoutToJSON(layoutDiff(diff)).version).toBe(1);
-    const read = layoutFromJSON(v2);
-    const outside = diff.nodes.map((n) => n.id).filter((id) => !read.positions.has(id));
-    const extended = layoutToJSON(extendLayout(diff, read, outside.slice(0, 1)));
-    expect(extended.version).toBe(1);
-    expect(JSON.stringify(extended)).not.toContain('generator');
-  });
-
   it('ignores a generator in a version 1 document', () => {
     const stray = { ...v1, generator: 'kgdiff-layout/1' } as LayoutJSON;
     const back = layoutFromJSON(stray);
     expect('generator' in back).toBe(false);
     expect(JSON.stringify(layoutToJSON(back))).toBe(JSON.stringify(v1));
-  });
-
-  it('positions read from version 2 are pins: anchored layouts keep them exactly', () => {
-    const read = layoutFromJSON(v2);
-    const anchored = layoutDiff(diff, { scope: 'changes', pinned: read.positions });
-    expect(anchored.stats.strategy).toBe('anchored');
-    for (const [id, p] of read.positions) expect(anchored.positions.get(id)).toEqual(p);
-    expect(anchored.generator).toBeUndefined();
-  });
-
-  it('extendLayout keeps every position read from version 2, and the generator only when it adds nothing', () => {
-    const read = layoutFromJSON(v2);
-    const outside = diff.nodes.map((n) => n.id).filter((id) => !read.positions.has(id));
-    expect(outside.length).toBeGreaterThan(0);
-    const extended = extendLayout(diff, read, outside.slice(0, 3));
-    for (const [id, p] of read.positions) expect(extended.positions.get(id)).toBe(p);
-    expect(extended.positions.size).toBe(read.positions.size + 3);
-    expect(extended.generator).toBeUndefined();
-    expect(extendLayout(diff, read, [...read.positions.keys()].slice(0, 2))).toBe(read);
   });
 
   it('rejects a version 2 document without a generator, and versions other than 1 and 2', () => {

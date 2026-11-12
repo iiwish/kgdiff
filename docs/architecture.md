@@ -41,9 +41,10 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 ## Packages
 
 ```
-@kgdiff/core       diff engine: normalize → match → classify → hunk → delta     (no deps)
-@kgdiff/formats    RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO, JSON → GraphInput   (n3)
-@kgdiff/layout     stable union layout, label-aware, deterministic                (d3-force)
+@kgdiff/core       model and read path: normalize, JSON transports, delta, hunk titles; diff  (compute)
+@kgdiff/formats    deprecated: RDF, OBO, JSON → GraphInput, on @kgdiff/compute's parsers      (compute)
+@kgdiff/layout     layout document, radii, label widths; stable union layout                  (compute)
+@kgdiff/compute    kgdiff's Rust engine in WebAssembly: diff, parsers, layout
 @kgdiff/scene      diff semantics → visual primitives: tokens, encodings, replay, focus
 @kgdiff/renderer   Canvas 2D engine: camera, LOD, labels, picking, swipe, minimap (DOM)
 @kgdiff/viewer     <kgdiff-viewer> web component and its elements: modes, change list, details, review (DOM)
@@ -51,7 +52,7 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 kgdiff             CLI: terminal diff, JSON / delta / Markdown, single-file HTML report
                    (`@kgdiff/cli`: an npm launcher of the native Rust binary, no TypeScript compute)
 crates/            Rust: kgdiff-core, -formats, -layout, -report, the `kgdiff` binary, kgdiff-wasm
-                   (`@kgdiff/compute`, a preview)
+                   (built into `@kgdiff/compute`)
 apps/site          landing page + playground (drag two files in, get a diff)
 ```
 
@@ -64,7 +65,11 @@ core ◀── layout ◀── scene ◀── renderer ◀── viewer
           formats ◀─────────────────── viewer ─┘
 ```
 
-`@kgdiff/cli` is not in the graph: it holds no TypeScript compute, only a launcher of the Rust
+`@kgdiff/compute` is not in the graph either: `core`, `formats` and `layout` load it with a
+dynamic `import()` when a function that computes is first called (it depends on them for their
+types and read path), so a bundle that only reads reports contains no WebAssembly. Since 0.11
+TypeScript keeps only what reads a computed diff synchronously (`tests/read-path.ts`); the
+engine itself is the Rust one. `@kgdiff/cli` is not in the graph: it holds no TypeScript compute, only a launcher of the Rust
 `kgdiff` binary. The Rust crates (`kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`,
 `kgdiff-report`) implement the same contracts as `core`, `formats` and `layout`; the
 [conformance corpus](https://github.com/iiwish/kgdiff/blob/main/conformance/README.md) keeps both
@@ -99,16 +104,16 @@ hashes in the delta check it, so a report opens the same way in every browser.
 
 ## Package contracts (summary)
 
-| Package  | Main API                                                                                                                                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `packDiffJSON`/`unpackDiffJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel`, `log2` |
-| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                                                                        |
-| layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                                 |
-| scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`; experimental `shapes` option and outline functions                             |
-| renderer | `createRenderer` (`setFrame`, `camera`, `pick`, `toDataURL`; experimental `addLayer`: the host draws under and over the graph), `createMinimap`, `labelFootprint`                                                 |
-| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; composable elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                              |
-| g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                                     |
-| cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                               |
+| Package  | Main API                                                                                                                                                                                                  |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `packDiffJSON`/`unpackDiffJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel` |
+| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                                                                |
+| layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                         |
+| scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`; experimental `shapes` option and outline functions                     |
+| renderer | `createRenderer` (`setFrame`, `camera`, `pick`, `toDataURL`; experimental `addLayer`: the host draws under and over the graph), `createMinimap`, `labelFootprint`                                         |
+| viewer   | `<kgdiff-viewer>` (`load`, `payload`, `panels`, `selectHunk`, `next`, `prev`, `play`, …), `defineViewer`; composable elements (`<kgdiff-root>`, `<kgdiff-stage>`, …)                                      |
+| g6       | `toG6Data`, `createDiffGraph`                                                                                                                                                                             |
+| cli      | `kgdiff <before> <after> [options]`, `kgdiff apply <graph> <delta>`                                                                                                                                       |
 
 The full, documented signatures live in each package's `src/index.ts` (and `src/types.ts`).
 
@@ -123,7 +128,8 @@ version.
 Layouts have two versions. kgdiff's Rust layout engine (crate `kgdiff-layout`) writes version 2,
 which `layout.v2.json` describes: version 1's members plus `generator`, a non-empty string such
 as `"kgdiff-layout/1"` that names the engine generation that computed the positions.
-`layoutToJSON` of `@kgdiff/layout` writes version 1 for the layouts it computes, and
+`layoutToJSON` of `@kgdiff/layout` writes version 2 for a layout with a `generator` (every
+layout computed since 0.11) and version 1 for one without (as 0.x wrote them), and
 `layoutFromJSON` reads both. Positions from either version are valid pins.
 A report payload holds a diff (packed or not), its layout of either version or none, `meta` and
 `view` (`report.v1.json`). The crate `kgdiff-report` writes it, with the layout of the default
@@ -225,7 +231,8 @@ and D-11).
   conformance:replay` replays its CLI runs).
 - Relative imports use `.js` extensions (NodeNext). Cross-package imports use the package name;
   in development `@kgdiff/*` resolves to `packages/*/src/index.ts` (see `tsconfig.base.json`,
-  `vitest.shared.ts`), so nothing needs building before tests.
+  `vitest.shared.ts`), so no package needs building before tests; only the WebAssembly modules
+  of `@kgdiff/compute` do, once (CONTRIBUTING.md).
 - Tests: Vitest, colocated in `packages/*/test`. Core uses property-based tests (fast-check).
   Unit tests assert no wall-clock times; the budgets above are checked by Vitest benchmarks
   (`test/*.bench.ts`, `pnpm bench`), which run the TypeScript source through Vite's module

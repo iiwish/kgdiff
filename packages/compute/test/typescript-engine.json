@@ -1,0 +1,208 @@
+{
+  "description": "Results of kgdiff's TypeScript engine (deleted in 0.11) for the inputs of this package's tests that the conformance corpus does not have, computed at 01a57e9. The tests that compared the WebAssembly build with that engine compare it with these values instead.",
+  "api": {
+    "diff": "{\"format\":\"kgdiff.diff\",\"version\":1,\"meta\":{\"before\":{},\"after\":{}},\"options\":{\"match\":{\"strategy\":\"auto\",\"threshold\":0.82,\"suggestThreshold\":0.6,\"maxCandidates\":8},\"edgeIdentity\":\"structure\",\"hierarchyPredicates\":[\"rdfs:subClassOf\",\"http://www.w3.org/2000/01/rdf-schema#subClassOf\",\"rdfs:subPropertyOf\",\"http://www.w3.org/2000/01/rdf-schema#subPropertyOf\",\"skos:broader\",\"http://www.w3.org/2004/02/skos/core#broader\",\"is_a\",\"subClassOf\",\"parent\"],\"detectMerges\":true,\"detectSplits\":true,\"ignoreAttrs\":[\"born\"]},\"nodes\":[{\"id\":\"ada\",\"beforeId\":\"ada\",\"afterId\":\"ada\",\"before\":{\"id\":\"ada\",\"label\":\"Ada\",\"types\":[\"Person\"],\"attrs\":{\"born\":1815}},\"after\":{\"id\":\"ada\",\"label\":\"Ada Lovelace\",\"types\":[\"Person\"],\"attrs\":{\"born\":1815}},\"status\":\"modified\",\"facets\":[{\"kind\":\"rename\",\"from\":\"Ada\",\"to\":\"Ada Lovelace\"}],\"hunk\":\"modify:ada\"},{\"id\":\"babbage\",\"beforeId\":\"babbage\",\"afterId\":\"babbage\",\"after\":{\"id\":\"babbage\",\"label\":\"Charles Babbage\"},\"status\":\"unchanged\"},{\"id\":\"engine\",\"beforeId\":\"engine\",\"before\":{\"id\":\"engine\",\"label\":\"Analytical Engine\"},\"status\":\"removed\",\"hunk\":\"remove:engine\"},{\"id\":\"notes\",\"afterId\":\"notes\",\"after\":{\"id\":\"notes\",\"label\":\"Notes on the Analytical Engine\"},\"status\":\"added\",\"hunk\":\"add:notes\"}],\"edges\":[{\"id\":\"[\\\"ada\\\",\\\"knows\\\",\\\"babbage\\\"]\",\"source\":\"ada\",\"target\":\"babbage\",\"after\":{\"source\":\"ada\",\"target\":\"babbage\",\"predicate\":\"knows\"},\"status\":\"unchanged\"},{\"id\":\"[\\\"ada\\\",\\\"wrote\\\",\\\"notes\\\"]\",\"source\":\"ada\",\"target\":\"notes\",\"after\":{\"source\":\"ada\",\"target\":\"notes\",\"predicate\":\"wrote\"},\"status\":\"added\",\"hunk\":\"add:notes\"},{\"id\":\"[\\\"babbage\\\",\\\"designed\\\",\\\"engine\\\"]\",\"source\":\"babbage\",\"target\":\"engine\",\"before\":{\"source\":\"babbage\",\"target\":\"engine\",\"predicate\":\"designed\"},\"status\":\"removed\",\"hunk\":\"remove:engine\"}],\"hunks\":[{\"id\":\"remove:engine\",\"kind\":\"remove\",\"phase\":\"remove\",\"anchor\":\"engine\",\"nodes\":[\"engine\"],\"edges\":[\"[\\\"babbage\\\",\\\"designed\\\",\\\"engine\\\"]\"],\"context\":[\"babbage\"],\"ops\":[0,1],\"requires\":[],\"summary\":{\"nodes\":{\"added\":0,\"removed\":1,\"modified\":0},\"edges\":{\"added\":0,\"removed\":1,\"modified\":0},\"facets\":[]},\"order\":0},{\"id\":\"modify:ada\",\"kind\":\"modify\",\"phase\":\"modify\",\"anchor\":\"ada\",\"nodes\":[\"ada\"],\"edges\":[],\"context\":[],\"ops\":[2],\"requires\":[],\"summary\":{\"nodes\":{\"added\":0,\"removed\":0,\"modified\":1},\"edges\":{\"added\":0,\"removed\":0,\"modified\":0},\"facets\":[\"rename\"]},\"order\":1},{\"id\":\"add:notes\",\"kind\":\"add\",\"phase\":\"add\",\"anchor\":\"notes\",\"nodes\":[\"notes\"],\"edges\":[\"[\\\"ada\\\",\\\"wrote\\\",\\\"notes\\\"]\"],\"context\":[\"ada\"],\"ops\":[3,4],\"requires\":[],\"summary\":{\"nodes\":{\"added\":1,\"removed\":0,\"modified\":0},\"edges\":{\"added\":1,\"removed\":0,\"modified\":0},\"facets\":[]},\"order\":2}],\"matches\":[],\"suggestions\":[],\"delta\":{\"format\":\"kgdiff.delta\",\"version\":1,\"edgeIdentity\":\"structure\",\"base\":{\"hash\":\"c53:1b36e9dd84fa46\",\"nodes\":3,\"edges\":2},\"target\":{\"hash\":\"c53:073afe7d16dd73\",\"nodes\":3,\"edges\":2},\"ops\":[{\"op\":\"edge.remove\",\"edge\":{\"source\":\"babbage\",\"target\":\"engine\",\"predicate\":\"designed\"}},{\"op\":\"node.remove\",\"node\":{\"id\":\"engine\",\"label\":\"Analytical Engine\"}},{\"op\":\"node.set\",\"id\":\"ada\",\"field\":\"label\",\"from\":\"Ada\",\"to\":\"Ada Lovelace\"},{\"op\":\"node.add\",\"node\":{\"id\":\"notes\",\"label\":\"Notes on the Analytical Engine\"}},{\"op\":\"edge.add\",\"edge\":{\"source\":\"ada\",\"target\":\"notes\",\"predicate\":\"wrote\"}}]},\"stats\":{\"nodes\":{\"added\":1,\"removed\":1,\"modified\":1,\"unchanged\":1},\"edges\":{\"added\":1,\"removed\":1,\"modified\":0,\"unchanged\":1},\"before\":{\"nodes\":3,\"edges\":2},\"after\":{\"nodes\":3,\"edges\":2},\"facets\":{\"rekey\":0,\"rename\":1,\"mergedInto\":0,\"mergeTarget\":0,\"splitFrom\":0,\"splitInto\":0,\"move\":0,\"deprecate\":0,\"replacement\":0,\"types\":0,\"aliases\":0,\"attrs\":0,\"retarget\":0,\"predicate\":0,\"label\":0,\"collapsed\":0},\"hunks\":{\"add\":1,\"remove\":1,\"merge\":0,\"split\":0,\"modify\":1,\"relations\":0},\"byType\":[{\"type\":\"\",\"added\":1,\"removed\":1,\"modified\":0,\"unchanged\":1},{\"type\":\"Person\",\"added\":0,\"removed\":0,\"modified\":1,\"unchanged\":0}],\"identical\":false}}",
+    "matchNodes": {
+      "matches": [
+        {
+          "before": "ada",
+          "after": "ada",
+          "method": "similarity",
+          "score": 0.822222,
+          "evidence": {
+            "label": 0.757576,
+            "neighbors": 0,
+            "types": 1,
+            "attrs": 1
+          }
+        },
+        {
+          "before": "babbage",
+          "after": "babbage",
+          "method": "similarity",
+          "score": 1,
+          "evidence": {
+            "label": 1,
+            "neighbors": 0,
+            "types": 0,
+            "attrs": 0
+          }
+        }
+      ],
+      "suggestions": []
+    }
+  },
+  "textSimilarity": [
+    ["Analytical Engine", "analytical engine", 1],
+    ["Notes on the Analytical Engine", "Analytical Engine", 0.75],
+    ["Ada", "Ada Lovelace", 0.757576],
+    ["Ada Lovelace", "Lovelace, Ada", 1]
+  ],
+  "parse": [
+    {
+      "text": "@prefix ex: <http://e.x/> . ex:a ex:p ex:b .",
+      "options": {
+        "format": "turtle"
+      },
+      "result": {
+        "graph": {
+          "nodes": [
+            {
+              "id": "http://e.x/a"
+            }
+          ],
+          "edges": [
+            {
+              "source": "http://e.x/a",
+              "target": "http://e.x/b",
+              "predicate": "http://e.x/p",
+              "label": "p"
+            }
+          ]
+        },
+        "format": "turtle",
+        "prefixes": {
+          "dc": "http://purl.org/dc/elements/1.1/",
+          "dcterms": "http://purl.org/dc/terms/",
+          "ex": "http://e.x/",
+          "foaf": "http://xmlns.com/foaf/0.1/",
+          "obo": "http://purl.obolibrary.org/obo/",
+          "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+          "owl": "http://www.w3.org/2002/07/owl#",
+          "prov": "http://www.w3.org/ns/prov#",
+          "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          "schema": "https://schema.org/",
+          "skos": "http://www.w3.org/2004/02/skos/core#",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "predicateLabels": {},
+        "warnings": []
+      }
+    },
+    {
+      "text": "{\"@context\":{\"@vocab\":\"http://e.x/\"},\"@id\":\"http://e.x/a\",\"p\":{\"@id\":\"http://e.x/b\"}}",
+      "options": {},
+      "result": {
+        "graph": {
+          "nodes": [
+            {
+              "id": "http://e.x/a"
+            }
+          ],
+          "edges": [
+            {
+              "source": "http://e.x/a",
+              "target": "http://e.x/b",
+              "predicate": "http://e.x/p",
+              "label": "p"
+            }
+          ]
+        },
+        "format": "jsonld",
+        "prefixes": {
+          "": "http://e.x/",
+          "dc": "http://purl.org/dc/elements/1.1/",
+          "dcterms": "http://purl.org/dc/terms/",
+          "foaf": "http://xmlns.com/foaf/0.1/",
+          "obo": "http://purl.obolibrary.org/obo/",
+          "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+          "owl": "http://www.w3.org/2002/07/owl#",
+          "prov": "http://www.w3.org/ns/prov#",
+          "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          "schema": "https://schema.org/",
+          "skos": "http://www.w3.org/2004/02/skos/core#",
+          "xsd": "http://www.w3.org/2001/XMLSchema#"
+        },
+        "predicateLabels": {},
+        "warnings": []
+      }
+    }
+  ],
+  "modules": {
+    "diff": "{\"format\":\"kgdiff.diff\",\"version\":1,\"meta\":{\"before\":{},\"after\":{}},\"options\":{\"match\":{\"strategy\":\"auto\",\"threshold\":0.82,\"suggestThreshold\":0.6,\"maxCandidates\":8},\"edgeIdentity\":\"structure\",\"hierarchyPredicates\":[\"rdfs:subClassOf\",\"http://www.w3.org/2000/01/rdf-schema#subClassOf\",\"rdfs:subPropertyOf\",\"http://www.w3.org/2000/01/rdf-schema#subPropertyOf\",\"skos:broader\",\"http://www.w3.org/2004/02/skos/core#broader\",\"is_a\",\"subClassOf\",\"parent\"],\"detectMerges\":true,\"detectSplits\":true,\"ignoreAttrs\":[]},\"nodes\":[{\"id\":\"a\",\"beforeId\":\"a\",\"afterId\":\"a\",\"before\":{\"id\":\"a\",\"label\":\"A\"},\"after\":{\"id\":\"a\",\"label\":\"A2\"},\"status\":\"modified\",\"facets\":[{\"kind\":\"rename\",\"from\":\"A\",\"to\":\"A2\"}],\"hunk\":\"modify:a\"},{\"id\":\"b\",\"beforeId\":\"b\",\"afterId\":\"b\",\"after\":{\"id\":\"b\"},\"status\":\"unchanged\"},{\"id\":\"c\",\"afterId\":\"c\",\"after\":{\"id\":\"c\"},\"status\":\"added\",\"hunk\":\"add:c\"}],\"edges\":[{\"id\":\"[\\\"a\\\",\\\"p\\\",\\\"c\\\"]\",\"source\":\"a\",\"target\":\"c\",\"after\":{\"source\":\"a\",\"target\":\"c\",\"predicate\":\"p\"},\"status\":\"added\",\"hunk\":\"add:c\"}],\"hunks\":[{\"id\":\"modify:a\",\"kind\":\"modify\",\"phase\":\"modify\",\"anchor\":\"a\",\"nodes\":[\"a\"],\"edges\":[],\"context\":[],\"ops\":[0],\"requires\":[],\"summary\":{\"nodes\":{\"added\":0,\"removed\":0,\"modified\":1},\"edges\":{\"added\":0,\"removed\":0,\"modified\":0},\"facets\":[\"rename\"]},\"order\":0},{\"id\":\"add:c\",\"kind\":\"add\",\"phase\":\"add\",\"anchor\":\"c\",\"nodes\":[\"c\"],\"edges\":[\"[\\\"a\\\",\\\"p\\\",\\\"c\\\"]\"],\"context\":[\"a\"],\"ops\":[1,2],\"requires\":[],\"summary\":{\"nodes\":{\"added\":1,\"removed\":0,\"modified\":0},\"edges\":{\"added\":1,\"removed\":0,\"modified\":0},\"facets\":[]},\"order\":1}],\"matches\":[],\"suggestions\":[],\"delta\":{\"format\":\"kgdiff.delta\",\"version\":1,\"edgeIdentity\":\"structure\",\"base\":{\"hash\":\"c53:1ccb7211a887a1\",\"nodes\":2,\"edges\":0},\"target\":{\"hash\":\"c53:10d14f2cff40db\",\"nodes\":3,\"edges\":1},\"ops\":[{\"op\":\"node.set\",\"id\":\"a\",\"field\":\"label\",\"from\":\"A\",\"to\":\"A2\"},{\"op\":\"node.add\",\"node\":{\"id\":\"c\"}},{\"op\":\"edge.add\",\"edge\":{\"source\":\"a\",\"target\":\"c\",\"predicate\":\"p\"}}]},\"stats\":{\"nodes\":{\"added\":1,\"removed\":0,\"modified\":1,\"unchanged\":1},\"edges\":{\"added\":1,\"removed\":0,\"modified\":0,\"unchanged\":0},\"before\":{\"nodes\":2,\"edges\":0},\"after\":{\"nodes\":3,\"edges\":1},\"facets\":{\"rekey\":0,\"rename\":1,\"mergedInto\":0,\"mergeTarget\":0,\"splitFrom\":0,\"splitInto\":0,\"move\":0,\"deprecate\":0,\"replacement\":0,\"types\":0,\"aliases\":0,\"attrs\":0,\"retarget\":0,\"predicate\":0,\"label\":0,\"collapsed\":0},\"hunks\":{\"add\":1,\"remove\":0,\"merge\":0,\"split\":0,\"modify\":1,\"relations\":0},\"byType\":[{\"type\":\"\",\"added\":1,\"removed\":0,\"modified\":1,\"unchanged\":1}],\"identical\":false}}",
+    "layoutErrors": [
+      {
+        "options": {
+          "fontSize": -1
+        },
+        "message": "Invalid layout option fontSize: expected a finite number > 0, got -1"
+      },
+      {
+        "options": {
+          "iterations": 1.5
+        },
+        "message": "Invalid layout option iterations: expected an integer ≥ 0, got 1.5"
+      },
+      {
+        "options": {
+          "scope": "some"
+        },
+        "message": "Invalid layout option scope: expected 'all' or 'changes', got some"
+      }
+    ],
+    "documentLoader": {
+      "graph": {
+        "nodes": [
+          {
+            "id": "http://e.x/a"
+          }
+        ],
+        "edges": [
+          {
+            "source": "http://e.x/a",
+            "target": "http://e.x/b",
+            "predicate": "http://e.x/p",
+            "label": "p"
+          }
+        ]
+      },
+      "format": "jsonld",
+      "prefixes": {
+        "": "http://e.x/",
+        "dc": "http://purl.org/dc/elements/1.1/",
+        "dcterms": "http://purl.org/dc/terms/",
+        "foaf": "http://xmlns.com/foaf/0.1/",
+        "obo": "http://purl.obolibrary.org/obo/",
+        "oboInOwl": "http://www.geneontology.org/formats/oboInOwl#",
+        "owl": "http://www.w3.org/2002/07/owl#",
+        "prov": "http://www.w3.org/ns/prov#",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "schema": "https://schema.org/",
+        "skos": "http://www.w3.org/2004/02/skos/core#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+      },
+      "predicateLabels": {},
+      "warnings": []
+    }
+  },
+  "compactIri": [["http://purl.obolibrary.org/obo/GO_0008150", "GO:0008150"]],
+  "matchNodes": {
+    "case": "json-dialects-c",
+    "result": {
+      "matches": [
+        {
+          "before": "1",
+          "after": "1",
+          "method": "id",
+          "score": 1
+        },
+        {
+          "before": "3",
+          "after": "3",
+          "method": "id",
+          "score": 1
+        },
+        {
+          "before": "2",
+          "after": "4",
+          "method": "hint",
+          "score": 1
+        }
+      ],
+      "suggestions": []
+    }
+  }
+}

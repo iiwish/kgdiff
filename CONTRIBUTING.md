@@ -6,10 +6,21 @@ Thanks for helping make graph changes reviewable.
 
 ```sh
 pnpm install
+pnpm --filter @kgdiff/compute build:wasm   # once, and after a change under crates/
 pnpm check        # lint + typecheck + test
 pnpm dev:site     # landing page and playground
 pnpm dev:docs     # documentation site (docs/)
 ```
+
+Since 0.11 kgdiff's engine (diff, parsers, layout) exists only in Rust, so the tests that compute
+a diff or a layout, of the read path and the viewer included, run it from its WebAssembly build
+in `packages/compute/wasm/`. Build it once before `pnpm test`, whatever you change: without it,
+those test files fail with a message that names the command, and none of them is skipped. The
+build needs the Rust toolchain below, the wasm-bindgen CLI at the version `crates/kgdiff-wasm`
+pins and `wasm-opt` (binaryen), found on `PATH` or through `WASM_BINDGEN` and `WASM_OPT`
+([`@kgdiff/compute`](packages/compute/README.md#building)). The modules CI built for a commit
+can be used instead: they are the `compute-wasm` artifact of its CI run (`gh run download <run>
+-n compute-wasm -D packages/compute`).
 
 Node.js ≥ 22 (the `engines` range; CI tests 22, 24 and 26 on Linux, and 24 on Windows and
 macOS) and pnpm 11 (`packageManager`; `corepack enable` installs the pinned version).
@@ -24,7 +35,8 @@ pnpm changeset                        # describe a change to a published package
 
 The Rust workspace (`crates/`, [RFC 0002](docs/rfcs/0002-rust-compute-core.md)) needs
 [rustup](https://rustup.rs); the first `cargo` command installs the toolchain that
-`rust-toolchain.toml` pins. Contributors who only touch TypeScript need none of it.
+`rust-toolchain.toml` pins. Contributors who only touch TypeScript need it only for the
+WebAssembly build above (or CI's artifact instead).
 
 ```sh
 cargo test --workspace                          # the crates' tests and the conformance corpus

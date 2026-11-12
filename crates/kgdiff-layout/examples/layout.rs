@@ -6,9 +6,6 @@
 //! # Two graphs diffed here first: { "before", "after", "options"?, "layoutOptions"? }
 //! cargo run --release -p kgdiff-layout --example layout -- --job job.json
 //! ```
-//!
-//! `crates/kgdiff-layout/scripts/quality.ts` compares what this writes with the TypeScript
-//! layout of the same diff.
 
 use std::process::ExitCode;
 

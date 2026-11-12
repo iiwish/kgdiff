@@ -1,6 +1,6 @@
 /**
  * The delta (docs/delta-format.md, docs/algorithms.md §8): validation, strict / lenient
- * application, and inversion. Emission is in `delta-emit.ts`.
+ * application, and inversion. Emission is kgdiff's engine's (`kgdiff-core`).
  */
 import {
   attrsEqual,

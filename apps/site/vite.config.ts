@@ -10,9 +10,6 @@
  *   KGDIFF_SITE_BASE   public base path, e.g. `/kgdiff/` on GitHub Pages (default `/`)
  *   KGDIFF_SITE_URL    absolute URL of the deployed site, for canonical / Open Graph tags
  *   KGDIFF_REPO_URL    GitHub repository (links to docs and source)
- *
- * On Vercel, the production domain (VERCEL_PROJECT_PRODUCTION_URL) and the GitHub repository
- * (VERCEL_GIT_REPO_OWNER / VERCEL_GIT_REPO_SLUG) stand in for the last two when unset.
  */
 import { fileURLToPath } from 'node:url';
 import { type Alias, defineConfig } from 'vite';
@@ -36,22 +33,11 @@ const alias: Alias[] = [
 
 const withSlash = (s: string): string => (s.endsWith('/') ? s : `${s}/`);
 const base = withSlash(process.env.KGDIFF_SITE_BASE ?? '/');
-const { VERCEL_PROJECT_PRODUCTION_URL: vercelDomain, VERCEL_GIT_PROVIDER: gitProvider } =
-  process.env;
-const { VERCEL_GIT_REPO_OWNER: gitOwner, VERCEL_GIT_REPO_SLUG: gitRepo } = process.env;
-const vercelRepo =
-  gitProvider === 'github' && gitOwner && gitRepo
-    ? `https://github.com/${gitOwner}/${gitRepo}`
-    : undefined;
-const repoUrl = (
-  process.env.KGDIFF_REPO_URL ??
-  vercelRepo ??
-  'https://github.com/iiwish/kgdiff'
-).replace(/\/+$/, '');
-const siteUrl = withSlash(
-  process.env.KGDIFF_SITE_URL ??
-    (vercelDomain ? `https://${vercelDomain}/` : `https://iiwish.github.io${base}`),
+const repoUrl = (process.env.KGDIFF_REPO_URL ?? 'https://github.com/iiwish/kgdiff').replace(
+  /\/+$/,
+  '',
 );
+const siteUrl = withSlash(process.env.KGDIFF_SITE_URL ?? `https://iiwish.github.io${base}`);
 const version = readVersion(repo);
 
 export default defineConfig({

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { estimateLabelWidth, nodeRadius } from '../src/index.js';
-import { labelBox, MAX_LABEL_EM } from '../src/label-box.js';
 
 const em = (text: string): number => estimateLabelWidth(text, 1);
 
@@ -51,21 +50,6 @@ describe('estimateLabelWidth', () => {
   it('is deterministic and monotonic in the text', () => {
     expect(em('abc')).toBe(em('abc'));
     expect(em('abcd')).toBeGreaterThan(em('abc'));
-  });
-});
-
-describe('labelBox', () => {
-  it('reserves one line, or two for a renamed node', () => {
-    const one = labelBox('Cell', undefined, 12);
-    const two = labelBox('Cell', 'Cellule', 12);
-    expect(one.height).toBeCloseTo(15);
-    expect(two.height).toBeCloseTo(29);
-    expect(two.width).toBeCloseTo(Math.max(em('Cell') * 12, em('Cellule') * 11));
-    expect(labelBox('Cell', 'Cell', 12)).toEqual(one);
-  });
-
-  it('caps pathological labels', () => {
-    expect(labelBox('x'.repeat(500), undefined, 12).width).toBe(MAX_LABEL_EM * 12);
   });
 });
 

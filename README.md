@@ -57,8 +57,9 @@ example datasets, or two files of your own, in your browser. Nothing is uploaded
 - **`kgdiff` CLI**: colored terminal summaries, `--stat`, `--name-status`, `--json`, `--delta`,
   GitHub-flavoured `--markdown` for PR comments, `--exit-code` for CI, `apply` for deltas, and
   single-file offline HTML reports (`-o report.html`, byte-identical with `--reproducible`).
-- **Libraries**: a zero-dependency diff engine, parsers (RDF through `n3`), a stable layout
-  engine, a renderer-agnostic visual model, a Canvas renderer and an AntV G6 adapter.
+- **Libraries**: the diff engine, the parsers and a stable layout engine (kgdiff's Rust engine,
+  compiled to WebAssembly in `@kgdiff/compute`), a renderer-agnostic visual model, a Canvas
+  renderer and an AntV G6 adapter.
 
 ## Quick start
 
@@ -166,8 +167,9 @@ All packages:
 
 | Package                                 |                                                                                          |
 | --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [`@kgdiff/core`](packages/core)         | Diff engine: normalize → match → classify → hunks → invertible delta. Zero dependencies. |
-| [`@kgdiff/formats`](packages/formats)   | RDF / OBO / JSON parsers.                                                                |
+| [`@kgdiff/core`](packages/core)         | Diff model: normalize, `diff` (on `@kgdiff/compute`), JSON transports, invertible delta. |
+| [`@kgdiff/formats`](packages/formats)   | RDF / OBO / JSON parsers (deprecated: use `@kgdiff/compute`).                            |
+| [`@kgdiff/compute`](packages/compute)   | kgdiff's Rust engine in WebAssembly: diff, parsers, layout.                              |
 | [`@kgdiff/layout`](packages/layout)     | Deterministic, label-aware union layout; anchored and changes-only modes.                |
 | [`@kgdiff/scene`](packages/scene)       | Diff semantics → visual primitives: design tokens, encodings, replay timeline, focus.    |
 | [`@kgdiff/renderer`](packages/renderer) | Canvas 2D engine: smooth camera, LOD, label placement, picking, swipe, minimap.          |
@@ -182,9 +184,11 @@ All packages:
 - **Deterministic**: the same inputs give byte-identical diffs, layouts and reports.
 - **Invertible**: `apply(A, diff(A, B).delta) ≅ B` and the inverse delta restores `A`;
   applying hunks one by one in review order always succeeds. Property-tested with fast-check.
-- **Tested**: ~2,200 tests across packages, including acceptance tests that run every example
-  dataset through the whole pipeline.
-- **Measured** (M-class laptop, `pnpm bench`): diff of 10k nodes / 30k edges ≈ 0.1 s; 50k RDF
+- **Tested**: ~2,100 TypeScript tests across packages and the Rust crates' own, the
+  conformance corpus run by both, and acceptance tests that run every example dataset through
+  the whole pipeline.
+- **Measured** (M-class laptop, 0.10's TypeScript engine; the Rust engine that replaced it in
+  0.11 is measured in [RFC 0002](docs/rfcs/0002-rust-compute-core.md) §7): diff of 10k nodes / 30k edges ≈ 0.1 s; 50k RDF
   triples parsed in ≈ 0.1 s; layout of a 10k-node diff (changes scope) ≈ 1.1 s; per-frame visual
   resolution < 1 ms for 5k nodes; standalone viewer ≈ 116 kB gzip.
 

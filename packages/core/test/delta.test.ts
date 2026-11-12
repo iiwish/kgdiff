@@ -9,8 +9,7 @@ import {
   normalize,
 } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { planRenames } from '../src/delta-emit.js';
-import { diff } from '../src/sync.js';
+import { diff } from './support/engine.js';
 
 const before: GraphInput = {
   meta: { name: 'demo', version: 'v1' },
@@ -452,27 +451,6 @@ describe('invertDelta', () => {
 });
 
 describe('rekeys', () => {
-  it('orders renames so that every target id is free, breaking cycles with a temporary id', () => {
-    const occupied = new Set(['a', 'b', 'c', 'x']);
-    const plan = planRenames(
-      new Map([
-        ['a', 'b'],
-        ['b', 'a'],
-        ['x', 'c'],
-        ['c', 'y'],
-      ]),
-      (id) => occupied.has(id),
-      () => false,
-    );
-    expect(plan).toEqual([
-      ['c', 'y'],
-      ['x', 'c'],
-      ['a', 'a@tmp'],
-      ['b', 'a'],
-      ['a@tmp', 'b'],
-    ]);
-  });
-
   it('round-trips a swap of identities found by similarity matching', () => {
     const g1: GraphInput = {
       nodes: [

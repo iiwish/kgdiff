@@ -1,6 +1,6 @@
 import { type DiffJSON, diffFromJSON, diffToJSON, formatHunk, hashGraph } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { diff } from '../src/sync.js';
+import { diff } from './support/engine.js';
 import { enterpriseAfter, enterpriseBefore } from './support/fixtures.js';
 
 describe('diffToJSON', () => {

@@ -9,8 +9,7 @@
  * `layoutGraph`, `layoutDiffOn`, `layoutAfter`) are computed by kgdiff's Rust layout engine
  * compiled to WebAssembly (`@kgdiff/compute`, loaded with a dynamic `import()` on first use) and
  * are asynchronous; the layout document, `nodeRadius` and `estimateLabelWidth` stay synchronous
- * here. The TypeScript engine of this package is no longer called by this entry and is deleted
- * next (`tests/read-path.ts`).
+ * here, in TypeScript, so that a report can be read without WebAssembly (`tests/read-path.ts`).
  */
 import {
   type DiffResult,
