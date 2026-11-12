@@ -1,19 +1,22 @@
 # RFC 0002: A Rust compute core
 
-- **Status:** Draft, proposed; implemented through phase 4, and released. 0.7.0 shipped the phase 1 to 3 work
+- **Status:** Draft, proposed; implemented through phase 5. **Phase 5 is complete on `main`
+  (2026-11-12) and kgdiff 0.11.0 is awaiting publication.** 0.7.0 shipped the phase 1 to 3 work
   and the layout crate, and 0.8.0 the native CLI, the npm launcher and the Action on the binary
   ([Phase 1](#phase-1--conformance-corpus-this-change), [Phase 2 results](#phase-2-results),
   [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 is the
-  current release and 0.10.0 (the cleanup before phase 5) is about to ship. Left is phase 5, which
-  is now **kgdiff 0.11** (decided 2026-11-11, [Revision](#revision-2026-11-11)): `@kgdiff/compute`
-  replacing the TypeScript compute modules in the browser, with the gates the earlier phases did
-  not meet (the native `normalize` memory target and the WebAssembly targets of
-  [§7](#7-size-and-performance-budgets)), the Rust corpus generator and the migration guide.
-  kgdiff 1.0 carries no new code: it is 0.11 after a two-week stable period ([kgdiff 1.0](#kgdiff-10)). The
-  pull requests and commits of every phase are listed in its results section.
+  current release and 0.10.0 (the cleanup before phase 5) is about to ship. Phase 5 is **kgdiff
+  0.11** (decided 2026-11-11, [Revision](#revision-2026-11-11)): `@kgdiff/compute` replacing the
+  TypeScript compute modules in the browser, with the Rust corpus generator and the migration
+  guide. Its sizes and timings were measured once on a quiet machine, and the gaps to the targets
+  that 0.11 only measures are listed as work after 0.11
+  ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.11 after a
+  two-week stable period ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase
+  are listed in its results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
   results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10; phase 5 moved from 1.0 to 0.11 and 1.0
-  defined as a stable 0.11 on 2026-11-11 ([Revision](#revision-2026-11-11)).
+  defined as a stable 0.11 on 2026-11-11 ([Revision](#revision-2026-11-11)); phase 5 results
+  2026-11-12.
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
@@ -671,6 +674,10 @@ after the compact graph of [#98](https://github.com/iiwish/kgdiff/pull/98)):
 | `layoutDiff`, 2k nodes                                 | 534 ms                                                                         | < 450 ms, measured |
 | parsing 50k Turtle triples                             | 171 ms                                                                         | < 250 ms           |
 
+These are #99's figures of 2026-11-11, at load 3 to 4 and before the last two fixes. The numbers
+measured for the release, on commit 023a697, are in [Phase 5 results](#phase-5-results); they agree
+with these within the noise, except that `diff` with the transport is lower since the trusted read of #102.
+
 The whole engine at opt-level `z` is 301.4 KiB gzip (before #98) and diffs 10k / 30k in 144 ms,
 207 ms with the transport; at `3`, 435.1 KiB and 90 ms / 160 ms. About 70 ms of the 10k diff and
 1 s of the 100k one are the transport (`JSON.parse` and `diffFromJSON`'s consistency checks), and
@@ -1195,7 +1202,7 @@ in §1 differ from it, the code-checked list holds.
 
 ##### Phase 5 progress
 
-- **Done**: the compact graph and typed graph input (#98); the three WebAssembly modules and the
+- **Done** (the results are in [Phase 5 results](#phase-5-results)): the compact graph and typed graph input (#98); the three WebAssembly modules and the
   package (#99); the corpus generated in Rust, TypeScript checking only the read path (#101); the
   public functions on `@kgdiff/compute`, asynchronous (#102).
 - **The TypeScript compute code is deleted.** 12,988 lines of source, everything the "Deleted"
@@ -1211,6 +1218,197 @@ in §1 differ from it, the code-checked list holds.
   of read path and the three entries (6,179 lines in all); `tests/read-path.ts` now lists every
   source file the three packages may have, and its test fails on any other, so compute code cannot
   come back unnoticed.
+
+##### Phase 5 results
+
+Status as of 2026-11-12: phase 5 is complete on `main` (023a697); **0.11.0 is not yet published**.
+Everything in this section was measured on that commit, in one session, on a quiet machine, after
+the earlier phases' numbers had been taken at load averages of 5 to 17 with other builds running
+and so were not comparable with each other. Where this section quotes a number from a pull request,
+it names the pull request and the date; the two are never mixed in one cell.
+
+**Merged** (squash merges into `main`; the first and last commit of each pull request are in
+the pull request itself):
+
+| PR                                                | Commit  | What                                                                                                                               |
+| ------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [#98](https://github.com/iiwish/kgdiff/pull/98)   | 3024eb1 | A compact graph in `kgdiff-core` read through methods, and typed graph input (RFC 0003, part 3); the native memory gate            |
+| [#99](https://github.com/iiwish/kgdiff/pull/99)   | de02790 | The three WebAssembly modules (`compute`, `layout`, `formats`), the `@kgdiff/compute` package, size limits and corpus checks in CI |
+| [#101](https://github.com/iiwish/kgdiff/pull/101) | 88b77d5 | The corpus generator moved to Rust (`cargo xtask conformance`), TypeScript checks only the read path                               |
+| [#102](https://github.com/iiwish/kgdiff/pull/102) | 01a57e9 | `diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat`, `layoutDiff`, `extendLayout` asynchronous, on WebAssembly    |
+| [#103](https://github.com/iiwish/kgdiff/pull/103) | 47a78d8 | The TypeScript compute code deleted (46 files, 12,988 lines, and `n3`, `d3-force`, `d3-quadtree`)                                  |
+| [#104](https://github.com/iiwish/kgdiff/pull/104) | 023a697 | Normalized graphs keep their edge identity, issues and positions on the way into the engine (a regression of #102 found by #103)   |
+
+**Against the acceptance** (the pull requests' own checks, which this section did not repeat, and
+the measurements below):
+
+- _Every corpus case passes against the WebAssembly build in Node; the TypeScript read path passes
+  its part of the corpus._ Met, as recorded by #99 and #104: `packages/compute/test/corpus.test.ts`
+  runs the corpus on the built modules, `cargo xtask conformance --check` regenerates it with the
+  Rust crates on Linux, macOS and Windows (#101), and #104's last commit passed `pnpm check` (2,350
+  tests, none skipped) and `cargo test --workspace`.
+- *The viewer bundle stays < 130 kB gzip with no WebAssembly inside; the add-on budgets hold.*
+  Met: 119.1 KiB, asserted free of WebAssembly by `standalone.test.ts`. The compute add-on grew from
+  33.9 KiB (TypeScript) to 120.4 KiB because it now carries `layout.wasm` inlined; its guard is 127
+  KiB. Measured below.
+- *The full engine < 400 kB gzip.* Met, narrowly: 390.1 KiB (the budget was set from the first
+  measurements on the stable toolchain, [Revision](#revision-2026-11-11) item 7).
+- _Measured and recorded, not gates:_ see the tables below. Not reached: the layout-only module
+  (90.9 KiB against < 45), the parsers (253.1 KiB against < 200) and `layoutDiff` 2k in WebAssembly
+  (474 to 560 ms against < 450). The WebAssembly memory figure (< 80 MB of linear memory) is met by
+  the graph alone (71.5 MiB) and not by the `normalize` call that writes the graph document
+  (220 MiB). `diff` with the transport reaches its target for 10k nodes and sits on the limit for
+  100k nodes. Everything else, and the native memory target (+40 MiB against < 50), is met.
+- _The viewer, scene, renderer and G6 test suites pass unchanged; reports open without
+  initializing WebAssembly unless a group is expanded._ Met as recorded by #102 (the packages
+  load the engine with `import('@kgdiff/compute')` on first use; `kgdiff-viewer.js` has none). The
+  scene, renderer and G6 sources are not touched by phase 5 (`git diff 99c77ef..023a697`), and
+  their benchmarks below are unchanged within the noise.
+- _Deleted:_ everything the list names, in #103, and `tests/read-path.ts` is now an allow-list
+  that fails on any other source file.
+- _The migration guide, in English and Chinese:_ `docs/guide/migrating-to-0.11.md` (#102, #103).
+- _0.11.0 is published on npm, crates.io and the GitHub release channels._ **Not yet.**
+
+**Measurements.** Commit 023a697, macOS on an Apple M5, Rust 1.95.0 (the pinned toolchain),
+Node 24.15.0, wasm-bindgen 0.2.129 and binaryen version_133 (the versions of CI). Each figure is
+the median of at least three runs (the benchmarks report their own samples; the others were run
+three times) with the range of all samples, and the load average at the time (`uptime`, one-minute
+figure). The machine ran no other task of mine but never idled: apps in the background kept the
+load at 3 to 5, and it reached 7 to 9 only while this session compiled. Timings were taken after
+the compile finished and the load returned to 3 to 5; the native benchmarks of the first
+minute (`cargo bench -p kgdiff-core`) ran at 3 to 8. Treat differences under about 10% as noise.
+
+Native (`cargo bench -p kgdiff-core`, `-p kgdiff-layout`, the `dist` profile for the binary):
+
+| What                                                            | Target (§7) | Measured                                                                                                                                                              | Load | Met |
+| --------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | --- |
+| `diff`, 10k nodes / 30k edges (from inputs, `normalize` inside) | < 40 ms     | 30.2 ms (28.6–31.6, 5 samples); 23.9 ms from normalized graphs                                                                                                        | 3–8  | yes |
+| `diff`, 100k / 300k (from inputs)                               | < 500 ms    | 467 ms (446–483, 5); 340 ms from normalized graphs                                                                                                                    | 3–8  | yes |
+| similarity matching, 5k unmatched per side                      | < 400 ms    | 101 ms (99–108, 3); 2k per side 41 ms                                                                                                                                 | 3–8  | yes |
+| `normalize` memory, 100k / 300k, resident growth                | < 50 MB     | +40.4 MiB (+40.4, +40.4, +42.3; 3 runs)                                                                                                                               | 6–7  | yes |
+| `layout_diff`, 2k nodes                                         | < 250 ms    | 162.5 ms tree (156–196, 10); 204.3 ms scale-free (197–211, 10)                                                                                                        | 4–7  | yes |
+| `layout_diff`, 5k and 10k, scope all (also in the bench)        | —           | 312.6 ms (5k scale-free), 482.9 ms (10k dense)                                                                                                                        | 4–7  | —   |
+| parsing 50k Turtle triples                                      | < 100 ms    | about 60 ms per parse, from `kgdiff` of a 50k-triple file against itself: 127 ms (124–129; 3 × 30 runs), which parses and normalizes it twice, process start included | 4–5  | yes |
+| `kgdiff --version` (warm)                                       | < 5 ms      | 1.5 ms (1.3–2.3; 3 × 30 runs)                                                                                                                                         | 4–5  | yes |
+| CLI, enterprise-kg summary end to end (warm)                    | < 20 ms     | 3.3 ms (3.1–3.5; 3 × 30 runs)                                                                                                                                         | 4–5  | yes |
+| `kgdiff` binary (`dist` profile: stripped, viewer bundles in)   | < 12 MB     | 3,994,976 bytes (3.81 MiB)                                                                                                                                            | —    | yes |
+
+The Turtle figure is derived, not isolated: no native benchmark of the parser exists, and the 50k
+triples are a generated file (12,500 nodes with a type, a label, a number and one edge each), not
+the file of earlier phases. The end-to-end CLI figures are the same method as phase 3, 30 runs
+after 3 warm-up runs, a child process spawned from Node with its output discarded.
+
+WebAssembly (Node 24, the modules built by `pnpm --filter @kgdiff/compute build:wasm`; `diffSync`
+is what the public `diff` runs, with the transport to `DiffResult` on the trusted path of #102):
+
+| What                                                                  | Target (§7)        | Measured                                                                                | Load    | Met             |
+| --------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------- | ------- | --------------- |
+| `compute.wasm` gzip with glue (core + layout, no parsers)             | < 400 kB (budget)  | 1,054.6 KiB raw, **390.1 KiB** gzip                                                     | —       | yes             |
+| `layout.wasm` gzip with glue (`@kgdiff/compute/layout` bundled)       | < 45 kB, measured  | 216.4 KiB raw, **90.9 KiB** gzip                                                        | —       | **no**          |
+| `formats.wasm` gzip with glue                                         | < 200 kB, measured | 621.6 KiB raw, **253.1 KiB** gzip                                                       | —       | **no**          |
+| `diff`, 10k / 30k, with the transport (`diffSync`)                    | < 150 ms, measured | 140.0 ms (131.3–149.9; 3 runs of 9; objects 140.3, text 140.0)                          | 4.0–4.4 | yes             |
+| `diff`, 100k / 300k, with the transport                               | < 2 s, measured    | 1.97 s as objects (1.95–2.37), 2.02 s as text (1.88–2.27); run medians 1.89–2.07 s      | 4.0–4.4 | at the limit    |
+| `diff` without the transport (`json.diff`), 10k / 30k and 100k / 300k | dropped as a gate  | 94.2 ms (86.1–102.7) and 1.20 s (1.17–1.84; the first call of each run is the slow one) | 4.0–4.4 | —               |
+| module initialization, from bytes in Node (compile + instantiate)     | < 100 ms, measured | 20–21 ms per module (5 fresh processes each); all three in one process 24.6–26.2 ms     | 4–5     | yes (Node only) |
+| similarity matching, 5k unmatched per side                            | < 800 ms           | 145 ms (137–160; 3 runs of 5)                                                           | 4.0–4.4 | yes             |
+| `layoutDiff`, 2k nodes                                                | < 450 ms, measured | 474 ms tree (453–602); 560 ms scale-free (532–623); 3 runs of 9                         | 4.0–4.4 | **no**          |
+| `layoutDiff`, 10k-node diff, default (changes) scope                  | —                  | 536 ms (532–1,054; 3 runs of 7), 2,400 nodes laid out                                   | 3.8     | —               |
+| parsing 50k Turtle triples                                            | < 250 ms           | 110.7 ms (106.1–185.1; 3 runs of 9)                                                     | 4.0–4.4 | yes             |
+| `normalize` 100k / 300k as `kgdiff.graph` text, linear memory         | < 80 MB, measured  | 220.1 MiB (3 fresh processes, identical)                                                | 4.1     | **no**          |
+| `hashGraph` 100k / 300k (the graph alone), linear memory              | < 80 MB, measured  | 71.5 MiB (3 fresh processes, identical)                                                 | 4.1     | yes             |
+| `diff` 100k / 300k as text, linear memory (high-water mark)           | —                  | 761.9 MiB (3 fresh processes, identical)                                                | 4.1     | —               |
+
+The inputs are the synthetic graphs of `crates/kgdiff-core/benches/synthetic` (the same stream as
+the native benchmark and as #99), 2.5 MB of JSON per graph for 10k and 26 MB for 100k. The 2k
+layouts are the two graphs of `kgdiff-layout`'s benchmarks, written as `kgdiff.diff` documents.
+Of the two, the scale-free graph is the one #99 reported (534 ms then).
+
+Browser artifacts (`pnpm build`, gzip level 9, "kB" = KiB as `standalone.test.ts` computes it):
+
+| Artifact                                                    | Budget        | Measured                                                                                                                                 |
+| ----------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `kgdiff-viewer.js` (standalone main bundle, no WebAssembly) | < 130 kB gzip | 391,661 B min, **119.1 KiB** gzip (was 116.3 on 2026-11-07)                                                                              |
+| `kgdiff-viewer-compute.js` (add-on, `layout.wasm` inlined)  | guard 127 KiB | 305,680 B min, **120.4 KiB** gzip (was 33.9 KiB of TypeScript)                                                                           |
+| `dist` of `@kgdiff/core`                                    | —             | 156,850 B JS, 403,214 B in all (gzip of the JS 39.4 KiB)                                                                                 |
+| `dist` of `@kgdiff/layout`                                  | —             | 18,216 B JS, 49,473 B in all (6.3 KiB)                                                                                                   |
+| `dist` of `@kgdiff/formats`                                 | —             | 4,133 B JS, 20,414 B in all (1.8 KiB)                                                                                                    |
+| `dist` of `@kgdiff/compute` (without the `.wasm` files)     | —             | 30,684 B JS, 83,100 B in all (7.5 KiB)                                                                                                   |
+| `dist` of `@kgdiff/scene`, `renderer`, `viewer`, `g6`       | —             | JS 170,364 B, 176,936 B, 461,784 B (without `standalone/`), 86,697 B; in all 443,226, 499,541, 1,825,001 (with `standalone/`), 224,276 B |
+
+`dist` figures are the sums of the files (JavaScript only, and everything with declarations and
+source maps); the gzip figure is of the concatenated JavaScript. Against 2026-11-07 (#103's table,
+built from scratch): `@kgdiff/core`'s JavaScript fell from 276.0 to 156.9 kB, `@kgdiff/layout`'s from
+109.5 to 18.2 kB and `@kgdiff/formats`'s from 247.7 to 4.1 kB. The HTML report overhead (< 135 kB
+gzip) was not measured again; no Rust report code changed in phase 5.
+
+`pnpm bench` (scene, renderer and G6; 11 benchmarks, all within their assertions; two runs at load
+3 to 4, mean per call, and the packages' sources are unchanged since 99c77ef): `buildScene` 5k / 10k
+6.2–10.0 ms and 10k / 30k 17.9–25 ms (budget 50 ms); `resolve` per frame, 5k / 10k, `union` 0.81–0.94
+ms, `after` 0.89–1.59 ms, mixed shapes 0.90–1.10 ms (budget 4 ms); `FrameCache.sync` 10k nodes
+2.0–2.7 ms; `pickAt` 0.26–0.48 ms; `placeLabels` 5k 1.4–2.0 ms; `toG6Data` 5k / 10k 12–29 ms;
+`tourOrder` 1,217 hunks 0.3–0.6 ms. They did not change with this phase.
+
+**Where the implementation differs from this RFC's plan** (from the pull requests):
+
+- _Gates._ The targets were re-based twice on 2026-11-11 ([Revision](#revision-2026-11-11) items 4
+  and 7): the full engine's budget went from < 250 kB to < 400 kB gzip because the build uses the
+  pinned stable toolchain only (#99 first built with `-Zbuild-std` and immediate-abort panics and
+  got 307.6 KiB; the stable build is 389–390 KiB), and the layout-only module, the parsers, `diff`
+  with the transport and the memory figures became "measured and recorded" instead of gates. CI
+  holds each module under its size plus about 5%, as a guard.
+- _Opt-level._ `compute.wasm` is built at opt-level `z` with `kgdiff-core` at `2`. Opt-level `3`
+  everywhere was 435.1 KiB and gave the same 10k diff and a 100k `json.diff` of 1.19 s instead of
+  1.38 s (#99, 2026-11-11, load about 5, alternating runs, before #98).
+- _The transport._ A trusted read (`diffFromTrustedJSON`, an internal `@kgdiff/core/computed`
+  export) skips `diffFromJSON`'s consistency checks for the document the engine has just written;
+  the 10k diff with the transport went from 160 to 141 ms (#102, 2026-11-12, load 3 to 5).
+  `wiring.test.ts` shows that both reads give the same object for every corpus case.
+- _`@kgdiff/formats` stays as a deprecated shell._ Its `parseGraph`, `detectFormat` and
+  `compactIri` are asynchronous wrappers over `@kgdiff/compute`, and `FORMAT_EXTENSIONS` is kept
+  as data; the parsers are gone (#102, #103). `@kgdiff/compute`
+  depends on core, formats and layout and they load it with `import()` on first use, a package
+  cycle that the build orders by hand and types with a stub (#102).
+- _Layout exports._ `@kgdiff/layout` also gained `layoutGraph`, `layoutDiffOn` and `layoutAfter`
+  (asynchronous), for the first embedding host, so that no later change is needed (#102).
+- _The corpus generator_ is the `xtask` crate (`cargo xtask conformance`), not a library of the
+  existing crates; the case definitions became `conformance/definitions.json`; five primitive
+  vectors that are V8 reference data are fixed, not generated (#101).
+- _The read-path tests use the WebAssembly engine to make their data._ The tests of `@kgdiff/core`
+  and `@kgdiff/layout` that need a diff or a layout compute it with the built modules
+  (`packages/core/test/support/engine.ts`), so they fail with a message naming the build command
+  when the modules are missing; none is skipped. The comparisons of `@kgdiff/compute`'s tests with
+  the TypeScript engine became comparisons with the corpus or, where the corpus has no equivalent,
+  with values that engine computed at 01a57e9 (`packages/compute/test/typescript-engine.json`)
+  (#103).
+- _The nightly differential run was removed_ in #101, before the deletion of #103: it compared the
+  Rust engine with the TypeScript one and loses its reference with it. The corpus on three operating systems, the WebAssembly corpus
+  test and the `proptest` properties cover what it did; §8 says so.
+- _`log2` was removed,_ not only deprecated; `n3`, `d3-force` and `d3-quadtree` are no longer
+  dependencies, and the site is deployed to GitHub Pages only (`vercel.json` removed) (#102, #103).
+- _A regression was found and fixed in the phase_ (#104): graphs given as `KGraph` lost their edge
+  identity, issues and positions on the way into the engine. No document format changed; no
+  changeset was added because the behaviour returns to 0.10's.
+
+**Not met, and after 0.11.** None of these blocks 0.11 ([§7](#7-size-and-performance-budgets));
+each stays open until reviewed before 1.0. The routes below are the ones the pull requests listed
+(#99 unless stated), gathered here; none is done.
+
+| Open item                                    | Gap (this section)                                      | Route                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `layout.wasm` size                           | 90.9 KiB against < 45                                   | A compact range table for the three label-width classes instead of ICU's general-category trie (−4 to −6 KiB; widths in JavaScript would tie the layout to the engine's Unicode version and break byte equality); sorted-slice lookups instead of hash maps inside `kgdiff-layout`; layout options as numbers instead of a `Value` object. The stable build also carries the standard library's panic and formatting code in every module; the first build with unstable flags, which dropped it, was 69.1 KiB, so these steps alone are unlikely to reach 45 |
+| `formats.wasm` size                          | 253.1 KiB against < 200                                 | A port of n3's Turtle reader instead of `oxttl` (§5), fewer map instantiations                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `layoutDiff` 2k in WebAssembly               | 474 / 560 ms against < 450 (the native is 163 / 204 ms) | Not analysed. The same code is 2.7 to 2.9 times slower in WebAssembly than native, and `layout.wasm` is built at opt-level `z` for size; a higher opt-level for that module is a candidate, at the cost of size                                                                                                                                                                                                                                                                                                                                               |
+| `diff` 100k / 300k with the transport        | 1.97–2.02 s, at the limit of 2 s                        | The transport is about 0.8 s of it (`json.diff` is 1.20 s): the trusted read can go further (a typed array instead of `diff.v1` text); opt-level `3` for the core took `json.diff` 100k from 1.38 to 1.19 s at 64 KiB more gzip (#99, before #98)                                                                                                                                                                                                                                                                                                             |
+| WebAssembly memory of `normalize`            | 220.1 MiB against < 80 (the graph alone is 71.5)        | `graph_to_json` writing the `kgdiff.graph` document without building a tree of values first                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `diff` of 100k / 300k as text, linear memory | 761.9 MiB (no target)                                   | Measured for the first time here; the text, both graphs, the result and its document are held at once. To be reviewed with the line above                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Module initialization in the browser         | not measured (Node only: 20–21 ms per module)           | Measure compile from the HTTP cache in Chrome and Firefox before 1.0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `diff` with the transport, 10k nodes         | 140 ms against < 150, inside by 7%                      | Nothing needed; watch it, because a small change in the engine would cross the line                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Native `diff` 100k / 300k                    | 467 ms against < 500, inside by 7%                      | As above                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+**What was not measured.** The HTML report overhead; the browser (Chrome, Firefox, Safari)
+timings of any WebAssembly figure, including initialization; the Node 22 and 26 figures (only 24);
+the native Turtle parse in isolation (only through the CLI); Linux and Windows. The nightly
+differential run no longer exists to compare with.
 
 #### kgdiff 1.0
 

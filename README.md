@@ -187,10 +187,11 @@ All packages:
 - **Tested**: ~2,100 TypeScript tests across packages and the Rust crates' own, the
   conformance corpus run by both, and acceptance tests that run every example dataset through
   the whole pipeline.
-- **Measured** (M-class laptop, 0.10's TypeScript engine; the Rust engine that replaced it in
-  0.11 is measured in [RFC 0002](docs/rfcs/0002-rust-compute-core.md) §7): diff of 10k nodes / 30k edges ≈ 0.1 s; 50k RDF
-  triples parsed in ≈ 0.1 s; layout of a 10k-node diff (changes scope) ≈ 1.1 s; per-frame visual
-  resolution < 1 ms for 5k nodes; standalone viewer ≈ 116 kB gzip.
+- **Measured** (M-class laptop, 0.11: the Rust engine in WebAssembly under Node 24; the numbers and the
+  targets still missed are in [RFC 0002](docs/rfcs/0002-rust-compute-core.md#phase-5-results)): diff of 10k
+  nodes / 30k edges ≈ 0.14 s, natively 30 ms; 50k RDF triples parsed in ≈ 0.11 s; layout of a 10k-node
+  diff (changes scope) ≈ 0.5 s; per-frame visual resolution < 1 ms for 5k nodes; standalone viewer ≈ 119 kB
+  gzip, and the engine's WebAssembly ≈ 390 kB gzip, loaded only when something is computed.
 
 ## Examples
 
