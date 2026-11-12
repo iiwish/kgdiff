@@ -186,6 +186,7 @@ pub fn escape_markdown(text: &str) -> String {
 }
 
 /// `MarkdownOptions`.
+#[non_exhaustive]
 pub struct MarkdownOptions<'a> {
     pub locale: Locale,
     pub title: &'a str,
@@ -193,6 +194,18 @@ pub struct MarkdownOptions<'a> {
     pub generator: &'a str,
     /// Watched attribute keys; `None` for the default definitions.
     pub watch: Option<&'a [String]>,
+}
+
+impl<'a> MarkdownOptions<'a> {
+    /// The options with the default watched attribute keys.
+    pub fn new(locale: Locale, title: &'a str, generator: &'a str) -> MarkdownOptions<'a> {
+        MarkdownOptions {
+            locale,
+            title,
+            generator,
+            watch: None,
+        }
+    }
 }
 
 /// `renderMarkdown`. Deterministic: no timestamps.

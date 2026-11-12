@@ -85,6 +85,7 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+#[doc(hidden)]
 pub mod canonical;
 mod classify;
 pub mod delta;
@@ -107,8 +108,10 @@ mod packed;
 mod pipeline;
 mod reader;
 mod stats;
+#[doc(hidden)]
 pub mod text;
 mod transport;
+#[doc(hidden)]
 pub mod util;
 
 pub use delta::{

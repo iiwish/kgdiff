@@ -54,33 +54,33 @@ fn rdf_options(value: Option<&Value>) -> RdfOptions {
     let Some(value) = value else {
         return defaults;
     };
-    RdfOptions {
-        label_predicates: strings(value, "labelPredicates"),
-        alias_predicates: strings(value, "aliasPredicates"),
-        type_edges: flag(value, "typeEdges", defaults.type_edges),
-        owl_restrictions: flag(value, "owlRestrictions", defaults.owl_restrictions),
-        languages: strings(value, "languages"),
-        prefixes: pairs(value.get("prefixes")),
-        compact_with: match value.get("compactWith").and_then(Value::as_str) {
-            Some("declared") => CompactWith::Declared,
-            _ => CompactWith::WellKnown,
-        },
-        fold_annotations: flag(value, "foldAnnotations", defaults.fold_annotations),
-    }
+    let mut options = RdfOptions::default();
+    options.label_predicates = strings(value, "labelPredicates");
+    options.alias_predicates = strings(value, "aliasPredicates");
+    options.type_edges = flag(value, "typeEdges", defaults.type_edges);
+    options.owl_restrictions = flag(value, "owlRestrictions", defaults.owl_restrictions);
+    options.languages = strings(value, "languages");
+    options.prefixes = pairs(value.get("prefixes"));
+    options.compact_with = match value.get("compactWith").and_then(Value::as_str) {
+        Some("declared") => CompactWith::Declared,
+        _ => CompactWith::WellKnown,
+    };
+    options.fold_annotations = flag(value, "foldAnnotations", defaults.fold_annotations);
+    options
 }
 
 fn json_fields(value: Option<&Value>) -> JsonFields {
     let Some(fields) = value.and_then(|v| v.get("fields")) else {
         return JsonFields::default();
     };
-    JsonFields {
-        id: string(fields, "id"),
-        label: string(fields, "label"),
-        r#type: string(fields, "type"),
-        source: string(fields, "source"),
-        target: string(fields, "target"),
-        predicate: string(fields, "predicate"),
-    }
+    let mut out = JsonFields::default();
+    out.id = string(fields, "id");
+    out.label = string(fields, "label");
+    out.r#type = string(fields, "type");
+    out.source = string(fields, "source");
+    out.target = string(fields, "target");
+    out.predicate = string(fields, "predicate");
+    out
 }
 
 /// `parseGraph(text, options)`, without `jsonld.documentLoader`, which is `loader` here.
@@ -99,14 +99,13 @@ fn parse(text: &str, options_text: &str, loader: Option<&DocumentLoader>) -> Res
             ))
         })?),
     };
-    let options = ParseOptions {
-        format,
-        filename: string(&value, "filename"),
-        base_iri: string(&value, "baseIRI"),
-        rdf: rdf_options(value.get("rdf")),
-        json: json_fields(value.get("json")),
-        document_loader: loader,
-    };
+    let mut options = ParseOptions::default();
+    options.format = format;
+    options.filename = string(&value, "filename");
+    options.base_iri = string(&value, "baseIRI");
+    options.rdf = rdf_options(value.get("rdf"));
+    options.json = json_fields(value.get("json"));
+    options.document_loader = loader;
     let result = parse_graph(text, &options)?;
     Ok(json::to_string(&result.to_value()))
 }

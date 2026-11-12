@@ -87,10 +87,11 @@ fn ids(layout: &kgdiff_layout::LayoutResult) -> BTreeSet<String> {
 }
 
 fn changes_only(hops: Option<usize>) -> LayoutOptions {
-    LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        context_hops: hops,
-        ..LayoutOptions::default()
+    {
+        let mut o = LayoutOptions::default();
+        o.scope = Some(LayoutScope::Changes);
+        o.context_hops = hops;
+        o
     }
 }
 
@@ -146,10 +147,8 @@ fn keeps_both_endpoints_of_a_relation_only_change() {
 fn defaults_to_changes_above_the_threshold() {
     let diff = changes(17).diff();
     let threshold = |t: Option<f64>| {
-        let options = LayoutOptions {
-            large_graph_threshold: t,
-            ..LayoutOptions::default()
-        };
+        let mut options = LayoutOptions::default();
+        options.large_graph_threshold = t;
         layout_diff(&diff, &options).unwrap().scope
     };
     assert_eq!(threshold(None), LayoutScope::All);
@@ -198,10 +197,8 @@ fn never_expands_context_from_a_hub() {
     assert_eq!(ids(&layout), expected_scope(&diff, 1, 40));
 
     // Without the rule the hub pulls in all of its leaves.
-    let all = LayoutOptions {
-        hub_degree: Some(f64::INFINITY),
-        ..changes_only(None)
-    };
+    let mut all = changes_only(None);
+    all.hub_degree = Some(f64::INFINITY);
     let all = layout_diff(&diff, &all).unwrap();
     assert_eq!(all.positions.len(), 63);
     assert!(!all.hidden.contains_key("hub"));

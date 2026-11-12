@@ -6,7 +6,7 @@ use std::io::Read;
 
 use kgdiff_core::js;
 use kgdiff_core::{ErrorCode, KgdiffError};
-use kgdiff_formats::{FormatId, ParseOptions, ParseResult, RdfOptions, parse_graph};
+use kgdiff_formats::{FormatId, ParseOptions, ParseResult, parse_graph};
 use kgdiff_report::width::sanitize;
 
 use crate::args::{FORMATS, Format, STDIO};
@@ -369,15 +369,10 @@ fn strip_period(message: &str) -> &str {
 
 /// Parses a graph, turning parser errors into messages that name the input.
 pub fn parse_input(input: &RawInput, options: &GraphParseOptions<'_>) -> CliResult<ParseResult> {
-    let mut parse_options = ParseOptions {
-        format: options.format,
-        filename: input.filename.clone(),
-        rdf: RdfOptions {
-            languages: options.languages.map(<[String]>::to_vec),
-            ..RdfOptions::default()
-        },
-        ..ParseOptions::default()
-    };
+    let mut parse_options = ParseOptions::default();
+    parse_options.format = options.format;
+    parse_options.filename = input.filename.clone();
+    parse_options.rdf.languages = options.languages.map(<[String]>::to_vec);
     if input.empty {
         // --allow-empty: an empty graph, without asking a parser to guess the format of nothing.
         parse_options.format = Some(FormatId::Json);

@@ -193,15 +193,12 @@ impl Streams<'_> {
         } else {
             LayoutScope::Changes
         };
-        let stats = LayoutStats {
-            strategy: if self.int() == 0 {
-                LayoutStrategy::Union
-            } else {
-                LayoutStrategy::Anchored
-            },
-            iterations: self.count(),
-            nodes: positions.len(),
+        let strategy = if self.int() == 0 {
+            LayoutStrategy::Union
+        } else {
+            LayoutStrategy::Anchored
         };
+        let stats = LayoutStats::new(strategy, self.count(), positions.len());
         (partial_layout(positions, radii, hidden, scope, stats), ids)
     }
 }

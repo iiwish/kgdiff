@@ -323,15 +323,9 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
         ));
     }
     if let Some(path) = &o.markdown {
-        let md = render_markdown(
-            &result,
-            &MarkdownOptions {
-                locale: ctx.locale,
-                title: &title,
-                generator: &generator,
-                watch: o.watch_attrs.as_deref(),
-            },
-        )?;
+        let mut markdown = MarkdownOptions::new(ctx.locale, &title, &generator);
+        markdown.watch = o.watch_attrs.as_deref();
+        let md = render_markdown(&result, &markdown)?;
         if path == STDIO {
             stdout_text = Some(md);
         } else {
@@ -345,24 +339,20 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
             Some(io.now()?)
         };
         let side = |meta: Option<&Object>, input: &RawInput, format: kgdiff_formats::FormatId| {
-            ReportSide {
-                name: graph_label(meta, input),
-                format: Some(format.id().to_owned()),
-            }
+            ReportSide::new(graph_label(meta, input), Some(format.id().to_owned()))
         };
-        let info = ReportInfo {
-            title: title.clone(),
-            generator: generator.clone(),
-            generated_at,
-            before: side(before_meta.as_ref(), &before_input, before_format),
-            after: side(after_meta.as_ref(), &after_input, after_format),
-            mode: o.mode.clone(),
-            scope: o.scope.clone(),
-            theme: o.theme.clone(),
-            locale: ctx.locale,
-            panels: o.panels.clone(),
-            shapes: None,
-        };
+        let mut info = ReportInfo::new(
+            title.clone(),
+            generator.clone(),
+            side(before_meta.as_ref(), &before_input, before_format),
+            side(after_meta.as_ref(), &after_input, after_format),
+        );
+        info.generated_at = generated_at;
+        info.mode = o.mode.clone();
+        info.scope = o.scope.clone();
+        info.theme = o.theme.clone();
+        info.locale = ctx.locale;
+        info.panels = o.panels.clone();
         let payload = report_payload(&result, &info);
         let compute = if needs_compute(&payload) {
             load_compute(o, io, &ctx)
@@ -371,10 +361,7 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
         };
         let html = render_report_html(
             &payload,
-            ViewerBundles {
-                main: bundle,
-                compute: compute.as_deref(),
-            },
+            ViewerBundles::new(bundle, compute.as_deref()),
             &describe_diff(&result, ctx.locale),
             GZIP_THRESHOLD,
         );
@@ -402,13 +389,10 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
     }
 
     if stdout_text.is_none() && !o.common.quiet {
-        let text = TextContext {
-            paint: ctx.paint.clone(),
-            locale: ctx.locale,
-            width: output_width(io),
-            limit: o.limit,
-            watch: o.watch_attrs.clone(),
-        };
+        let mut text = TextContext::new(ctx.paint.clone(), ctx.locale);
+        text.width = output_width(io);
+        text.limit = o.limit;
+        text.watch = o.watch_attrs.clone();
         stdout_text = Some(if o.json.as_deref() == Some(STDIO) {
             json_text(&diff_to_json(&result), o.pretty)
         } else if o.delta.as_deref() == Some(STDIO) {
@@ -584,17 +568,15 @@ pub fn run_apply(o: &ApplyCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
         .and_then(Value::as_str)
         .and_then(EdgeIdentity::from_name)
         .unwrap_or_default();
-    let graph = normalize(
-        &Value::Object(parsed.graph),
-        NormalizeOptions {
-            edge_identity,
-            ..NormalizeOptions::default()
-        },
-    )?;
+    let mut normalize_options = NormalizeOptions::default();
+    normalize_options.edge_identity = edge_identity;
+    let graph = normalize(&Value::Object(parsed.graph), normalize_options)?;
     let delta = Delta::from_value(&delta_value)?;
+    let mut apply_options = ApplyOptions::default();
+    apply_options.strict = o.strict;
 
     let (result, skipped) = if o.strict {
-        match apply_delta(&graph, &delta, ApplyOptions { strict: true }) {
+        match apply_delta(&graph, &delta, apply_options) {
             Ok(applied) => applied,
             Err(error) if error.code == ErrorCode::DeltaBaseMismatch => {
                 let detail = |key: &str| {
@@ -633,7 +615,7 @@ pub fn run_apply(o: &ApplyCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
             Err(error) => return Err(error.into()),
         }
     } else {
-        let (result, skipped) = apply_delta(&graph, &delta, ApplyOptions { strict: false })?;
+        let (result, skipped) = apply_delta(&graph, &delta, apply_options)?;
         if !skipped.is_empty() {
             let total = delta.ops.len();
             let tail = if o.verbose {

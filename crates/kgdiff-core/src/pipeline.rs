@@ -47,6 +47,7 @@ impl Ctx<'_> {
 /// The result of `diff`: both normalized graphs, the union of their nodes and edges with their
 /// changes, the hunks, the matches, the delta and the statistics (`DiffResult`).
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct DiffResult {
     pub before: KGraph,
     pub after: KGraph,

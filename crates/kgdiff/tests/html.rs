@@ -427,27 +427,14 @@ fn renders_html_building_blocks() {
     assert_eq!(encode_payload(&payload, 10).1, Some("gzip-base64"));
     let html = render_report_html(
         &payload,
-        ViewerBundles {
-            main: "main()",
-            compute: Some("x = \"</script>\""),
-        },
+        ViewerBundles::new("main()", Some("x = \"</script>\"")),
         "d",
         kgdiff_report::html::GZIP_THRESHOLD,
     );
     assert!(
         html.contains("<script>main()</script>\n<script>x = \"<\\/script>\"</script>\n</body>")
     );
-    let plain = || {
-        render_report_html(
-            &payload,
-            ViewerBundles {
-                main: "/**/",
-                compute: None,
-            },
-            "d",
-            512 * 1024,
-        )
-    };
+    let plain = || render_report_html(&payload, ViewerBundles::new("/**/", None), "d", 512 * 1024);
     assert_eq!(plain(), plain());
     assert!(
         plain().contains("<title>a → b · kgdiff</title>") && plain().contains("<html lang=\"en\">")

@@ -310,9 +310,10 @@ fn generate_case(repo: &Path, def: &Definition, recorder: &Recorder) -> Result<C
         .ok_or("no apply.json")?;
     let applied = json::parse(std::str::from_utf8(applied).map_err(|e| e.to_string())?)
         .map_err(|e| format!("apply.json: {e}"))?;
-    let options = NormalizeOptions {
-        edge_identity: lib.options.edge_identity,
-        ..NormalizeOptions::default()
+    let options = {
+        let mut o = NormalizeOptions::default();
+        o.edge_identity = lib.options.edge_identity;
+        o
     };
     let graph = normalize(&applied, options).map_err(|e| format!("apply.json: {}", e.message))?;
     if hash_graph(&graph) != lib.hashes[1] {

@@ -56,6 +56,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
       { text: 'Embed the viewer', link: '/docs/guide/viewer' },
       { text: 'Use the engine in code', link: '/docs/guide/library' },
       { text: 'Migrating to 0.11', link: '/docs/guide/migrating-to-0.11' },
+      { text: 'Migrating to 0.12', link: '/docs/guide/migrating-to-0.12' },
       { text: 'Embed in a Rust application', link: '/docs/guide/embedding' },
       { text: 'Browse a graph with G6', link: '/docs/guide/g6' },
       { text: 'Deltas: apply and invert', link: '/docs/guide/deltas' },
@@ -69,6 +70,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
       { text: 'Viewer: interaction and API', link: '/docs/interaction' },
       { text: 'Viewer elements: reference', link: '/docs/viewer-elements' },
       { text: 'Delta format', link: '/docs/delta-format' },
+      { text: 'Versioning', link: '/docs/versioning' },
     ],
   },
   {
@@ -103,6 +105,7 @@ const zhSidebar: DefaultTheme.SidebarItem[] = [
       { text: '嵌入查看器', link: '/docs/zh/guide/viewer' },
       { text: '在代码中使用引擎', link: '/docs/zh/guide/library' },
       { text: '迁移到 0.11', link: '/docs/zh/guide/migrating-to-0.11' },
+      { text: '迁移到 0.12', link: '/docs/zh/guide/migrating-to-0.12' },
       { text: '在 Rust 应用中嵌入', link: '/docs/zh/guide/embedding' },
       { text: '用 G6 浏览单张图', link: '/docs/zh/guide/g6' },
       { text: '增量：应用与反向', link: '/docs/zh/guide/deltas' },
@@ -116,6 +119,7 @@ const zhSidebar: DefaultTheme.SidebarItem[] = [
       { text: '查看器：交互与 API', link: '/docs/zh/interaction' },
       { text: '查看器元素：参考', link: '/docs/zh/viewer-elements' },
       { text: '增量格式', link: '/docs/zh/delta-format' },
+      { text: '版本约定', link: '/docs/zh/versioning' },
     ],
   },
   {

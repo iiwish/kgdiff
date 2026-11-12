@@ -30,7 +30,9 @@ with other options) passes it with `report_payload_with` or `build_report_html_w
 use kgdiff_layout::{LayoutOptions, layout_diff};
 use kgdiff_report::{ReportLayout, report_payload_with};
 
-let layout = layout_diff(&diff, &LayoutOptions { seed: Some(7.0), ..LayoutOptions::default() })?;
+let mut options = LayoutOptions::default();
+options.seed = Some(7.0);
+let layout = layout_diff(&diff, &options)?;
 let payload = report_payload_with(&diff, ReportLayout::Given(&layout), &info)?;
 ```
 

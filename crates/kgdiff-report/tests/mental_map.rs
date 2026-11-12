@@ -62,9 +62,10 @@ fn read(path: &Path) -> Value {
 }
 
 fn graph(value: &Value, options: &DiffOptions) -> KGraph {
-    let options = NormalizeOptions {
-        edge_identity: options.edge_identity,
-        ..NormalizeOptions::default()
+    let options = {
+        let mut o = NormalizeOptions::default();
+        o.edge_identity = options.edge_identity;
+        o
     };
     normalize(value, options).expect("a valid graph")
 }
@@ -98,12 +99,14 @@ fn corpus_pairs() -> Vec<Pair> {
 /// `n2` name other things in the after version, and the removed `n1` gets a union id that is an
 /// id of neither version (`n1@before`). The corpus has no such collision.
 fn renumbered() -> Pair {
-    let options = DiffOptions {
-        r#match: kgdiff_core::MatchOptions {
-            strategy: MatchStrategy::Similarity,
-            ..DiffOptions::default().r#match
-        },
-        ..DiffOptions::default()
+    let options = {
+        let mut o = DiffOptions::default();
+        o.r#match = {
+            let mut o = DiffOptions::default().r#match;
+            o.strategy = MatchStrategy::Similarity;
+            o
+        };
+        o
     };
     let before = r#"{"nodes":[
         {"id":"n1","label":"Ada Lovelace","types":["person"]},
@@ -151,10 +154,7 @@ fn info() -> ReportInfo {
     host::report_info("v1 → v2", "v1", "v2")
 }
 
-const STUBS: ViewerBundles<'static> = ViewerBundles {
-    main: "/* viewer */",
-    compute: Some("/* compute */"),
-};
+const STUBS: ViewerBundles<'static> = ViewerBundles::new("/* viewer */", Some("/* compute */"));
 
 /// The JSON text of a position in a layout document: what a page reads.
 fn written(document: &Value, id: &str) -> String {
@@ -180,10 +180,8 @@ fn next_map(diff: &DiffResult, previous: &LayoutResult) -> kgdiff_core::Result<L
             pinned.insert(after.clone(), *position);
         }
     }
-    let options = LayoutOptions {
-        pinned,
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = pinned;
     layout_graph(&diff.after, &options)
 }
 
@@ -476,10 +474,8 @@ fn ids_reused_for_other_nodes_keep_the_map_too() {
 /// The after version laid out with the stored positions as they are, keyed by the before
 /// version's ids: the short form, right when ids are stable.
 fn by_id(pair: &Pair, previous: &LayoutResult) -> LayoutResult {
-    let options = LayoutOptions {
-        pinned: previous.positions.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = previous.positions.clone();
     layout_graph(&pair.after, &options).unwrap()
 }
 
@@ -636,10 +632,8 @@ fn with_positions(graph: &KGraph, positions: &IndexMap<JsStr, Point>) -> KGraph 
         }
     }
     let value = Value::Object(value);
-    let options = NormalizeOptions {
-        edge_identity: graph.edge_identity(),
-        ..NormalizeOptions::default()
-    };
+    let mut options = NormalizeOptions::default();
+    options.edge_identity = graph.edge_identity();
     let positioned = normalize(&value, options).unwrap();
     assert_eq!(hash_graph(&positioned), hash_graph(graph));
     positioned

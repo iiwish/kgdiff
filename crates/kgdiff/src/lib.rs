@@ -23,15 +23,23 @@
 //! cover just the changes of a large graph. The viewer bundles are compiled in with the feature
 //! `embed-viewer` (on by default) once `pnpm build:viewer-assets` has run.
 
+#[doc(hidden)]
 pub mod args;
 pub mod cli;
+#[doc(hidden)]
 pub mod commands;
+#[doc(hidden)]
 pub mod errors;
+#[doc(hidden)]
 pub mod help;
+#[doc(hidden)]
 pub mod inputs;
 pub mod io;
+#[doc(hidden)]
 pub mod output;
+#[doc(hidden)]
 pub mod paths;
+#[doc(hidden)]
 pub mod style;
 pub mod system;
 pub mod testing;

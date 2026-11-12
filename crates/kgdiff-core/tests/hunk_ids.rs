@@ -27,17 +27,19 @@ fn matching(strategy: MatchStrategy) -> DiffOptions {
 }
 
 fn plain() -> DiffOptions {
-    DiffOptions {
-        detect_merges: false,
-        detect_splits: false,
-        ..matching(MatchStrategy::Id)
+    {
+        let mut o = matching(MatchStrategy::Id);
+        o.detect_merges = false;
+        o.detect_splits = false;
+        o
     }
 }
 
 fn edge_id() -> DiffOptions {
-    DiffOptions {
-        edge_identity: EdgeIdentity::Id,
-        ..DiffOptions::default()
+    {
+        let mut o = DiffOptions::default();
+        o.edge_identity = EdgeIdentity::Id;
+        o
     }
 }
 

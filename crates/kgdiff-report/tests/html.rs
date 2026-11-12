@@ -26,31 +26,26 @@ fn diff() -> DiffResult {
 }
 
 fn info() -> ReportInfo {
-    ReportInfo {
-        title: "g 1 → g 2 <i>".to_owned(),
-        generator: "kgdiff 9.9.9".to_owned(),
-        generated_at: None,
-        before: ReportSide {
-            name: "g 1".to_owned(),
-            format: Some("json".to_owned()),
-        },
-        after: ReportSide {
-            name: "g 2".to_owned(),
-            format: Some("json".to_owned()),
-        },
-        mode: None,
-        scope: Some("changes".to_owned()),
-        theme: Some("dark".to_owned()),
-        locale: Locale::ZhCn,
-        panels: None,
-        shapes: None,
+    {
+        let mut o = ReportInfo::new(
+            "g 1 → g 2 <i>".to_owned(),
+            "kgdiff 9.9.9".to_owned(),
+            ReportSide::new("g 1".to_owned(), Some("json".to_owned())),
+            ReportSide::new("g 2".to_owned(), Some("json".to_owned())),
+        );
+        o.generated_at = None;
+        o.mode = None;
+        o.scope = Some("changes".to_owned());
+        o.theme = Some("dark".to_owned());
+        o.locale = Locale::ZhCn;
+        o.panels = None;
+        o.shapes = None;
+        o
     }
 }
 
-const STUBS: ViewerBundles<'static> = ViewerBundles {
-    main: "/* viewer </script> */",
-    compute: Some("/* compute <!-- */"),
-};
+const STUBS: ViewerBundles<'static> =
+    ViewerBundles::new("/* viewer </script> */", Some("/* compute <!-- */"));
 
 /// The payload script's attributes and text.
 fn payload_script(html: &str) -> (&str, &str) {

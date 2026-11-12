@@ -36,9 +36,10 @@ fn plain() -> LayoutOptions {
 }
 
 fn without_labels() -> LayoutOptions {
-    LayoutOptions {
-        label_aware: Some(false),
-        ..LayoutOptions::default()
+    {
+        let mut o = LayoutOptions::default();
+        o.label_aware = Some(false);
+        o
     }
 }
 
@@ -131,10 +132,8 @@ fn partner_distances(
 fn merges_stay_next_to_their_target() {
     for seed in [0, 1, 2, 3, 4, 5] {
         let diff = changes(17 + seed).diff();
-        let options = LayoutOptions {
-            seed: (seed > 0).then_some(f64::from(seed)),
-            ..LayoutOptions::default()
-        };
+        let mut options = LayoutOptions::default();
+        options.seed = (seed > 0).then_some(f64::from(seed));
         let layout = layout_diff(&diff, &options).unwrap();
         let q = quality(&diff, &layout, 12.0);
         expect_readable(&q);
@@ -333,10 +332,8 @@ fn keeps_the_previous_picture_when_the_before_graph_has_positions() {
 fn focuses_on_changes_and_expands_them_without_moving_anything() {
     let (before, after) = ontology(21);
     let result = diff(&before, &after);
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
     let focused = layout_diff(&result, &options).unwrap();
     assert!(focused.positions.len() < result.nodes.len());
     for hunk in &result.hunks {
@@ -375,10 +372,8 @@ fn a_2k_scale_free_graph_with_almost_no_overlapping_labels() {
 #[test]
 fn a_5k_graph_in_48_ticks_deterministically() {
     let diff = scale_free(5000, 1.3, 11).diff();
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::All);
     let layout = layout_diff(&diff, &options).unwrap();
     assert_eq!(layout.stats.iterations, 48);
     assert_eq!(json(&layout_diff(&diff, &options).unwrap()), json(&layout));
@@ -388,10 +383,8 @@ fn a_5k_graph_in_48_ticks_deterministically() {
 #[test]
 fn a_dense_10k_graph_in_30_ticks() {
     let diff = scale_free(10_000, 2.0, 11).diff();
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::All);
     let layout = layout_diff(&diff, &options).unwrap();
     assert_eq!(layout.stats.iterations, 30);
     let q = quality(&diff, &layout, 12.0);

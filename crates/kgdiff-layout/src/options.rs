@@ -9,6 +9,7 @@ use crate::prng::seed_state;
 
 /// How positions are found.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum LayoutStrategy {
     /// Lay out the union graph, so that neither version is favoured (the default when no
     /// position is known).
@@ -38,6 +39,7 @@ impl LayoutStrategy {
 
 /// Which union nodes get a position.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum LayoutScope {
     /// Every union node.
     All,
@@ -67,6 +69,7 @@ impl LayoutScope {
 
 /// The options of a layout (`LayoutOptions` of `@kgdiff/layout`); `None` takes the default.
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct LayoutOptions {
     /// Default: `Anchored` when any position is known, else `Union`.
     pub strategy: Option<LayoutStrategy>,

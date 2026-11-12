@@ -13,13 +13,10 @@ fn renders_150k_hunks() {
     let after = json::parse(&format!("{{\"nodes\":[{}],\"edges\":[]}}", nodes.join(","))).unwrap();
     let before = json::parse("{\"nodes\":[],\"edges\":[]}").unwrap();
     let result = kgdiff_core::diff(&before, &after, &resolve_options(None).unwrap()).unwrap();
-    let ctx = TextContext {
-        paint: Painter::plain(),
-        locale: Locale::En,
-        width: 100,
-        limit: 0,
-        watch: None,
-    };
+    let mut ctx = TextContext::new(Painter::plain(), Locale::En);
+    ctx.width = 100;
+    ctx.limit = 0;
+    ctx.watch = None;
     let aligned = render_name_status(&result, &ctx, true).unwrap();
     let lines: Vec<&str> = kgdiff_core::js::trim_end(&aligned).split('\n').collect();
     assert_eq!(lines.len(), HUNKS);

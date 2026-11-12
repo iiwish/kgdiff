@@ -195,14 +195,14 @@ and the exact rules in [Algorithms](docs/algorithms.md).
 
 ## Use it for
 
-| You work with…                                      | Start here                                                                                        |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Ontology releases (OBO, OWL)                        | [Ontologies: OBO and OWL](docs/guide/ontologies.md)                                               |
-| LLM and GraphRAG extractions, ids that mean nothing | [Graphs without stable ids](docs/guide/llm-graphs.md)                                             |
-| Graph files kept in git                             | [Use kgdiff with git](docs/guide/git.md) · [Review changes in CI](docs/guide/ci.md)               |
-| A product that shows graph changes to its users     | [Embed the viewer](docs/guide/viewer.md) · [Embed in a Rust application](docs/guide/embedding.md) |
-| A graph drawn with AntV G6                          | [Browse a graph with G6](docs/guide/g6.md) · [`@kgdiff/g6`](packages/g6)                          |
-| Patches between versions                            | [Deltas: apply and invert](docs/guide/deltas.md) · [Delta format](docs/delta-format.md)           |
+| You work with…                                      | Start here                                                                                                                 |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Ontology releases (OBO, OWL)                        | [Ontologies: OBO and OWL](docs/guide/ontologies.md)                                                                        |
+| LLM and GraphRAG extractions, ids that mean nothing | [Graphs without stable ids](docs/guide/llm-graphs.md)                                                                      |
+| Graph files kept in git                             | [Use kgdiff with git](docs/guide/git.md) · [Review changes in CI](docs/guide/ci.md)                                        |
+| A product that shows graph changes to its users     | [Embed the viewer](docs/guide/viewer.md) · [Embed in a Rust application](docs/guide/embedding.md)                          |
+| A graph drawn with AntV G6                          | [Browse a graph with G6](docs/guide/g6.md) · [`@kgdiff/g6`](packages/g6)                                                   |
+| Patches between versions                            | [Deltas: apply and invert](docs/guide/deltas.md) · [Delta format](docs/delta-format.md) · [Versioning](docs/versioning.md) |
 
 ## Formats
 
@@ -310,9 +310,11 @@ The same documentation, in English and Chinese, is published at
 ## Roadmap
 
 **0.11** (2026-11-12) moved all computing onto the Rust engine: the CLI natively, everything
-else through `@kgdiff/compute`. It is planned as the last release with breaking changes.
-**1.0** is 0.11 unchanged after two weeks with only patch releases, with its experimental APIs
-declared stable ([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10)).
+else through `@kgdiff/compute`. **0.12** changes only the Rust API, so that the additions after
+1.0 need no major release ([Migrating to 0.12](docs/guide/migrating-to-0.12.md)); it is the last
+release with breaking changes. **1.0** is 0.12 unchanged after two weeks with only patch
+releases, with its experimental APIs declared stable
+([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10), [Versioning](docs/versioning.md)).
 
 After 1.0, additive: GraphML and GEXF input · KGCL and RDF Patch export · an MCP server, so
 agents can review the graph edits they make · Python and Jupyter · a plain view of one graph and

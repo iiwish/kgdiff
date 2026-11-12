@@ -98,6 +98,7 @@ pub fn script_safe_js(code: &str) -> String {
 
 /// One side of the report (`meta.before`, `meta.after`).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ReportSide {
     pub name: String,
     pub format: Option<String>,
@@ -105,6 +106,7 @@ pub struct ReportSide {
 
 /// What a report says about itself and how the viewer starts (`ReportInfo`).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ReportInfo {
     pub title: String,
     /// e.g. `kgdiff 0.1.0`.
@@ -125,6 +127,41 @@ pub struct ReportInfo {
     pub shapes: Option<Vec<(String, String)>>,
 }
 
+impl ReportSide {
+    /// A side with its name and, when known, its format (`json`, `turtle`, ...).
+    pub fn new(name: impl Into<String>, format: Option<String>) -> ReportSide {
+        ReportSide {
+            name: name.into(),
+            format,
+        }
+    }
+}
+
+impl ReportInfo {
+    /// A report with its title, generator and sides; the other fields are unset (`None`, the
+    /// default locale): reproducible, with the viewer's own defaults.
+    pub fn new(
+        title: impl Into<String>,
+        generator: impl Into<String>,
+        before: ReportSide,
+        after: ReportSide,
+    ) -> ReportInfo {
+        ReportInfo {
+            title: title.into(),
+            generator: generator.into(),
+            generated_at: None,
+            before,
+            after,
+            mode: None,
+            scope: None,
+            theme: None,
+            locale: Locale::default(),
+            panels: None,
+            shapes: None,
+        }
+    }
+}
+
 fn side_value(side: &ReportSide) -> Value {
     let mut out = Object::new();
     out.insert("name", side.name.as_str());
@@ -136,6 +173,7 @@ fn side_value(side: &ReportSide) -> Value {
 
 /// What the layout of a report is ([`report_payload_with`], [`build_report_html_with`]).
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub enum ReportLayout<'a> {
     /// `layout_diff` with the default options: what [`report_payload`] and
     /// [`build_report_html`] do.
@@ -315,11 +353,20 @@ fn theme_style(theme: &str) -> String {
 
 /// The viewer's JavaScript the report inlines.
 #[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
 pub struct ViewerBundles<'a> {
     /// The standalone viewer bundle (an IIFE).
     pub main: &'a str,
     /// The compute add-on (an IIFE that sets `globalThis.KgdiffCompute`).
     pub compute: Option<&'a str>,
+}
+
+impl<'a> ViewerBundles<'a> {
+    /// The standalone viewer bundle and, when the report may lay the diff out, the compute
+    /// add-on.
+    pub const fn new(main: &'a str, compute: Option<&'a str>) -> ViewerBundles<'a> {
+        ViewerBundles { main, compute }
+    }
 }
 
 /// The viewer bundles compiled into this crate: with feature `embed-viewer`, the files

@@ -5,6 +5,7 @@ pub type ColorLevel = u8;
 
 /// The color tones of the text outputs: the five meaning families plus the UI accent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Tone {
     Added,
     Removed,

@@ -20,13 +20,8 @@
 //! let before = json::parse(r#"{"nodes":[{"id":"a","label":"Ada"}],"edges":[]}"#)?;
 //! let after = json::parse(r#"{"nodes":[{"id":"a","label":"Ada Lovelace"}],"edges":[]}"#)?;
 //! let result = diff(&before, &after, &DiffOptions::default())?;
-//! let ctx = TextContext {
-//!     paint: Painter::plain(),
-//!     locale: Locale::En,
-//!     width: 80,
-//!     limit: 50,
-//!     watch: None,
-//! };
+//! let mut ctx = TextContext::new(Painter::plain(), Locale::En);
+//! ctx.limit = 50;
 //! let text = render_summary(&result, "v1 → v2", &ctx)?;
 //! assert!(text.starts_with("kgdiff  v1 → v2"));
 //! assert!(text.contains("Renamed “Ada” → “Ada Lovelace”"));
@@ -44,28 +39,16 @@
 //! let before = json::parse(r#"{"nodes":[{"id":"a","label":"Ada"}],"edges":[]}"#)?;
 //! let after = json::parse(r#"{"nodes":[{"id":"a","label":"Ada Lovelace"}],"edges":[]}"#)?;
 //! let result = diff(&before, &after, &DiffOptions::default())?;
-//! let options = LayoutOptions {
-//!     seed: Some(7.0),
-//!     ..LayoutOptions::default()
-//! };
+//! let mut options = LayoutOptions::default();
+//! options.seed = Some(7.0);
 //! let layout = layout_diff(&result, &options)?;
-//! let side = |name: &str| ReportSide {
-//!     name: name.to_owned(),
-//!     format: None,
-//! };
-//! let info = ReportInfo {
-//!     title: "v1 → v2".to_owned(),
-//!     generator: "my-app 1.0".to_owned(),
-//!     generated_at: None,
-//!     before: side("v1"),
-//!     after: side("v2"),
-//!     mode: None,
-//!     scope: None,
-//!     theme: None,
-//!     locale: Locale::En,
-//!     panels: None,
-//!     shapes: None,
-//! };
+//! let mut info = ReportInfo::new(
+//!     "v1 → v2",
+//!     "my-app 1.0",
+//!     ReportSide::new("v1", None),
+//!     ReportSide::new("v2", None),
+//! );
+//! info.locale = Locale::En;
 //! let payload = report_payload_with(&result, ReportLayout::Given(&layout), &info)?;
 //! assert_eq!(payload.get("layout"), Some(&layout_to_json(&layout)));
 //! // The layout places every node: the report needs nothing computed in the browser.
@@ -79,11 +62,14 @@
 //! ```
 
 pub mod html;
+#[doc(hidden)]
 pub mod locale;
 pub mod markdown;
+#[doc(hidden)]
 pub mod model;
 mod paint;
 pub mod summary;
+#[doc(hidden)]
 pub mod width;
 
 pub use html::{

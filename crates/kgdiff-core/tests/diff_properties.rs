@@ -33,25 +33,17 @@ fn ignored() -> Vec<JsStr> {
 fn variant() -> impl Strategy<Value = DiffOptions> {
     let mut similarity = DiffOptions::default();
     similarity.r#match.strategy = MatchStrategy::Similarity;
-    let edge_id = DiffOptions {
-        edge_identity: EdgeIdentity::Id,
-        ..DiffOptions::default()
-    };
-    let mut plain = DiffOptions {
-        detect_merges: false,
-        detect_splits: false,
-        ..DiffOptions::default()
-    };
+    let mut edge_id = DiffOptions::default();
+    edge_id.edge_identity = EdgeIdentity::Id;
+    let mut plain = DiffOptions::default();
+    plain.detect_merges = false;
+    plain.detect_splits = false;
     plain.r#match.strategy = MatchStrategy::Id;
-    let ignoring = DiffOptions {
-        ignore_attrs: ignored(),
-        ..DiffOptions::default()
-    };
-    let mut ignoring_similarity = DiffOptions {
-        ignore_attrs: ignored(),
-        edge_identity: EdgeIdentity::Id,
-        ..DiffOptions::default()
-    };
+    let mut ignoring = DiffOptions::default();
+    ignoring.ignore_attrs = ignored();
+    let mut ignoring_similarity = DiffOptions::default();
+    ignoring_similarity.ignore_attrs = ignored();
+    ignoring_similarity.edge_identity = EdgeIdentity::Id;
     ignoring_similarity.r#match.strategy = MatchStrategy::Similarity;
     prop::sample::select(vec![
         DiffOptions::default(),
@@ -192,7 +184,7 @@ proptest! {
             }
             g.to_value()
         };
-        let mut options = DiffOptions { detect_merges: false, detect_splits: false, ..DiffOptions::default() };
+        let mut options = { let mut o = DiffOptions::default(); o.detect_merges = false; o.detect_splits = false; o };
         options.r#match.strategy = MatchStrategy::Id;
         let (a, b) = (unlink(&a), unlink(&b));
         let forward = diff(&a, &b, &options).unwrap();

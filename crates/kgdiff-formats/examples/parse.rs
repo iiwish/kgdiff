@@ -9,11 +9,9 @@ fn main() {
     let filename = std::path::Path::new(&path)
         .file_name()
         .map(|f| f.to_string_lossy().into_owned());
-    let options = kgdiff_formats::ParseOptions {
-        format,
-        filename,
-        ..Default::default()
-    };
+    let mut options = kgdiff_formats::ParseOptions::default();
+    options.format = format;
+    options.filename = filename;
     match kgdiff_formats::parse_graph(&text, &options) {
         Ok(result) => println!("{}", kgdiff_core::js::json::to_string(&result.to_value())),
         Err(error) => println!("ERROR {} {}", error.code, error.message),

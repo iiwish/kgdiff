@@ -24,24 +24,24 @@ use support::{
 };
 
 fn graph(value: &Value, edge_identity: EdgeIdentity) -> KGraph {
-    let options = NormalizeOptions {
-        edge_identity,
-        ..NormalizeOptions::default()
-    };
+    let mut options = NormalizeOptions::default();
+    options.edge_identity = edge_identity;
     normalize(value, options).expect("a valid graph")
 }
 
 fn diff_options(graph: &KGraph) -> DiffOptions {
-    DiffOptions {
-        edge_identity: graph.edge_identity(),
-        ..DiffOptions::default()
+    {
+        let mut o = DiffOptions::default();
+        o.edge_identity = graph.edge_identity();
+        o
     }
 }
 
 fn all(options: &LayoutOptions) -> LayoutOptions {
-    LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..options.clone()
+    {
+        let mut o = options.clone();
+        o.scope = Some(LayoutScope::All);
+        o
     }
 }
 
@@ -113,10 +113,13 @@ fn equals_the_layout_of_the_identical_diff_on_both_graphs_of_every_corpus_case()
         let spec = read(&dir.join("case.json"));
         let edge_identity = resolve_options(spec.get("options")).unwrap().edge_identity;
         // The case's layout options, but for its scope (`synthetic-600` asks for `changes`).
-        let given = LayoutOptions {
-            scope: None,
-            ..LayoutOptions::from_value(&spec.get("layoutOptions").cloned().unwrap_or_else(empty))
-                .unwrap()
+        let given = {
+            let mut o = LayoutOptions::from_value(
+                &spec.get("layoutOptions").cloned().unwrap_or_else(empty),
+            )
+            .unwrap();
+            o.scope = None;
+            o
         };
         for side in ["before", "after"] {
             let what = format!("{id} ({side})");
@@ -138,15 +141,13 @@ fn equals_the_layout_of_the_identical_diff_on_both_graphs_of_every_corpus_case()
                 .filter(|(k, _)| k % 3 == 0)
                 .map(|(_, (id, p))| (id.clone(), off_grid(*p)))
                 .collect();
-            let options = LayoutOptions {
-                seed: Some(7.0),
-                label_aware: Some(false),
-                large_graph_threshold: Some(0.0),
-                context_hops: Some(0),
-                hub_degree: Some(0.0),
-                pinned: pinned.clone(),
-                ..LayoutOptions::default()
-            };
+            let mut options = LayoutOptions::default();
+            options.seed = Some(7.0);
+            options.label_aware = Some(false);
+            options.large_graph_threshold = Some(0.0);
+            options.context_hops = Some(0);
+            options.hub_degree = Some(0.0);
+            options.pinned = pinned.clone();
             let anchored = check_contract(&what, &graph, &options);
             for (id, p) in &pinned {
                 assert!(same(anchored.positions[id.as_str()], *p), "{what}: {id}");
@@ -408,10 +409,8 @@ fn keeps_pins_bit_for_bit_and_pins_win_over_the_positions_on_the_nodes() {
         .iter()
         .map(|(id, p)| (id.clone(), off_grid(*p)))
         .collect();
-    let options = LayoutOptions {
-        pinned: pinned.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = pinned.clone();
     let unpositioned = graph(&next.versions().1, EdgeIdentity::Structure);
     let layout = check_contract("pins", &unpositioned, &options);
     assert_eq!(layout.stats.strategy, LayoutStrategy::Anchored);
@@ -426,10 +425,8 @@ fn keeps_pins_bit_for_bit_and_pins_win_over_the_positions_on_the_nodes() {
         layout_graph(&on_nodes, &LayoutOptions::default()).unwrap(),
         layout
     );
-    let options = LayoutOptions {
-        pinned: support::points(&[("s0001", 1234.5678, -98.7654), ("new-a", 10.001, 20.002)]),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = support::points(&[("s0001", 1234.5678, -98.7654), ("new-a", 10.001, 20.002)]);
     let layout = check_contract("pins over positions", &on_nodes, &options);
     let at = |x, y| Point { x, y };
     assert_eq!(layout.positions["s0001"], at(1234.5678, -98.7654));
@@ -455,10 +452,8 @@ fn positions_read_back_from_a_layout_document_survive_unchanged() {
     assert_eq!(previous.positions, first.positions);
 
     let graph = graph(&next.versions().1, EdgeIdentity::Structure);
-    let options = LayoutOptions {
-        pinned: previous.positions.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = previous.positions.clone();
     let second = layout_graph(&graph, &options).unwrap();
     let (second_text, previous) = stored(&second);
     assert_eq!(previous.positions, second.positions);
@@ -467,10 +462,8 @@ fn positions_read_back_from_a_layout_document_survive_unchanged() {
     }
 
     // A third version with nothing new: every position is known, and the document repeats.
-    let options = LayoutOptions {
-        pinned: previous.positions.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = previous.positions.clone();
     let third = layout_graph(&graph, &options).unwrap();
     assert_eq!(third.positions, second.positions);
     let positions = |text: &str| json::parse(text).unwrap().get("positions").cloned();
@@ -496,10 +489,8 @@ fn positions_read_back_from_a_layout_document_survive_unchanged() {
 
 #[test]
 fn rejects_scope_changes() {
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
     for spec in [GraphSpec::default(), tree(20, 7, english_label)] {
         let graph = graph(&spec.versions().1, EdgeIdentity::Structure);
         let error = layout_graph(&graph, &options).unwrap_err();
@@ -526,22 +517,26 @@ fn rejects_the_options_layout_diff_rejects() {
     );
     let identical = diff_graphs(graph.clone(), graph.clone(), diff_options(&graph)).unwrap();
     let invalid = [
-        LayoutOptions {
-            link_distance: Some(0.0),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.link_distance = Some(0.0);
+            o
         },
-        LayoutOptions {
-            seed: Some(f64::NAN),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.seed = Some(f64::NAN);
+            o
         },
-        LayoutOptions {
-            pinned: support::points(&[("t0000", f64::INFINITY, 0.0)]),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.pinned = support::points(&[("t0000", f64::INFINITY, 0.0)]);
+            o
         },
         // Not read, but still checked.
-        LayoutOptions {
-            hub_degree: Some(-1.0),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.hub_degree = Some(-1.0);
+            o
         },
     ];
     for options in &invalid {
@@ -561,10 +556,8 @@ fn every_node_is_in_scope_whatever_the_threshold() {
         EdgeIdentity::Structure,
     );
     let reference = support::json(&layout_graph(&graph, &LayoutOptions::default()).unwrap());
-    let small_threshold = LayoutOptions {
-        large_graph_threshold: Some(100.0),
-        ..LayoutOptions::default()
-    };
+    let mut small_threshold = LayoutOptions::default();
+    small_threshold.large_graph_threshold = Some(100.0);
     let identical = diff_graphs(graph.clone(), graph.clone(), diff_options(&graph)).unwrap();
     let trapped = layout_diff(&identical, &small_threshold).unwrap();
     assert_eq!(trapped.scope, LayoutScope::Changes);
@@ -576,13 +569,11 @@ fn every_node_is_in_scope_whatever_the_threshold() {
     assert_eq!(support::json(&layout), reference);
 
     // The options of scope `Changes` change nothing.
-    let unread = LayoutOptions {
-        scope: Some(LayoutScope::All),
-        large_graph_threshold: Some(0.0),
-        context_hops: Some(3),
-        hub_degree: Some(0.0),
-        ..LayoutOptions::default()
-    };
+    let mut unread = LayoutOptions::default();
+    unread.scope = Some(LayoutScope::All);
+    unread.large_graph_threshold = Some(0.0);
+    unread.context_hops = Some(3);
+    unread.hub_degree = Some(0.0);
     assert_eq!(
         support::json(&layout_graph(&graph, &unread).unwrap()),
         reference

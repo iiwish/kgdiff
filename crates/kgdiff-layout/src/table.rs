@@ -119,10 +119,10 @@ impl From<LayoutInput<'_>> for LayoutTable {
                     NodeFacet::SplitFrom { source, .. } => {
                         partners.extend(lookup(source).map(|anchor| (i, anchor)));
                     }
-                    NodeFacet::MergeTarget { sources } => {
+                    NodeFacet::MergeTarget { sources, .. } => {
                         partners.extend(sources.iter().filter_map(&lookup).map(|m| (m, i)));
                     }
-                    NodeFacet::SplitInto { targets } => {
+                    NodeFacet::SplitInto { targets, .. } => {
                         partners.extend(targets.iter().filter_map(&lookup).map(|m| (m, i)));
                     }
                     _ => {}

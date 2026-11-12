@@ -48,39 +48,34 @@ fn chain(prefix: &str, before: usize, after: usize) -> DiffResult {
 }
 
 fn info() -> ReportInfo {
-    let side = |name: &str| ReportSide {
-        name: name.to_owned(),
-        format: Some("json".to_owned()),
-    };
-    ReportInfo {
-        title: "chain 1 → chain 2".to_owned(),
-        generator: "kgdiff 9.9.9".to_owned(),
-        generated_at: Some("2026-11-10T00:00:00.000Z".to_owned()),
-        before: side("chain 1"),
-        after: side("chain 2"),
-        mode: Some("swipe".to_owned()),
-        scope: Some("all".to_owned()),
-        theme: Some("light".to_owned()),
-        locale: Locale::En,
-        panels: Some(vec![
+    let side = |name: &str| ReportSide::new(name.to_owned(), Some("json".to_owned()));
+    {
+        let mut o = ReportInfo::new(
+            "chain 1 → chain 2".to_owned(),
+            "kgdiff 9.9.9".to_owned(),
+            side("chain 1"),
+            side("chain 2"),
+        );
+        o.generated_at = Some("2026-11-10T00:00:00.000Z".to_owned());
+        o.mode = Some("swipe".to_owned());
+        o.scope = Some("all".to_owned());
+        o.theme = Some("light".to_owned());
+        o.locale = Locale::En;
+        o.panels = Some(vec![
             ("detail".to_owned(), "collapsed".to_owned()),
             ("minimap".to_owned(), "hidden".to_owned()),
-        ]),
-        shapes: None,
+        ]);
+        o.shapes = None;
+        o
     }
 }
 
-const STUBS: ViewerBundles<'static> = ViewerBundles {
-    main: "/* viewer */",
-    compute: Some("/* compute */"),
-};
+const STUBS: ViewerBundles<'static> = ViewerBundles::new("/* viewer */", Some("/* compute */"));
 
 /// A layout of the changes only: the renamed node and its neighbour, of the chain's nodes.
 fn changes_only(diff: &DiffResult) -> LayoutResult {
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
     layout_diff(diff, &options).unwrap()
 }
 
@@ -113,11 +108,9 @@ fn a_given_layout_appears_unchanged() {
     let diff = chain("n", 6, 7);
     let default = report_payload(&diff, &info());
     // Other options than the report's own, and a pinned node on the document's 0.01 grid.
-    let mut options = LayoutOptions {
-        seed: Some(7.0),
-        link_distance: Some(120.0),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.seed = Some(7.0);
+    options.link_distance = Some(120.0);
     options.pinned.insert(
         "n3".into(),
         kgdiff_core::Point {
@@ -274,13 +267,14 @@ fn shapes_go_into_the_view_in_their_order_and_only_when_given() {
     let plain = report_payload(&diff, &info());
     assert_eq!(member(&plain, "view").unwrap().get("shapes"), None);
 
-    let with_shapes = ReportInfo {
-        shapes: Some(vec![
+    let with_shapes = {
+        let mut o = info();
+        o.shapes = Some(vec![
             ("Rule".to_owned(), "diamond".to_owned()),
             ("Concept".to_owned(), "hexagon".to_owned()),
             ("Metric".to_owned(), "square".to_owned()),
-        ]),
-        ..info()
+        ]);
+        o
     };
     let payload = report_payload(&diff, &with_shapes);
     let shapes = member(&payload, "view").unwrap().get("shapes").unwrap();
@@ -308,31 +302,24 @@ fn shapes_go_into_the_view_in_their_order_and_only_when_given() {
 #[test]
 fn every_payload_validates_against_the_schema() {
     let schemas = Schemas::load();
-    let bare = ReportInfo {
-        generated_at: None,
-        mode: None,
-        scope: None,
-        theme: None,
-        panels: None,
-        before: ReportSide {
-            name: "a".to_owned(),
-            format: None,
-        },
-        ..info()
-    };
+    let mut bare = info();
+    bare.generated_at = None;
+    bare.mode = None;
+    bare.scope = None;
+    bare.theme = None;
+    bare.panels = None;
+    bare.before = ReportSide::new("a".to_owned(), None);
     for diff in [
         chain("n", 6, 7),
         chain("n", 12, 12),
         chain("n", 0, 3),
         chain("n", 0, 0),
     ] {
-        let given = layout_diff(
-            &diff,
-            &LayoutOptions {
-                seed: Some(7.0),
-                ..LayoutOptions::default()
-            },
-        )
+        let given = layout_diff(&diff, &{
+            let mut o = LayoutOptions::default();
+            o.seed = Some(7.0);
+            o
+        })
         .unwrap();
         let changes = changes_only(&diff);
         for info in [info(), bare.clone()] {

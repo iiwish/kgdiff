@@ -16,10 +16,8 @@ fn norm(text: &str) -> KGraph {
 }
 
 fn by_id(text: &str) -> KGraph {
-    let options = NormalizeOptions {
-        edge_identity: EdgeIdentity::Id,
-        ..NormalizeOptions::default()
-    };
+    let mut options = NormalizeOptions::default();
+    options.edge_identity = EdgeIdentity::Id;
     normalize(&graph(text), options).unwrap()
 }
 
@@ -146,19 +144,15 @@ fn applies_the_dangling_edge_policies() {
         norm(r#"{"nodes":[{"id":"a"}],"edges":[{"source":"a","target":"ghost","predicate":"p"}]}"#);
     assert!(g.node("ghost").unwrap().is_implicit());
     assert_eq!(g.issues()[0].reference.as_deref(), Some("ghost"));
-    let drop = NormalizeOptions {
-        dangling_edges: DanglingEdges::Drop,
-        ..NormalizeOptions::default()
-    };
+    let mut drop = NormalizeOptions::default();
+    drop.dangling_edges = DanglingEdges::Drop;
     let dropped = normalize(&graph(r#"{"nodes":[{"id":"a"}],"edges":[{"source":"ghost","target":"a"},{"source":"a","target":"a"}]}"#), drop).unwrap();
     assert_eq!(
         (dropped.edge_count(), dropped.contains_node("ghost")),
         (1, false)
     );
-    let error = NormalizeOptions {
-        dangling_edges: DanglingEdges::Error,
-        ..NormalizeOptions::default()
-    };
+    let mut error = NormalizeOptions::default();
+    error.dangling_edges = DanglingEdges::Error;
     let e = normalize(
         &graph(r#"{"nodes":[],"edges":[{"source":"a","target":"a"}]}"#),
         error,
