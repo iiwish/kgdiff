@@ -4,8 +4,8 @@ The CLI and the viewer are built from packages you can use directly:
 
 | Package            | What it does                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------ |
-| `@kgdiff/core`     | The diff engine: normalize, match, classify, hunks, invertible deltas. No dependencies.                |
-| `@kgdiff/formats`  | Parsers from RDF, OBO and JSON graph formats into kgdiff graphs.                                       |
+| `@kgdiff/core`     | The diff model: normalize, match, classify, hunks, invertible deltas. Computes on `@kgdiff/compute`.   |
+| `@kgdiff/formats`  | Deprecated since 0.11: the parsers are `parseGraph` and `detectFormat` of `@kgdiff/compute`.           |
 | `@kgdiff/layout`   | A deterministic, label-aware layout that both versions share.                                          |
 | `@kgdiff/scene`    | Turns a diff into visual primitives: design tokens, encodings, replay timeline.                        |
 | `@kgdiff/renderer` | A Canvas 2D renderer: camera, level of detail, labels, picking, minimap.                               |
@@ -176,8 +176,8 @@ as `@kgdiff/compute/compute.wasm`, `/formats.wasm` and `/layout.wasm`.
 **Content Security Policy.** Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`,
 for example `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`.
 
-Since 0.11, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
-`@kgdiff/layout` are asynchronous and run on this package: `await diff(…)` loads `compute.wasm`
+Since 0.11, `diff` of `@kgdiff/core`, `layoutDiff` of `@kgdiff/layout` and the deprecated
+`parseGraph` of `@kgdiff/formats` are asynchronous and run on this package: `await diff(…)` loads `compute.wasm`
 on first use. [Migrating to 0.11](./migrating-to-0.11.md) lists every changed function.
 
 ## Errors

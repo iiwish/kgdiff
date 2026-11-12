@@ -20,14 +20,14 @@ kgdiff 的引擎是一组 Rust crate，画面是一组 npm 包。本指南跟着
 
 ```toml
 [dependencies]
-kgdiff-core = "0.9"
-kgdiff-layout = "0.9"
-kgdiff-report = "0.9"
+kgdiff-core = "0.11"
+kgdiff-layout = "0.11"
+kgdiff-report = "0.11"
 ```
 
-- **几个 crate 一起升级。** 每个 crate 都要求其他 crate 与自己的版本完全相同（`kgdiff-report` 0.9.0 依赖 `kgdiff-core = "=0.9.0"`），所以 Cargo 会把三者解析到同一个发布版本；如果你写的版本要求之间没有共同的版本，解析会失败。给它们写相同的版本要求，并一起更新。
-- **npm 包与 crate 是同一个版本号**：kgdiff 0.9.0 指的是一套互相一致、一起测试过的包。npm 包装成与 crate 相同的版本（`npm install @kgdiff/viewer@^0.9.0`）。
-- 1.0 之前，次版本可能改动接口。Cargo 里的 `"0.9"` 和 npm 里的 `^0.9.0` 都只在 0.9 之内升级。
+- **几个 crate 一起升级。** 每个 crate 都要求其他 crate 与自己的版本完全相同（`kgdiff-report` 0.11.0 依赖 `kgdiff-core = "=0.11.0"`），所以 Cargo 会把三者解析到同一个发布版本；如果你写的版本要求之间没有共同的版本，解析会失败。给它们写相同的版本要求，并一起更新。
+- **npm 包与 crate 是同一个版本号**：kgdiff 0.11.0 指的是一套互相一致、一起测试过的包。npm 包装成与 crate 相同的版本（`npm install @kgdiff/viewer@^0.11.0`）。
+- 1.0 之前，次版本可能改动接口。Cargo 里的 `"0.11"` 和 npm 里的 `^0.11.0` 都只在 0.11 之内升级。
 - 从服务端传到浏览器的文档各有自己的版本（`kgdiff.report` 1、`kgdiff.diff.packed` 1、`kgdiff.layout` 2），JSON Schema 在 [`@kgdiff/core/schema/`](../formats.md#格式标记与-json-schema) 里。
 
 本页的函数共用这些导入：
@@ -378,9 +378,9 @@ const removeMarks = renderer.addLayer({
 
 [RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md)（英文）还规划了两个部分。它们现在都不存在，而且这份 RFC 还是草案：版本和细节都可能变化。
 
-| 部分 | 内容                                             | 计划版本          | 在此之前                                                                                      |
-| ---- | ------------------------------------------------ | ----------------- | --------------------------------------------------------------------------------------------- |
-| 4c   | 朴素视图：在查看器里看单张图，按你的类别着色     | 0.10，或 1.0 之后 | 场景和渲染器用中性色画没有变化的 diff；`<kgdiff-viewer>` 显示“没有差异”卡片；着色通过图层完成 |
-| 4d   | 分组：每组一块背景，以及让同组节点靠在一起的布局 | 1.0 之后          | 根据位置在 `under` 图层上画背景；布局不知道分组                                               |
+| 部分 | 内容                                             | 计划版本 | 在此之前                                                                                      |
+| ---- | ------------------------------------------------ | -------- | --------------------------------------------------------------------------------------------- |
+| 4c   | 朴素视图：在查看器里看单张图，按你的类别着色     | 1.0 之后 | 场景和渲染器用中性色画没有变化的 diff；`<kgdiff-viewer>` 显示“没有差异”卡片；着色通过图层完成 |
+| 4d   | 分组：每组一块背景，以及让同组节点靠在一起的布局 | 1.0 之后 | 根据位置在 `under` 图层上画背景；布局不知道分组                                               |
 
-同样还没有的：TypeScript 里的 `layout_graph`、`layout_diff_on` 和 `layout_after`。`@kgdiff/layout` 没有与它们对应的函数；`layoutGraph` 计划随布局的其余部分一起放进 `@kgdiff/compute`。在浏览器里可以给一张图与它自己的 diff 布局；更好的做法是像上面那样在服务端计算布局。
+从 0.11 起，这三个布局函数在 TypeScript 里也有了：`@kgdiff/layout` 的 `layoutGraph`、`layoutDiffOn` 和 `layoutAfter`（异步），或者 `@kgdiff/compute` 里对应的 `*Sync` 函数（先 `init()`），用的是同一个引擎，结果与 crate 逐字节相同。在浏览器里计算布局的宿主同样能保持同一张心智地图；像上面那样在服务端计算，网页则不必加载引擎的 WebAssembly。
