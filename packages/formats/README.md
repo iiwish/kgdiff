@@ -7,7 +7,8 @@
 > to WebAssembly (`@kgdiff/compute`, which also has their synchronous forms), the same results as
 > the kgdiff CLI. This package's functions are asynchronous wrappers over them
 > (`await parseGraph(…)`); its types and `FORMAT_EXTENSIONS` are the same declarations, re-exported
-> here until it is removed in 2.0. No other kgdiff package depends on it. See
+> here. **1.0 is not published for this package:** 0.11.x stays on npm and keeps working, so change
+> the import before you upgrade the other packages to 1.0. No other kgdiff package depends on it. See
 > [Migrating to 0.11](../../docs/guide/migrating-to-0.11.md).
 
 Parsers that turn real-world graph files into [`@kgdiff/core`](../core) graphs: RDF (Turtle,
