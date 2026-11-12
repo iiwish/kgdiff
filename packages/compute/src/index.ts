@@ -14,8 +14,12 @@
  * asynchronous functions (`diff`, `parseGraph`, `layoutDiff`, …) load what they need themselves.
  *
  * Graphs and options are passed to the engine as JSON text. A graph given as an object is
- * written with `JSON.stringify` (a normalized `KGraph` with `graphToJSON`), so values that JSON
- * cannot hold (NaN, ±Infinity) arrive as `null`.
+ * written with `JSON.stringify` (a normalized `KGraph` with `graphToJSON` and its nodes'
+ * positions), so values that JSON cannot hold (NaN, ±Infinity) arrive as `null`. A
+ * `kgdiff.graph` document carries no edge
+ * identity, so a `KGraph`'s is passed with the options: the diff functions take it when both
+ * graphs are `KGraph`s with the same edge identity and the options name none (as `diff` of
+ * `@kgdiff/core` 0.10 did), and the matching functions normalize each `KGraph` with its own.
  *
  * `@kgdiff/core`'s `diff`, `matchNodes` and `textSimilarity`, `@kgdiff/formats`' parsers and
  * `@kgdiff/layout`'s layouts call the asynchronous functions of this package.
@@ -35,7 +39,7 @@ import {
   normalize,
   type UnionId,
 } from '@kgdiff/core';
-import { readComputedDiff } from '@kgdiff/core/computed';
+import { type GraphIssues, readComputedDiff } from '@kgdiff/core/computed';
 import type { FormatId, ParseOptions, ParseResult } from '@kgdiff/formats';
 import {
   type LayoutJSON,
@@ -105,10 +109,65 @@ export async function init(options: InitOptions = {}): Promise<void> {
 /** A graph as the engine takes it: JSON text, a graph as input, or a normalized `KGraph`. */
 export type GraphSource = GraphInput | KGraph | string;
 
-/** JSON text as given, a `KGraph` as `graphToJSON` writes it, else `JSON.stringify`. */
+/** JSON text as given, a `KGraph` as `graphText` writes it, else `JSON.stringify`. */
 function text(value: unknown): string {
   if (typeof value === 'string') return value;
-  return JSON.stringify(isKGraph(value) ? graphToJSON(value) : value);
+  return JSON.stringify(isKGraph(value) ? graphText(value) : value);
+}
+
+/**
+ * A `KGraph` as `graphToJSON` writes it, with its nodes' positions, which `graphToJSON` leaves out
+ * and a `kgdiff.graph` document may carry: the engine anchors the layout of `diffAndLayout` on
+ * them, as it does for the graphs as input.
+ */
+function graphText(graph: KGraph): object {
+  const json = graphToJSON(graph);
+  if (![...graph.nodes.values()].some((node) => node.position)) return json;
+  const nodes = json.nodes.map((node) => {
+    const position = graph.nodes.get(node.id)?.position;
+    return position ? { ...node, position } : node;
+  });
+  return { ...json, nodes };
+}
+
+/**
+ * The options of a diff of `before` and `after`: when both are `KGraph`s with the same edge
+ * identity and the options name none, the options with that edge identity (0.10's rule). An
+ * `edgeIdentity` of the options wins: the engine normalizes the graphs' JSON with it, which
+ * re-keys a graph of the other identity as `diff` of 0.10 did.
+ */
+function diffOptions(
+  before: GraphSource,
+  after: GraphSource,
+  options: DiffOptions | string | undefined,
+): DiffOptions | string | undefined {
+  if (!isKGraph(before) || !isKGraph(after) || before.edgeIdentity !== after.edgeIdentity) {
+    return options;
+  }
+  const edgeIdentity = before.edgeIdentity;
+  if (typeof options !== 'string') {
+    return options?.edgeIdentity === undefined ? { ...options, edgeIdentity } : options;
+  }
+  // Options as text: completed when they are an object (or none) without an edge identity; text
+  // the engine would reject is passed as it is, for the engine's error.
+  if (options.trim() === '') return { edgeIdentity };
+  let given: unknown;
+  try {
+    given = JSON.parse(options);
+  } catch {
+    return options;
+  }
+  if (given === null) return { edgeIdentity };
+  if (typeof given !== 'object' || Array.isArray(given)) return options;
+  const record = given as Record<string, unknown>;
+  return record.edgeIdentity === undefined || record.edgeIdentity === null
+    ? JSON.stringify({ ...record, edgeIdentity })
+    : options;
+}
+
+/** The normalize options the engine reads a graph's JSON with: a `KGraph`'s edge identity. */
+function graphOptions(graph: GraphSource): string {
+  return isKGraph(graph) ? JSON.stringify({ edgeIdentity: graph.edgeIdentity }) : '';
 }
 
 /** Options as JSON text; none is the empty text. */
@@ -148,7 +207,8 @@ export function diffJSON(
  * back as a `DiffResult`. That document was just written by this build's engine, so it is read
  * without `diffFromJSON`'s consistency checks (the result is the same object), and the graphs'
  * node positions, which a diff document does not carry, are put back on its nodes: `layoutDiff`
- * anchors on them as it does for the diff of the graphs.
+ * anchors on them as it does for the diff of the graphs. When both graphs are `KGraph`s with the
+ * same edge identity and `options` names none, theirs is used.
  *
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
@@ -157,12 +217,38 @@ export function diffSync(
   after: GraphSource,
   options?: DiffOptions,
 ): DiffResult {
-  return readComputedDiff(json.diff(before, after, options), before, after);
+  const { diff, issues } = computed(before, after, options, undefined, false);
+  return readComputedDiff(diff, before, after, issues);
 }
 
 /**
- * `matchNodes` of `@kgdiff/core` on the two graphs, each normalized with the default options (a
- * `KGraph` is passed as `graphToJSON` writes it, which normalizes to itself).
+ * `computedDiffJSON` of the engine: the `kgdiff.diff` document, the issues of normalizing the
+ * graphs (which the document does not carry) and, `withLayout`, the `kgdiff.layout` document.
+ */
+function computed(
+  before: GraphSource,
+  after: GraphSource,
+  options: DiffOptions | undefined,
+  layoutOptions: LayoutOptions | undefined,
+  withLayout: boolean,
+): { diff: DiffJSON; issues: GraphIssues; layout?: LayoutJSON } {
+  return JSON.parse(
+    computeModule.call((e) =>
+      e.computedDiffJSON(
+        text(before),
+        text(after),
+        optionsText(diffOptions(before, after, options)),
+        layoutOptionsText(layoutOptions),
+        withLayout,
+      ),
+    ),
+  ) as { diff: DiffJSON; issues: GraphIssues; layout?: LayoutJSON };
+}
+
+/**
+ * `matchNodes` of `@kgdiff/core` on the two graphs. A `KGraph` is passed as `graphToJSON` writes
+ * it and normalized with its own edge identity, which gives it back; a graph as input is
+ * normalized with the default options.
  *
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
@@ -226,13 +312,10 @@ export function diffAndLayoutSync(
   options?: DiffOptions,
   layoutOptions?: LayoutOptions,
 ): { readonly diff: DiffResult; readonly layout: LayoutResult } {
-  const { diff, layout } = JSON.parse(json.diffLayout(before, after, options, layoutOptions)) as {
-    diff: unknown;
-    layout: LayoutJSON;
-  };
+  const { diff, issues, layout } = computed(before, after, options, layoutOptions, true);
   return {
-    diff: readComputedDiff(diff as DiffJSON, before, after),
-    layout: layoutFromJSON(layout),
+    diff: readComputedDiff(diff, before, after, issues),
+    layout: layoutFromJSON(layout as LayoutJSON),
   };
 }
 
@@ -340,12 +423,25 @@ export function diffAndLayout(
  * existing diff, `layout`).
  */
 export const json = {
-  /** `diffToJSON(diff(before, after, options))`: the `kgdiff.diff` document (`compute`). */
+  /**
+   * `diffToJSON(diff(before, after, options))`: the `kgdiff.diff` document (`compute`). Two
+   * `KGraph`s with one edge identity bring it when the options name none.
+   */
   diff: (before: GraphSource, after: GraphSource, options?: DiffOptions | string): string =>
-    computeModule.call((e) => e.diffJSON(text(before), text(after), optionsText(options))),
-  /** `matchNodes` on the two graphs: `{ matches, suggestions }` (`compute`). */
+    computeModule.call((e) =>
+      e.diffJSON(text(before), text(after), optionsText(diffOptions(before, after, options))),
+    ),
+  /** `matchNodes` on the two graphs, a `KGraph` with its edge identity: `{ matches, suggestions }` (`compute`). */
   matchNodes: (before: GraphSource, after: GraphSource, options?: MatchOptions | string): string =>
-    computeModule.call((e) => e.matchNodesJSON(text(before), text(after), optionsText(options))),
+    computeModule.call((e) =>
+      e.matchNodesJSON(
+        text(before),
+        text(after),
+        optionsText(options),
+        graphOptions(before),
+        graphOptions(after),
+      ),
+    ),
   /** `graphToJSON(normalize(graph, options))` (`compute`). */
   normalize: (graph: GraphInput | string, options?: object | string): string =>
     computeModule.call((e) => e.normalizeJSON(text(graph), optionsText(options))),
@@ -355,7 +451,7 @@ export const json = {
   /** `hashGraph(normalize(graph, options))` (`compute`). */
   hashGraph: (graph: GraphInput | string, options?: object | string): string =>
     computeModule.call((e) => e.hashGraphJSON(text(graph), optionsText(options))),
-  /** `{ diff, layout }`, the two documents of the graphs (`compute`). */
+  /** `{ diff, layout }`, the two documents of the graphs; options as for `diff` (`compute`). */
   diffLayout: (
     before: GraphSource,
     after: GraphSource,
@@ -366,7 +462,7 @@ export const json = {
       e.diffLayoutJSON(
         text(before),
         text(after),
-        optionsText(options),
+        optionsText(diffOptions(before, after, options)),
         layoutOptionsText(layoutOptions),
       ),
     ),

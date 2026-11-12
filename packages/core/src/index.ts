@@ -129,7 +129,10 @@ export async function matchNodes(
 /**
  * Compute the semantic diff between two graph versions: union graph with statuses and
  * facets, hunks, an invertible delta and stats. Deterministic: shuffling the input nodes or
- * edges does not change `diffToJSON` output.
+ * edges does not change `diffToJSON` output. Inputs may be raw `GraphInput`s or normalized
+ * `KGraph`s; when both are `KGraph`s with the same edge identity and no `edgeIdentity` option is
+ * given, theirs is used. Otherwise the option (default `structure`) is, and a `KGraph` of the
+ * other edge identity is re-keyed to it.
  *
  * Asynchronous since 0.11: kgdiff's engine runs it (`@kgdiff/compute`, loaded and compiled on
  * the first call), so the result is the same, byte for byte in `diffToJSON`, as the kgdiff

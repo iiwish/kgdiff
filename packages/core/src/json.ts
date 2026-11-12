@@ -407,11 +407,17 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
  * `diffFromJSON` returns for the same document: the checks only throw, they build nothing.
  * Never for a document read from elsewhere (a report, a file, a caller's JSON).
  */
-export function diffFromTrustedJSON(json: DiffJSON): DiffResult {
-  return readDiff(json, true);
+export function diffFromTrustedJSON(json: DiffJSON, issues?: GraphIssues): DiffResult {
+  return readDiff(json, true, issues);
 }
 
-function readDiff(json: DiffJSON, trusted: boolean): DiffResult {
+/** The issues of a diff's two graphs, which a `kgdiff.diff` document does not carry. */
+export interface GraphIssues {
+  readonly before: readonly GraphIssue[];
+  readonly after: readonly GraphIssue[];
+}
+
+function readDiff(json: DiffJSON, trusted: boolean, issues?: GraphIssues): DiffResult {
   if (!isRecord(json) || json.format !== 'kgdiff.diff') {
     throw new KgdiffError(
       'unsupported-version',
@@ -429,7 +435,8 @@ function readDiff(json: DiffJSON, trusted: boolean): DiffResult {
   const options = resolveOptions(json.options);
   const mode = options.edgeIdentity;
   const graphs = canonicalGraphs(json, mode) ?? normalizedGraphs(json, mode);
-  const { before, after } = graphs;
+  const before = issues ? { ...graphs.before, issues: issues.before } : graphs.before;
+  const after = issues ? { ...graphs.after, issues: issues.after } : graphs.after;
 
   // A version a node or edge must not have is left out here, so `toUnionNode` / `toUnionEdge`
   // report it (a removed node with an afterId, …).
