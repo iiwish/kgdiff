@@ -166,7 +166,7 @@ export const ZH: Dictionary = {
   'cmp.onto': '本体 diff 工具',
   'cmp.lineage': '血缘 diff 界面',
   'cmp.lineageSub': '例如 dbt 的 Recce',
-  'cmp.usSub': 'v0.1，MIT 协议',
+  'cmp.usSub': '开源，MIT 协议',
   'cmp.r1': '语义变化：合并、拆分、改名、迁移',
   'cmp.r1.text': '只有增删的行',
   'cmp.r1.onto': '公理级或实体级；部分能识别改名',

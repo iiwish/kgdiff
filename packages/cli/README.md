@@ -213,7 +213,8 @@ Run `kgdiff --help` for the full list. The most useful:
 
 This package exports no JavaScript API since 0.8.0: it only runs `kgdiff`. In JavaScript, diff
 graphs with [`@kgdiff/core`](https://www.npmjs.com/package/@kgdiff/core) and
-[`@kgdiff/formats`](https://www.npmjs.com/package/@kgdiff/formats), and show them with
+[`@kgdiff/compute`](https://www.npmjs.com/package/@kgdiff/compute) (the same Rust engine in
+WebAssembly), and show them with
 [`@kgdiff/viewer`](https://www.npmjs.com/package/@kgdiff/viewer). In Rust, the crates
 [`kgdiff`](https://crates.io/crates/kgdiff) (the command line as a library, `kgdiff::cli::run`
 behind an I/O trait) and [`kgdiff-report`](https://crates.io/crates/kgdiff-report) (the

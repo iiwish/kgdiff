@@ -54,7 +54,8 @@ const undone = applyDelta(result.after, invertDelta(result.delta));
 hashGraph(undone) === hashGraph(result.before); // true
 ```
 
-- Graph files (RDF, OBO, JSON graph formats): parse them with [`@kgdiff/formats`](../formats).
+- Graph files (RDF, OBO, JSON graph formats): parse them with `parseGraph` of
+  [`@kgdiff/compute`](../compute).
 - Ids that mean nothing across versions, such as two LLM extraction runs: match by label and
   neighbourhood with `diff(a, b, { match: { strategy: 'similarity' } })`.
 - `formatHunk(hunk, result, 'zh-CN')` gives Chinese titles.

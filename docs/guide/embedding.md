@@ -31,20 +31,20 @@ this page makes about them ([`tests/mental_map.rs`](../../crates/kgdiff-report/t
 
 ```toml
 [dependencies]
-kgdiff-core = "0.9"
-kgdiff-layout = "0.9"
-kgdiff-report = "0.9"
+kgdiff-core = "0.11"
+kgdiff-layout = "0.11"
+kgdiff-report = "0.11"
 ```
 
 - **The crates move together.** Each crate requires the others at exactly its own version
-  (`kgdiff-report` 0.9.0 depends on `kgdiff-core = "=0.9.0"`), so Cargo resolves the three to
+  (`kgdiff-report` 0.11.0 depends on `kgdiff-core = "=0.11.0"`), so Cargo resolves the three to
   one release, and refuses requirements that allow no common one. Give all of them the same
   requirement and update them together.
-- **The npm packages have the same version number** as the crates: kgdiff 0.9.0 names one
+- **The npm packages have the same version number** as the crates: kgdiff 0.11.0 names one
   consistent set, tested together. Install the packages at the version of your crates
-  (`npm install @kgdiff/viewer@^0.9.0`).
-- Before 1.0 a minor release may change an API. `"0.9"` in Cargo and `^0.9.0` in npm both stay
-  within 0.9.
+  (`npm install @kgdiff/viewer@^0.11.0`).
+- Before 1.0 a minor release may change an API. `"0.11"` in Cargo and `^0.11.0` in npm both stay
+  within 0.11.
 - The documents that cross from the server to the browser are versioned on their own
   (`kgdiff.report` 1, `kgdiff.diff.packed` 1, `kgdiff.layout` 2) and have JSON Schemas in
   [`@kgdiff/core/schema/`](../formats.md#format-marker-and-json-schema).
@@ -480,12 +480,13 @@ The rules in full are in the
 [RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) plans
 two more parts. Neither exists yet, and the RFC is a draft: releases and details may change.
 
-| Part | What                                                                     | Planned for        | Until then                                                                                                                   |
-| ---- | ------------------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| 4c   | The plain view: one graph in the viewer, colored by your categories      | 0.10, or after 1.0 | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
-| 4d   | Groups: a background per group, and a layout that keeps a group together | after 1.0          | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
+| Part | What                                                                     | Planned for | Until then                                                                                                                   |
+| ---- | ------------------------------------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 4c   | The plain view: one graph in the viewer, colored by your categories      | after 1.0   | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
+| 4d   | Groups: a background per group, and a layout that keeps a group together | after 1.0   | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
 
-Also not there: `layout_graph`, `layout_diff_on` and `layout_after` in TypeScript.
-`@kgdiff/layout` has no counterpart of them; `layoutGraph` is planned for `@kgdiff/compute`,
-with the rest of the layout. In the browser, lay out the diff of a graph with itself, or better,
-compute layouts on the server as above.
+Since 0.11 the three layout functions exist in TypeScript too: `layoutGraph`, `layoutDiffOn` and
+`layoutAfter` of `@kgdiff/layout` (asynchronous) or of `@kgdiff/compute` (`*Sync` after `init()`),
+the same engine and the same bytes as the crates. A host that computes its layouts in the browser
+keeps the same mental map; computing them on the server as above still keeps the pages free of
+the engine's WebAssembly.
