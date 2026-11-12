@@ -21,10 +21,8 @@ import { layoutToJSON } from '@kgdiff/layout';
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { parseGraph } from '../../formats/src/sync.js';
-import { layoutDiff } from '../../layout/src/sync.js';
-import { diff } from '../src/sync.js';
 import { versionPairArb } from './support/arbitraries.js';
+import { diff, layoutDiff, parseGraph } from './support/engine.js';
 import {
   enterpriseAfter,
   enterpriseBefore,
@@ -284,8 +282,9 @@ describe('the delta and diff schemas', () => {
 
 describe('the report schema', () => {
   const result = diff(enterpriseBefore, enterpriseAfter('hint'));
-  // Version 1, as this repository's TypeScript engine writes it; the Rust engine writes 2.
-  const layoutV1 = layoutToJSON(layoutDiff(result));
+  // Version 1, as layouts without a generator (those of 0.x) are written; the engine writes 2.
+  const { generator: _generator, ...layout } = layoutDiff(result);
+  const layoutV1 = layoutToJSON(layout);
   const layoutV2 = { ...layoutV1, version: 2, generator: 'kgdiff-layout/1' };
   const payload = {
     format: 'kgdiff.report',

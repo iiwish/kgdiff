@@ -14,11 +14,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { type DiffOptions, type DiffResult, diffFromJSON, normalize } from '@kgdiff/core';
-import type { FormatId } from '@kgdiff/formats';
+import type { FormatId, ParseOptions } from '@kgdiff/formats';
 import { type LayoutOptions, type LayoutResult, layoutToJSON } from '@kgdiff/layout';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { decodeInput } from '../../../conformance/inputs.js';
-import { parseGraph as parseGraphTS } from '../../formats/src/sync.js';
 import {
   estimateLabelWidthSync,
   extendLayoutSync,
@@ -33,6 +32,7 @@ import {
   textSimilaritySync,
 } from '../src/index.js';
 import { type CorpusBuild, corpusBuild, enabled, nativeLayouts } from './support.js';
+import typescript from './typescript-engine.json' with { type: 'json' };
 
 const CORPUS = fileURLToPath(new URL('../../../conformance/', import.meta.url));
 
@@ -215,14 +215,10 @@ describe.runIf(enabled)('the WebAssembly build reproduces the corpus', () => {
     });
   });
 
-  it('the other inputs of the parsers give what @kgdiff/formats gives', () => {
-    for (const [text, options] of [
-      ['@prefix ex: <http://e.x/> . ex:a ex:p ex:b .', { format: 'turtle' as const }],
-      ['{"@context":{"@vocab":"http://e.x/"},"@id":"http://e.x/a","p":{"@id":"http://e.x/b"}}', {}],
-    ] as const) {
-      expect(parseGraphSync(text, options)).toEqual(
-        JSON.parse(JSON.stringify(parseGraphTS(text, options))),
-      );
+  it('the other inputs of the parsers give what @kgdiff/formats’ TypeScript parsers gave', () => {
+    // Kept in typescript-engine.json since those parsers are deleted (0.11).
+    for (const { text, options, result } of typescript.parse) {
+      expect(parseGraphSync(text, options as ParseOptions)).toEqual(result);
     }
   });
 

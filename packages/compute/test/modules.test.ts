@@ -1,8 +1,6 @@
-import { KgdiffError } from '@kgdiff/core';
+import { type DiffJSON, diffFromJSON, KgdiffError } from '@kgdiff/core';
+import type { LayoutOptions } from '@kgdiff/layout';
 import { describe, expect, it } from 'vitest';
-import { diff as diffTS } from '../../core/src/sync.js';
-import { parseGraph as parseTS } from '../../formats/src/sync.js';
-import { layoutDiff as layoutTS } from '../../layout/src/sync.js';
 import {
   detectFormat,
   diffSync,
@@ -14,6 +12,7 @@ import {
 } from '../src/index.js';
 import * as layoutOnly from '../src/layout.js';
 import { enabled } from './support.js';
+import typescript from './typescript-engine.json' with { type: 'json' };
 
 const before = { nodes: [{ id: 'a', label: 'A' }, { id: 'b' }], edges: [] };
 const after = {
@@ -30,10 +29,13 @@ function failure(run: () => unknown): unknown {
   throw new Error('expected a failure');
 }
 
+/** The diff of `before` and `after` as the TypeScript engine (deleted in 0.11) computed it. */
+const computed = () => diffFromJSON(JSON.parse(typescript.modules.diff) as DiffJSON);
+
 describe.runIf(enabled)('the modules load on demand', () => {
   it('loads only what is asked for', async () => {
     await layoutOnly.init();
-    const result = diffTS(before, after);
+    const result = computed();
     expect(layoutOnly.layoutDiffSync(result).positions.size).toBe(3);
     expect(() => diffSync(before, after)).toThrow(/compute module is not initialized/);
     expect(() => parseGraphSync('{}')).toThrow(/formats module is not initialized/);
@@ -46,14 +48,13 @@ describe.runIf(enabled)('the modules load on demand', () => {
     expect(diffSync(before, after).stats).toEqual(result.stats);
   });
 
-  it('fails as the TypeScript packages do', async () => {
+  it('fails as the TypeScript packages did', async () => {
     await init();
-    const result = diffTS(before, after);
-    for (const options of [{ fontSize: -1 }, { iterations: 1.5 }, { scope: 'some' as 'all' }]) {
-      const wasm = failure(() => layoutDiffSync(result, options));
-      const ts = failure(() => layoutTS(result, options));
+    const result = computed();
+    for (const { options, message } of typescript.modules.layoutErrors) {
+      const wasm = failure(() => layoutDiffSync(result, options as LayoutOptions));
       expect(wasm).toBeInstanceOf(KgdiffError);
-      expect((wasm as KgdiffError).message).toBe((ts as KgdiffError).message);
+      expect((wasm as KgdiffError).message).toBe(message);
     }
     const parse = failure(() => parseGraphSync('@prefix ex <x> .', { format: 'turtle' }));
     expect(parse).toBeInstanceOf(KgdiffError);
@@ -66,8 +67,6 @@ describe.runIf(enabled)('the modules load on demand', () => {
     const context = { '@context': { '@vocab': 'http://e.x/' } };
     const text = '{"@context":"http://ctx/","@id":"http://e.x/a","p":{"@id":"http://e.x/b"}}';
     const options = { jsonld: { documentLoader: () => context } };
-    expect(parseGraphSync(text, options)).toEqual(
-      JSON.parse(JSON.stringify(parseTS(text, options))),
-    );
+    expect(parseGraphSync(text, options)).toEqual(typescript.modules.documentLoader);
   });
 });

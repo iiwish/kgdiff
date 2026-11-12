@@ -1104,7 +1104,9 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
 - **Against the acceptance**: `layout-contract.json` and `label-width.json` pass for every corpus
   case; the properties hold for every corpus case and for synthetic graphs up to 10k nodes. The
   positions are bit-identical to TypeScript's on every corpus case and on synthetic graphs of
-  1k–10k nodes, so the five quality metrics are equal, not just within 10%. The `targets` job
+  1k–10k nodes, so the five quality metrics are equal, not just within 10% (measured with
+  `crates/kgdiff-layout/scripts/quality.ts`, which phase 5 deleted with the TypeScript layout it
+  compared with). The `targets` job
   finds the same bytes for 102 layouts on x86-64 Linux, AArch64 macOS, x86-64 Windows and wasm32.
   The corpus generator checks that each case's report carries the layout `@kgdiff/layout`
   computes (what `conformance/compare-reports.ts` checked against the deleted TypeScript CLI), and
@@ -1187,9 +1189,28 @@ Acceptance:
 - 0.11.0 is published on npm, crates.io and the GitHub release channels.
 
 The file-by-file split of `@kgdiff/core` and `@kgdiff/layout` into the read path, the compute code
-this phase deletes and each package's entry is
-[`tests/read-path.ts`](../../tests/read-path.ts); its test checks that no read-path file imports
-the compute code, and where the lists above and in §1 differ from it, the code-checked list holds.
+this phase deletes and each package's entry was
+[`tests/read-path.ts`](../../tests/read-path.ts), checked by its test; where the lists above and
+in §1 differ from it, the code-checked list holds.
+
+##### Phase 5 progress
+
+- **Done**: the compact graph and typed graph input (#98); the three WebAssembly modules and the
+  package (#99); the corpus generated in Rust, TypeScript checking only the read path (#101); the
+  public functions on `@kgdiff/compute`, asynchronous (#102).
+- **The TypeScript compute code is deleted.** 12,988 lines of source, everything the "Deleted"
+  list above names, in 46 files: 13 of `@kgdiff/core` (the `remove` list of `tests/read-path.ts`,
+  `log2` with it), 21 of `@kgdiff/layout` (the engine and `label-box`) and 12 of
+  `@kgdiff/formats` (the parsers and their helpers; `FORMAT_EXTENSIONS` moved into its entry),
+  each package's synchronous entry `sync.ts`, which the comparison tests used until then,
+  included; and `n3`, `d3-force` and `d3-quadtree` as dependencies. With them went the tests of that code; the tests of the read
+  path compute what they read with the WebAssembly build, and the comparisons of
+  `@kgdiff/compute`'s tests with the TypeScript engine became comparisons with the corpus or,
+  for inputs it does not have, with values that engine computed
+  (`packages/compute/test/typescript-engine.json`). What stays in TypeScript is about 5,300 lines
+  of read path and the three entries (6,179 lines in all); `tests/read-path.ts` now lists every
+  source file the three packages may have, and its test fails on any other, so compute code cannot
+  come back unnoticed.
 
 #### kgdiff 1.0
 

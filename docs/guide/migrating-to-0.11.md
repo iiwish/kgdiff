@@ -24,8 +24,9 @@ New in `@kgdiff/layout`, asynchronous too: `layoutGraph(graph, options?)`,
 that keep one map across versions ([Embed kgdiff in a Rust application](./embedding.md) explains
 them; the TypeScript functions are the same).
 
-`log2` of `@kgdiff/core` is deprecated and goes before 0.11.0 with the TypeScript engine that used
-it; use `Math.log2`.
+`log2` of `@kgdiff/core` is removed, with the TypeScript engine that used it; use `Math.log2`.
+`@kgdiff/formats` keeps `FORMAT_EXTENSIONS` (synchronous) and its types; its TypeScript parsers
+are removed, and its three functions run kgdiff's parsers (above).
 
 ### Two ways to migrate
 

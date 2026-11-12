@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { diffToJSON, KgdiffError, normalize } from '@kgdiff/core';
+import { diffFromJSON, KgdiffError } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { diff, matchNodes, textSimilarity } from '../../core/src/sync.js';
 import {
   diffJSON,
   diffSync,
@@ -11,6 +10,7 @@ import {
   version,
 } from '../src/index.js';
 import { enabled } from './support.js';
+import typescript from './typescript-engine.json' with { type: 'json' };
 
 const before = {
   nodes: [
@@ -44,33 +44,27 @@ describe.runIf(enabled)('@kgdiff/compute', () => {
     expect(version()).toBe(/^version = "([^"]+)"/m.exec(cargo)?.[1]);
   });
 
-  it('diffs as @kgdiff/core does, byte for byte', async () => {
+  it('diffs as @kgdiff/core’s TypeScript engine did, byte for byte', async () => {
     await init();
     const options = { ignoreAttrs: ['born'] };
     const text = diffJSON(before, after, options);
-    expect(text).toBe(JSON.stringify(diffToJSON(diff(before, after, options))));
+    // What the TypeScript engine (deleted in 0.11) computed, kept in typescript-engine.json.
+    const expected = diffFromJSON(JSON.parse(typescript.api.diff));
+    expect(text).toBe(typescript.api.diff);
     expect(diffJSON(JSON.stringify(before), JSON.stringify(after), JSON.stringify(options))).toBe(
       text,
     );
     const result = diffSync(before, after, options);
-    expect(result.stats).toEqual(diff(before, after, options).stats);
-    expect(result.hunks.map((h) => h.id)).toEqual(
-      diff(before, after, options).hunks.map((h) => h.id),
-    );
+    expect(result.stats).toEqual(expected.stats);
+    expect(result.hunks.map((h) => h.id)).toEqual(expected.hunks.map((h) => h.id));
   });
 
-  it('matches nodes and compares text as @kgdiff/core does', async () => {
+  it('matches nodes and compares text as @kgdiff/core’s TypeScript engine did', async () => {
     await init();
     const options = { strategy: 'similarity' as const };
-    expect(matchNodesSync(before, after, options)).toEqual(
-      JSON.parse(JSON.stringify(matchNodes(normalize(before), normalize(after), options))),
-    );
-    for (const [a, b] of [
-      ['Analytical Engine', 'analytical engine'],
-      ['Notes on the Analytical Engine', 'Analytical Engine'],
-      ['Ada', 'Ada Lovelace'],
-    ] as const) {
-      expect(textSimilaritySync(a, b)).toBe(textSimilarity(a, b));
+    expect(matchNodesSync(before, after, options)).toEqual(typescript.api.matchNodes);
+    for (const [a, b, similarity] of typescript.textSimilarity) {
+      expect([a, b, textSimilaritySync(a as string, b as string)]).toEqual([a, b, similarity]);
     }
   });
 

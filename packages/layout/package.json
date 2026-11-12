@@ -45,12 +45,6 @@
   },
   "dependencies": {
     "@kgdiff/compute": "workspace:*",
-    "@kgdiff/core": "workspace:*",
-    "d3-force": "3.0.0",
-    "d3-quadtree": "3.0.1"
-  },
-  "devDependencies": {
-    "@types/d3-force": "3.0.10",
-    "@types/d3-quadtree": "3.0.6"
+    "@kgdiff/core": "workspace:*"
   }
 }

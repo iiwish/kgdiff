@@ -224,17 +224,12 @@ the `pypi` environment (trusted publisher: owner `iiwish`, repository `kgdiff`, 
 ## Website
 
 The landing page, the playground and the documentation build together into static files
-(`pnpm build:site` → `apps/site/dist`). Deploy them with either:
-
-- **GitHub Pages**: [`pages.yml`](../.github/workflows/pages.yml) builds and deploys on every push
-  to `main` that touches the site, the packages or the docs. Under Settings → Pages, set the source
-  to GitHub Actions; the base path (`/<repo>/`, or `/` with a custom domain) comes from there.
-- **Vercel**: import the repository. [`vercel.json`](../vercel.json) sets the install and build
-  commands and the output directory; the production domain and the repository come from Vercel's
-  environment. Set `KGDIFF_SITE_URL` for a custom domain, and `ENABLE_EXPERIMENTAL_COREPACK=1` so
-  that Vercel installs with the pnpm version in `packageManager`. Pull requests get previews.
-
-Choose one as the canonical address: canonical and Open Graph tags point at `KGDIFF_SITE_URL`.
+(`pnpm build:site` → `apps/site/dist`) and are deployed to GitHub Pages only:
+[`pages.yml`](../.github/workflows/pages.yml) builds the WebAssembly modules and the site and
+deploys them on every push to `main` that touches the site, the packages or the docs. Under
+Settings → Pages, set the source to GitHub Actions; the base path (`/<repo>/`, or `/` with a
+custom domain) and `KGDIFF_SITE_URL`, which canonical and Open Graph tags point at, come from
+there.
 
 ## What ships
 

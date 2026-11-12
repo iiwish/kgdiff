@@ -44,7 +44,7 @@ npx @kgdiff/cli before.ttl after.ttl -o report.html --open
 
 - **`<kgdiff-viewer>`**：与框架无关的 Web 组件，三种对比方式——**叠加**、**滑动对比**（拖动分隔线对照前后）、**回放**（旧图按变更组逐步演变成新图），每种都可以叠加**仅看变更**（大图默认打开）；外加可搜索、可筛选的变更列表，带字符级差异的详情面板，审阅进度，深链接，键盘快捷键，深浅主题，中英文界面。
 - **`kgdiff` 命令行**：彩色终端摘要，`--stat`、`--name-status`、`--json`、`--delta`，适合 PR 评论的 `--markdown`，供 CI 使用的 `--exit-code`，应用补丁的 `apply`，以及可离线打开的单文件 HTML 报告（`-o report.html`，加 `--reproducible` 时逐字节可复现）。
-- **库**：零依赖的差异引擎、解析器（RDF 用 `n3`）、稳定布局引擎、与渲染器无关的视觉模型、Canvas 渲染器，以及 AntV G6 适配器。
+- **库**：差异引擎、解析器和稳定布局引擎（kgdiff 的 Rust 引擎，在 `@kgdiff/compute` 里编译为 WebAssembly）、与渲染器无关的视觉模型、Canvas 渲染器，以及 AntV G6 适配器。
 
 ## 快速开始
 
@@ -145,25 +145,26 @@ for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'zh-CN').t
 
 全部包：
 
-| 包                                      | 说明                                                                   |
-| --------------------------------------- | ---------------------------------------------------------------------- |
-| [`@kgdiff/core`](packages/core)         | 差异引擎：规范化 → 匹配 → 分类 → 变更组 → 可逆补丁。零依赖。           |
-| [`@kgdiff/formats`](packages/formats)   | RDF / OBO / JSON 解析器。                                              |
-| [`@kgdiff/layout`](packages/layout)     | 确定性、为标签留空间的并集布局；支持锚定模式和只布局变更的模式。       |
-| [`@kgdiff/scene`](packages/scene)       | 把差异语义转成视觉图元：设计令牌、编码规则、回放时间线、聚焦。         |
-| [`@kgdiff/renderer`](packages/renderer) | Canvas 2D 引擎：平滑镜头、细节分级、标签布局、拾取、滑动对比、小地图。 |
-| [`@kgdiff/viewer`](packages/viewer)     | `<kgdiff-viewer>` Web 组件。                                           |
-| [`@kgdiff/g6`](packages/g6)             | 在 AntV G6 v5 中渲染 kgdiff 场景。                                     |
-| [`@kgdiff/cli`](packages/cli)           | 命令行工具。                                                           |
-| [`action.yml`](action.yml)              | GitHub Action（`uses: iiwish/kgdiff@v0`）：在 PR 上展示图谱 diff。     |
-| [`apps/site`](apps/site)                | 官网和在线体验页。                                                     |
+| 包                                      | 说明                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| [`@kgdiff/core`](packages/core)         | 差异模型：规范化、`diff`（由 `@kgdiff/compute` 计算）、JSON 传输、可逆补丁。 |
+| [`@kgdiff/formats`](packages/formats)   | RDF / OBO / JSON 解析器（已弃用，请用 `@kgdiff/compute`）。                  |
+| [`@kgdiff/compute`](packages/compute)   | 编译为 WebAssembly 的 kgdiff Rust 引擎：差异、解析、布局。                   |
+| [`@kgdiff/layout`](packages/layout)     | 确定性、为标签留空间的并集布局；支持锚定模式和只布局变更的模式。             |
+| [`@kgdiff/scene`](packages/scene)       | 把差异语义转成视觉图元：设计令牌、编码规则、回放时间线、聚焦。               |
+| [`@kgdiff/renderer`](packages/renderer) | Canvas 2D 引擎：平滑镜头、细节分级、标签布局、拾取、滑动对比、小地图。       |
+| [`@kgdiff/viewer`](packages/viewer)     | `<kgdiff-viewer>` Web 组件。                                                 |
+| [`@kgdiff/g6`](packages/g6)             | 在 AntV G6 v5 中渲染 kgdiff 场景。                                           |
+| [`@kgdiff/cli`](packages/cli)           | 命令行工具。                                                                 |
+| [`action.yml`](action.yml)              | GitHub Action（`uses: iiwish/kgdiff@v0`）：在 PR 上展示图谱 diff。           |
+| [`apps/site`](apps/site)                | 官网和在线体验页。                                                           |
 
 ## 正确性与性能
 
 - **确定性**：相同输入得到逐字节相同的差异、布局和报告。
 - **可逆**：`apply(A, diff(A, B).delta) ≅ B`，逆补丁可还原 `A`；按审阅顺序逐组应用补丁一定成功。均由 fast-check 属性测试保证。
-- **测试**：各包合计约 2200 个测试，另有验收测试让每个示例数据集跑完整条流水线。
-- **实测**（M 系列笔记本，`pnpm bench`）：1 万节点 / 3 万边的差异约 0.1 秒；5 万条 RDF 三元组解析约 0.1 秒；1 万节点差异的布局（只布局变更范围）约 1.1 秒；5000 节点每帧视觉计算不到 1 毫秒；独立版查看器 gzip 后约 116 kB。
+- **测试**：各包合计约 2100 个 TypeScript 测试，加上 Rust 各 crate 自己的测试、两边都要通过的一致性语料，以及让每个示例数据集跑完整条流水线的验收测试。
+- **实测**（M 系列笔记本，0.10 的 TypeScript 引擎；0.11 替换它的 Rust 引擎的测量见 [RFC 0002](docs/rfcs/0002-rust-compute-core.md) §7）：1 万节点 / 3 万边的差异约 0.1 秒；5 万条 RDF 三元组解析约 0.1 秒；1 万节点差异的布局（只布局变更范围）约 1.1 秒；5000 节点每帧视觉计算不到 1 毫秒；独立版查看器 gzip 后约 116 kB。
 
 ## 示例数据
 

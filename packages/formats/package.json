@@ -50,10 +50,6 @@
   },
   "dependencies": {
     "@kgdiff/compute": "workspace:*",
-    "@kgdiff/core": "workspace:*",
-    "n3": "2.13.12"
-  },
-  "devDependencies": {
-    "@types/n3": "1.26.6"
+    "@kgdiff/core": "workspace:*"
   }
 }

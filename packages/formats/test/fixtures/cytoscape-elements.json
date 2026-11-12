@@ -1,5 +1,0 @@
-[
-  { "group": "nodes", "data": { "id": "a", "label": "A" } },
-  { "group": "edges", "data": { "id": "ab", "source": "a", "target": "b", "label": "links to" } },
-  { "data": { "id": "b", "label": "B" } }
-]

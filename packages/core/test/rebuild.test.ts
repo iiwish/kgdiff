@@ -15,8 +15,8 @@ import {
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { canonicalGraphs, normalizedGraphs } from '../src/json.js';
-import { diff } from '../src/sync.js';
 import { versionPairArb } from './support/arbitraries.js';
+import { diff } from './support/engine.js';
 import { editGraph, syntheticGraph } from './support/synthetic.js';
 
 const RUNS = Number(process.env.KGDIFF_PROPERTY_RUNS ?? 300);

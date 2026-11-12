@@ -1,9 +1,22 @@
 /**
- * Seeded graph fixtures for layout tests and previews.
+ * Seeded graph fixtures for layout tests.
  */
 import type { NodeFacet } from '@kgdiff/core';
-import { mulberry32, type Random } from '../../src/prng.js';
 import type { EdgeSpec, GraphSpec, NodeSpec } from './diff-builder.js';
+
+type Random = () => number;
+
+/** mulberry32: uniform floats in [0, 1) from a 32-bit seed. */
+function mulberry32(seed: number): Random {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 const WORDS = [
   'cell',
