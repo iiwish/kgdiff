@@ -19,19 +19,14 @@ import { StageView } from '../view.js';
 import { BoundElement, define } from './bound.js';
 import { type StageViewContext, stageContext } from './stage-context.js';
 
+export type { Context } from '../context.js';
 export type { StageContext } from './stage-context.js';
 export { stageContext } from './stage-context.js';
 
 /**
  * The regions of the built-in chrome a stage has.
  */
-export const STAGE_REGIONS: readonly StageRegion[] = [
-  'dock',
-  'transport',
-  'legend',
-  'zoom',
-  'minimap',
-];
+const STAGE_REGIONS: readonly StageRegion[] = ['dock', 'transport', 'legend', 'zoom', 'minimap'];
 
 type MutableStagePanels = { -readonly [R in StageRegion]?: PanelState };
 
@@ -85,6 +80,7 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     return ['for', 'panels', 'version'];
   }
 
+  /** @internal */
   protected readonly name = 'stage';
   #stage: Stage | null = null;
   /** The page's `panels`, and what the user changed since (the legend's head). */
@@ -144,6 +140,7 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     else super.attributeChangedCallback(name, old, value);
   }
 
+  /** @internal */
   protected override upgradedProperties(): readonly string[] {
     return [...super.upgradedProperties(), 'panels', 'version'];
   }
@@ -205,6 +202,7 @@ export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     };
   }
 
+  /** @internal */
   protected build(ui: UiContext, ctx: ViewerContext, release: (fn: () => void) => void): Region {
     release(
       provideContext(this, stageContext, (): StageViewContext => {

@@ -19,8 +19,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-transport
  */
 export class KgdiffTransport extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'transport';
 
+  /** @internal */
   protected build(ui: UiContext): Region {
     const transport = new Transport(ui);
     this.shadow.append(h('div', { class: 'stack' }, transport.finished, transport.el));

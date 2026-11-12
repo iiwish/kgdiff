@@ -26,11 +26,6 @@ export function layoutDiffSync(diff: DiffResult, options?: LayoutOptions): Layou
 
 export function layoutGraphSync(graph: KGraph, options?: LayoutOptions): LayoutResult;
 
-// Warning: (ae-forgotten-export) The symbol "Module" needs to be exported by the entry point layout.d.ts
-// Warning: (ae-forgotten-export) The symbol "Glue_2" needs to be exported by the entry point layout.d.ts
-//
-export const layoutModule: Module<typeof Glue_2>;
-
 export function nodeRadiusSync(degree: number): number;
 
 ```

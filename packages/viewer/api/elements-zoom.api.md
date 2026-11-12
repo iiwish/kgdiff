@@ -4,47 +4,24 @@
 
 ```ts
 
-import { Camera } from '@kgdiff/renderer';
-import { ChangeFamily } from '@kgdiff/scene';
 import type { Delta } from '@kgdiff/core';
 import type { DiffJSON } from '@kgdiff/core';
 import type { DiffOptions } from '@kgdiff/core';
-import { DiffResult } from '@kgdiff/core';
-import type { DiffStats } from '@kgdiff/core';
-import { FocusState } from '@kgdiff/scene';
 import type { GraphInput } from '@kgdiff/core';
 import type { KGraph } from '@kgdiff/core';
-import { Layer } from '@kgdiff/scene';
 import type { LayoutJSON } from '@kgdiff/layout';
-import { LayoutOptions } from '@kgdiff/layout';
-import { LayoutResult } from '@kgdiff/layout';
+import type { LayoutOptions } from '@kgdiff/layout';
 import type { Locale } from '@kgdiff/core';
 import type { NodeShape } from '@kgdiff/scene';
 import type { PackedDiffJSON } from '@kgdiff/core';
-import { PaletteName } from '@kgdiff/scene';
+import type { PaletteName } from '@kgdiff/scene';
 import type { ParseOptions } from '@kgdiff/compute';
-import type { Rect } from '@kgdiff/core';
-import { RendererLayer } from '@kgdiff/renderer';
-import type { ReplayPhase } from '@kgdiff/core';
-import { Scene } from '@kgdiff/scene';
-import { Theme } from '@kgdiff/scene';
-import { ThemeName } from '@kgdiff/scene';
-import type { Timeline } from '@kgdiff/scene';
-import type { UnionId } from '@kgdiff/core';
-import type { UnionNode } from '@kgdiff/core';
-import { ViewState } from '@kgdiff/scene';
-import { VisualResolver } from '@kgdiff/scene';
+import type { RendererLayer } from '@kgdiff/renderer';
 
 // Warning: (ae-forgotten-export) The symbol "ViewBoundElement" needs to be exported by the entry point zoom.d.ts
 // Warning: (ae-forgotten-export) The symbol "KgdiffStageBoundElement" needs to be exported by the entry point zoom.d.ts
 //
 export class KgdiffZoom extends ViewBoundElement implements KgdiffStageBoundElement {
-    // Warning: (ae-forgotten-export) The symbol "UiContext" needs to be exported by the entry point zoom.d.ts
-    // Warning: (ae-forgotten-export) The symbol "StageView" needs to be exported by the entry point zoom.d.ts
-    // Warning: (ae-forgotten-export) The symbol "Region" needs to be exported by the entry point zoom.d.ts
-    //
-    protected build(ui: UiContext, view: StageView): Region;
-    protected readonly name = "zoom";
 }
 
 ```

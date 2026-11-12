@@ -17,8 +17,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-change-list
  */
 export class KgdiffChangeList extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'change-list';
 
+  /** @internal */
   protected build(ui: UiContext, _ctx: unknown, release: (fn: () => void) => void): Region {
     const list = new ChangeList(ui);
     const rows = h('div', { class: 'list-wrap' }, list.sticky, list.list, list.phases);

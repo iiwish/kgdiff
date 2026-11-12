@@ -60,9 +60,9 @@ import {
   layoutDiffOnSync,
   layoutDiffSync,
   layoutGraphSync as layoutKGraphSync,
-  layoutModule,
   nodeRadiusSync,
 } from './layout.js';
+import { layoutModule } from './layout-module.js';
 import { type InitSource, Module } from './loader.js';
 
 export {

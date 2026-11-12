@@ -32,6 +32,8 @@ export interface DiffGraphController {
     stop(): void;
 }
 
+export type ElementKind = 'node' | 'edge' | 'glyph' | 'anchor' | 'collapsed';
+
 export type KgdiffDatumData = {
     readonly kgdiff: ElementKind;
     readonly index: number;
@@ -48,9 +50,5 @@ export interface ToG6DataOptions {
     readonly idPrefix?: string;
     readonly keepHidden?: boolean;
 }
-
-// Warnings were encountered during analysis:
-//
-// src/map-context.ts:25:3 - (ae-forgotten-export) The symbol "ElementKind" needs to be exported by the entry point index.d.ts
 
 ```

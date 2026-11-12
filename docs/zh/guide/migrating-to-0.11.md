@@ -2,7 +2,7 @@
 
 kgdiff 0.11 在浏览器和 Node 里的所有计算都改由编译成 WebAssembly 的 kgdiff Rust 引擎
 [`@kgdiff/compute`](../../../packages/compute/README.md) 执行：和 kgdiff 命令行是同一个引擎，输出逐字节相同。
-编译 WebAssembly 是异步的，所以做计算的函数改为返回 Promise。之后的 0.12 只改 Rust API（[迁移到 0.12](./migrating-to-0.12.md)），
+编译 WebAssembly 是异步的，所以做计算的函数改为返回 Promise。之后的 0.12 为 1.0 整理公开 API，主要是 Rust API（[迁移到 0.12](./migrating-to-0.12.md)），
 它是最后一个有破坏性变更的版本；1.0 是 0.12 稳定一段时间后的同一份代码（[RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)，英文）。
 
 ## 改成异步的函数

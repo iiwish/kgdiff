@@ -3,7 +3,8 @@
 kgdiff 0.11 runs every computation in the browser and in Node on kgdiff's Rust engine compiled to
 WebAssembly, [`@kgdiff/compute`](../../packages/compute/README.md): the same engine, and the same
 bytes, as the kgdiff CLI. Compiling WebAssembly is asynchronous, so the functions that compute
-return promises. 0.12 then changes only the Rust API ([Migrating to 0.12](./migrating-to-0.12.md));
+return promises. 0.12 then readies the public API for 1.0, the Rust API above all
+([Migrating to 0.12](./migrating-to-0.12.md));
 it is the last release with breaking changes, and 1.0 is 0.12 after a stable period
 ([RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
 

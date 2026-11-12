@@ -1,11 +1,37 @@
 # Migrating to 0.12
 
-kgdiff 0.12 changes only the Rust API: it makes room for the additions planned after 1.0, so that
-none of them needs a major release ([Versioning](../versioning.md)). The npm packages, the CLI,
-the document formats and every output byte are those of 0.11; for JavaScript and the command
-line, the upgrade is the version number. 0.12 is the last release with breaking changes; 1.0 is
-0.12 after a stable period
+kgdiff 0.12 makes the public API ready for 1.0. The Rust API makes room for the additions
+planned after 1.0, so that none of them needs a major release ([Versioning](../versioning.md)).
+The JavaScript API shrinks to what is documented: a few exports that only kgdiff's own packages
+used are gone or hidden ([below](#javascript)). The CLI, the document formats and every output
+byte are those of 0.11; for the command line, the upgrade is the version number. 0.12 is the last
+release with breaking changes; 1.0 is 0.12 after a stable period
 ([RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#kgdiff-10)).
+
+## JavaScript
+
+Pages and applications that use the viewer's elements through their attributes, properties,
+methods and events, and the other packages through what their documentation describes, need no
+change. What changes:
+
+- **`@kgdiff/viewer/elements/*`:** the declarations of the element classes no longer show the
+  members a subclass would override (`build`, `name`, `shadow`, `context`,
+  `upgradedProperties`, and `actions`, `connected`, `createSession`, `sheets` and the other
+  hooks of `<kgdiff-root>`), nor `KgdiffStage`'s `view`. Subclassing the element classes is not
+  part of the public API ([Versioning](../versioning.md)): extend an element by composition
+  (slots, `addLayer`, `registerObstacle`, events) instead.
+- **`@kgdiff/viewer/elements/stage`:** `STAGE_REGIONS` is no longer exported. The regions are the
+  `StageRegion` type of `@kgdiff/viewer`: `['dock', 'transport', 'legend', 'zoom', 'minimap']`.
+  The `Context` type of `stageContext` is exported with it.
+- **`@kgdiff/compute/layout`:** `layoutModule` is no longer exported. Call `init()` and the
+  functions of the entry point.
+- **`@kgdiff/core/computed`** is an internal entry point of `@kgdiff/compute` and not covered by
+  semantic versioning.
+- **Added:** `@kgdiff/g6` exports `ElementKind`, the type of `KgdiffDatumData.kgdiff`.
+- **`@kgdiff/scene`:** `shape2` of `EdgeVisual` and `GlyphVisual` is experimental, like `shape1`
+  (it already was in intent; its documentation said so only for `shape1`).
+- Each entry point now has an API report, `packages/<name>/api/*.api.md`, which CI compares with
+  the built declarations.
 
 ## Options, inputs and results are `#[non_exhaustive]`
 

@@ -19,7 +19,17 @@ them.
 ## What is covered
 
 - **The JavaScript API**: everything `@kgdiff/*` exports, with its types, except what is marked
-  `@experimental` (below).
+  `@experimental` (below). The API reports in `packages/*/api/` list it, entry point by entry
+  point. Not covered, as the Rust crates' `#[doc(hidden)]` items are not:
+  - `@kgdiff/core/computed` (`readComputedDiff` and its types): an internal entry point that
+    only `@kgdiff/compute` of the same version calls;
+  - subclassing the viewer's element classes (`@kgdiff/viewer/elements/*`). An element's public
+    interface is its attributes, properties, methods, events, slots and CSS, as
+    `custom-elements.json` lists them. The base classes the declarations name (`BoundElement`,
+    `ViewBoundElement`, `RootElement`) and the members a subclass would override are the
+    viewer's own: their declarations leave those members out, and they may change in any
+    release;
+  - items marked `@internal`, which the declarations leave out where they can.
 - **The Rust API**: the public items of `kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`,
   `kgdiff-report` and `kgdiff` that the documentation on docs.rs shows. Items marked
   `#[doc(hidden)]` are not covered: they are the engine's own, shared between kgdiff's crates

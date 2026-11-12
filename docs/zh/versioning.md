@@ -14,7 +14,10 @@ kgdiff 遵循[语义化版本](https://semver.org/lang/zh-CN/)。本页说明版
 
 ## 承诺范围
 
-- **JavaScript API**：`@kgdiff/*` 导出的一切及其类型，标了 `@experimental` 的除外（见下文）。
+- **JavaScript API**：`@kgdiff/*` 导出的一切及其类型，标了 `@experimental` 的除外（见下文）。`packages/*/api/` 里的 API 报告按入口逐个列出了它们。和 Rust crate 里标了 `#[doc(hidden)]` 的项一样，下面这些不在承诺之内：
+  - `@kgdiff/core/computed`（`readComputedDiff` 及其类型）：内部入口，只有同版本的 `@kgdiff/compute` 调用它；
+  - 继承查看器的元素类（`@kgdiff/viewer/elements/*`）。元素的公开接口是它的属性（attribute 和 property）、方法、事件、插槽和 CSS，也就是 `custom-elements.json` 列出的内容。声明文件里出现的基类（`BoundElement`、`ViewBoundElement`、`RootElement`）和子类会去覆盖的成员都是查看器自己的：声明文件里不含这些成员，任何版本都可能改动它们；
+  - 标了 `@internal` 的项，声明文件里能去掉的都去掉了。
 - **Rust API**：`kgdiff-core`、`kgdiff-formats`、`kgdiff-layout`、`kgdiff-report` 和 `kgdiff` 在 docs.rs 文档里显示的公开项。标了 `#[doc(hidden)]` 的不在承诺之内：它们是引擎自己的、在 kgdiff 的几个 crate 之间共用的东西（`kgdiff_core::js` 里除 `Value`、`Object`、`JsStr`、`json`、`IndexMap`、`IndexSet` 以外的 JavaScript 辅助函数；`canonical`、`text`、`util` 模块；`kgdiff_report` 的 `locale`、`model`、`width`；`kgdiff` crate 里除 `cli`、`io`、`system`、`testing` 以外的所有模块）。宿主会去实现的 trait（`kgdiff::io::CliIo`）以后加的方法都带默认实现。只有一个依赖的类型属于公开 API：`IndexMap` 和 `IndexSet` 是 `indexmap` 2 的类型，所以 `indexmap` 升主版本就是 kgdiff 的主版本。
 - **命令行**：命令、选项、退出码，以及它写出的文件和机器可读的输出（`--json`、`--delta`、`--markdown`、HTML 报告）。提示信息和终端摘要的措辞可以在次版本里改。
 - **文档格式**：差异 JSON、增量、布局文档和报告载荷都带格式版本号。同一版本的文档含义不变；读取方遇到比自己认识的更新的版本时拒绝读取（[增量格式](./delta-format.md)）。

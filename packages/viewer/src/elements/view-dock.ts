@@ -17,8 +17,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-view-dock
  */
 export class KgdiffViewDock extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'view-dock';
 
+  /** @internal */
   protected build(ui: UiContext, _ctx: unknown, release: (fn: () => void) => void): Region {
     const dock = new Dock(ui);
     this.shadow.append(dock.el);

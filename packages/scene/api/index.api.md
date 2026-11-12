@@ -68,6 +68,7 @@ export interface EdgeVisual {
     r2: number;
     // @experimental
     shape1?: NodeShape;
+    // @experimental
     shape2?: NodeShape;
     visible: boolean;
     width: number;
@@ -123,6 +124,7 @@ export interface GlyphVisual {
     r2: number;
     // @experimental
     shape1?: NodeShape;
+    // @experimental
     shape2?: NodeShape;
     width: number;
     x1: number;

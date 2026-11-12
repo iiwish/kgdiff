@@ -24,7 +24,7 @@ The first application that embeds kgdiff's crates (an ontology editor: Rust on t
 scene and the renderer in its web pages) checked what it needs against 0.8.0 and found four
 gaps. Each has a workaround, so none blocks it; each will be met again by the next host. This
 RFC says which to close, how, and when, around the work that is already planned
-([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 is 0.12, which changes only the Rust API, after a stable period):
+([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 is 0.12, which readies the public API for 1.0, the Rust API above all, after a stable period):
 
 | Part | What                                                         | Release   | Size   |
 | ---- | ------------------------------------------------------------ | --------- | ------ |

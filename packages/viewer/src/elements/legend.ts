@@ -24,6 +24,7 @@ export class KgdiffLegend extends BoundElement implements KgdiffLegendElement {
     return ['for', 'variant', 'open'];
   }
 
+  /** @internal */
   protected readonly name = 'legend';
   #legend: Legend | null = null;
   #reflecting = false;
@@ -54,10 +55,12 @@ export class KgdiffLegend extends BoundElement implements KgdiffLegendElement {
     else if (name === 'variant') this.#place();
   }
 
+  /** @internal */
   protected override upgradedProperties(): readonly string[] {
     return [...super.upgradedProperties(), 'variant', 'open'];
   }
 
+  /** @internal */
   protected build(ui: UiContext): Region {
     const legend = new Legend(ui, (open) => {
       // The user's toggle, reflected as <details> does.

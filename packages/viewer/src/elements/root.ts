@@ -40,16 +40,17 @@ export class KgdiffRoot extends RootElement implements KgdiffRootElement {
     });
   }
 
+  /** @internal */
   protected sheets(doc: Document): readonly CSSStyleSheet[] {
     return [elementSheet(doc, 'root')];
   }
 
-  /** A session without a canvas of its own: each `<kgdiff-stage>` brings its view. */
+  /** @internal A session without a canvas of its own: each `<kgdiff-stage>` brings its view. */
   protected createSession(host: SessionHost, deps: SessionDeps): DiffSession {
     return new DiffSession(host, deps);
   }
 
-  /** No layout of its own: `\` does nothing, `?` and `/` go to the elements registered last. */
+  /** @internal No layout of its own: `\` does nothing, `?` and `/` go to the elements registered last. */
   protected actions(): UiActions {
     return {
       ...this.baseActions(),
@@ -66,12 +67,14 @@ export class KgdiffRoot extends RootElement implements KgdiffRootElement {
     };
   }
 
+  /** @internal */
   protected connected(): void {
     if (this.#built) return;
     this.#built = true;
     this.shadow.append(document.createElement('slot'), this.root.live);
   }
 
+  /** @internal */
   protected disconnected(): void {}
 }
 

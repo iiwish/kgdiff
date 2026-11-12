@@ -155,6 +155,7 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
     return ['for'];
   }
 
+  /** @internal */
   protected readonly shadow: ShadowRoot;
   #ctx: ViewerContext | null = null;
   readonly #release: (() => void)[] = [];
@@ -164,22 +165,22 @@ export abstract class BoundElement extends HTMLElement implements KgdiffBoundEle
     this.shadow = this.attachShadow({ mode: 'open' });
   }
 
-  /** The element's name after `kgdiff-` (its host rules). */
+  /** @internal The element's name after `kgdiff-` (its host rules). */
   protected abstract readonly name: ElementName;
 
-  /** Build the region in the shadow root, bound to `ui`; `release` collects what to undo. */
+  /** @internal Build the region in the shadow root, bound to `ui`; `release` collects what to undo. */
   protected abstract build(
     ui: UiContext,
     ctx: ViewerContext,
     release: (fn: () => void) => void,
   ): Region;
 
-  /** The root this element is bound to, or null while it waits for one. */
+  /** @internal The root this element is bound to, or null while it waits for one. */
   protected get context(): ViewerContext | null {
     return this.#ctx;
   }
 
-  /** Properties a page may set before the element is defined (they shadow the accessors). */
+  /** @internal Properties a page may set before the element is defined (they shadow the accessors). */
   protected upgradedProperties(): readonly string[] {
     return ['htmlFor'];
   }

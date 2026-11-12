@@ -38,16 +38,7 @@ import { VisualResolver } from '@kgdiff/scene';
 //
 export class KgdiffRoot extends RootElement implements KgdiffRootElement {
     constructor();
-    // Warning: (ae-forgotten-export) The symbol "UiActions" needs to be exported by the entry point root.d.ts
-    protected actions(): UiActions;
-    protected connected(): void;
-    // Warning: (ae-forgotten-export) The symbol "SessionHost" needs to be exported by the entry point root.d.ts
-    // Warning: (ae-forgotten-export) The symbol "SessionDeps" needs to be exported by the entry point root.d.ts
-    // Warning: (ae-forgotten-export) The symbol "DiffSession" needs to be exported by the entry point root.d.ts
-    protected createSession(host: SessionHost, deps: SessionDeps): DiffSession;
-    protected disconnected(): void;
     static get observedAttributes(): readonly string[];
-    protected sheets(doc: Document): readonly CSSStyleSheet[];
 }
 
 ```

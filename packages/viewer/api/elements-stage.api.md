@@ -4,36 +4,24 @@
 
 ```ts
 
-import { Camera } from '@kgdiff/renderer';
-import { ChangeFamily } from '@kgdiff/scene';
 import type { Delta } from '@kgdiff/core';
 import type { DiffJSON } from '@kgdiff/core';
 import type { DiffOptions } from '@kgdiff/core';
-import { DiffResult } from '@kgdiff/core';
-import type { DiffStats } from '@kgdiff/core';
-import { FocusState } from '@kgdiff/scene';
 import type { GraphInput } from '@kgdiff/core';
 import type { KGraph } from '@kgdiff/core';
-import { Layer } from '@kgdiff/scene';
 import type { LayoutJSON } from '@kgdiff/layout';
-import { LayoutOptions } from '@kgdiff/layout';
-import { LayoutResult } from '@kgdiff/layout';
+import type { LayoutOptions } from '@kgdiff/layout';
 import type { Locale } from '@kgdiff/core';
 import type { NodeShape } from '@kgdiff/scene';
 import type { PackedDiffJSON } from '@kgdiff/core';
-import { PaletteName } from '@kgdiff/scene';
+import type { PaletteName } from '@kgdiff/scene';
 import type { ParseOptions } from '@kgdiff/compute';
-import type { Rect } from '@kgdiff/core';
-import { RendererLayer } from '@kgdiff/renderer';
-import type { ReplayPhase } from '@kgdiff/core';
-import { Scene } from '@kgdiff/scene';
-import { Theme } from '@kgdiff/scene';
-import { ThemeName } from '@kgdiff/scene';
-import type { Timeline } from '@kgdiff/scene';
-import type { UnionId } from '@kgdiff/core';
-import type { UnionNode } from '@kgdiff/core';
-import { ViewState } from '@kgdiff/scene';
-import { VisualResolver } from '@kgdiff/scene';
+import type { RendererLayer } from '@kgdiff/renderer';
+
+export interface Context<T> {
+    readonly __value?: T;
+    readonly key: symbol;
+}
 
 // Warning: (ae-forgotten-export) The symbol "BoundElement" needs to be exported by the entry point stage.d.ts
 // Warning: (ae-forgotten-export) The symbol "KgdiffStageElement" needs to be exported by the entry point stage.d.ts
@@ -41,38 +29,21 @@ import { VisualResolver } from '@kgdiff/scene';
 export class KgdiffStage extends BoundElement implements KgdiffStageElement {
     addLayer(layer: RendererLayer): () => void;
     attributeChangedCallback(name: string, old: string | null, value: string | null): void;
-    // Warning: (ae-forgotten-export) The symbol "UiContext" needs to be exported by the entry point stage.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ViewerContext" needs to be exported by the entry point stage.d.ts
-    // Warning: (ae-forgotten-export) The symbol "Region" needs to be exported by the entry point stage.d.ts
-    //
-    protected build(ui: UiContext, ctx: ViewerContext, release: (fn: () => void) => void): Region;
-    protected readonly name = "stage";
     static get observedAttributes(): readonly string[];
     // Warning: (ae-forgotten-export) The symbol "StagePanels" needs to be exported by the entry point stage.d.ts
     //
     get panels(): StagePanels;
     set panels(value: StagePanels | string | null);
     registerObstacle(element: Element): () => void;
-    protected upgradedProperties(): readonly string[];
     // Warning: (ae-forgotten-export) The symbol "StageVersion" needs to be exported by the entry point stage.d.ts
     get version(): StageVersion | null;
     set version(value: StageVersion | null);
-    // Warning: (ae-forgotten-export) The symbol "StageView" needs to be exported by the entry point stage.d.ts
-    //
-    // @internal
-    get view(): StageView | null;
 }
-
-// Warning: (ae-forgotten-export) The symbol "StageRegion" needs to be exported by the entry point stage.d.ts
-//
-export const STAGE_REGIONS: readonly StageRegion[];
 
 export interface StageContext {
     registerObstacle(element: Element): () => void;
 }
 
-// Warning: (ae-forgotten-export) The symbol "Context" needs to be exported by the entry point stage.d.ts
-//
 export const stageContext: Context<StageContext>;
 
 ```
