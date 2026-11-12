@@ -1,0 +1,5 @@
+# `cargo xtask <task>`: the repository's own tasks (xtask/), such as `cargo xtask conformance`,
+# which generates the conformance corpus. Release mode, since generating runs every case's diff
+# and layout.
+[alias]
+xtask = "run --package xtask --release --locked --"

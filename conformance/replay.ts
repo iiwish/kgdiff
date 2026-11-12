@@ -3,8 +3,9 @@
  * implementation would run them (README, "CLI runs"): the executable with the run's arguments,
  * the case directory as working directory, the run's environment and only what starting a
  * process needs besides it, stdin piped from the recorded file or empty, stdout and stderr
- * through pipes. The corpus records the runs with the Rust `kgdiff` (corpus.ts); this checks
- * that an implementation, on this machine, prints the same bytes and exits with the same code.
+ * through pipes. The corpus records the runs with the Rust `kgdiff` (`cargo xtask conformance`);
+ * this checks that an implementation, on this machine, prints the same bytes and exits with the
+ * same code.
  *
  *   cargo build --release -p kgdiff && pnpm conformance:replay
  *

@@ -37,12 +37,13 @@ pnpm build:viewer-assets                        # the viewer bundles the Rust HT
 cargo test -p kgdiff-report --features embed-viewer
 ```
 
-The differential run compares TypeScript and Rust byte for byte on seeded random graph pairs (CI
-runs it nightly, `.github/workflows/differential.yml`):
+The conformance corpus is generated in Rust (`conformance/README.md`, "Changing the corpus"):
 
 ```sh
-pnpm tsx scripts/differential.ts --pairs 1000 --seed 1 --out target/differential.jsonl
-KGDIFF_DIFFERENTIAL=$PWD/target/differential.jsonl cargo test --release -p kgdiff-core --test differential
+pnpm build:viewer-assets                        # once: the viewer bundles kgdiff's reports embed
+cargo xtask conformance                         # regenerate it (also `pnpm conformance:update`)
+cargo xtask conformance --check                 # compare it with the files instead of writing
+cargo build --release -p kgdiff && pnpm conformance:replay
 ```
 
 ## Where things live
@@ -57,10 +58,10 @@ KGDIFF_DIFFERENTIAL=$PWD/target/differential.jsonl cargo test --release -p kgdif
   `pnpm test`, and `.github/workflows/action.yml` runs it on the example datasets.
 - `apps/site`: landing page and playground. `examples/datasets`: demo and acceptance data.
 - `conformance/`: the language-neutral conformance corpus — inputs, options and the expected
-  diffs, deltas, hashes and CLI outputs of every case ([README](conformance/README.md)). It runs
-  in `pnpm test`; after an intended behaviour change, `pnpm conformance:update` regenerates it
-  (the CLI's outputs with the Rust `kgdiff`, which it builds), and its diff is part of the
-  review.
+  diffs, deltas, hashes and CLI outputs of every case ([README](conformance/README.md)). The
+  Rust crates generate it (`cargo xtask conformance`, from `conformance/definitions.json`) and
+  `cargo test` checks them against it; `pnpm test` checks the TypeScript read path against it.
+  After an intended behaviour change, regenerate it; its diff is part of the review.
 - `crates/`: the Rust port of the compute packages ([RFC 0002](docs/rfcs/0002-rust-compute-core.md)),
   checked against `conformance/`. `clippy.toml` forbids the methods and types whose Rust
   defaults differ from JavaScript; everything JavaScript-specific lives in `kgdiff_core::js`.

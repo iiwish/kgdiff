@@ -1,7 +1,7 @@
 {
   "format": "kgdiff.conformance",
   "version": 1,
-  "description": "Language-neutral conformance corpus of kgdiff: inputs, options and the expected outputs of the reference (TypeScript) implementation. See README.md.",
+  "description": "Language-neutral conformance corpus of kgdiff: inputs, options and the expected outputs of the reference (Rust) implementation. See README.md.",
   "versionPlaceholder": "kgdiff <version>",
   "cases": [
     {

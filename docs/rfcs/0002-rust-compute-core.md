@@ -722,7 +722,14 @@ add-on. Size is tracked in CI from phase 2 on (`wasm-opt -Oz`, `twiggy` reports 
 - Until phase 5 (0.11) retires the TypeScript compute code, a nightly `differential` workflow generates
   random graph pairs (seeded, with the generator in `scripts/gen-synthetic.ts` and a proptest
   strategy) and compares the TypeScript and Rust outputs byte for byte; a mismatch becomes a
-  corpus case with its fix.
+  corpus case with its fix. **Removed in phase 5** (with the move of the corpus generator to
+  Rust): once the TypeScript engine is gone it has nothing to compare against, so
+  `.github/workflows/differential.yml`, `scripts/differential.ts` and
+  `crates/kgdiff-core/tests/differential.rs` are deleted. What it checked stays covered by the
+  corpus (generated in Rust, checked on Linux, macOS, Windows and in WebAssembly, and against the
+  TypeScript read path) and by the proptest property tests of `cargo test`; a separate native
+  versus WebAssembly run on random graphs would add little beside the corpus run of the
+  `compute` job and is not planned.
 - `CI passed` (the one required check) depends on every job. Actions stay pinned by commit SHA:
   `dtolnay/rust-toolchain`, `Swatinem/rust-cache`, `PyO3/maturin-action`.
 - Contributors who only touch the viewer need no Rust toolchain until phase 5 (0.11); from then on the
@@ -786,6 +793,33 @@ case with an issue).
 | 1–3      | TypeScript: `pnpm conformance:update` generates everything                                                                                                                                                          | regenerates everything in memory, byte for byte (today's check)                                                                                                                                                                                                                                                                                                              |
 | 4        | split: the TypeScript CLI is deleted, so `cargo xtask conformance` (Rust) writes what the CLI produced — the CLI runs, `report.json` — and the layout contract; the TypeScript generator writes the library outputs | regenerates the library outputs; reads the CLI runs, `report.json` and the layout contract as given                                                                                                                                                                                                                                                                          |
 | 5 (0.11) | Rust: `cargo xtask conformance` generates everything; `pnpm conformance:update` is removed                                                                                                                          | checks what TypeScript keeps against the files: `normalize` and `graphToJSON` from `parse.*.json` → `graph.*`; `hashGraph` → `hashes`; `diffFromJSON` then `diffToJSON` → `diff.json`; `packDiffJSON` / `unpackDiffJSON`; `applyDelta` → `apply.json`; `invertDelta`; `formatHunk` → `titles`; `predicateLabel`, `estimateLabelWidth`, `nodeRadius` and `facetLabel` vectors |
+
+**Status: the last row is reached** (phase 5, before 0.11.0). `cargo xtask conformance` (the
+unpublished crate `xtask/`, an alias in `.cargo/config.toml`) reads the case definitions from
+`conformance/definitions.json` and writes every case's `case.json` and expected files, the
+generated primitive vectors and the manifest; the CLI runs and `report.json` are recorded with the
+release `kgdiff` as a real process, as before. Regenerated this way, the corpus was byte for byte
+what the TypeScript generator had written (only the manifest's description then changed, to name
+the Rust reference). `conformance/` imports no compute code and nothing of `@kgdiff/formats`: its
+check (`conformance.test.ts`) uses only the read path, through the packages' entries. Where this
+differs from the plan in the table:
+
+- `pnpm conformance:update` is kept as a shorthand for `cargo xtask conformance` instead of being
+  removed.
+- The case definitions moved from `conformance/cases.ts` to data, `conformance/definitions.json`
+  (a dataset case still takes its options from its `meta.json`).
+- Five primitive vectors pin JavaScript built-ins (`number-to-string`, `number-from-string`,
+  `js-math`, `string-order`, `json-roundtrip`): they stay as fixed reference data computed by V8,
+  which the generator never writes and `cargo test` checks the Rust implementation against. The
+  generator writes the vectors of kgdiff's own functions (`log2`, `text-similarity`,
+  `predicate-label`, `label-width`, `facet-labels`).
+- The TypeScript check does somewhat more than the table lists: `unpackDiffJSON` of
+  `diff.packed.json` gives `diff.json`, `invertDelta` of the inverse gives `delta.json` back, and
+  the inverse applied to the after graph gives the before graph's hash; the documents are still
+  validated against their JSON Schemas.
+- CI regenerates the corpus on Linux, macOS and Windows (`cargo xtask conformance --check`), not
+  only on Linux.
+- The nightly differential run is removed (§8).
 
 Before phase 4 deletes the CLI sources, the TypeScript generator drops every `@kgdiff/cli`
 import: `readInput` / `parseInput` (input decoding, which README step 1 specifies) move into the
@@ -1086,8 +1120,8 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
 - **Where the implementation differs from this RFC's plan**:
   - The CLI's outputs are recorded by `pnpm conformance:update`, which builds and runs the Rust
     `kgdiff`, not by a `cargo xtask conformance`: the case definitions stay in `cases.ts` until
-    phase 5 moves the whole generator to Rust. The layout contract stays a library output of the
-    TypeScript generator meanwhile (`@kgdiff/layout` keeps its engine until phase 5, and
+    phase 5 moves the whole generator to Rust (done: [Corpus ownership](#corpus-ownership)). The
+    layout contract stays a library output of the TypeScript generator meanwhile (`@kgdiff/layout` keeps its engine until phase 5, and
     `kgdiff-layout`'s conformance tests check the file).
   - The platform packages are not in the pnpm workspace: the release assembles them from dist's
     archives (`scripts/npm-platforms.ts`), publishes them first and only then writes them into

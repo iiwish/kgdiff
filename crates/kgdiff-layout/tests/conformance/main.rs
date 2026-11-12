@@ -58,8 +58,8 @@ fn diffed(case: &Case) -> Result<(DiffResult, Value), String> {
     Ok((result, member(&spec, "layoutOptions")))
 }
 
-/// `layout-contract.json` as the corpus generator computes it (`conformance/corpus.ts`), from
-/// `layout_diff` and `layout_to_json`.
+/// `layout-contract.json` as the corpus generator computes it
+/// (`xtask/src/conformance/library.rs`), from `layout_diff` and `layout_to_json`.
 fn contract(case: &Case) -> Result<Vec<u8>, String> {
     let (diff, given) = diffed(case)?;
     let options = LayoutOptions::from_value(&given).map_err(|e| e.message)?;
