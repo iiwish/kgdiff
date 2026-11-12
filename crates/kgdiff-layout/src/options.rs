@@ -28,6 +28,7 @@ impl LayoutStrategy {
         }
     }
 
+    /// Parses a name written by [`LayoutStrategy::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<LayoutStrategy> {
         match name {
             "union" => Some(LayoutStrategy::Union),
@@ -58,6 +59,7 @@ impl LayoutScope {
         }
     }
 
+    /// Parses a name written by [`LayoutScope::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<LayoutScope> {
         match name {
             "all" => Some(LayoutScope::All),
@@ -67,7 +69,7 @@ impl LayoutScope {
     }
 }
 
-/// The options of a layout (`LayoutOptions` of `@kgdiff/layout`); `None` takes the default.
+/// The options of a layout; `None` takes the default.
 #[derive(Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub struct LayoutOptions {

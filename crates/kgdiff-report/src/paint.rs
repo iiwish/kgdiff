@@ -7,11 +7,17 @@ pub type ColorLevel = u8;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Tone {
+    /// The family of additions.
     Added,
+    /// The family of removals.
     Removed,
+    /// The family of changes to a node's content.
     Content,
+    /// The family of changes to structure.
     Structure,
+    /// The family of changes to identity (renames, merges, splits).
     Identity,
+    /// The accent of the interface itself.
     Accent,
 }
 
@@ -100,9 +106,10 @@ pub fn ansi256((r, g, b): Rgb) -> u8 {
     u8::try_from(index).unwrap_or(0)
 }
 
-/// Applies colors and text attributes; every method is the identity at level 0 (`Painter`).
+/// Applies colors and text attributes; every method is the identity at level 0.
 #[derive(Clone, Debug)]
 pub struct Painter {
+    /// The color level the painter emits (0 for plain text).
     pub level: ColorLevel,
     open: [String; 6],
 }
@@ -147,6 +154,7 @@ impl Painter {
         Painter::new(0, false)
     }
 
+    /// Colors `text` in the tone's color; plain at level 0.
     pub fn tone(&self, tone: Tone, text: &str) -> String {
         if self.level == 0 || text.is_empty() {
             return text.to_owned();
@@ -162,6 +170,7 @@ impl Painter {
         format!("\x1b[1m{text}\x1b[22m")
     }
 
+    /// Dims `text`; plain at level 0.
     pub fn dim(&self, text: &str) -> String {
         if self.level == 0 || text.is_empty() {
             return text.to_owned();

@@ -1,4 +1,5 @@
-//! The normalized graph (`KGraph` and its parts in `types.ts`).
+//! The normalized graph and the vocabulary of a diff: statuses, facets, hunks, matches and
+//! statistics.
 
 use std::sync::Arc;
 
@@ -20,7 +21,9 @@ pub type Attrs = Object;
 /// A pinned layout position.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Point {
+    /// Horizontal coordinate.
     pub x: f64,
+    /// Vertical coordinate.
     pub y: f64,
 }
 
@@ -36,6 +39,7 @@ pub enum EdgeIdentity {
 }
 
 impl EdgeIdentity {
+    /// The name used in kgdiff JSON (`"structure"` or `"id"`).
     pub fn as_str(self) -> &'static str {
         match self {
             EdgeIdentity::Structure => "structure",
@@ -43,6 +47,7 @@ impl EdgeIdentity {
         }
     }
 
+    /// Parses a name written by [`EdgeIdentity::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<EdgeIdentity> {
         match name {
             "structure" => Some(EdgeIdentity::Structure),
@@ -56,14 +61,20 @@ impl EdgeIdentity {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum GraphIssueCode {
+    /// Two nodes carry the same id.
     DuplicateNode,
+    /// An edge names an endpoint that is not a node.
     DanglingEdge,
+    /// Several edges share one identity.
     DuplicateEdge,
+    /// A node has an empty id and is dropped.
     EmptyId,
+    /// An attribute value cannot be represented in JSON and was dropped or converted.
     InvalidAttr,
 }
 
 impl GraphIssueCode {
+    /// The code as written in kgdiff JSON (for example `"duplicate-node"`).
     pub fn as_str(self) -> &'static str {
         match self {
             GraphIssueCode::DuplicateNode => "duplicate-node",
@@ -79,7 +90,9 @@ impl GraphIssueCode {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct GraphIssue {
+    /// What kind of repair this is.
     pub code: GraphIssueCode,
+    /// A human-readable description.
     pub message: String,
     /// The node id or edge key the issue refers to.
     pub reference: Option<JsStr>,
@@ -107,13 +120,18 @@ fn strings(list: &[JsStr]) -> Value {
 /// `unchanged`, `added`, `removed` or `modified`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ChangeStatus {
+    /// Present in both versions and equal.
     Unchanged,
+    /// Present only in the after version.
     Added,
+    /// Present only in the before version.
     Removed,
+    /// Present in both versions with at least one facet.
     Modified,
 }
 
 impl ChangeStatus {
+    /// The name used in kgdiff JSON (`"unchanged"`, `"added"`, `"removed"` or `"modified"`).
     pub fn as_str(self) -> &'static str {
         match self {
             ChangeStatus::Unchanged => "unchanged",
@@ -123,6 +141,7 @@ impl ChangeStatus {
         }
     }
 
+    /// Parses a name written by [`ChangeStatus::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<ChangeStatus> {
         match name {
             "unchanged" => Some(ChangeStatus::Unchanged),
@@ -137,12 +156,16 @@ impl ChangeStatus {
 /// An attribute change: `before` absent → added, `after` absent → removed.
 #[derive(Clone, Debug, PartialEq)]
 pub struct AttrChange {
+    /// The attribute key.
     pub key: JsStr,
+    /// The value in the before version; `None` when the attribute was added.
     pub before: Option<AttrValue>,
+    /// The value in the after version; `None` when the attribute was removed.
     pub after: Option<AttrValue>,
 }
 
 impl AttrChange {
+    /// The change as `{ key, before?, after? }`, as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("key", &self.key);
@@ -163,11 +186,14 @@ fn changes_value(changes: &[AttrChange]) -> Value {
 /// Elements added to and removed from a sorted set.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct SetChange {
+    /// Elements present in the after version only, sorted.
     pub added: Vec<JsStr>,
+    /// Elements present in the before version only, sorted.
     pub removed: Vec<JsStr>,
 }
 
 impl SetChange {
+    /// Whether nothing was added and nothing was removed.
     pub fn is_empty(&self) -> bool {
         self.added.is_empty() && self.removed.is_empty()
     }
@@ -177,6 +203,7 @@ impl SetChange {
         out.insert("removed", strings(&self.removed));
     }
 
+    /// The change as `{ added, removed }`, as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         self.insert_into(&mut out);
@@ -188,11 +215,14 @@ impl SetChange {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Via {
+    /// An explicit replacement hint (`replaces` / `replacedBy`), confidence 1.
     Hint,
+    /// Label similarity and edge carry-over.
     Heuristic,
 }
 
 impl Via {
+    /// The name used in kgdiff JSON (`"hint"` or `"heuristic"`).
     pub fn as_str(self) -> &'static str {
         match self {
             Via::Hint => "hint",
@@ -205,13 +235,18 @@ impl Via {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Cause {
+    /// The endpoint was changed by editing the edge.
     Edit,
+    /// The endpoint's node was merged into another.
     Merge,
+    /// The endpoint's node was split.
     Split,
+    /// The endpoint's node was moved under another parent (hierarchy predicates).
     Move,
 }
 
 impl Cause {
+    /// The name used in kgdiff JSON (`"edit"`, `"merge"`, `"split"` or `"move"`).
     pub fn as_str(self) -> &'static str {
         match self {
             Cause::Edit => "edit",
@@ -225,11 +260,14 @@ impl Cause {
 /// An edge end.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum End {
+    /// The edge's source node.
     Source,
+    /// The edge's target node.
     Target,
 }
 
 impl End {
+    /// The name used in kgdiff JSON (`"source"` or `"target"`).
     pub fn as_str(self) -> &'static str {
         match self {
             End::Source => "source",
@@ -242,21 +280,37 @@ impl End {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum FacetKind {
+    /// The node's id changed (a hint or similarity match).
     Rekey,
+    /// The node's label changed.
     Rename,
+    /// The node was merged into another node.
     MergedInto,
+    /// The node absorbed one or more merged nodes.
     MergeTarget,
+    /// The node was split off from another node.
     SplitFrom,
+    /// The node was split into several nodes.
     SplitInto,
+    /// The node's parents changed under a hierarchy predicate.
     Move,
+    /// The node's `deprecated` flag changed.
     Deprecate,
+    /// The node's `replaces` or `replacedBy` changed.
     Replacement,
+    /// The node's type set changed.
     Types,
+    /// The node's alias set changed.
     Aliases,
+    /// The node's attributes changed.
     Attrs,
+    /// An edge endpoint was redirected to another node.
     Retarget,
+    /// An edge's predicate changed.
     Predicate,
+    /// An edge's label changed.
     Label,
+    /// The edge was removed because a merge made it duplicate another edge.
     Collapsed,
 }
 
@@ -281,6 +335,7 @@ impl FacetKind {
         FacetKind::Collapsed,
     ];
 
+    /// The name used in kgdiff JSON (for example `"mergedInto"`).
     pub fn as_str(self) -> &'static str {
         match self {
             FacetKind::Rekey => "rekey",
@@ -302,6 +357,7 @@ impl FacetKind {
         }
     }
 
+    /// Parses a name written by [`FacetKind::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<FacetKind> {
         FacetKind::ALL.into_iter().find(|k| k.as_str() == name)
     }
@@ -317,61 +373,93 @@ impl FacetKind {
 #[non_exhaustive]
 pub enum NodeFacet {
     #[non_exhaustive]
+    /// The label changed.
     Rename {
+        /// The label in the before version.
         from: JsStr,
+        /// The label in the after version.
         to: JsStr,
     },
     #[non_exhaustive]
+    /// The id changed.
     Rekey {
+        /// The id in the before version.
         from: Id,
+        /// The id in the after version.
         to: Id,
+        /// The match score in [0, 1].
         score: f64,
     },
+    /// The type set changed.
     Types(SetChange),
+    /// The alias set changed.
     Aliases(SetChange),
     #[non_exhaustive]
+    /// Attributes changed.
     Attrs {
+        /// The changes, sorted by key.
         changes: Vec<AttrChange>,
     },
     /// Parents removed and added (union ids, sorted) under a hierarchy predicate.
     #[non_exhaustive]
     Move {
+        /// The hierarchy predicate under which the parents changed.
         predicate: JsStr,
+        /// Parents in the before version, as union ids.
         from: Vec<UnionId>,
+        /// Parents in the after version, as union ids.
         to: Vec<UnionId>,
     },
     #[non_exhaustive]
+    /// The `deprecated` flag changed.
     Deprecate {
+        /// The flag in the after version.
         deprecated: bool,
     },
     #[non_exhaustive]
+    /// `replaces` and `replacedBy` changed; a side that did not change is empty.
     Replacement {
+        /// Changes to the ids this node replaces.
         replaces: SetChange,
+        /// Changes to the ids this node is replaced by.
         replaced_by: SetChange,
     },
     #[non_exhaustive]
+    /// The node was merged into another node.
     MergedInto {
+        /// The union id of the node it was merged into.
         target: UnionId,
+        /// Confidence in [0, 1]; 1 for a hint.
         confidence: f64,
+        /// How the merge was found.
         via: Via,
     },
     #[non_exhaustive]
+    /// The node absorbed one or more merged nodes.
     MergeTarget {
+        /// The union ids of the merged nodes, sorted.
         sources: Vec<UnionId>,
     },
     #[non_exhaustive]
+    /// The node was split off from another node.
     SplitFrom {
+        /// The union id of the node it was split from.
         source: UnionId,
+        /// Confidence in [0, 1]; 1 for a hint.
         confidence: f64,
+        /// How the split was found.
         via: Via,
     },
     #[non_exhaustive]
+    /// The node was split into several nodes.
     SplitInto {
+        /// The union ids of the nodes it was split into, sorted.
         targets: Vec<UnionId>,
     },
 }
 
 impl NodeFacet {
+    /// The kind of this facet.
     pub fn kind(&self) -> FacetKind {
         match self {
             NodeFacet::Rename { .. } => FacetKind::Rename,
@@ -460,24 +548,49 @@ impl NodeFacet {
 #[non_exhaustive]
 pub enum EdgeFacet {
     #[non_exhaustive]
+    /// An endpoint was redirected.
     Retarget {
+        /// Which end of the edge changed.
         end: End,
+        /// The union id of the old endpoint.
         from: UnionId,
+        /// The union id of the new endpoint.
         to: UnionId,
+        /// Why the endpoint changed.
         cause: Cause,
     },
+    /// The predicate changed.
     #[non_exhaustive]
-    Predicate { from: JsStr, to: JsStr },
+    Predicate {
+        /// The predicate in the before version.
+        from: JsStr,
+        /// The predicate in the after version.
+        to: JsStr,
+    },
+    /// The label changed.
     #[non_exhaustive]
-    Label { from: JsStr, to: JsStr },
+    Label {
+        /// The label in the before version.
+        from: JsStr,
+        /// The label in the after version.
+        to: JsStr,
+    },
+    /// Attributes changed.
     #[non_exhaustive]
-    Attrs { changes: Vec<AttrChange> },
+    Attrs {
+        /// The changes, sorted by key.
+        changes: Vec<AttrChange>,
+    },
     /// Removed because, after a merge, it would duplicate the union edge `into`.
     #[non_exhaustive]
-    Collapsed { into: UnionId },
+    Collapsed {
+        /// The union id of the edge it duplicates.
+        into: UnionId,
+    },
 }
 
 impl EdgeFacet {
+    /// The kind of this facet.
     pub fn kind(&self) -> FacetKind {
         match self {
             EdgeFacet::Retarget { .. } => FacetKind::Retarget,
@@ -488,6 +601,7 @@ impl EdgeFacet {
         }
     }
 
+    /// The facet as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("kind", self.kind().as_str());
@@ -521,7 +635,9 @@ impl EdgeFacet {
 /// Degrees of a union node in each version.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct Degree {
+    /// Degree in the before version (0 if the node does not exist there).
     pub before: usize,
+    /// Degree in the after version (0 if the node does not exist there).
     pub after: usize,
 }
 
@@ -530,11 +646,17 @@ pub struct Degree {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct UnionNode {
+    /// The union id: the after id, else the before id.
     pub id: UnionId,
+    /// Whether the node was added, removed, modified or left alone.
     pub status: ChangeStatus,
+    /// The node's id in the before version, if it exists there.
     pub before_id: Option<Id>,
+    /// The node's id in the after version, if it exists there.
     pub after_id: Option<Id>,
+    /// The node in the before version.
     pub before: Option<Arc<KGNode>>,
+    /// The node in the after version.
     pub after: Option<Arc<KGNode>>,
     /// In canonical facet order.
     pub facets: Vec<NodeFacet>,
@@ -542,6 +664,7 @@ pub struct UnionNode {
     pub hunk: Option<JsStr>,
     /// `after.label ?? before.label`.
     pub label: JsStr,
+    /// The node's degree in each version.
     pub degree: Degree,
 }
 
@@ -559,23 +682,35 @@ impl UnionNode {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct UnionEdge {
+    /// The union id, computed from the union endpoints.
     pub id: UnionId,
     /// Endpoints in the after version (the before version for removed edges).
     pub source: UnionId,
+    /// The target's union id (the before target for removed edges).
     pub target: UnionId,
+    /// The predicate in the after version (the before version for removed edges).
     pub predicate: JsStr,
+    /// The edge label, defaulting to the predicate's readable form.
     pub label: JsStr,
+    /// Whether the edge was added, removed, modified or left alone.
     pub status: ChangeStatus,
+    /// The edge's semantic changes, in canonical facet order.
     pub facets: Vec<EdgeFacet>,
+    /// The hunk this edge's change belongs to; unchanged edges have none.
     pub hunk: Option<JsStr>,
     /// The predicate is a hierarchy predicate.
     pub hierarchical: bool,
+    /// The edge's key in the before version, if it exists there.
     pub before_key: Option<EdgeKey>,
+    /// The edge's key in the after version, if it exists there.
     pub after_key: Option<EdgeKey>,
+    /// The edge in the before version.
     pub before: Option<Arc<KGEdge>>,
+    /// The edge in the after version.
     pub after: Option<Arc<KGEdge>>,
     /// Present only when the before-version endpoint differs.
     pub source_before: Option<UnionId>,
+    /// Present only when the before-version endpoint differs.
     pub target_before: Option<UnionId>,
     /// Present only when the predicate changed.
     pub predicate_before: Option<JsStr>,
@@ -586,11 +721,17 @@ pub struct UnionEdge {
 /// `add`, `remove`, `merge`, `split`, `modify` or `relations`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum HunkKind {
+    /// Added nodes and their edges.
     Add,
+    /// Removed nodes and their edges.
     Remove,
+    /// Several nodes merged into one.
     Merge,
+    /// One node split into several.
     Split,
+    /// A changed node and the edges it is the subject of.
     Modify,
+    /// Changed edges grouped by their source node.
     Relations,
 }
 
@@ -605,6 +746,7 @@ impl HunkKind {
         HunkKind::Relations,
     ];
 
+    /// The name used in kgdiff JSON (for example `"relations"`).
     pub fn as_str(self) -> &'static str {
         match self {
             HunkKind::Add => "add",
@@ -616,10 +758,12 @@ impl HunkKind {
         }
     }
 
+    /// Parses a name written by [`HunkKind::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<HunkKind> {
         HunkKind::ALL.into_iter().find(|k| k.as_str() == name)
     }
 
+    /// Position in [`HunkKind::ALL`].
     pub fn index(self) -> usize {
         self as usize
     }
@@ -628,13 +772,18 @@ impl HunkKind {
 /// Replay order: clean up, restructure, refine, grow.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ReplayPhase {
+    /// Removals, applied first.
     Remove,
+    /// Merges, splits and relation changes.
     Restructure,
+    /// Changes to existing nodes.
     Modify,
+    /// Additions, applied last.
     Add,
 }
 
 impl ReplayPhase {
+    /// The name used in kgdiff JSON (`"remove"`, `"restructure"`, `"modify"` or `"add"`).
     pub fn as_str(self) -> &'static str {
         match self {
             ReplayPhase::Remove => "remove",
@@ -644,6 +793,7 @@ impl ReplayPhase {
         }
     }
 
+    /// Parses a name written by [`ReplayPhase::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<ReplayPhase> {
         [
             ReplayPhase::Remove,
@@ -659,12 +809,16 @@ impl ReplayPhase {
 /// Added, removed and modified counts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct CountTriplet {
+    /// Number of elements added.
     pub added: usize,
+    /// Number of elements removed.
     pub removed: usize,
+    /// Number of elements modified.
     pub modified: usize,
 }
 
 impl CountTriplet {
+    /// The counts as `{ added, removed, modified }`, as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("added", self.added);
@@ -678,13 +832,16 @@ impl CountTriplet {
 #[derive(Clone, Debug, PartialEq, Default)]
 #[non_exhaustive]
 pub struct HunkSummary {
+    /// Counts of nodes the hunk owns.
     pub nodes: CountTriplet,
+    /// Counts of edges the hunk owns.
     pub edges: CountTriplet,
     /// Distinct facet kinds in the hunk, in canonical order.
     pub facets: Vec<FacetKind>,
 }
 
 impl HunkSummary {
+    /// The summary as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("nodes", self.nodes.to_value());
@@ -713,8 +870,11 @@ pub struct Hunk {
     /// review progress under an id. Read `kind` and `anchor` instead of parsing the id, since
     /// node ids may contain `:`.
     pub id: JsStr,
+    /// What kind of change the hunk groups.
     pub kind: HunkKind,
+    /// When the hunk is replayed relative to others.
     pub phase: ReplayPhase,
+    /// The union id the hunk is anchored on.
     pub anchor: UnionId,
     /// Changed nodes owned by the hunk (sorted, anchor first).
     pub nodes: Vec<UnionId>,
@@ -726,12 +886,14 @@ pub struct Hunk {
     pub ops: Vec<usize>,
     /// Ids of the hunks to apply first (sorted).
     pub requires: Vec<JsStr>,
+    /// Counts of what the hunk owns.
     pub summary: HunkSummary,
     /// Default review order, 0-based and dense.
     pub order: usize,
 }
 
 impl Hunk {
+    /// The hunk as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("id", &self.id);
@@ -756,12 +918,16 @@ impl Hunk {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum MatchMethod {
+    /// Equal ids.
     Id,
+    /// A replacement hint.
     Hint,
+    /// Label, neighbour, type and attribute similarity.
     Similarity,
 }
 
 impl MatchMethod {
+    /// The name used in kgdiff JSON (`"id"`, `"hint"` or `"similarity"`).
     pub fn as_str(self) -> &'static str {
         match self {
             MatchMethod::Id => "id",
@@ -775,13 +941,18 @@ impl MatchMethod {
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 #[non_exhaustive]
 pub struct MatchEvidence {
+    /// Label similarity.
     pub label: f64,
+    /// Similarity of the matched neighbours.
     pub neighbors: f64,
+    /// Type-set similarity.
     pub types: f64,
+    /// Attribute similarity.
     pub attrs: f64,
 }
 
 impl MatchEvidence {
+    /// The evidence as `{ label, neighbors, types, attrs }`, as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("label", self.label);
@@ -796,15 +967,20 @@ impl MatchEvidence {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct NodeMatch {
+    /// The node's id in the before version.
     pub before: Id,
+    /// The node's id in the after version.
     pub after: Id,
+    /// How the pair was matched.
     pub method: MatchMethod,
     /// 1 for id and hint matches.
     pub score: f64,
+    /// The similarity breakdown; absent for id and hint matches.
     pub evidence: Option<MatchEvidence>,
 }
 
 impl NodeMatch {
+    /// The match as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("before", &self.before);
@@ -821,11 +997,14 @@ impl NodeMatch {
 /// Why a suggestion was not applied.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum SuggestionReason {
+    /// The score is below the match threshold but above the suggestion threshold.
     BelowThreshold,
+    /// The pair leads a rival by less than the required margin.
     Ambiguous,
 }
 
 impl SuggestionReason {
+    /// The name used in kgdiff JSON (`"below-threshold"` or `"ambiguous"`).
     pub fn as_str(self) -> &'static str {
         match self {
             SuggestionReason::BelowThreshold => "below-threshold",
@@ -838,14 +1017,20 @@ impl SuggestionReason {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct MatchSuggestion {
+    /// The before node's id.
     pub before: Id,
+    /// The after node's id.
     pub after: Id,
+    /// The similarity score in [0, 1].
     pub score: f64,
+    /// The similarity breakdown behind the score.
     pub evidence: MatchEvidence,
+    /// Why the pair was not matched.
     pub reason: SuggestionReason,
 }
 
 impl MatchSuggestion {
+    /// The suggestion as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("before", &self.before);
@@ -860,17 +1045,23 @@ impl MatchSuggestion {
 /// Counts of a kind of element by status.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct CountDelta {
+    /// Number of elements added.
     pub added: usize,
+    /// Number of elements removed.
     pub removed: usize,
+    /// Number of elements modified.
     pub modified: usize,
+    /// Number of elements left alone.
     pub unchanged: usize,
 }
 
 impl CountDelta {
+    /// Added + removed + modified.
     pub fn changes(&self) -> usize {
         self.added + self.removed + self.modified
     }
 
+    /// Counts one element of the given status.
     pub fn add(&mut self, status: ChangeStatus) {
         match status {
             ChangeStatus::Added => self.added += 1,
@@ -887,6 +1078,7 @@ impl CountDelta {
         out.insert("unchanged", self.unchanged);
     }
 
+    /// The counts as `{ added, removed, modified, unchanged }`, as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         self.insert_into(&mut out);
@@ -898,7 +1090,9 @@ impl CountDelta {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct TypeStat {
+    /// The type.
     pub r#type: JsStr,
+    /// Counts of the nodes with that type.
     pub counts: CountDelta,
 }
 
@@ -906,10 +1100,13 @@ pub struct TypeStat {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct DiffStats {
+    /// Node counts by status.
     pub nodes: CountDelta,
+    /// Edge counts by status.
     pub edges: CountDelta,
     /// Nodes and edges of the before version.
     pub before: (usize, usize),
+    /// Nodes and edges of the after version.
     pub after: (usize, usize),
     /// Union elements carrying each facet kind, in `FacetKind::ALL` order.
     pub facets: [usize; 16],
@@ -917,10 +1114,12 @@ pub struct DiffStats {
     pub hunks: [usize; 6],
     /// Sorted by total changes (descending), then type.
     pub by_type: Vec<TypeStat>,
+    /// Whether both versions are identical (nothing added, removed or modified).
     pub identical: bool,
 }
 
 impl DiffStats {
+    /// The statistics as kgdiff JSON writes it.
     pub fn to_value(&self) -> Value {
         let size = |(nodes, edges): (usize, usize)| {
             let mut out = Object::new();

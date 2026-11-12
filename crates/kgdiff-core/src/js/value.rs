@@ -9,19 +9,27 @@ use super::object::Object;
 #[derive(Clone, Debug, PartialEq, Default)]
 pub enum Value {
     #[default]
+    /// `null`.
     Null,
+    /// `true` or `false`.
     Bool(bool),
+    /// A number (always an `f64`, as in JSON).
     Number(f64),
+    /// A string.
     String(JsStr),
+    /// An array.
     Array(Vec<Value>),
+    /// An object.
     Object(Object),
 }
 
 impl Value {
+    /// Whether this is `null`.
     pub fn is_null(&self) -> bool {
         matches!(self, Value::Null)
     }
 
+    /// The string, if this is one.
     pub fn as_str(&self) -> Option<&str> {
         match self {
             Value::String(s) => Some(s),
@@ -29,6 +37,7 @@ impl Value {
         }
     }
 
+    /// The string as a [`JsStr`], if this is one.
     pub fn as_js_str(&self) -> Option<&JsStr> {
         match self {
             Value::String(s) => Some(s),
@@ -36,6 +45,7 @@ impl Value {
         }
     }
 
+    /// The number, if this is one.
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             Value::Number(x) => Some(*x),
@@ -43,6 +53,7 @@ impl Value {
         }
     }
 
+    /// The boolean, if this is one.
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             Value::Bool(b) => Some(*b),
@@ -50,6 +61,7 @@ impl Value {
         }
     }
 
+    /// The array's items, if this is an array.
     pub fn as_array(&self) -> Option<&[Value]> {
         match self {
             Value::Array(items) => Some(items),
@@ -57,6 +69,7 @@ impl Value {
         }
     }
 
+    /// The object, if this is one.
     pub fn as_object(&self) -> Option<&Object> {
         match self {
             Value::Object(object) => Some(object),

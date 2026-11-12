@@ -1,11 +1,13 @@
-//! The `kgdiff` command line: `git diff` for knowledge graphs (RFC 0002). npm's `@kgdiff/cli`
-//! runs this binary.
+//! The `kgdiff` command line: `git diff` for knowledge graphs. It reads two versions of a graph
+//! (kgdiff JSON and other JSON graph shapes, RDF, OBO) and prints a summary, `--stat`,
+//! `--name-status`, `--json`, a `--delta` for `kgdiff apply`, GitHub Markdown, or writes a
+//! self-contained interactive HTML report; `docs/cli.md` in the repository lists every option.
+//! npm's `@kgdiff/cli` runs this binary.
 //!
-//! It records the CLI runs of the conformance corpus, and every one is replayed against it on
-//! Linux, macOS and Windows (`conformance/replay.ts`): the same arguments, messages, outputs and
-//! exit codes, byte for byte. The library is
-//! [`cli::run`] behind the [`io::CliIo`] trait, so that a host embeds kgdiff (the Python package
-//! does) and tests run it in memory; [`system::SystemIo`] is the real process.
+//! This library is the command line without the process around it: [`cli::run`] runs a command
+//! against any [`io::CliIo`], so that a host can embed kgdiff and tests can run it in memory
+//! with [`testing::MemoryIo`]; [`system::SystemIo`] is the real process. The same arguments give
+//! the same messages, outputs and exit codes on Linux, macOS and Windows.
 //!
 //! ```
 //! use kgdiff::testing::MemoryIo;
@@ -22,6 +24,13 @@
 //! without laying anything out; the viewer's compute add-on is inlined only for layouts that
 //! cover just the changes of a large graph. The viewer bundles are compiled in with the feature
 //! `embed-viewer` (on by default) once `pnpm build:viewer-assets` has run.
+
+#![warn(missing_docs)]
+
+/// The README's examples, run as tests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
 
 #[doc(hidden)]
 pub mod args;
@@ -45,6 +54,6 @@ pub mod system;
 pub mod testing;
 mod v8_json;
 
-/// The version kgdiff reports (`kgdiff --version`, report generators): the workspace's, which
-/// `scripts/sync-versions.ts` keeps equal to the npm packages'.
+/// The version kgdiff reports (`kgdiff --version`, report generators): the workspace's, which the
+/// repository's release script keeps equal to the npm packages'.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

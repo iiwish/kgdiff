@@ -38,24 +38,35 @@ pub struct MemoryIo {
     read_through: Option<String>,
     inodes: IndexMap<String, u64>,
     temps: usize,
+    /// Environment variables.
     pub env: IndexMap<String, String>,
+    /// What standard input holds.
     pub stdin: Vec<u8>,
+    /// Whether stdout is a terminal.
     pub is_tty: bool,
+    /// Whether stderr is a terminal.
     pub stderr_is_tty: bool,
+    /// Whether stdin is a terminal.
     pub stdin_is_tty: bool,
+    /// The terminal width of stdout, when known.
     pub columns: Option<f64>,
+    /// The platform string for bug reports.
     pub runtime: Option<String>,
     /// What `now` returns, or the message it fails with.
     pub now: Result<String, String>,
     /// The viewer bundle, or the message of the `viewer-missing` error it fails with.
     pub bundle: Result<String, String>,
+    /// The compute add-on bundle, or the message of the `viewer-missing` error it fails with.
     pub compute: Result<String, String>,
     /// When set, opening a file fails with this message.
     pub open_error: Option<String>,
+    /// Everything written to stdout.
     pub stdout: String,
+    /// Everything written to stderr.
     pub stderr: String,
     /// Files written, by absolute path (case-folded on a case-insensitive file system), in order.
     pub written: Vec<(String, Vec<u8>)>,
+    /// Files opened with the default application, by absolute path.
     pub opened: Vec<String>,
 }
 
@@ -115,12 +126,14 @@ impl MemoryIo {
     }
 
     #[must_use]
+    /// Sets an environment variable.
     pub fn var(mut self, name: &str, value: &str) -> MemoryIo {
         self.env.insert(name.to_owned(), value.to_owned());
         self
     }
 
     #[must_use]
+    /// Sets what standard input holds.
     pub fn with_stdin(mut self, data: impl Into<Vec<u8>>) -> MemoryIo {
         self.stdin = data.into();
         self

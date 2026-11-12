@@ -122,10 +122,12 @@ impl Members {
 }
 
 impl Object {
+    /// Creates an empty object.
     pub fn new() -> Object {
         Object::default()
     }
 
+    /// Creates an empty object with room for `capacity` members.
     pub fn with_capacity(capacity: usize) -> Object {
         Object((capacity > 0).then(|| {
             Arc::new(Members {
@@ -144,24 +146,29 @@ impl Object {
         self.0.as_ref().map_or(&[], |m| m.entries.as_slice())
     }
 
+    /// The number of members.
     pub fn len(&self) -> usize {
         self.entries().len()
     }
 
+    /// Whether the object has no members.
     pub fn is_empty(&self) -> bool {
         self.entries().is_empty()
     }
 
+    /// The value of the member `key`.
     pub fn get(&self, key: &str) -> Option<&Value> {
         let members = self.0.as_ref()?;
         members.position(key).map(|at| &members.entries[at].1)
     }
 
+    /// The value of the member `key`, mutably.
     pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
         let at = self.0.as_ref()?.position(key)?;
         self.members_mut().map(|members| &mut members.entries[at].1)
     }
 
+    /// Whether the object has a member `key`.
     pub fn contains_key(&self, key: &str) -> bool {
         self.0.as_ref().is_some_and(|m| m.position(key).is_some())
     }
@@ -185,6 +192,7 @@ impl Object {
         self.entries().iter().map(pair)
     }
 
+    /// Members in enumeration order, with mutable values.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (&JsStr, &mut Value)> {
         let entries: &mut [Entry] = match self.members_mut() {
             Some(members) => &mut members.entries,

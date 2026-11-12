@@ -1,5 +1,6 @@
-//! The delta (`delta.ts`, docs/delta-format.md, docs/algorithms.md §8): emission in canonical op
-//! order, reading and checking, strict / lenient application, and inversion.
+//! The delta: a low-level, invertible patch between two graphs (docs/delta-format.md,
+//! docs/algorithms.md §8). Emission in canonical op order, reading and checking, strict and
+//! lenient application, and inversion.
 
 use std::sync::Arc;
 
@@ -25,11 +26,17 @@ use crate::util::sorted_unique;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum NodeField {
+    /// The label.
     Label,
+    /// The type set (sorted).
     Types,
+    /// The alias set (sorted).
     Aliases,
+    /// The `deprecated` flag.
     Deprecated,
+    /// The ids the node replaces (sorted).
     Replaces,
+    /// The ids the node is replaced by (sorted).
     ReplacedBy,
 }
 
@@ -44,6 +51,7 @@ impl NodeField {
         NodeField::ReplacedBy,
     ];
 
+    /// The field's name in a `node.set` op (`label`, `types`, `aliases`, `deprecated`, `replaces` or `replacedBy`).
     pub fn as_str(self) -> &'static str {
         match self {
             NodeField::Label => "label",
@@ -55,6 +63,7 @@ impl NodeField {
         }
     }
 
+    /// Parses a name written by [`NodeField::as_str`]; `None` for anything else.
     pub fn from_name(name: &str) -> Option<NodeField> {
         NodeField::ALL.into_iter().find(|f| f.as_str() == name)
     }
@@ -78,44 +87,73 @@ impl NodeField {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum DeltaOp {
+    /// `node.rekey`: changes a node's id and re-keys its incident edges. Requires `from` to exist and `to` to be absent.
     NodeRekey {
+        /// The current id.
         from: Id,
+        /// The new id.
         to: Id,
     },
+    /// `edge.remove`: removes an edge. Requires an edge equal to the snapshot to exist.
     EdgeRemove {
+        /// The edge's JSON snapshot.
         edge: Object,
     },
+    /// `node.remove`: removes a node. Requires a node equal to the snapshot, with no edges.
     NodeRemove {
+        /// The node's full JSON snapshot.
         node: Object,
     },
+    /// `node.set`: changes one field of a node. Requires the field's current value to equal `from`.
     NodeSet {
+        /// The node's id.
         id: Id,
+        /// The field to change.
         field: NodeField,
+        /// The current value, as JSON.
         from: Value,
+        /// The new value, as JSON.
         to: Value,
     },
+    /// `node.attr`: changes one attribute of a node. Requires the current value to equal `from`.
     NodeAttr {
+        /// The node's id.
         id: Id,
+        /// The attribute key.
         key: JsStr,
+        /// The current value; `None` when the attribute is absent.
         from: Option<Value>,
+        /// The new value; `None` to remove the attribute.
         to: Option<Value>,
     },
+    /// `node.add`: adds a node. Requires the id to be absent.
     NodeAdd {
+        /// The node's full JSON snapshot.
         node: Object,
     },
+    /// `edge.add`: adds an edge. Requires both endpoints to exist and the edge to be absent.
     EdgeAdd {
+        /// The edge's JSON snapshot.
         edge: Object,
     },
     /// `edge.set` of the field `label`.
     EdgeSet {
+        /// The edge's JSON snapshot (its locator).
         edge: Object,
+        /// The current label.
         from: JsStr,
+        /// The new label.
         to: JsStr,
     },
+    /// `edge.attr`: changes one attribute of an edge. Requires the current value to equal `from`.
     EdgeAttr {
+        /// The edge's JSON snapshot (its locator).
         edge: Object,
+        /// The attribute key.
         key: JsStr,
+        /// The current value; `None` when the attribute is absent.
         from: Option<Value>,
+        /// The new value; `None` to remove the attribute.
         to: Option<Value>,
     },
 }
@@ -202,14 +240,18 @@ impl DeltaOp {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct Delta {
+    /// How edges are identified in the graphs the delta refers to.
     pub edge_identity: EdgeIdentity,
+    /// A reference to the base graph: `name?`, `version?`, `hash`, `nodes` and `edges`, as JSON.
     pub base: Object,
+    /// A reference to the target graph in the same form; `None` when the delta was read without one.
     pub target: Option<Value>,
     /// In canonical op order (docs/delta-format.md §Canonical order).
     pub ops: Vec<DeltaOp>,
 }
 
 impl Delta {
+    /// The delta as the `kgdiff.delta` document.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("format", "kgdiff.delta");
@@ -1548,8 +1590,11 @@ pub fn with_edge_identity(graph: &KGraph, edge_identity: EdgeIdentity) -> Result
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct SkippedOp {
+    /// The op's position in the delta.
     pub index: usize,
+    /// The op that was skipped.
     pub op: DeltaOp,
+    /// Why it was skipped; the text strict mode would put in its `delta-conflict` error.
     pub reason: String,
 }
 

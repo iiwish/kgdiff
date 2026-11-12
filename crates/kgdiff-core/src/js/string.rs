@@ -84,6 +84,7 @@ pub struct KeySorted<T> {
 }
 
 impl<T> KeySorted<T> {
+    /// Creates an empty collection with room for `capacity` items.
     pub fn with_capacity(capacity: usize) -> KeySorted<T> {
         KeySorted {
             items: Vec::with_capacity(capacity),
@@ -97,10 +98,12 @@ impl<T> KeySorted<T> {
         self.items.push(Some(item));
     }
 
+    /// The number of items.
     pub fn len(&self) -> usize {
         self.items.len()
     }
 
+    /// Whether there are no items.
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
@@ -202,10 +205,12 @@ impl PartialEq for JsStr {
 }
 
 impl JsStr {
+    /// Creates a string from `s`.
     pub fn new(s: &str) -> JsStr {
         JsStr(Arc::from(s))
     }
 
+    /// The string as a `&str`.
     pub fn as_str(&self) -> &str {
         &self.0
     }

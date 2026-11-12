@@ -89,6 +89,7 @@ impl KGNode {
         }
     }
 
+    /// The node's id.
     pub fn id(&self) -> &Id {
         &self.id
     }
@@ -108,10 +109,12 @@ impl KGNode {
         self.rare.as_ref().map_or(&[], |r| &r.aliases)
     }
 
+    /// The node's attributes.
     pub fn attrs(&self) -> &Attrs {
         &self.attrs
     }
 
+    /// Whether the node is marked deprecated.
     pub fn is_deprecated(&self) -> bool {
         self.deprecated
     }
@@ -156,26 +159,32 @@ impl KGEdge {
         &self.key
     }
 
+    /// The edge's stable id, if it has one.
     pub fn id(&self) -> Option<&Id> {
         self.id.as_ref()
     }
 
+    /// The id of the source node.
     pub fn source(&self) -> &Id {
         &self.source
     }
 
+    /// The id of the target node.
     pub fn target(&self) -> &Id {
         &self.target
     }
 
+    /// The predicate, as written in the input.
     pub fn predicate(&self) -> &JsStr {
         &self.predicate
     }
 
+    /// The label; never empty, defaulting to a readable form of the predicate.
     pub fn label(&self) -> &JsStr {
         &self.label
     }
 
+    /// The edge's attributes.
     pub fn attrs(&self) -> &Attrs {
         &self.attrs
     }
@@ -423,10 +432,12 @@ impl KGraph {
         &self.issues
     }
 
+    /// The number of nodes.
     pub fn node_count(&self) -> usize {
         self.nodes.len()
     }
 
+    /// The number of edges.
     pub fn edge_count(&self) -> usize {
         self.edges.len()
     }
@@ -441,6 +452,7 @@ impl KGraph {
         self.nodes.get(id).map(AsRef::as_ref)
     }
 
+    /// Whether the graph has a node `id`.
     pub fn contains_node(&self, id: &str) -> bool {
         self.nodes.contains_key(id)
     }
@@ -473,6 +485,7 @@ impl KGraph {
         self.edge_index(key).and_then(|at| self.edge_at(at))
     }
 
+    /// Whether the graph has an edge with this key.
     pub fn contains_edge(&self, key: &str) -> bool {
         self.edge_index(key).is_some()
     }
@@ -626,26 +639,32 @@ impl<'g> EdgeRef<'g> {
         self.graph.key_at(self.at)
     }
 
+    /// The edge's stable id, if it has one.
     pub fn id(&self) -> Option<&'g Id> {
         self.graph.edges.ids.get(self.at)?.as_ref()
     }
 
+    /// The id of the source node.
     pub fn source(&self) -> &'g Id {
         self.graph.node_id(self.row().source)
     }
 
+    /// The id of the target node.
     pub fn target(&self) -> &'g Id {
         self.graph.node_id(self.row().target)
     }
 
+    /// The predicate, as written in the input.
     pub fn predicate(&self) -> &'g JsStr {
         &self.graph.edges.texts[position(self.row().predicate)]
     }
 
+    /// The label; never empty, defaulting to a readable form of the predicate.
     pub fn label(&self) -> &'g JsStr {
         &self.graph.edges.texts[position(self.row().label)]
     }
 
+    /// The edge's attributes.
     pub fn attrs(&self) -> &'g Attrs {
         self.graph
             .edges

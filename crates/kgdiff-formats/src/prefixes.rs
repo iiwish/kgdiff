@@ -136,6 +136,7 @@ pub struct PrefixTable {
 }
 
 impl PrefixTable {
+    /// Compiles a table from layers of `(name, namespace)` pairs; when prefixes share a namespace, explicit options beat well-known names, which beat file declarations.
     pub fn new(layers: &[(PrefixSource, &[(String, String)])]) -> PrefixTable {
         let mut ordered: Vec<&(PrefixSource, &[(String, String)])> = layers.iter().collect();
         ordered.sort_by_key(|(source, _)| source.override_rank());

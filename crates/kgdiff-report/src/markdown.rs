@@ -185,10 +185,12 @@ pub fn escape_markdown(text: &str) -> String {
     js::trim(&out).to_owned()
 }
 
-/// `MarkdownOptions`.
+/// What the Markdown summary needs to know.
 #[non_exhaustive]
 pub struct MarkdownOptions<'a> {
+    /// The language of the summary.
     pub locale: Locale,
+    /// The title of the document.
     pub title: &'a str,
     /// e.g. `kgdiff 0.1.0`.
     pub generator: &'a str,
@@ -208,7 +210,12 @@ impl<'a> MarkdownOptions<'a> {
     }
 }
 
-/// `renderMarkdown`. Deterministic: no timestamps.
+/// The Markdown summary of a diff, as `kgdiff --markdown` writes it. Deterministic: no
+/// timestamps.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when `diff` is inconsistent, for example when a hunk does not belong to it.
 pub fn render_markdown(
     diff: &DiffResult,
     options: &MarkdownOptions<'_>,

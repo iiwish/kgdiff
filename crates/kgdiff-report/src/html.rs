@@ -96,28 +96,37 @@ pub fn script_safe_js(code: &str) -> String {
     out
 }
 
-/// One side of the report (`meta.before`, `meta.after`).
+/// One side of the report: a version of the graph.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct ReportSide {
+    /// The name shown for this version (a file name, a tag, a commit).
     pub name: String,
+    /// The format the version was read as (for example `turtle`), when known.
     pub format: Option<String>,
 }
 
-/// What a report says about itself and how the viewer starts (`ReportInfo`).
+/// What a report says about itself and how the viewer starts
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct ReportInfo {
+    /// The report's title.
     pub title: String,
     /// e.g. `kgdiff 0.1.0`.
     pub generator: String,
     /// ISO timestamp; `None` for reproducible reports.
     pub generated_at: Option<String>,
+    /// The before version.
     pub before: ReportSide,
+    /// The after version.
     pub after: ReportSide,
+    /// The viewer mode it opens in (`overlay`, `swipe` or `replay`); `None` for the viewer's default.
     pub mode: Option<String>,
+    /// The scope the viewer opens with (`all` or `changes`); `None` for the viewer's default.
     pub scope: Option<String>,
+    /// The theme it opens in (`auto`, `light` or `dark`); `None` for the viewer's default (`auto`).
     pub theme: Option<String>,
+    /// The language of the viewer's texts.
     pub locale: Locale,
     /// `view.panels`: region and state, in the order given.
     pub panels: Option<Vec<(String, String)>>,

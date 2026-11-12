@@ -1,5 +1,5 @@
 //! The text outputs and HTML reports of [kgdiff](https://github.com/iiwish/kgdiff),
-//! the rendering half of what the `kgdiff` command prints (RFC 0002, phase 3). Given a
+//! the rendering half of what the `kgdiff` command prints. Given a
 //! [`kgdiff_core::DiffResult`], it writes what `kgdiff` prints — the terminal summary, `--stat`,
 //! `--name-status` and the Markdown summary, in English or Simplified Chinese, laid out for a
 //! width in terminal columns — and assembles the single-file HTML report. It does no I/O, so an
@@ -9,7 +9,7 @@
 //! A report carries the diff and its layout ([`report_payload`], [`build_report_html`]: the
 //! layout of the default options). An application that has a layout already hands it over with
 //! [`ReportLayout::Given`], or leaves the layout to the viewer with [`ReportLayout::None`]
-//! ([`report_payload_with`], [`build_report_html_with`]; RFC 0003, part 2). The payload is a
+//! ([`report_payload_with`], [`build_report_html_with`]). The payload is a
 //! `kgdiff.report` document of version 1, described by `packages/core/schema/report.v1.json`.
 //!
 //! ```
@@ -60,6 +60,13 @@
 //! assert!(report_payload_with(&other, ReportLayout::Given(&layout), &info).is_err());
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+
+#![warn(missing_docs)]
+
+/// The README's examples, run as tests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
 
 pub mod html;
 #[doc(hidden)]

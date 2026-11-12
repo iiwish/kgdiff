@@ -1,16 +1,17 @@
 //! The layout of [kgdiff](https://github.com/iiwish/kgdiff): one stable, deterministic,
 //! label-aware set of coordinates for both versions of a knowledge-graph diff (the union
 //! layout), so that nothing jumps when a viewer switches between before, after, overlay and
-//! replay. A port of the TypeScript package `@kgdiff/layout` (RFC 0002, phase 4).
+//! replay.
 //!
-//! What the port must reproduce exactly is everything that does not depend on floating-point
-//! simulation: which nodes are laid out (the scope), their radii, the `hidden` counts, the
-//! strategy, the tick counts of union layouts, component membership and order, and the label
-//! widths the scene shares ([`estimate_label_width`], [`node_radius`]). The conformance corpus
-//! pins them (`layout-contract.json`, `label-width.json`). Positions do not have to equal
-//! TypeScript's (RFC 0002, "Layout decision"); they must be good, deterministic and identical on
-//! every target, WebAssembly included: results use only `+ − × ÷ √`, comparisons and
-//! conversions, and a seeded PRNG.
+//! [`layout_diff`] places every node of a [`DiffResult`] once, with a force simulation (the
+//! parts of d3-force and d3-quadtree it needs are built in) that keeps labels apart, packs
+//! disconnected components, and can limit the layout to the changes and their context. The
+//! result is deterministic and identical on every target, WebAssembly included: it uses only
+//! `+ − × ÷ √`, comparisons and conversions, and a seeded PRNG. [`layout_graph`] lays out one
+//! graph, [`layout_diff_on`] and [`layout_after`] carry a previous version's positions through
+//! the diff so that the next version stays on the same map, and [`layout_to_json`] and
+//! [`layout_from_json`] write and read the `kgdiff.layout` document. [`node_radius`] and
+//! [`estimate_label_width`] give the sizes renderers share.
 //!
 //! # Laying out a diff
 //!
@@ -167,6 +168,13 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
+#![warn(missing_docs)]
+
+/// The README's examples, run as tests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
+
 mod carry;
 mod components;
 mod engine;
@@ -199,14 +207,16 @@ pub use result::{LayoutComponent, LayoutResult, LayoutStats, Rect};
 
 /// The engine generation of this crate's layouts, written as `generator` in layout documents
 /// (version 2). It changes whenever an algorithm change moves positions for the same input, so
-/// that caches can tell layout generations apart (RFC 0002, §2).
+/// that caches can tell layout generations apart (layout documents carry it as `generator`).
 pub const GENERATOR: &str = "kgdiff-layout/1";
 
 /// The union graph a layout is computed from: the nodes and edges of a [`DiffResult`] (in any
 /// order; they are sorted by id).
 #[derive(Clone, Copy, Debug)]
 pub struct LayoutInput<'a> {
+    /// The union nodes.
     pub nodes: &'a [UnionNode],
+    /// The union edges.
     pub edges: &'a [UnionEdge],
 }
 

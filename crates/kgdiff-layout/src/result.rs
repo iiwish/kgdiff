@@ -8,16 +8,21 @@ use crate::geometry::{Extent, extent_of, to_rect};
 use crate::graph::LayoutGraph;
 use crate::{LayoutScope, LayoutStrategy};
 
-/// An axis-aligned rectangle in world units (y down), as `Rect` of `@kgdiff/core`.
+/// An axis-aligned rectangle in world units (y down).
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Rect {
+    /// The left edge.
     pub x: f64,
+    /// The top edge (y grows downwards).
     pub y: f64,
+    /// The width.
     pub width: f64,
+    /// The height.
     pub height: f64,
 }
 
 impl Rect {
+    /// The empty rectangle at the origin.
     pub const ZERO: Rect = Rect {
         x: 0.0,
         y: 0.0,
@@ -40,6 +45,7 @@ pub struct LayoutComponent {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct LayoutStats {
+    /// The strategy that placed the nodes.
     pub strategy: LayoutStrategy,
     /// The ticks of the largest simulation run (0 when none ran).
     pub iterations: usize,
@@ -61,8 +67,8 @@ impl LayoutStats {
 
 /// A layout: positions and radii of the nodes in scope, their bounds and components.
 ///
-/// Unlike TypeScript's `LayoutResult`, there is no wall-clock time in it (`stats.ms`): no clock
-/// is read, so that the crate is the same on every target (callers time it themselves).
+/// There is no wall-clock time in it: no clock is read, so that the crate is the same on every
+/// target (callers time it themselves).
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct LayoutResult {
@@ -73,16 +79,18 @@ pub struct LayoutResult {
     pub radii: IndexMap<UnionId, f64>,
     /// The bounds of all nodes in scope, label boxes included.
     pub bounds: Rect,
+    /// Which union nodes were laid out.
     pub scope: LayoutScope,
     /// For scope `Changes`: per visible node with any, the number of neighbours left out of the
     /// layout, in id order. Empty for scope `All`.
     pub hidden: IndexMap<UnionId, usize>,
     /// Connected components after packing, largest first.
     pub components: Vec<LayoutComponent>,
+    /// How the layout was computed.
     pub stats: LayoutStats,
     /// The engine generation the positions come from: [`GENERATOR`](crate::GENERATOR) for
     /// layouts this crate computes or extends, the document's `generator` for a version 2
-    /// document read back, `None` for a version 1 document (TypeScript's engine).
+    /// document read back, `None` for a version 1 document (written by the engine that preceded this crate).
     pub generator: Option<JsStr>,
 }
 

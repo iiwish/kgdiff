@@ -2,9 +2,10 @@
 
 The layout of [kgdiff](https://github.com/iiwish/kgdiff) in Rust: one stable, deterministic,
 label-aware set of coordinates for both versions of a knowledge-graph diff, so that nothing jumps
-when a viewer switches between before, after, overlay and replay. A port of the TypeScript package
-[`@kgdiff/layout`](https://www.npmjs.com/package/@kgdiff/layout) and of the parts of d3-force and
-d3-quadtree it uses.
+when a viewer switches between before, after, overlay and replay. `layout_diff` places every node
+of a [`kgdiff-core`](https://crates.io/crates/kgdiff-core) diff once, with a force simulation that
+keeps labels apart, packs disconnected components, and can limit the layout to the changes and
+their context. The parts of d3-force and d3-quadtree it needs are built in.
 
 ```rust
 use kgdiff_core::js::json;
@@ -21,19 +22,16 @@ println!("{}", json::to_string(&layout_to_json(&layout)));
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-This is phase 4 of
-[RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md). What
-does not depend on floating-point simulation — the scope, radii, `hidden` counts, strategy, tick
-counts of union layouts, component membership and order, and the label widths the scene shares —
-must equal TypeScript's, and the conformance corpus checks it
-(`cargo test -p kgdiff-layout --test conformance`). Positions only have to be good, deterministic
-and identical on every target: results use only `+ − × ÷ √`, comparisons and conversions, and a
-seeded PRNG, and CI compares layout hashes across x86-64 Linux, AArch64 macOS, x86-64 Windows and
-WebAssembly.
+Positions are good, deterministic and identical on every target: results use only `+ − × ÷ √`,
+comparisons and conversions, and a seeded PRNG, and CI compares layout hashes across x86-64 Linux,
+AArch64 macOS, x86-64 Windows and WebAssembly. What does not depend on floating-point simulation
+(the scope, radii, `hidden` counts, strategy, tick counts of union layouts, component membership
+and order, and the label widths renderers share) is pinned by the conformance corpus
+(`cargo test -p kgdiff-layout --test conformance`).
 
 Layout documents are `kgdiff.layout` version 2 (`generator: "kgdiff-layout/1"`), described by
 [`layout.v2.json`](https://github.com/iiwish/kgdiff/blob/main/packages/core/schema/layout.v2.json);
-version 1 documents of the TypeScript engine are read as well.
+version 1 documents, written by the engine that preceded this crate, are read as well.
 
 ## One graph
 
@@ -110,8 +108,9 @@ walks through it, from the first layout to a report and the browser, with code t
 on the conformance corpus.
 
 `layout_graph`, `layout_diff_on` and `layout_after` are new in 0.9
-([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), part 1) and
-experimental until 1.0. In TypeScript they are `layoutGraph`, `layoutDiffOn` and `layoutAfter` of
-`@kgdiff/layout` and `@kgdiff/compute` (since 0.11): this crate compiled to WebAssembly.
+([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), part 1).
+In JavaScript they are `layoutGraph`, `layoutDiffOn` and `layoutAfter` of
+[`@kgdiff/compute`](https://www.npmjs.com/package/@kgdiff/compute): this crate compiled to
+WebAssembly.
 
 Licensed under the MIT license.

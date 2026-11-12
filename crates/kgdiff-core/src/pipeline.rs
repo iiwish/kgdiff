@@ -49,8 +49,11 @@ impl Ctx<'_> {
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub struct DiffResult {
+    /// The normalized before graph.
     pub before: KGraph,
+    /// The normalized after graph.
     pub after: KGraph,
+    /// The options the diff ran with, every default filled in.
     pub options: DiffOptions,
     /// Sorted by id.
     pub nodes: Vec<UnionNode>,
@@ -60,8 +63,11 @@ pub struct DiffResult {
     pub hunks: Vec<Hunk>,
     /// The matches not implied by equal ids (methods `hint` and `similarity`), sorted by `after`.
     pub matches: Vec<NodeMatch>,
+    /// Plausible pairings that were not applied, sorted by score.
     pub suggestions: Vec<MatchSuggestion>,
+    /// The invertible patch from the before graph to the after graph.
     pub delta: Delta,
+    /// Counts of what changed.
     pub stats: DiffStats,
     /// Lookups by id, built on first use (not serialized).
     pub(crate) index: DiffIndex,
