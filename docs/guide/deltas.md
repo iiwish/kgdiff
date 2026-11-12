@@ -53,11 +53,10 @@ The CLI applies deltas forwards. In code, `invertDelta` gives the inverse:
 
 ```ts
 import { readFile } from 'node:fs/promises';
-import { applyDelta, invertDelta, normalize } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { applyDelta, invertDelta, normalize, parseGraph } from '@kgdiff/core';
 
 const delta = JSON.parse(await readFile('patch.json', 'utf8'));
-const after = parseGraph(await readFile('after.obo', 'utf8'), { filename: 'after.obo' });
+const after = await parseGraph(await readFile('after.obo', 'utf8'), { filename: 'after.obo' });
 const before = applyDelta(normalize(after.graph), invertDelta(delta));
 ```
 

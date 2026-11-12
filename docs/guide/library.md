@@ -4,8 +4,8 @@ The CLI and the viewer are built from packages you can use directly:
 
 | Package            | What it does                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------ |
-| `@kgdiff/core`     | The diff engine: normalize, match, classify, hunks, invertible deltas. No dependencies.                |
-| `@kgdiff/formats`  | Deprecated: the parsers of `@kgdiff/compute`, re-exported until 2.0.                                   |
+| `@kgdiff/core`     | The diff model and the parsers: parse, normalize, match, classify, hunks, invertible deltas.           |
+| `@kgdiff/formats`  | Deprecated since 0.11: moved to `@kgdiff/core`, which has the same functions and types.                |
 | `@kgdiff/layout`   | A deterministic, label-aware layout that both versions share.                                          |
 | `@kgdiff/scene`    | Turns a diff into visual primitives: design tokens, encodings, replay timeline.                        |
 | `@kgdiff/renderer` | A Canvas 2D renderer: camera, level of detail, labels, picking, minimap.                               |
@@ -20,7 +20,12 @@ you pass text and objects in and get objects out. Since 0.11, computing (`diff`,
 `@kgdiff/compute` and is asynchronous; reading and applying (`normalize`, `hashGraph`,
 `diffFromJSON`, `applyDelta`, `formatHunk`, `layoutFromJSON`, …) stays synchronous. Upgrading
 from 0.10: [Migrating to 0.11](./migrating-to-0.11.md). `@kgdiff/formats` is deprecated: its
-parsers are `parseGraph` and `detectFormat` of `@kgdiff/compute`.
+parsers are in `@kgdiff/core` since 0.11.1, so moving off it means changing the import path only.
+
+The rule: the model packages (`@kgdiff/core`, `@kgdiff/layout`) give asynchronous entries that
+load the engine on the first call. For the synchronous API, for choosing where the `.wasm` files
+are loaded from, or for the low-level JSON functions, use
+[`@kgdiff/compute`](#the-rust-engine-in-the-browser).
 
 This page is about the TypeScript packages. The engine itself is written in Rust, and an
 application in Rust uses its crates directly:
@@ -30,13 +35,12 @@ layout, and on to the browser.
 ## Diff two graphs
 
 ```sh
-npm install @kgdiff/core @kgdiff/compute
+npm install @kgdiff/core
 ```
 
 ```ts
 import { readFile } from 'node:fs/promises';
-import { diff, formatHunk } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/compute';
+import { diff, formatHunk, parseGraph } from '@kgdiff/core';
 
 const read = async (file: string) => parseGraph(await readFile(file, 'utf8'), { filename: file });
 const before = await read('before.obo');
@@ -176,9 +180,9 @@ as `@kgdiff/compute/compute.wasm`, `/formats.wasm` and `/layout.wasm`.
 **Content Security Policy.** Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`,
 for example `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`.
 
-Since 0.11, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
-`@kgdiff/layout` are asynchronous and run on this package: `await diff(…)` loads `compute.wasm`
-on first use. [Migrating to 0.11](./migrating-to-0.11.md) lists every changed function.
+Since 0.11, `diff` and `parseGraph` of `@kgdiff/core` and `layoutDiff` of `@kgdiff/layout` are
+asynchronous and run on this package: `await diff(…)` loads `compute.wasm` on first use, and
+`await parseGraph(…)` loads `formats.wasm`. [Migrating to 0.11](./migrating-to-0.11.md) lists every changed function.
 
 ## Errors
 

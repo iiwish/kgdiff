@@ -2,8 +2,9 @@
 
 The semantic diff engine behind [kgdiff](../../README.md). It matches nodes across two versions
 of a knowledge graph, classifies what changed (rename, rekey, merge, split, hierarchy move,
-retarget, …), groups the changes into reviewable hunks and emits an invertible delta.
-Deterministic, zero dependencies, and it runs unchanged in browsers, Node, Deno, Bun and workers.
+retarget, …), groups the changes into reviewable hunks and emits an invertible delta, and it
+parses graph files (RDF, OBO, the JSON graph shapes). Deterministic, and it runs unchanged in
+browsers, Node, Deno, Bun and workers.
 
 ## Install
 
@@ -54,10 +55,26 @@ const undone = applyDelta(result.after, invertDelta(result.delta));
 hashGraph(undone) === hashGraph(result.before); // true
 ```
 
-- Graph files (RDF, OBO, JSON graph formats): parse them with [`@kgdiff/formats`](../formats).
+- Graph files (RDF, OBO, JSON graph formats): `parseGraph(text, { filename })` detects the format
+  and gives the `graph` with the `format` read and `warnings`; `detectFormat`, `compactIri` and
+  `FORMAT_EXTENSIONS` too. They are the functions and types of `@kgdiff/formats` (deprecated):
+  moving off it means changing the import path only.
 - Ids that mean nothing across versions, such as two LLM extraction runs: match by label and
   neighbourhood with `diff(a, b, { match: { strategy: 'similarity' } })`.
 - `formatHunk(hunk, result, 'zh-CN')` gives Chinese titles.
+
+## Asynchronous entries, and `@kgdiff/compute`
+
+`diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat` and `compactIri` run kgdiff's
+Rust engine compiled to WebAssembly, the same results as the kgdiff CLI. It is
+[`@kgdiff/compute`](../compute), a dependency of this package, loaded with a dynamic `import()`
+on the first call: these functions return promises, and a bundle that only reads diffs
+(`diffFromJSON`, `formatHunk`, `applyDelta`, …, all synchronous) contains no WebAssembly.
+
+The rule: the model packages (`@kgdiff/core`, `@kgdiff/layout`) give asynchronous entries that
+load the engine on the first call. For the synchronous API (`init()`, then `diffSync`,
+`parseGraphSync`, …), for choosing where the `.wasm` files are loaded from, or for the low-level
+JSON functions, use `@kgdiff/compute`.
 
 ## JSON formats
 
