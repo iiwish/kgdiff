@@ -1,5 +1,30 @@
 # @kgdiff/core
 
+## 0.12.0
+
+### Minor Changes
+
+- 603551e: **JavaScript API:** before 1.0, the npm packages keep only the API they document, so that nothing kgdiff uses internally becomes a promise. Each entry point now has an API report (`packages/<name>/api/*.api.md`) that CI compares with the built declarations. Pages that use the viewer's elements through their attributes, properties, methods and events, and code that uses the other packages as documented, need no change. Guide: [Migrating to 0.12](https://github.com/iiwish/kgdiff/blob/main/docs/guide/migrating-to-0.12.md#javascript).
+  - `@kgdiff/viewer/elements/*`: the element classes' declarations no longer show the members a subclass would override (`build`, `name`, `shadow`, `context`, `upgradedProperties`, and the hooks of `<kgdiff-root>`), nor `KgdiffStage`'s `view`. Subclassing the element classes is not covered by semantic versioning: an element's public interface is what `custom-elements.json` lists. Extend an element by composition (slots, `addLayer`, `registerObstacle`, events).
+  - `@kgdiff/viewer/elements/stage` no longer exports `STAGE_REGIONS`: use the `StageRegion` values (`'dock'`, `'transport'`, `'legend'`, `'zoom'`, `'minimap'`). It exports `Context`, the type of `stageContext`.
+  - `@kgdiff/compute/layout` no longer exports `layoutModule`: call `init()` and the entry point's functions.
+  - `@kgdiff/core/computed` is an internal entry point of `@kgdiff/compute` of the same version, not covered by semantic versioning.
+  - `@kgdiff/g6` exports `ElementKind`, the type of `KgdiffDatumData.kgdiff`.
+  - `@kgdiff/scene`: `shape2` of `EdgeVisual` and `GlyphVisual` is documented as experimental, like `shape1`.
+- eb7d948: **Rust crates:** the public Rust API makes room for the additions planned after 1.0, so that none of them needs a major release. The JavaScript API changes too, in a separate entry (it keeps only what is documented); the CLI, the document formats and every output byte are those of 0.11, so for the command line the upgrade is the version number. Guide: [Migrating to 0.12](https://github.com/iiwish/kgdiff/blob/main/docs/guide/migrating-to-0.12.md); what each version promises from now on: [Versioning](https://github.com/iiwish/kgdiff/blob/main/docs/versioning.md).
+  - Enums that will grow are `#[non_exhaustive]` (error, issue and warning codes, formats, locales, strategies, facets, delta ops): a `match` on them needs a `_` arm. `ChangeStatus`, `HunkKind`, `ReplayPhase`, `SuggestionReason`, `End` and `js::Value` stay exhaustive.
+  - Options, inputs and results are `#[non_exhaustive]`: build them from `Default::default()` or a constructor and set the fields (`let mut options = DiffOptions::default(); options.edge_identity = …;`). New constructors: `ReportInfo::new`, `ReportSide::new`, `ViewerBundles::new`, `MarkdownOptions::new`, `TextContext::new`.
+  - The internals kgdiff's crates share are hidden from the documentation and not covered by semantic versioning: `kgdiff_core::js` apart from `Value`, `Object`, `JsStr`, `json`, `IndexMap` and `IndexSet`; `kgdiff_core::{canonical, text, util}`; `kgdiff_report::{locale, model, width}`; every module of `kgdiff` apart from `cli`, `io`, `system` and `testing`.
+  - `kgdiff_core::js::BuildHasher` (the hasher of the public `IndexMap` and `IndexSet`) is kgdiff's own type instead of `foldhash::fast::RandomState`, so that a foldhash upgrade cannot change the public types.
+  - The `kgdiff` crate's embedding interface: `CliIo::viewer_bundle` returns `ViewerMissing` instead of the internal `Failure`; `FileStat` (`FileStat::new`), `ViewerBundle` and `SystemIo` (`SystemIo::default()`) are `#[non_exhaustive]`.
+  - CI checks the Rust API against the last release with `cargo-semver-checks`.
+
+### Patch Changes
+
+- 21f269c: **Rust crates only:** the public API of `kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`, `kgdiff-report` and `kgdiff` is documented on docs.rs: every public type, field, variant and function has a description, functions that return `Result` say what they fail with, and the crate pages and READMEs describe what each crate provides, with an example that runs as a test. `#![warn(missing_docs)]` keeps it that way. No type, signature or behavior changes.
+- Updated dependencies [603551e]
+  - @kgdiff/compute@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
