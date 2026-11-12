@@ -4,9 +4,10 @@
  * they catch complexity regressions on any machine; the bench tables show the actual times.
  * Quality and determinism at these sizes are tested in perf.test.ts.
  */
-import { diff } from '@kgdiff/core';
+
 import { expect, test } from 'vitest';
-import { extendLayout, layoutDiff } from '../src/index.js';
+import { diff } from '../../core/src/sync.js';
+import { extendLayout, layoutDiff } from '../src/sync.js';
 import { makeDiff } from './support/diff-builder.js';
 import { scaleFree, tree } from './support/fixtures.js';
 import { syntheticPair } from './support/synthetic.js';

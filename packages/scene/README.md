@@ -21,8 +21,8 @@ import { diff } from '@kgdiff/core';
 import { layoutDiff } from '@kgdiff/layout';
 import { buildScene, createViewState, createVisualResolver } from '@kgdiff/scene';
 
-const result = diff(before, after);
-const scene = buildScene(result, layoutDiff(result), { theme: 'light', locale: 'en' });
+const result = await diff(before, after);
+const scene = buildScene(result, await layoutDiff(result), { theme: 'light', locale: 'en' });
 scene.hunks.map((hunk) => hunk.title); // localized titles, in review order
 
 const resolver = createVisualResolver(scene);

@@ -1,6 +1,7 @@
 import { type GraphInput, hashGraph, type NodeInput, normalize } from '@kgdiff/core';
 import { describe, expect, it, vi } from 'vitest';
-import { type ParseOptions, parseGraph } from '../src/index.js';
+import type { ParseOptions } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 import { catchError, deepFreeze, parseFixture } from './helpers.js';
 
 const EX = 'https://example.org/';

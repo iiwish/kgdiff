@@ -284,6 +284,11 @@ jobs:
           # No caches in a release build: a poisoned cache would end up in the binaries.
           package-manager-cache: false
       - run: pnpm install --frozen-lockfile
+      # The compute add-on inlines the layout-only module (built here: this job also runs when
+      # nothing is released, unlike compute-wasm).
+      - uses: ./.github/actions/compute-wasm
+        with:
+          cache: "false"
       - run: pnpm build:viewer-assets
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

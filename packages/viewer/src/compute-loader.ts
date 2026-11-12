@@ -29,10 +29,25 @@ export function computeNow(): Compute | null {
   return ready;
 }
 
-/** `ready`: loaded; `unavailable`: the last attempt failed and no add-on is present; else `unknown`. */
+/**
+ * `ready`: loaded with its layout module compiled; `unavailable`: the last attempt failed and no
+ * add-on is present, or the layout module failed to compile; else `unknown` (not loaded yet, or
+ * still compiling).
+ */
 export function computeStatus(): 'ready' | 'unavailable' | 'unknown' {
-  if (computeNow()) return 'ready';
+  const now = computeNow();
+  if (now) {
+    const state = now.layoutState();
+    return state === 'ready' ? 'ready' : state === 'failed' ? 'unavailable' : 'unknown';
+  }
   return failed ? 'unavailable' : 'unknown';
+}
+
+/** The compute module once its layout module is compiled (`ready`). */
+export async function loadLayout(): Promise<Compute> {
+  const compute = await loadCompute();
+  await compute.ready;
+  return compute;
 }
 
 export function loadCompute(): Promise<Compute> {

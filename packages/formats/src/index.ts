@@ -1,23 +1,21 @@
 /**
  * @kgdiff/formats: turn real-world graph files into kgdiff `GraphInput`s.
  *
- * Isomorphic (browser + Node), synchronous, no file-system or network access: callers pass
- * text. Every parser maps its source into the same `GraphInput` conventions
- * (docs/architecture.md §Formats) so diffs across formats behave identically.
+ * @deprecated Since 0.11 this package is a thin asynchronous layer over `@kgdiff/compute`,
+ * which runs kgdiff's Rust parsers compiled to WebAssembly: use `parseGraph`, `detectFormat` and
+ * `compactIri` of `@kgdiff/compute` (or `init()` and their `*Sync` forms) instead. The types stay
+ * here until the package is removed in 2.0; `@kgdiff/compute` uses them too.
+ *
+ * Isomorphic (browser + Node), no file-system or network access: callers pass text. Every parser
+ * maps its source into the same `GraphInput` conventions (docs/architecture.md §Formats) so
+ * diffs across formats behave identically.
  *
  * Output is deterministic: the same text and options always give an identical result, with
  * nodes sorted by id, edges by (source, predicate, target), attribute keys sorted and
  * multi-valued fields as sorted arrays.
  */
 import type { GraphInput } from '@kgdiff/core';
-import { detect, FORMAT_EXTENSIONS, isJsonLd } from './detect.js';
-import { parseJson, parseJsonText } from './json.js';
-import { readJsonLd } from './jsonld.js';
-import { parseObo } from './obo.js';
-import { tableFor, WELL_KNOWN_PREFIXES } from './prefixes.js';
-import { mapRdf, readN3 } from './rdf.js';
-import { readRdfXml } from './rdfxml.js';
-import { assertNever, invalidInput, isRecord, makeMeta, Warnings } from './shared.js';
+import { FORMAT_EXTENSIONS } from './detect.js';
 
 export { FORMAT_EXTENSIONS };
 
@@ -184,7 +182,25 @@ export interface ParseResult {
   readonly warnings: readonly ParseWarning[];
 }
 
-const FORMAT_IDS: ReadonlySet<string> = new Set(Object.keys(FORMAT_EXTENSIONS));
+/** What this package calls in `@kgdiff/compute` (checked against it by compute's tests). */
+interface FormatsEngine {
+  parseGraph(text: string, options?: ParseOptions): Promise<ParseResult>;
+  detectFormat(text: string, filename?: string): Promise<FormatId>;
+  compactIri(iri: string, prefixes?: Readonly<Record<string, string>>): Promise<string>;
+}
+
+let engine: Promise<FormatsEngine> | undefined;
+
+/** `@kgdiff/compute`, imported on first use. */
+function compute(): Promise<FormatsEngine> {
+  engine ??= (import('@kgdiff/compute') as Promise<unknown> as Promise<FormatsEngine>).catch(
+    (error: unknown) => {
+      engine = undefined;
+      throw error;
+    },
+  );
+  return engine;
+}
 
 /**
  * Parse graph text in any supported format. Throws `KgdiffError('invalid-input')` with line
@@ -194,75 +210,20 @@ const FORMAT_IDS: ReadonlySet<string> = new Set(Object.keys(FORMAT_EXTENSIONS));
  * - `meta.source` is set to `filename` when given.
  * - Every RDF syntax (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) maps through the same
  *   conventions, so one graph gives the same `GraphInput` in any of them.
- * - Synchronous and offline: JSON-LD remote contexts come only from `jsonld.documentLoader`.
+ * - Offline: JSON-LD remote contexts come only from `jsonld.documentLoader` (called
+ *   synchronously).
  * - Recoverable oddities (named graphs merged, unsupported OBO stanzas, d3 index ids, …) are
  *   reported in `warnings` instead of failing.
  *
  * Linear in the input size (plus sorting the output); 50k triples parse in well under a second.
+ *
+ * Asynchronous since 0.11: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded
+ * and compiled on the first call), so the result is the kgdiff CLI's.
+ *
+ * @deprecated Use `parseGraph` of `@kgdiff/compute`, or `parseGraphSync` after its `init()`.
  */
-export function parseGraph(text: string, options: ParseOptions = {}): ParseResult {
-  if (typeof text !== 'string')
-    throw invalidInput('parseGraph expects the file content as a string.');
-  const requested = options.format ?? 'auto';
-  if (requested !== 'auto' && !FORMAT_IDS.has(requested)) {
-    throw invalidInput(
-      `Unknown format "${String(requested)}". Expected auto, ${[...FORMAT_IDS].join(', ')}.`,
-    );
-  }
-  let format = requested === 'auto' ? detectFormat(text, options.filename) : requested;
-  const warnings = new Warnings();
-  let parsed: {
-    readonly graph: GraphInput;
-    readonly prefixes?: Readonly<Record<string, string>>;
-    readonly predicateLabels: Readonly<Record<string, string>>;
-    readonly dialect?: JsonDialect;
-  };
-  switch (format) {
-    case 'json':
-    case 'jsonld': {
-      const data = parseJsonText(text);
-      // JSON-LD is RDF, also when it arrives as plain `.json`.
-      if (format === 'jsonld' || isJsonLd(data)) {
-        format = 'jsonld';
-        const jsonld = { ...options.jsonld, baseIRI: options.baseIRI };
-        parsed = mapRdf(readJsonLd(data, jsonld, warnings), options.rdf, warnings);
-      } else parsed = parseJson(data, options.json, warnings);
-      break;
-    }
-    case 'obo':
-      parsed = parseObo(text, warnings);
-      break;
-    case 'turtle':
-    case 'ntriples':
-    case 'nquads':
-    case 'trig':
-      parsed = mapRdf(readN3(text, format, options.baseIRI), options.rdf, warnings);
-      break;
-    case 'rdfxml':
-      parsed = mapRdf(readRdfXml(text, options.baseIRI), options.rdf, warnings);
-      break;
-    default:
-      return assertNever(format);
-  }
-  let { graph } = parsed;
-  const { predicateLabels, dialect, prefixes = WELL_KNOWN_PREFIXES } = parsed;
-  const hasLabels = Object.keys(predicateLabels).length > 0;
-  if (options.filename !== undefined || hasLabels) {
-    const meta = makeMeta({
-      ...(isRecord(graph.meta) ? graph.meta : {}),
-      ...(hasLabels ? { predicateLabels } : {}),
-      ...(options.filename !== undefined ? { source: options.filename } : {}),
-    });
-    graph = { ...graph, ...(meta ? { meta } : {}) };
-  }
-  return {
-    graph,
-    format,
-    ...(dialect !== undefined ? { dialect } : {}),
-    prefixes,
-    predicateLabels,
-    warnings: warnings.finish(),
-  };
+export async function parseGraph(text: string, options: ParseOptions = {}): Promise<ParseResult> {
+  return (await compute()).parseGraph(text, options);
 }
 
 /**
@@ -279,9 +240,14 @@ export function parseGraph(text: string, options: ParseOptions = {}): ParseResul
  * (empty) Turtle graph. Throws `KgdiffError('invalid-input')` with a conversion hint for
  * recognisably unsupported formats (OWL/XML, OWL Functional / Manchester Syntax, GraphML,
  * GEXF, other XML) and for unrecognisable text.
+ *
+ * Asynchronous since 0.11: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded
+ * and compiled on the first call), so the result is the kgdiff CLI's.
+ *
+ * @deprecated Use `detectFormat` of `@kgdiff/compute`, or `detectFormatSync` after its `init()`.
  */
-export function detectFormat(text: string, filename?: string): FormatId {
-  return detect(text, filename);
+export async function detectFormat(text: string, filename?: string): Promise<FormatId> {
+  return (await compute()).detectFormat(text, filename);
 }
 
 /**
@@ -292,7 +258,15 @@ export function detectFormat(text: string, filename?: string): FormatId {
  * binds that id space elsewhere. The longest matching namespace wins; when several names share
  * one namespace, names from `prefixes` win over well-known ones. Returns `iri` unchanged when
  * nothing matches. For display only: node ids keep full IRIs.
+ *
+ * Asynchronous since 0.11: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded
+ * and compiled on the first call), so the result is the kgdiff CLI's.
+ *
+ * @deprecated Use `compactIri` of `@kgdiff/compute`, or `compactIriSync` after its `init()`.
  */
-export function compactIri(iri: string, prefixes?: Readonly<Record<string, string>>): string {
-  return tableFor(prefixes).compact(iri);
+export async function compactIri(
+  iri: string,
+  prefixes?: Readonly<Record<string, string>>,
+): Promise<string> {
+  return (await compute()).compactIri(iri, prefixes);
 }

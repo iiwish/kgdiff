@@ -28,6 +28,7 @@ export const READ_PATH: readonly ReadPathPackage[] = [
     entry: ['index.ts'],
     keep: [
       'canonical.ts',
+      'computed.ts',
       'consistency.ts',
       'delta.ts',
       'diff-index.ts',
@@ -59,6 +60,7 @@ export const READ_PATH: readonly ReadPathPackage[] = [
       'order.ts',
       'pipeline.ts',
       'similarity.ts',
+      'sync.ts',
     ],
   },
   {
@@ -85,6 +87,7 @@ export const READ_PATH: readonly ReadPathPackage[] = [
       'result.ts',
       'scope.ts',
       'simulate.ts',
+      'sync.ts',
       'union.ts',
     ],
   },

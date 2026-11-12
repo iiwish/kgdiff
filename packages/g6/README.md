@@ -26,8 +26,8 @@ import { buildScene } from '@kgdiff/scene';
 import { createDiffGraph } from '@kgdiff/g6';
 
 // before / after: GraphInput ({ nodes, edges }) — or parse files with @kgdiff/formats.
-const result = diff(before, after);
-const scene = buildScene(result, layoutDiff(result), { theme: 'dark', locale: 'en' });
+const result = await diff(before, after);
+const scene = buildScene(result, await layoutDiff(result), { theme: 'dark', locale: 'en' });
 
 const diffGraph = await createDiffGraph(document.getElementById('graph') as HTMLElement, scene);
 

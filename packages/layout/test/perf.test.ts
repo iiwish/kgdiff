@@ -4,7 +4,8 @@
  * perf.bench.ts (`pnpm bench`); the timeout here only guards against hangs.
  */
 import { describe, expect, it } from 'vitest';
-import { layoutDiff, layoutToJSON } from '../src/index.js';
+import { layoutToJSON } from '../src/index.js';
+import { layoutDiff } from '../src/sync.js';
 import { makeDiff } from './support/diff-builder.js';
 import { scaleFree, tree } from './support/fixtures.js';
 import { quality } from './support/metrics.js';

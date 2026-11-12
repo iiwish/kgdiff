@@ -3,16 +3,10 @@
  * moves it. Hosts store review progress under these ids, so the rule is a contract; the cases
  * are those of `crates/kgdiff-core/tests/hunk_ids.rs`.
  */
-import {
-  type DiffOptions,
-  type DiffResult,
-  diff,
-  type EdgeInput,
-  type GraphInput,
-  type NodeInput,
-} from '@kgdiff/core';
+import type { DiffOptions, DiffResult, EdgeInput, GraphInput, NodeInput } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 import { shuffleGraph, versionPairArb } from './support/arbitraries.js';
 
 /** Override with KGDIFF_PROPERTY_RUNS for a deeper soak run. */

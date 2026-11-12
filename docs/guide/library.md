@@ -14,8 +14,13 @@ The CLI and the viewer are built from packages you can use directly:
 | `@kgdiff/compute`  | The Rust engine compiled to WebAssembly: [the same bytes as the CLI](#the-rust-engine-in-the-browser). |
 | `@kgdiff/cli`      | The command-line tool, `kgdiff`: runs its native binary, exports no JavaScript API.                    |
 
-All of them are ESM only and run in Node.js 22 or later and in evergreen browsers. Core and
-formats are synchronous and do no I/O: you pass text and objects in and get objects out.
+All of them are ESM only and run in Node.js 22 or later and in evergreen browsers, and do no I/O:
+you pass text and objects in and get objects out. Since 0.11, computing (`diff`, `matchNodes`,
+`textSimilarity`, `parseGraph`, `detectFormat`, `layoutDiff`, `extendLayout`) runs on
+`@kgdiff/compute` and is asynchronous; reading and applying (`normalize`, `hashGraph`,
+`diffFromJSON`, `applyDelta`, `formatHunk`, `layoutFromJSON`, …) stays synchronous. Upgrading
+from 0.10: [Migrating to 0.11](./migrating-to-0.11.md). `@kgdiff/formats` is deprecated: its
+parsers are `parseGraph` and `detectFormat` of `@kgdiff/compute`.
 
 This page is about the TypeScript packages. The engine itself is written in Rust, and an
 application in Rust uses its crates directly:
@@ -25,19 +30,19 @@ layout, and on to the browser.
 ## Diff two graphs
 
 ```sh
-npm install @kgdiff/core @kgdiff/formats
+npm install @kgdiff/core @kgdiff/compute
 ```
 
 ```ts
 import { readFile } from 'node:fs/promises';
 import { diff, formatHunk } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { parseGraph } from '@kgdiff/compute';
 
 const read = async (file: string) => parseGraph(await readFile(file, 'utf8'), { filename: file });
 const before = await read('before.obo');
 const after = await read('after.obo');
 
-const result = diff(before.graph, after.graph, { match: { strategy: 'id' } });
+const result = await diff(before.graph, after.graph, { match: { strategy: 'id' } });
 
 console.log(result.stats.nodes); // { added: 5, removed: 0, modified: 23, unchanged: 156 }
 for (const hunk of result.hunks) {
@@ -59,7 +64,7 @@ for (const hunk of result.hunks) {
 ## Options
 
 ```ts
-diff(before.graph, after.graph, {
+await diff(before.graph, after.graph, {
   match: { strategy: 'auto', threshold: 0.82 }, // 'id' | 'auto' | 'similarity'
   hierarchyPredicates: ['is_a'], // replaces DEFAULT_HIERARCHY_PREDICATES
   ignoreAttrs: ['creation_date'],
@@ -171,9 +176,9 @@ as `@kgdiff/compute/compute.wasm`, `/formats.wasm` and `/layout.wasm`.
 **Content Security Policy.** Compiling WebAssembly needs `'wasm-unsafe-eval'` in `script-src`,
 for example `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`.
 
-In kgdiff 0.11, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
-`@kgdiff/layout` become asynchronous and run on this package
-([RFC 0002, §6](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
+Since 0.11, `diff` of `@kgdiff/core`, `parseGraph` of `@kgdiff/formats` and `layoutDiff` of
+`@kgdiff/layout` are asynchronous and run on this package: `await diff(…)` loads `compute.wasm`
+on first use. [Migrating to 0.11](./migrating-to-0.11.md) lists every changed function.
 
 ## Errors
 

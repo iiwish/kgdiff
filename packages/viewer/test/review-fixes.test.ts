@@ -37,13 +37,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function payload(view?: unknown, graphs = zoo()): ReportPayload {
-  const d = diff(graphs.before, graphs.after);
+async function payload(view?: unknown, graphs = zoo()): Promise<ReportPayload> {
+  const d = await diff(graphs.before, graphs.after);
   return {
     format: 'kgdiff.report',
     version: 1,
     diff: diffToJSON(d),
-    layout: layoutToJSON(layoutDiff(d)),
+    layout: layoutToJSON(await layoutDiff(d)),
     meta: { generator: 'test', before: { name: 'a' }, after: { name: 'b' } },
     ...(view !== undefined ? { view: view as ReportPayload['view'] } : {}),
   };
@@ -85,7 +85,7 @@ describe('1 · invalid preferences never break the viewer', () => {
   it('drops invalid report view fields and keeps rendering later payloads', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const el = mount({ locale: 'en' });
-    await ready(el, payload({ theme: 'neon', locale: 'fr', mode: 'bogus', palette: 42 }));
+    await ready(el, await payload({ theme: 'neon', locale: 'fr', mode: 'bogus', palette: 42 }));
     expect(warn).toHaveBeenCalledOnce();
     expect(el.controller.status).toBe('ready');
     expect([el.theme, el.palette, el.locale, el.mode]).toEqual([
@@ -96,19 +96,19 @@ describe('1 · invalid preferences never break the viewer', () => {
     ]);
     expect(el.getAttribute('mode')).toBe('overlay');
     expect($(el, '.list').querySelectorAll('.row').length).toBeGreaterThan(0);
-    await ready(el, payload({ theme: 'light', mode: 'swipe' }));
+    await ready(el, await payload({ theme: 'light', mode: 'swipe' }));
     expect([el.theme, el.mode]).toEqual(['light', 'swipe']);
   });
 
   it('treats the removed report mode changes as unknown: ignored, with a warning', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const el = mount({ locale: 'en' });
-    await ready(el, payload({ mode: 'changes' }));
+    await ready(el, await payload({ mode: 'changes' }));
     expect(warn).toHaveBeenCalledOnce();
     expect(String(warn.mock.calls[0]?.[0])).toContain('mode');
     expect([el.mode, el.scope]).toEqual(['overlay', 'all']);
     // An explicit scope in the same view is kept.
-    await ready(el, payload({ mode: 'changes', scope: 'changes' }));
+    await ready(el, await payload({ mode: 'changes', scope: 'changes' }));
     expect([el.mode, el.scope]).toEqual(['overlay', 'changes']);
   });
 
@@ -161,7 +161,7 @@ describe('2 · an initial selection is framed instead of the whole graph', () =>
     const el = mount();
     el.controller.setChrome(chrome);
     el.addEventListener('kgdiff-ready', () => el.selectHunk('add:G'));
-    await ready(el, payload());
+    await ready(el, await payload());
     const cam = backend.last().camera;
     expect(cam.fits).toBe(0);
     expect(el.controller.scene?.hunks[el.controller.selectedHunk]?.id).toBe('add:G');
@@ -171,7 +171,7 @@ describe('2 · an initial selection is framed instead of the whole graph', () =>
 describe('3 · focus survives detail and menu re-renders', () => {
   it('keeps focus on next / reviewed / show-more after they re-render the panel', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     el.selectHunk('remove:E');
     await tick();
     for (const key of ['next', 'review', 'next']) {
@@ -185,7 +185,7 @@ describe('3 · focus survives detail and menu re-renders', () => {
 
   it('keeps focus on the chosen menu item', async () => {
     const el = mount({ theme: 'dark' });
-    await ready(el, payload());
+    await ready(el, await payload());
     ($(el, '.hud [aria-haspopup="menu"]') as HTMLButtonElement).click();
     const light = $(el, '.menu [data-focus-key="light"]') as HTMLButtonElement;
     light.focus();
@@ -199,7 +199,7 @@ describe('3 · focus survives detail and menu re-renders', () => {
 describe('5 · listbox semantics', () => {
   it('options carry set size, position and their group, and contain no buttons', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     const rows = [...$(el, '.list').querySelectorAll<HTMLElement>('[role="option"]')];
     expect(rows.length).toBe(el.reviewState().total);
     rows.forEach((row, i) => {
@@ -218,7 +218,7 @@ describe('6 · hidden context is keyboard-expandable', () => {
     expect(keyAction({ key: 'e' }, 'replay', 'changes')).toEqual({ type: 'expand' });
     expect(keyAction({ key: 'e' }, 'overlay')).toBeNull();
     const el = mount();
-    await ready(el, payload(undefined, hub(6)));
+    await ready(el, await payload(undefined, hub(6)));
     el.scope = 'changes';
     el.controller.setHops(0);
     await tick();
@@ -234,7 +234,7 @@ describe('6 · hidden context is keyboard-expandable', () => {
 describe('7 · moving the element keeps the camera', () => {
   it('restores the camera on re-attach', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     backend.last().camera.state = { x: 12, y: -34, k: 1.7 };
     el.remove();
     document.body.appendChild(el);
@@ -245,7 +245,7 @@ describe('7 · moving the element keeps the camera', () => {
 describe('8 · bottom sheet handle', () => {
   it('is a 28 px separator with values', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     const handle = $(el, '.sheet-handle');
     expect(handle.getAttribute('role')).toBe('separator');
     press(handle, 'ArrowUp');
@@ -266,7 +266,7 @@ describe('9 · filter chips', () => {
         edges: [{ source: 'a', target: 'b', predicate: 'p' }],
       },
     };
-    await ready(el, payload(undefined, edgeOnly));
+    await ready(el, await payload(undefined, edgeOnly));
     const filters = $(el, '.filters');
     expect(filters.hidden).toBe(false);
     const counts = familyCounts(el.controller.scene as never);
@@ -283,7 +283,7 @@ describe('9 · filter chips', () => {
 describe('10 · announcements', () => {
   it('announces replay steps and review progress once', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     el.mode = 'replay';
     press(el, 'ArrowRight');
     await tick(60);
@@ -305,7 +305,7 @@ describe('11 · misc', () => {
 
   it('exportDelta returns a frozen copy', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     const a = el.exportDelta();
     expect(Object.isFrozen(a)).toBe(true);
     expect(Object.isFrozen(a.ops)).toBe(true);
@@ -315,7 +315,7 @@ describe('11 · misc', () => {
 
   it('syncs review progress from other tabs', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     const d = el.controller.diff;
     const key = reviewKey(d?.delta.base.hash ?? '', d?.delta.target.hash ?? '');
     localStorage.setItem(key, JSON.stringify({ v: 1, reviewed: ['add:G'] }));
@@ -328,7 +328,7 @@ describe('11 · misc', () => {
 
   it('Home / End on the swipe divider move it to the edges, not the selection', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     el.mode = 'swipe';
     const divider = $(el, '.swipe .divider');
     press(divider, 'End');
@@ -342,7 +342,7 @@ describe('11 · misc', () => {
 describe('12 · contrast tokens', () => {
   it('exposes the control border and uses it for review circles; focus uses solid accent', async () => {
     const el = mount();
-    await ready(el, payload());
+    await ready(el, await payload());
     const styles = css(el);
     expect(styles).toContain('--kgdiff-control-border:');
     expect(styles).toMatch(/\.rv \.ring \{[^}]*var\(--kgdiff-control-border\)/);

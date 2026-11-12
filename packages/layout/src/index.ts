@@ -5,12 +5,24 @@
  * nothing jumps when switching between before / after / overlay / replay.
  * See docs/algorithms.md §Layout for the algorithm and quality bars.
  *
- * Signatures are the package contract; bodies live in the modules imported below.
+ * Signatures are the package contract. Since 0.11 the layouts (`layoutDiff`, `extendLayout`,
+ * `layoutGraph`, `layoutDiffOn`, `layoutAfter`) are computed by kgdiff's Rust layout engine
+ * compiled to WebAssembly (`@kgdiff/compute`, loaded with a dynamic `import()` on first use) and
+ * are asynchronous; the layout document, `nodeRadius` and `estimateLabelWidth` stay synchronous
+ * here. The TypeScript engine of this package is no longer called by this entry and is deleted
+ * next (`tests/read-path.ts`).
  */
-import type { DiffResult, Point, Rect, UnionId } from '@kgdiff/core';
-import { extend } from './extend.js';
+import {
+  type DiffResult,
+  type GraphInput,
+  isKGraph,
+  type KGraph,
+  normalize,
+  type Point,
+  type Rect,
+  type UnionId,
+} from '@kgdiff/core';
 import { fromJSON, toJSON } from './json.js';
-import { computeLayout } from './layout.js';
 import { labelWidth } from './text-metrics.js';
 
 export type LayoutStrategy = 'union' | 'anchored';
@@ -84,8 +96,8 @@ export interface LayoutResult {
   };
   /**
    * The layout engine generation that computed the positions, as a version 2 document names it
-   * (`layoutFromJSON`), e.g. `"kgdiff-layout/1"`. Absent for layouts read from version 1 and for
-   * the ones this package computes (`layoutDiff`, and `extendLayout` once it places a node).
+   * (`layoutFromJSON`), e.g. `"kgdiff-layout/1"`. Every layout computed since 0.11 has one (they
+   * come from kgdiff's Rust engine); absent for layouts read from version 1.
    */
   readonly generator?: string;
 }
@@ -157,13 +169,18 @@ export interface LayoutJSONV2 extends Omit<LayoutJSONV1, 'version'> {
  * budget (`iterations` overrides both; `stats.iterations` reports the largest simulation's).
  *
  * Complexity: O(I · N log N) for I iterations (Barnes–Hut charge, quadtree collision).
- * Budget: 2k nodes < 800 ms (measured ~0.6–0.7 s on an M-class laptop; 5k ≈ 1 s, 10k ≈ 1.6 s).
+ * Measured on kgdiff's Rust engine in WebAssembly: 2k nodes in about 0.5 s (RFC 0002 §7).
+ *
+ * Asynchronous since 0.11: kgdiff's layout engine computes it (`@kgdiff/compute`'s `layout`
+ * module, loaded and compiled on the first call), so the positions are the kgdiff CLI's. After
+ * `await init()` of `@kgdiff/compute`, its `layoutDiffSync` gives the same layout synchronously.
  *
  * @throws KgdiffError `invalid-input` for invalid options (negative distances, non-integer
  *   iterations, non-finite pins…).
  */
-export function layoutDiff(diff: DiffResult, options?: LayoutOptions): LayoutResult {
-  return computeLayout(diff, options, nodeRadius);
+export async function layoutDiff(diff: DiffResult, options?: LayoutOptions): Promise<LayoutResult> {
+  const engine = await compute();
+  return engine.layoutDiff(diff, options);
 }
 
 /**
@@ -174,15 +191,110 @@ export function layoutDiff(diff: DiffResult, options?: LayoutOptions): LayoutRes
  * path to a placed node are laid out on their own and packed beside the existing bounds. `hidden`
  * is recounted for scope `changes`; `stats.strategy` / `stats.iterations` are kept from `layout`.
  *
+ * Asynchronous since 0.11, like `layoutDiff` (`extendLayoutSync` of `@kgdiff/compute` after its
+ * `init()`, or of `@kgdiff/compute/layout`, which loads only the layout module).
+ *
  * @throws KgdiffError `invalid-input` when an id is not a node of `diff`.
  */
-export function extendLayout(
+export async function extendLayout(
   diff: DiffResult,
   layout: LayoutResult,
   nodes: readonly UnionId[],
   options?: LayoutOptions,
-): LayoutResult {
-  return extend(diff, layout, nodes, options, nodeRadius);
+): Promise<LayoutResult> {
+  const engine = await compute();
+  return engine.extendLayout(diff, layout, nodes, options);
+}
+
+/**
+ * The layout of one graph: the positions `layoutDiff` gives its diff with itself, with every node
+ * in scope (`layout_graph` of the `kgdiff-layout` crate). A `GraphInput` is normalized first with
+ * the default options. Positions on its nodes are kept, as `layoutDiff` keeps them.
+ *
+ * Asynchronous, like `layoutDiff`. Added in 0.11.
+ *
+ * @throws KgdiffError `invalid-input` for scope `changes`, or for invalid options.
+ */
+export async function layoutGraph(
+  graph: KGraph | GraphInput,
+  options?: LayoutOptions,
+): Promise<LayoutResult> {
+  const engine = await compute();
+  return engine.layoutGraph(isKGraph(graph) ? graph : normalize(graph), options);
+}
+
+/**
+ * The layout of a diff on the map of its before version (`previous`, a layout of the before
+ * graph keyed by its node ids, e.g. from `layoutGraph`): every node `previous` places stays exactly
+ * where it is, through renames and changed ids, and only the others are placed
+ * (`layout_diff_on` of the `kgdiff-layout` crate). `options.pinned` wins over `previous`, which
+ * wins over `position` on a node. For an application that keeps one map across versions.
+ *
+ * Asynchronous, like `layoutDiff`. Added in 0.11.
+ *
+ * @throws KgdiffError `invalid-input` for scope `changes`, strategy `union` or invalid options.
+ */
+export async function layoutDiffOn(
+  diff: DiffResult,
+  previous: LayoutResult,
+  options?: LayoutOptions,
+): Promise<LayoutResult> {
+  const engine = await compute();
+  return engine.layoutDiffOn(diff, previous, options);
+}
+
+/**
+ * The layout of the after version of a diff, on the map of the diff's layout `layout` and keyed by
+ * the after version's node ids: what to store as the next version's map (`layout_after` of the
+ * `kgdiff-layout` crate). Nothing is simulated; `options.pinned` is not read.
+ *
+ * Asynchronous, like `layoutDiff`. Added in 0.11.
+ *
+ * @throws KgdiffError `invalid-input` when `layout` does not place a node of the after version,
+ *   for scope `changes`, strategy `union` or invalid options.
+ */
+export async function layoutAfter(
+  diff: DiffResult,
+  layout: LayoutResult,
+  options?: LayoutOptions,
+): Promise<LayoutResult> {
+  const engine = await compute();
+  return engine.layoutAfter(diff, layout, options);
+}
+
+/** What this package calls in `@kgdiff/compute` (checked against it by compute's tests). */
+interface LayoutEngine {
+  layoutDiff(diff: DiffResult, options?: LayoutOptions): Promise<LayoutResult>;
+  extendLayout(
+    diff: DiffResult,
+    layout: LayoutResult,
+    nodes: readonly UnionId[],
+    options?: LayoutOptions,
+  ): Promise<LayoutResult>;
+  layoutGraph(graph: KGraph, options?: LayoutOptions): Promise<LayoutResult>;
+  layoutDiffOn(
+    diff: DiffResult,
+    previous: LayoutResult,
+    options?: LayoutOptions,
+  ): Promise<LayoutResult>;
+  layoutAfter(
+    diff: DiffResult,
+    layout: LayoutResult,
+    options?: LayoutOptions,
+  ): Promise<LayoutResult>;
+}
+
+let engine: Promise<LayoutEngine> | undefined;
+
+/** `@kgdiff/compute`, imported on first use. */
+function compute(): Promise<LayoutEngine> {
+  engine ??= (import('@kgdiff/compute') as Promise<unknown> as Promise<LayoutEngine>).catch(
+    (error: unknown) => {
+      engine = undefined;
+      throw error;
+    },
+  );
+  return engine;
 }
 
 /** Node radius in world units from degree: `clamp(4 + 2.2·√degree, 4, 14)`. Shared by every renderer. */
@@ -203,9 +315,9 @@ export function estimateLabelWidth(text: string, fontSize: number): number {
 
 /**
  * Deterministic JSON form: keys sorted by id, coordinates and radii rounded to 0.01, no timing.
- * Version 1 for the layouts this package computes; version 2 with the `generator` for a layout
- * that has one (read from version 2, and not extended since), as kgdiff's Rust layout engine
- * writes it. `layoutToJSON(layoutFromJSON(json))` reproduces `json` of either version.
+ * Version 2 with the `generator` for a layout that has one (every layout computed since 0.11), as
+ * kgdiff's Rust layout engine writes it; version 1 for one without (read from version 1).
+ * `layoutToJSON(layoutFromJSON(json))` reproduces `json` of either version.
  */
 export function layoutToJSON(layout: LayoutResult): LayoutJSON {
   return toJSON(layout);

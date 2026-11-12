@@ -49,6 +49,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@kgdiff/compute": "workspace:*",
     "@kgdiff/core": "workspace:*",
     "n3": "2.13.12"
   },

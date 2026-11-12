@@ -7,29 +7,29 @@ import { assertPayload, decodePayloadText } from '../src/payload.js';
 import { setRenderBackend } from '../src/renderer-port.js';
 import { mockBackend, until, zoo } from './support.js';
 
-function payload(): ReportPayload {
+async function payload(): Promise<ReportPayload> {
   const { before, after } = zoo();
-  const d = diff(before, after);
+  const d = await diff(before, after);
   return {
     format: 'kgdiff.report',
     version: 1,
     diff: diffToJSON(d),
-    layout: layoutToJSON(layoutDiff(d)),
+    layout: layoutToJSON(await layoutDiff(d)),
     meta: { generator: 'test', before: { name: 'zoo v1' }, after: { name: 'zoo v2' } },
     view: { mode: 'replay', locale: 'zh-CN' },
   };
 }
 
 /** The zoo with every node of the after version a `Bird`. */
-function typed(): ReportPayload {
+async function typed(): Promise<ReportPayload> {
   const { before, after } = zoo();
   const birds = { ...after, nodes: after.nodes.map((n) => ({ ...n, types: ['Bird'] })) };
-  const d = diff(before, birds);
+  const d = await diff(before, birds);
   return {
     format: 'kgdiff.report',
     version: 1,
     diff: diffToJSON(d),
-    layout: layoutToJSON(layoutDiff(d)),
+    layout: layoutToJSON(await layoutDiff(d)),
     meta: { generator: 'test', before: { name: 'v1' }, after: { name: 'v2' } },
   };
 }
@@ -73,7 +73,7 @@ afterEach(() => {
 
 describe('payload decoding', () => {
   it('decodes plain JSON and gzip-base64', async () => {
-    const p = payload();
+    const p = await payload();
     const json = JSON.stringify(p);
     expect(await decodePayloadText(json, null)).toEqual(p);
     expect(await decodePayloadText(await gzipBase64(json), 'gzip-base64')).toEqual(p);
@@ -93,7 +93,7 @@ describe('payload decoding', () => {
   });
 
   it('opens a report with members of `view` it does not know, which later versions add', async () => {
-    const p = payload();
+    const p = await payload();
     const newer = {
       ...p,
       view: { ...p.view, plain: true, categories: { A: 1 }, futureMember: {} },
@@ -103,7 +103,7 @@ describe('payload decoding', () => {
   });
 
   it('takes the layout as optional, and an object when present', async () => {
-    const { layout: _, ...rest } = payload();
+    const { layout: _, ...rest } = await payload();
     expect(assertPayload(rest)).toBe(rest);
     expect(await decodePayloadText(JSON.stringify(rest), null)).toEqual(rest);
     for (const layout of [null, 'none', 1, false]) {
@@ -118,7 +118,7 @@ describe('payload decoding', () => {
 
 describe('hydrateEmbeddedPayloads', () => {
   it('assigns a gzip-base64 payload to the targeted viewer, which then honours `view`', async () => {
-    const p = payload();
+    const p = await payload();
     const a = document.createElement('kgdiff-viewer');
     const b = document.createElement('kgdiff-viewer');
     b.id = 'second';
@@ -144,7 +144,7 @@ describe('hydrateEmbeddedPayloads', () => {
   });
 
   it('lays out a payload without a layout, importing the compute module (ESM build)', async () => {
-    const p = payload();
+    const p = await payload();
     const { layout, ...rest } = p;
     const v = document.createElement('kgdiff-viewer');
     let ready = false;
@@ -169,7 +169,7 @@ describe('hydrateEmbeddedPayloads', () => {
     const shown = async (view: ReportPayload['view']): Promise<KgdiffViewer> => {
       const viewer = document.createElement('kgdiff-viewer') as KgdiffViewer;
       document.body.append(viewer);
-      viewer.payload = { ...typed(), view };
+      viewer.payload = { ...(await typed()), view };
       await until(() => viewer.controller.status === 'ready');
       return viewer;
     };
@@ -197,7 +197,7 @@ describe('hydrateEmbeddedPayloads', () => {
   it('defaults to the first viewer and works before the element is connected', async () => {
     const holder = document.createElement('div');
     const v = document.createElement('kgdiff-viewer');
-    holder.append(v, script(JSON.stringify(payload())));
+    holder.append(v, script(JSON.stringify(await payload())));
     await hydrateEmbeddedPayloads(holder);
     expect(v.payload?.format).toBe('kgdiff.report');
   });

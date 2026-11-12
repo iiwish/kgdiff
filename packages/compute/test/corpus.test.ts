@@ -14,10 +14,11 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { type DiffOptions, type DiffResult, diffFromJSON, normalize } from '@kgdiff/core';
-import { type FormatId, parseGraph as parseGraphTS } from '@kgdiff/formats';
+import type { FormatId } from '@kgdiff/formats';
 import { type LayoutOptions, type LayoutResult, layoutToJSON } from '@kgdiff/layout';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { decodeInput } from '../../../conformance/inputs.js';
+import { parseGraph as parseGraphTS } from '../../formats/src/sync.js';
 import {
   estimateLabelWidthSync,
   extendLayoutSync,

@@ -77,12 +77,12 @@ importers:
 
   apps/site:
     dependencies:
+      '@kgdiff/compute':
+        specifier: workspace:*
+        version: link:../../packages/compute
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@kgdiff/formats':
-        specifier: workspace:*
-        version: link:../../packages/formats
       '@kgdiff/layout':
         specifier: workspace:*
         version: link:../../packages/layout
@@ -117,10 +117,17 @@ importers:
         specifier: 0.28.2
         version: 0.28.2
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      '@kgdiff/compute':
+        specifier: workspace:*
+        version: link:../compute
 
   packages/formats:
     dependencies:
+      '@kgdiff/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../core
@@ -147,6 +154,9 @@ importers:
 
   packages/layout:
     dependencies:
+      '@kgdiff/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../core
@@ -184,6 +194,9 @@ importers:
 
   packages/viewer:
     dependencies:
+      '@kgdiff/compute':
+        specifier: workspace:*
+        version: link:../compute
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../core

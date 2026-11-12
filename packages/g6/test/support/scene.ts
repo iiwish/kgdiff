@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * The real pipeline for tests: example dataset → formats `parseGraph` → core `diff` →
  * layout `layoutDiff` → scene `buildScene`. Diff and layout are memoized per dataset.
@@ -19,17 +20,31 @@ interface Meta {
 
 const cache = new Map<string, { diff: DiffResult; layout: LayoutResult }>();
 
-function load(id: string): { diff: DiffResult; layout: LayoutResult } {
-  const hit = cache.get(id);
-  if (hit !== undefined) return hit;
+async function compute(id: string): Promise<{ diff: DiffResult; layout: LayoutResult }> {
   const read = (name: string): string => readFileSync(`${ROOT}${id}/${name}`, 'utf8');
   const meta = JSON.parse(read('meta.json')) as Meta;
-  const before = parseGraph(read(meta.files.before), { filename: meta.files.before }).graph;
-  const after = parseGraph(read(meta.files.after), { filename: meta.files.after }).graph;
-  const result = diff(before, after, meta.options);
-  const entry = { diff: result, layout: layoutDiff(result) };
-  cache.set(id, entry);
-  return entry;
+  const before = (await parseGraph(read(meta.files.before), { filename: meta.files.before })).graph;
+  const after = (await parseGraph(read(meta.files.after), { filename: meta.files.after })).graph;
+  const result = await diff(before, after, meta.options);
+  return { diff: result, layout: await layoutDiff(result) };
+}
+
+// Diff and layout are asynchronous (kgdiff's engine in WebAssembly): every dataset the tests use
+// is computed once, before they run, so that `datasetScene` stays synchronous.
+const DATASETS = [
+  'enterprise-kg',
+  'enterprise-kg-en',
+  'data-lineage',
+  'llm-extraction',
+  'ontology-release',
+  'schema-vocab',
+];
+for (const id of DATASETS) cache.set(id, await compute(id));
+
+function load(id: string): { diff: DiffResult; layout: LayoutResult } {
+  const hit = cache.get(id);
+  if (hit === undefined) throw new Error(`support/scene.ts: add "${id}" to its datasets`);
+  return hit;
 }
 
 /** Scene of an example dataset (default: the featured enterprise-kg). */

@@ -1,7 +1,7 @@
 import type { Attrs, GraphInput } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { parseGraph } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 import { fixture, parseFixture } from './helpers.js';
 
 const FIXTURES = [

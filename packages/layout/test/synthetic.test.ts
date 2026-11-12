@@ -2,9 +2,11 @@
  * The CLI's large benchmark: a generated 10k-node pair (scripts/gen-synthetic.ts) whose class
  * hubs used to pull every node into the `changes` scope. Its timing is in perf.bench.ts.
  */
-import { diff } from '@kgdiff/core';
+
 import { describe, expect, it } from 'vitest';
-import { layoutDiff, layoutToJSON } from '../src/index.js';
+import { diff } from '../../core/src/sync.js';
+import { layoutToJSON } from '../src/index.js';
+import { layoutDiff } from '../src/sync.js';
 import { quality } from './support/metrics.js';
 import { syntheticPair } from './support/synthetic.js';
 

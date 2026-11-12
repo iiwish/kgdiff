@@ -18,8 +18,8 @@ ESM only. Node.js ≥ 22 or any evergreen browser.
 import { diff } from '@kgdiff/core';
 import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
 
-const result = diff(before, after);
-const layout = layoutDiff(result);
+const result = await diff(before, after);
+const layout = await layoutDiff(result);
 
 layout.positions.get('company'); // { x, y } in world units, keyed by union node id
 layout.scope; // 'all', or 'changes' above 3000 nodes: the changes and their context only

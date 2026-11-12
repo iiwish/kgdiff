@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { detectFormat, FORMAT_EXTENSIONS, type FormatId, parseGraph } from '../src/index.js';
+import { FORMAT_EXTENSIONS, type FormatId } from '../src/index.js';
+import { detectFormat, parseGraph } from '../src/sync.js';
 import { catchError, fixture } from './helpers.js';
 
 describe('detectFormat by file name', () => {

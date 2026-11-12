@@ -4,7 +4,6 @@ import {
   type DeltaOp,
   type DiffOptions,
   type DiffResult,
-  diff,
   diffFromJSON,
   diffToJSON,
   type GraphInput,
@@ -12,10 +11,10 @@ import {
   invertDelta,
   type KGraph,
   normalize,
-  textSimilarity,
 } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { diff, textSimilarity } from '../src/sync.js';
 import { graphArb, shuffleGraph, versionPairArb } from './support/arbitraries.js';
 
 /** Override with KGDIFF_PROPERTY_RUNS for a deeper soak run. */

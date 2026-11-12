@@ -5,7 +5,6 @@
 import {
   type DiffJSON,
   type DiffOptions,
-  diff,
   diffFromJSON,
   diffToJSON,
   type PackedDiffJSON,
@@ -14,6 +13,7 @@ import {
 } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 import { versionPairArb } from './support/arbitraries.js';
 import {
   enterpriseAfter,

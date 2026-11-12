@@ -411,11 +411,14 @@ window.addEventListener('drop', (e) => {
 
 // ── Parse → diff ───────────────────────────────────────────────────────────
 
-type Formats = typeof import('@kgdiff/formats');
-let formatsModule: Promise<Formats> | null = null;
-const loadFormats = (): Promise<Formats> => {
-  formatsModule ??= import('@kgdiff/formats');
-  return formatsModule;
+// kgdiff's engine in WebAssembly: parsing, diffing and laying out all run in it. The module and
+// its `.wasm` files load on first use (the parsers here, the full engine and the layout module
+// in the viewer's compute chunk); Vite publishes the `.wasm` files with the site.
+type Compute = typeof import('@kgdiff/compute');
+let computeModule: Promise<Compute> | null = null;
+const loadCompute = (): Promise<Compute> => {
+  computeModule ??= import('@kgdiff/compute');
+  return computeModule;
 };
 
 interface Current {
@@ -490,7 +493,7 @@ async function run(): Promise<void> {
   hideError();
   downloadBtn.disabled = true;
   current = null;
-  const f = await loadFormats();
+  const f = await loadCompute();
   const graphs: Partial<Record<SideName, { graph: GraphInput; format: string }>> = {};
   for (const side of ['before', 'after'] as const) {
     const s = side === 'before' ? before : after;
@@ -498,7 +501,7 @@ async function run(): Promise<void> {
     await nextFrame();
     if (token !== runToken) return;
     try {
-      const parsed = f.parseGraph(s.text, { filename: s.parseName });
+      const parsed = await f.parseGraph(s.text, { filename: s.parseName });
       graphs[side] = { graph: parsed.graph, format: parsed.format };
       if (parsed.warnings.length > 0) {
         console.info(
@@ -601,8 +604,8 @@ downloadBtn.addEventListener('click', async () => {
   try {
     // Same inputs + options → the same diff and layout the viewer shows (deterministic).
     const compute = await import('@kgdiff/viewer/compute');
-    const result = compute.diff(c.before, c.after, c.options);
-    const layout = compute.layoutDiff(result);
+    const result = await compute.diff(c.before, c.after, c.options);
+    const layout = await compute.layoutDiff(result);
     const payload: ReportPayload = {
       format: 'kgdiff.report',
       version: 1,

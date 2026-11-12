@@ -1,5 +1,6 @@
-import { type DiffOptions, diff, type GraphInput } from '@kgdiff/core';
+import type { DiffOptions, GraphInput } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 const facetsOf = (d: ReturnType<typeof diff>, id: string) => d.index.node(id)?.facets ?? [];
 const kinds = (d: ReturnType<typeof diff>, id: string) => facetsOf(d, id).map((f) => f.kind);

@@ -41,7 +41,7 @@ const v2 = {
   ],
 };
 
-const result = diff(v1, v2);
+const result = await diff(v1, v2);
 for (const hunk of result.hunks) console.log(formatHunk(hunk, result).title);
 // Removed “NGO” and 1 relation
 // Renamed “Organization” → “Organisation”

@@ -1,10 +1,12 @@
 /**
  * End to end with the real diff engine: GraphInput × 2 → diff → layout.
  */
-import { diff, type EdgeInput, type GraphInput, type NodeInput } from '@kgdiff/core';
+import type { EdgeInput, GraphInput, NodeInput } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { extendLayout, layoutDiff, layoutToJSON } from '../src/index.js';
+import { diff } from '../../core/src/sync.js';
+import { layoutToJSON } from '../src/index.js';
 import { mulberry32 } from '../src/prng.js';
+import { extendLayout, layoutDiff } from '../src/sync.js';
 import { englishLabel } from './support/fixtures.js';
 import { quality } from './support/metrics.js';
 

@@ -26,6 +26,12 @@ const BUDGET_KB = 90;
  * the compute module (tens of kB each) slipping into the bundle.
  */
 const GUARD_KB = 130;
+/**
+ * Ceiling of the compute add-on, gzip: kgdiff's layout-only WebAssembly module inlined as base64
+ * with its glue, about 120.5 kB in 0.11 (RFC 0002 §7 measures it and optimizes it after 0.11). A
+ * guard against growing by accident, not a target.
+ */
+const ADDON_GUARD_KB = 127;
 
 afterAll(() => rmSync(outDir, { recursive: true, force: true }));
 
@@ -58,6 +64,15 @@ describe('standalone bundle', () => {
     expect(viewer.text).toContain('customElements.define');
     expect(viewer.gzip / 1024).toBeLessThan(GUARD_KB);
     expect(compute.text).toContain('KgdiffCompute');
+    // No WebAssembly in the viewer, ever (RFC 0002 §7); the add-on carries the layout-only
+    // module once, inlined, and leaves the full engine and the parsers to an import map.
+    expect(viewer.text).not.toMatch(/WebAssembly|application\/wasm|\.wasm\b/);
+    expect(compute.text.match(/data:application\/wasm;base64,/g)).toHaveLength(1);
+    expect(compute.text).toContain('import(`@kgdiff/compute`)');
+    expect(compute.text).not.toMatch(/(compute|formats)\.wasm/);
+    // An IIFE has no `import.meta.url`: the inlined module must not be resolved against it.
+    expect(compute.text).not.toMatch(/import\.meta|\{\}\.url/);
+    expect(compute.gzip / 1024).toBeLessThan(ADDON_GUARD_KB);
   }, 60_000);
 });
 

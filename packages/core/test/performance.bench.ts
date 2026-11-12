@@ -3,16 +3,9 @@
  * the budget, so they catch complexity regressions on any machine; the bench tables show the
  * actual times. Correctness at these sizes is tested in performance.test.ts.
  */
-import {
-  applyDelta,
-  type DiffJSON,
-  diff,
-  diffFromJSON,
-  diffToJSON,
-  matchNodes,
-  normalize,
-} from '@kgdiff/core';
+import { applyDelta, type DiffJSON, diffFromJSON, diffToJSON, normalize } from '@kgdiff/core';
 import { expect, test } from 'vitest';
+import { diff, matchNodes } from '../src/sync.js';
 import { editGraph, extractionPair, syntheticGraph } from './support/synthetic.js';
 
 /** Every sample is a whole diff: a few samples after one warm-up run. */

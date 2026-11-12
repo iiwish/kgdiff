@@ -127,11 +127,12 @@
     "manifest": "tsx scripts/manifest.ts"
   },
   "dependencies": {
+    "@kgdiff/compute": "workspace:*",
     "@kgdiff/core": "workspace:*",
     "@kgdiff/formats": "workspace:*",
     "@kgdiff/layout": "workspace:*",
-    "@kgdiff/scene": "workspace:*",
-    "@kgdiff/renderer": "workspace:*"
+    "@kgdiff/renderer": "workspace:*",
+    "@kgdiff/scene": "workspace:*"
   },
   "peerDependencies": {
     "@types/react": ">=19"

@@ -12,8 +12,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@kgdiff/compute": "workspace:*",
     "@kgdiff/core": "workspace:*",
-    "@kgdiff/formats": "workspace:*",
     "@kgdiff/layout": "workspace:*",
     "@kgdiff/scene": "workspace:*",
     "@kgdiff/viewer": "workspace:*"

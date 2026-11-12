@@ -1,6 +1,7 @@
 import * as core from '@kgdiff/core';
-import { DEFAULT_HIERARCHY_PREDICATES, diff, type GraphInput, KgdiffError } from '@kgdiff/core';
+import { DEFAULT_HIERARCHY_PREDICATES, type GraphInput, KgdiffError } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 import { enterpriseAfter, enterpriseBefore } from './support/fixtures.js';
 
 function deepFreeze<T>(value: T): T {

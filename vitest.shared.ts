@@ -18,6 +18,9 @@ export const alias = [
     find: /^@kgdiff\/viewer\/react$/,
     replacement: `${root}packages/viewer/src/react.ts`,
   },
+  // What @kgdiff/compute reads back its diffs with, and its layout-only entry.
+  { find: /^@kgdiff\/core\/computed$/, replacement: `${root}packages/core/src/computed.ts` },
+  { find: /^@kgdiff\/compute\/layout$/, replacement: `${root}packages/compute/src/layout.ts` },
   {
     find: /^@kgdiff\/([\w-]+)$/,
     replacement: `${root}packages/$1/src/index.ts`,

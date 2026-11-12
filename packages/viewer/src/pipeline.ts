@@ -2,7 +2,8 @@
  * Load pipeline: sources → (parse) → diff → layout, or a precomputed report → diff + layout
  * (laid out here when the report has none).
  * Each step is announced through `onStep`, which the controller awaits so the loading state
- * can paint between the (synchronous, CPU-bound) steps.
+ * can paint between the (CPU-bound) steps. Parsing, diffing and laying out run kgdiff's engine in
+ * WebAssembly (`@kgdiff/compute`, through `compute.ts` and `@kgdiff/formats`).
  */
 import {
   type DiffResult,
@@ -76,7 +77,7 @@ async function resolveSource(source: GraphSource, side: 'before' | 'after'): Pro
   }
   if (isTextSource(source)) {
     const { parseGraph } = await loadFormats();
-    const parsed = parseGraph(source.text, {
+    const parsed = await parseGraph(source.text, {
       ...source.parse,
       ...(source.filename !== undefined ? { filename: source.filename } : {}),
     });
@@ -136,9 +137,9 @@ export async function runLoad(
   const a = await resolveSource(after, 'after');
   const compute = await computing;
   await onStep('match');
-  const diff = compute.diff(b.graph, a.graph, options.diff);
+  const diff = await compute.diff(b.graph, a.graph, options.diff);
   await onStep('layout');
-  const layout = compute.layoutDiff(diff, options.layout);
+  const layout = await compute.layoutDiff(diff, options.layout);
   const vb = str(diff.before.meta.version);
   const va = str(diff.after.meta.version);
   return {
@@ -179,7 +180,7 @@ export async function readPayload(
     payload.diff.format === 'kgdiff.diff.packed' ? unpackDiffJSON(payload.diff) : payload.diff;
   const diff = diffFromJSON(json);
   await onStep('layout');
-  const layout = engine ? (await engine).layoutDiff(diff) : layoutFromJSON(payload.layout!);
+  const layout = engine ? await (await engine).layoutDiff(diff) : layoutFromJSON(payload.layout!);
   const vb = str(diff.before.meta.version);
   const va = str(diff.after.meta.version);
   const meta = payload.meta;

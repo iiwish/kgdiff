@@ -27,7 +27,6 @@ import {
   applyDelta,
   type DiffOptions,
   type DiffResult,
-  diff,
   diffFromJSON,
   diffToJSON,
   formatHunk,
@@ -39,6 +38,7 @@ import {
   packDiffJSON,
 } from '@kgdiff/core';
 import fc from 'fast-check';
+import { diff } from '../packages/core/src/sync.js';
 import { versionPairArb } from '../packages/core/test/support/arbitraries.ts';
 
 const ROOT = resolve(import.meta.dirname, '..');

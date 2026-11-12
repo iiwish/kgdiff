@@ -1,5 +1,6 @@
-import { diff, type GraphInput, type NodeInput } from '@kgdiff/core';
+import type { GraphInput, NodeInput } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 const single = (node: NodeInput): GraphInput => ({ nodes: [node], edges: [] });
 const facets = (b: NodeInput, a: NodeInput, options = {}) => {

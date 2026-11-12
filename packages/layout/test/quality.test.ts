@@ -3,7 +3,8 @@
  * the test output; thresholds are deliberately a little looser than today's values.
  */
 import { describe, expect, it } from 'vitest';
-import { type LayoutOptions, layoutDiff } from '../src/index.js';
+import type { LayoutOptions } from '../src/index.js';
+import { layoutDiff } from '../src/sync.js';
 import { type GraphSpec, makeDiff } from './support/diff-builder.js';
 import { changes, cjk, components, scaleFree, star, tree } from './support/fixtures.js';
 import { type QualityReport, quality } from './support/metrics.js';

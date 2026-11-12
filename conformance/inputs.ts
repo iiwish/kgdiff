@@ -6,7 +6,8 @@
  * here: the corpus records the CLI's errors through its CLI runs.
  */
 import { gunzipSync } from 'node:zlib';
-import { type FormatId, type ParseResult, parseGraph } from '@kgdiff/formats';
+import type { FormatId, ParseResult } from '@kgdiff/formats';
+import { parseGraph } from '../packages/formats/src/sync.js';
 
 /** The text of an input file. */
 export function decodeInput(bytes: Uint8Array): string {

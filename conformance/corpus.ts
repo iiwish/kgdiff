@@ -31,7 +31,6 @@ import { gunzipSync } from 'node:zlib';
 import {
   type DiffOptions,
   type DiffResult,
-  diff,
   diffToJSON,
   formatHunk,
   graphToJSON,
@@ -43,7 +42,9 @@ import {
   resolveOptions,
 } from '@kgdiff/core';
 import type { ParseResult } from '@kgdiff/formats';
-import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
+import { layoutToJSON } from '@kgdiff/layout';
+import { diff } from '../packages/core/src/sync.js';
+import { layoutDiff } from '../packages/layout/src/sync.js';
 import { CASES, type CaseDefinition } from './cases.js';
 import { type InputOptions, parseInput } from './inputs.js';
 import { generatePrimitives } from './primitives.js';

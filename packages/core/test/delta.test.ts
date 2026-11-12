@@ -2,7 +2,6 @@ import {
   applyDelta,
   type Delta,
   type DeltaOp,
-  diff,
   type GraphInput,
   hashGraph,
   invertDelta,
@@ -11,6 +10,7 @@ import {
 } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
 import { planRenames } from '../src/delta-emit.js';
+import { diff } from '../src/sync.js';
 
 const before: GraphInput = {
   meta: { name: 'demo', version: 'v1' },

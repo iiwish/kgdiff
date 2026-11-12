@@ -21,19 +21,22 @@
  *   i18n.ts          formatHunk, facetLabel
  *   math.ts          log2 from exactly rounded operations (identical in every engine)
  *   diff.ts          the pipeline
+ *   computed.ts      reading back what @kgdiff/compute computed (`@kgdiff/core/computed`)
+ *
+ * Since 0.11 `diff`, `matchNodes` and `textSimilarity` run kgdiff's engine compiled to
+ * WebAssembly (`@kgdiff/compute`, loaded with a dynamic `import()` on first use, so a bundle that
+ * only reads diffs never contains it) and are asynchronous. The TypeScript engine above (match.ts
+ * to diff.ts) is no longer called by this entry and is deleted next (`tests/read-path.ts`).
  */
 
 import { applyDelta as apply, invertDelta as invert } from './delta.js';
-import { diff as runDiff } from './diff.js';
 import { hashGraph as hash, graphToJSON as toGraphJSON } from './graph-json.js';
 import { formatHunk as format, facetLabel as labelOfFacet } from './i18n.js';
 import { diffFromJSON as fromJSON, diffToJSON as toJSON } from './json.js';
-import { matchNodes as match } from './match.js';
 import { log2 as exactLog2 } from './math.js';
 import { isKGraph as isGraph, normalize as normalizeGraph } from './normalize.js';
 import { resolveOptions as resolve } from './options.js';
 import { packDiffJSON as pack, unpackDiffJSON as unpack } from './packed.js';
-import { textSimilarity as similarity } from './similarity.js';
 import { predicateLabel as labelOfPredicate } from './text.js';
 import type {
   ApplyOptions,
@@ -57,6 +60,30 @@ import type {
 export { KgdiffError } from './errors.js';
 export { DEFAULT_HIERARCHY_PREDICATES } from './options.js';
 export * from './types.js';
+
+/** What this package calls in `@kgdiff/compute` (checked against it by compute's tests). */
+interface CoreEngine {
+  diff(
+    before: GraphInput | KGraph,
+    after: GraphInput | KGraph,
+    options?: DiffOptions,
+  ): Promise<DiffResult>;
+  matchNodes(before: KGraph, after: KGraph, options?: MatchOptions): Promise<MatchResult>;
+  textSimilarity(a: string, b: string): Promise<number>;
+}
+
+let engine: Promise<CoreEngine> | undefined;
+
+/** `@kgdiff/compute`, imported on first use. */
+function compute(): Promise<CoreEngine> {
+  engine ??= (import('@kgdiff/compute') as Promise<unknown> as Promise<CoreEngine>).catch(
+    (error: unknown) => {
+      engine = undefined;
+      throw error;
+    },
+  );
+  return engine;
+}
 
 /**
  * Fill every option with its documented default: `match` = `{ strategy: 'auto',
@@ -94,9 +121,19 @@ export function isKGraph(value: unknown): value is KGraph {
  * Align the nodes of two versions (exact ids, then 1:1 replacement hints, then similarity).
  * Matches are sorted by `after`. Similarity matching uses blocking on both sides, so it never
  * compares all pairs.
+ *
+ * Asynchronous since 0.11: kgdiff's engine runs it (`@kgdiff/compute`, loaded and compiled on
+ * the first call). After `await init()` of `@kgdiff/compute`, its `matchNodesSync` gives the
+ * same result synchronously.
+ *
+ * @throws KgdiffError `invalid-input` for invalid options.
  */
-export function matchNodes(before: KGraph, after: KGraph, options?: MatchOptions): MatchResult {
-  return match(before, after, options);
+export async function matchNodes(
+  before: KGraph,
+  after: KGraph,
+  options?: MatchOptions,
+): Promise<MatchResult> {
+  return (await compute()).matchNodes(before, after, options);
 }
 
 /**
@@ -104,14 +141,19 @@ export function matchNodes(before: KGraph, after: KGraph, options?: MatchOptions
  * facets, hunks, an invertible delta and stats. Deterministic: shuffling the input nodes or
  * edges does not change `diffToJSON` output.
  *
+ * Asynchronous since 0.11: kgdiff's engine runs it (`@kgdiff/compute`, loaded and compiled on
+ * the first call), so the result is the same, byte for byte in `diffToJSON`, as the kgdiff
+ * CLI's. Node positions of the graphs are kept, so `layoutDiff` anchors on them as before. After
+ * `await init()` of `@kgdiff/compute`, its `diffSync` gives the same result synchronously.
+ *
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
-export function diff(
+export async function diff(
   before: GraphInput | KGraph,
   after: GraphInput | KGraph,
   options?: DiffOptions,
-): DiffResult {
-  return runDiff(before, after, options);
+): Promise<DiffResult> {
+  return (await compute()).diff(before, after, options);
 }
 
 /**
@@ -185,9 +227,14 @@ export function unpackDiffJSON(packed: PackedDiffJSON): DiffJSON {
   return unpack(packed);
 }
 
-/** Similarity of two display strings in [0, 1]; robust to case, punctuation, word order and CJK. */
-export function textSimilarity(a: string, b: string): number {
-  return similarity(a, b);
+/**
+ * Similarity of two display strings in [0, 1]; robust to case, punctuation, word order and CJK.
+ *
+ * Asynchronous since 0.11, like `diff`; `textSimilaritySync` of `@kgdiff/compute` after its
+ * `init()` for a loop over many pairs.
+ */
+export async function textSimilarity(a: string, b: string): Promise<number> {
+  return (await compute()).textSimilarity(a, b);
 }
 
 /** Human-readable form of a predicate: `rdfs:subClassOf` → `subClassOf`, `…/part_of` → `part of`. */
@@ -197,8 +244,11 @@ export function predicateLabel(predicate: string): string {
 
 /**
  * log₂(x), computed from `+ − × ÷` alone (accurate to ~1e-15), so that it gives the same bits in
- * every JavaScript engine, unlike `Math.log2`, which engines approximate differently. Matching's
- * weights and the layout use it. `-Infinity` for x ≤ 0 and NaN, `Infinity` for `Infinity`.
+ * every JavaScript engine, unlike `Math.log2`, which engines approximate differently.
+ *
+ * @deprecated Only the TypeScript diff and layout engines used it, and kgdiff's engine
+ *   (`@kgdiff/compute`) replaces them in 0.11: it is removed with them before 0.11.0. For a
+ *   logarithm, use `Math.log2`.
  */
 export function log2(x: number): number {
   return exactLog2(x);

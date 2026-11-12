@@ -7,9 +7,10 @@
  * JSON number formatting is involved in checking JSON number formatting.
  */
 import { createHash } from 'node:crypto';
-import { facetLabel, log2, predicateLabel, textSimilarity } from '@kgdiff/core';
+import { facetLabel, predicateLabel } from '@kgdiff/core';
 import { estimateLabelWidth, nodeRadius } from '@kgdiff/layout';
 import { FACET_ORDER } from '../packages/core/src/model.js';
+import { log2, textSimilarity } from '../packages/core/src/sync.js';
 
 const view = new DataView(new ArrayBuffer(8));
 

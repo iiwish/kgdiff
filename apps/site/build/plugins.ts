@@ -74,7 +74,7 @@ export function kgdiffData(paths: SitePaths): Plugin {
       const virtual = id.slice(RESOLVED.length);
       if (virtual === STATS_ID) {
         const m = await load();
-        return jsonModule(m.allStats(datasets));
+        return jsonModule(await m.allStats(datasets));
       }
       if (virtual.startsWith(PAYLOAD_PREFIX)) {
         const name = virtual.slice(PAYLOAD_PREFIX.length);
@@ -82,7 +82,7 @@ export function kgdiffData(paths: SitePaths): Plugin {
         if (!m.datasetIds(datasets).includes(name)) {
           this.error(`Unknown example dataset "${name}" (see examples/datasets/index.json).`);
         }
-        return jsonModule(m.payloadOf(datasets, name));
+        return jsonModule(await m.payloadOf(datasets, name));
       }
       return null;
     },

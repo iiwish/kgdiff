@@ -34,7 +34,7 @@ import {
   type ViewState,
   type VisualResolver,
 } from '@kgdiff/scene';
-import { computeNow, computeStatus, loadCompute } from './compute-loader.js';
+import { type Compute, computeNow, computeStatus, loadLayout } from './compute-loader.js';
 import { translate } from './i18n.js';
 import type {
   LoadOptions,
@@ -429,8 +429,9 @@ export class DiffSession {
     this.status = 'ready';
     this.step = null;
     if (layout.scope === 'changes' && computeStatus() === 'unknown') {
-      // Learn early whether out-of-layout groups can be expanded (standalone reports).
-      loadCompute().then(
+      // Learn early whether out-of-layout groups can be expanded (standalone reports), and start
+      // compiling the layout module so that the first expansion does not wait for all of it.
+      loadLayout().then(
         () => this.notify('focus'),
         () => this.notify('focus'),
       );
@@ -1073,10 +1074,9 @@ export class DiffSession {
       this.#focusChanged();
       return Promise.resolve();
     }
-    const place = (): void => {
-      const compute = computeNow();
+    const place = (compute: Compute): void => {
       const current = this.layout;
-      if (!compute || !current || this.data !== data) return;
+      if (!current || this.data !== data) return;
       const todo = [...missing].filter((id) => !current.positions.has(id));
       if (todo.length > 0) {
         this.layout = compute.extendLayout(data.diff, current, todo, data.layoutOptions);
@@ -1086,12 +1086,15 @@ export class DiffSession {
       }
       this.#focusChanged();
     };
-    if (computeNow()) {
-      place();
+    // Once the layout module is compiled the group expands at once; until then (the module is
+    // still compiling, or standalone reports load it on demand) the expansion waits for it, and
+    // if it cannot be loaded or compiled the group stays collapsed (`canExpand` turns false).
+    const now = computeNow();
+    if (now && now.layoutState() === 'ready') {
+      place(now);
       return Promise.resolve();
     }
-    // Standalone reports load the layout engine on demand.
-    return loadCompute().then(place, () => this.#focusChanged());
+    return loadLayout().then(place, () => this.#focusChanged());
   }
 
   #focusChanged(): void {

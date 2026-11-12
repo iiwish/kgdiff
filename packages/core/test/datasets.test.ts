@@ -5,15 +5,10 @@
  * `edges.uncertain` and items marked `heuristic` are not enforced.
  */
 import { readFileSync } from 'node:fs';
-import {
-  type DiffOptions,
-  type DiffResult,
-  diff,
-  type GraphInput,
-  type UnionEdge,
-} from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import type { DiffOptions, DiffResult, GraphInput, UnionEdge } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { parseGraph } from '../../formats/src/sync.js';
+import { diff } from '../src/sync.js';
 
 type Triple = [string, string, string];
 

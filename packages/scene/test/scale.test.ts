@@ -10,9 +10,9 @@ import { makeLayout } from './fixtures.js';
 const LEAVES = 150_000;
 
 describe('a hunk larger than a call’s argument limit', () => {
-  it('focuses a hub removed with 150k relations', () => {
+  it('focuses a hub removed with 150k relations', async () => {
     const leaves = Array.from({ length: LEAVES }, (_, i) => ({ id: `l${i}` }));
-    const d = diff(
+    const d = await diff(
       {
         nodes: [{ id: 'hub' }, ...leaves],
         edges: leaves.map((l) => ({ source: 'hub', target: l.id, predicate: 'p' })),

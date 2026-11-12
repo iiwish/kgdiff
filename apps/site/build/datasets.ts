@@ -6,11 +6,16 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { type DiffOptions, diff, diffToJSON, type Locale, packDiffJSON } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
-import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
+import { diff, init, layoutDiff, parseGraph } from '@kgdiff/compute';
+import { type DiffOptions, diffToJSON, type Locale, packDiffJSON } from '@kgdiff/core';
+import { layoutToJSON } from '@kgdiff/layout';
 import { buildScene, type ChangeFamily, getTheme } from '@kgdiff/scene';
 import type { ReportPayload } from '@kgdiff/viewer';
+
+// kgdiff's engine (`@kgdiff/compute`), loaded while this module is imported: Vite's module runner
+// is closed afterwards, so nothing may be imported on demand later (as `diff` of `@kgdiff/core`
+// would import the engine on its first call).
+await init();
 
 /** `examples/datasets/<id>/meta.json`. */
 export interface DatasetMeta {
@@ -59,21 +64,29 @@ interface Computed {
   readonly stats: DatasetStats;
 }
 
-const cache = new Map<string, Computed>();
+const cache = new Map<string, Promise<Computed>>();
 
-function compute(root: string, id: string): Computed {
-  const hit = cache.get(id);
-  if (hit) return hit;
+function compute(root: string, id: string): Promise<Computed> {
+  let hit = cache.get(id);
+  if (!hit) {
+    hit = run(root, id);
+    cache.set(id, hit);
+    hit.catch(() => cache.delete(id));
+  }
+  return hit;
+}
+
+async function run(root: string, id: string): Promise<Computed> {
   const meta = readMeta(root, id);
-  const side = (name: 'before' | 'after') => {
+  const side = async (name: 'before' | 'after') => {
     const filename = meta.files[name];
     const text = readFileSync(join(root, id, filename), 'utf8');
-    return { filename, parsed: parseGraph(text, { filename }) };
+    return { filename, parsed: await parseGraph(text, { filename }) };
   };
-  const before = side('before');
-  const after = side('after');
-  const result = diff(before.parsed.graph, after.parsed.graph, meta.options);
-  const layout = layoutDiff(result);
+  const before = await side('before');
+  const after = await side('after');
+  const result = await diff(before.parsed.graph, after.parsed.graph, meta.options);
+  const layout = await layoutDiff(result);
   const families = Object.fromEntries(FAMILIES.map((f) => [f, 0])) as Record<ChangeFamily, number>;
   // The scene's family per hunk is what the viewer's change list shows (a move-only modify is
   // structure, not content).
@@ -101,16 +114,16 @@ function compute(root: string, id: string): Computed {
       edges: { before: result.stats.before.edges, after: result.stats.after.edges },
     },
   };
-  cache.set(id, computed);
   return computed;
 }
 
 /** The precomputed report payload of a dataset (default options from its meta.json). */
-export function payloadOf(root: string, id: string): ReportPayload {
-  return compute(root, id).payload;
+export async function payloadOf(root: string, id: string): Promise<ReportPayload> {
+  return (await compute(root, id)).payload;
 }
 
 /** Card numbers for every dataset, in display order. */
-export function allStats(root: string): DatasetStats[] {
-  return datasetIds(root).map((id) => compute(root, id).stats);
+export async function allStats(root: string): Promise<DatasetStats[]> {
+  const all = await Promise.all(datasetIds(root).map((id) => compute(root, id)));
+  return all.map((c) => c.stats);
 }

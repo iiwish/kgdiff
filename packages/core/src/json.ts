@@ -398,6 +398,20 @@ function readCanonical(json: DiffJSON, mode: EdgeIdentity): RebuiltGraphs | unde
  *   `invalid-input` for a malformed document.
  */
 export function diffFromJSON(json: DiffJSON): DiffResult {
+  return readDiff(json, false);
+}
+
+/**
+ * `diffFromJSON` without the document's checks (its envelope and `checkConsistency`), for a
+ * document this build's engine has just written (`readComputedDiff`). The result is the object
+ * `diffFromJSON` returns for the same document: the checks only throw, they build nothing.
+ * Never for a document read from elsewhere (a report, a file, a caller's JSON).
+ */
+export function diffFromTrustedJSON(json: DiffJSON): DiffResult {
+  return readDiff(json, true);
+}
+
+function readDiff(json: DiffJSON, trusted: boolean): DiffResult {
   if (!isRecord(json) || json.format !== 'kgdiff.diff') {
     throw new KgdiffError(
       'unsupported-version',
@@ -411,7 +425,7 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
       { version: json.version },
     );
   }
-  checkEnvelope(json);
+  if (!trusted) checkEnvelope(json);
   const options = resolveOptions(json.options);
   const mode = options.edgeIdentity;
   const graphs = canonicalGraphs(json, mode) ?? normalizedGraphs(json, mode);
@@ -469,7 +483,7 @@ export function diffFromJSON(json: DiffJSON): DiffResult {
 
   const hunks: readonly Hunk[] = json.hunks;
   const { delta, stats } = json;
-  checkConsistency({ before, after, options, nodes, edges, hunks, delta, stats });
+  if (!trusted) checkConsistency({ before, after, options, nodes, edges, hunks, delta, stats });
   return {
     before,
     after,

@@ -1,6 +1,6 @@
 import type { DiffResult } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { layoutDiff } from '../src/index.js';
+import { layoutDiff } from '../src/sync.js';
 import { makeDiff } from './support/diff-builder.js';
 import { changes, tree } from './support/fixtures.js';
 

@@ -1,7 +1,8 @@
-import { diff, diffToJSON, type GraphInput, graphToJSON, hashGraph, normalize } from '@kgdiff/core';
+import { diffToJSON, type GraphInput, graphToJSON, hashGraph, normalize } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { parseGraph } from '../src/index.js';
+import { diff } from '../../core/src/sync.js';
+import { parseGraph } from '../src/sync.js';
 import { catchError, deepFreeze, parseFixture } from './helpers.js';
 
 const json = (value: unknown, options: Parameters<typeof parseGraph>[1] = {}) =>

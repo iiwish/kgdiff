@@ -11,18 +11,19 @@
 import { readFileSync } from 'node:fs';
 import {
   type DiffOptions,
-  diff,
   diffToJSON,
   type GraphInput,
   graphToJSON,
   invertDelta,
   packDiffJSON,
 } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
-import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
+import { layoutToJSON } from '@kgdiff/layout';
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { parseGraph } from '../../formats/src/sync.js';
+import { layoutDiff } from '../../layout/src/sync.js';
+import { diff } from '../src/sync.js';
 import { versionPairArb } from './support/arbitraries.js';
 import {
   enterpriseAfter,
