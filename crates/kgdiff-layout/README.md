@@ -111,7 +111,7 @@ on the conformance corpus.
 
 `layout_graph`, `layout_diff_on` and `layout_after` are new in 0.9
 ([RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md), part 1) and
-experimental for one minor release. The TypeScript package `@kgdiff/layout` has no counterpart;
-`@kgdiff/compute` will export them with the rest of the layout (RFC 0002, phase 5).
+experimental until 1.0. In TypeScript they are `layoutGraph`, `layoutDiffOn` and `layoutAfter` of
+`@kgdiff/layout` and `@kgdiff/compute` (since 0.11): this crate compiled to WebAssembly.
 
 Licensed under the MIT license.

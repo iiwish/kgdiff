@@ -58,11 +58,11 @@ graph again and everything looks different. kgdiff compares the graphs:
 
 Most people need one package; it depends only on what you want to do:
 
-| You want to…                                      | Install                                                               |
-| ------------------------------------------------- | --------------------------------------------------------------------- |
-| Compare graph files in the terminal or in CI      | `@kgdiff/cli` (`npx @kgdiff/cli a.ttl b.ttl`), or the GitHub Action   |
-| Show a diff in a web page, without rendering code | `@kgdiff/viewer` (the `<kgdiff-viewer>` web component)                |
-| Compute diffs in your code, draw them yourself    | `@kgdiff/core`, plus `formats`, `layout`, `scene` or `g6` as you need |
+| You want to…                                      | Install                                                              |
+| ------------------------------------------------- | -------------------------------------------------------------------- |
+| Compare graph files in the terminal or in CI      | `@kgdiff/cli` (`npx @kgdiff/cli a.ttl b.ttl`), or the GitHub Action  |
+| Show a diff in a web page, without rendering code | `@kgdiff/viewer` (the `<kgdiff-viewer>` web component)               |
+| Compute diffs in your code, draw them yourself    | `@kgdiff/core` and `@kgdiff/compute`, plus `layout`, `scene` or `g6` |
 
 `@kgdiff/cli` runs a native binary: npm installs the one for your machine with it
 (`@kgdiff/cli-darwin-arm64`, `@kgdiff/cli-linux-x64-gnu`, …). Never install those yourself.

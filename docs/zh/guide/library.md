@@ -4,7 +4,7 @@
 
 | 包                 | 作用                                                                           |
 | ------------------ | ------------------------------------------------------------------------------ |
-| `@kgdiff/core`     | diff 引擎：规范化、匹配、分类、分组、可反向的增量。无依赖。                    |
+| `@kgdiff/core`     | diff 模型：规范化、匹配、分类、分组、可反向的增量。由 `@kgdiff/compute` 计算。 |
 | `@kgdiff/formats`  | 已弃用：重新导出 `@kgdiff/compute` 的解析器，到 2.0 移除。                     |
 | `@kgdiff/layout`   | 确定性、考虑标签的布局，两个版本共用。                                         |
 | `@kgdiff/scene`    | 把 diff 转成视觉元素：设计令牌、编码、回放时间线。                             |
@@ -135,7 +135,7 @@ const layout = layoutDiffSync(result); // LayoutResult，与 layoutDiff() 相同
 
 **内容安全策略。** 编译 WebAssembly 需要在 `script-src` 中加入 `'wasm-unsafe-eval'`，例如 `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`。
 
-从 0.11 起，`@kgdiff/core` 的 `diff`、`@kgdiff/formats` 的 `parseGraph` 和 `@kgdiff/layout` 的 `layoutDiff` 都是异步的，并在这个包上运行：`await diff(…)` 第一次调用时加载 `compute.wasm`。[迁移到 0.11](./migrating-to-0.11.md) 列出了所有变了签名的函数。
+从 0.11 起，`@kgdiff/core` 的 `diff`、`@kgdiff/layout` 的 `layoutDiff` 和已弃用的 `@kgdiff/formats` 的 `parseGraph` 都是异步的，并在这个包上运行：`await diff(…)` 第一次调用时加载 `compute.wasm`。[迁移到 0.11](./migrating-to-0.11.md) 列出了所有变了签名的函数。
 
 ## 错误
 

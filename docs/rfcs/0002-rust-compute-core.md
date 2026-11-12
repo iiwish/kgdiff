@@ -1,11 +1,11 @@
 # RFC 0002: A Rust compute core
 
 - **Status:** Draft, proposed; implemented through phase 5. **Phase 5 is complete on `main`
-  (2026-11-12) and kgdiff 0.11.0 is awaiting publication.** 0.7.0 shipped the phase 1 to 3 work
+  (2026-11-12) and kgdiff 0.11.0 was published the same day.** 0.7.0 shipped the phase 1 to 3 work
   and the layout crate, and 0.8.0 the native CLI, the npm launcher and the Action on the binary
   ([Phase 1](#phase-1--conformance-corpus-this-change), [Phase 2 results](#phase-2-results),
-  [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 is the
-  current release and 0.10.0 (the cleanup before phase 5) is about to ship. Phase 5 is **kgdiff
+  [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 and
+  0.10.0 (the cleanup before phase 5) followed. Phase 5 is **kgdiff
   0.11** (decided 2026-11-11, [Revision](#revision-2026-11-11)): `@kgdiff/compute` replacing the
   TypeScript compute modules in the browser, with the Rust corpus generator and the migration
   guide. Its sizes and timings were measured once on a quiet machine, and the gaps to the targets
@@ -1221,7 +1221,7 @@ in §1 differ from it, the code-checked list holds.
 
 ##### Phase 5 results
 
-Status as of 2026-11-12: phase 5 is complete on `main` (023a697); **0.11.0 is not yet published**.
+Status as of 2026-11-12: phase 5 is complete on `main` (023a697), and 0.11.0 was published the same day.
 Everything in this section was measured on that commit, in one session, on a quiet machine, after
 the earlier phases' numbers had been taken at load averages of 5 to 17 with other builds running
 and so were not comparable with each other. Where this section quotes a number from a pull request,
@@ -1267,7 +1267,7 @@ the measurements below):
 - _Deleted:_ everything the list names, in #103, and `tests/read-path.ts` is now an allow-list
   that fails on any other source file.
 - _The migration guide, in English and Chinese:_ `docs/guide/migrating-to-0.11.md` (#102, #103).
-- _0.11.0 is published on npm, crates.io and the GitHub release channels._ **Not yet.**
+- _0.11.0 is published on npm, crates.io and the GitHub release channels._ Met on 2026-11-12.
 
 **Measurements.** Commit 023a697, macOS on an Apple M5, Rust 1.95.0 (the pinned toolchain),
 Node 24.15.0, wasm-bindgen 0.2.129 and binaryen version_133 (the versions of CI). Each figure is
