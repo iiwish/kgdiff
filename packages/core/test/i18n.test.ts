@@ -1,12 +1,6 @@
-import {
-  diff,
-  type FacetKind,
-  facetLabel,
-  formatHunk,
-  type GraphInput,
-  type Locale,
-} from '@kgdiff/core';
+import { type FacetKind, facetLabel, formatHunk, type GraphInput, type Locale } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 const FACETS: readonly FacetKind[] = [
   'rekey', 'rename', 'mergedInto', 'mergeTarget', 'splitFrom', 'splitInto', 'move', 'deprecate',

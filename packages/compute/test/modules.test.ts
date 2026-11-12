@@ -1,7 +1,8 @@
-import { diff as diffTS, KgdiffError } from '@kgdiff/core';
-import { parseGraph as parseTS } from '@kgdiff/formats';
-import { layoutDiff as layoutTS } from '@kgdiff/layout';
+import { KgdiffError } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff as diffTS } from '../../core/src/sync.js';
+import { parseGraph as parseTS } from '../../formats/src/sync.js';
+import { layoutDiff as layoutTS } from '../../layout/src/sync.js';
 import {
   detectFormat,
   diffSync,

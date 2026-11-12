@@ -40,14 +40,14 @@ async function loaded(attrs: Record<string, string> = {}): Promise<KgdiffViewer>
   return el;
 }
 
-function payload(view?: ReportPayload['view']): ReportPayload {
+async function payload(view?: ReportPayload['view']): Promise<ReportPayload> {
   const graphs = zoo();
-  const d = diff(graphs.before, graphs.after);
+  const d = await diff(graphs.before, graphs.after);
   return {
     format: 'kgdiff.report',
     version: 1,
     diff: diffToJSON(d),
-    layout: layoutToJSON(layoutDiff(d)),
+    layout: layoutToJSON(await layoutDiff(d)),
     meta: { generator: 'test', before: { name: 'a' }, after: { name: 'b' } },
     ...(view !== undefined ? { view } : {}),
   };
@@ -476,7 +476,7 @@ describe('persistence', () => {
     const el = mount({ panels: 'zoom:open' });
     await ready(
       el,
-      payload({ panels: { detail: 'collapsed', minimap: 'hidden', list: 'nope' } as never }),
+      await payload({ panels: { detail: 'collapsed', minimap: 'hidden', list: 'nope' } as never }),
     );
     expect(el.layout.panels).toMatchObject({
       zoom: 'open', // the host
@@ -490,7 +490,7 @@ describe('persistence', () => {
 
   it('keeps an older payload without panels at today’s layout', async () => {
     const el = mount();
-    await ready(el, payload({ mode: 'replay' }));
+    await ready(el, await payload({ mode: 'replay' }));
     expect(el.layout.panels).toEqual(DEFAULT_PANELS);
   });
 
@@ -510,16 +510,17 @@ describe('persistence', () => {
     expect([third.theme, third.palette, third.locale]).toEqual(['dark', 'colorblind', 'en']);
   });
 
-  it('applies the report’s theme and language as soon as the payload is set', () => {
+  it('applies the report’s theme and language as soon as the payload is set', async () => {
+    const p = await payload({ theme: 'light', locale: 'zh-CN', panels: { detail: 'collapsed' } });
     const el = mount();
-    el.payload = payload({ theme: 'light', locale: 'zh-CN', panels: { detail: 'collapsed' } });
+    el.payload = p;
     expect([el.theme, el.locale, el.layout.panels.detail]).toEqual(['light', 'zh-CN', 'collapsed']);
   });
 
   it('remembered preferences win over the report’s view', async () => {
     remember({ panels: {}, theme: 'light', locale: 'zh-CN' });
     const el = mount();
-    await ready(el, payload({ theme: 'dark', locale: 'en' }));
+    await ready(el, await payload({ theme: 'dark', locale: 'en' }));
     expect([el.theme, el.locale]).toEqual(['light', 'zh-CN']);
   });
 

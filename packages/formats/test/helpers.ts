@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { KgdiffError } from '@kgdiff/core';
 import { expect } from 'vitest';
-import { type ParseOptions, type ParseResult, parseGraph } from '../src/index.js';
+import type { ParseOptions, ParseResult } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 
 const FIXTURES = new URL('./fixtures/', import.meta.url);
 

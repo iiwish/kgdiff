@@ -1,5 +1,6 @@
-import { applyDelta, type DeltaOp, diff, type GraphInput, hashGraph } from '@kgdiff/core';
+import { applyDelta, type DeltaOp, type GraphInput, hashGraph } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 const key = (s: string, p: string, t: string) => JSON.stringify([s, p, t]);
 

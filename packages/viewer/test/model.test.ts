@@ -8,8 +8,8 @@ import { fold, SearchIndex, scoreText } from '../src/search.js';
 import { MemoryStorage, zoo } from './support.js';
 
 const { before, after } = zoo();
-const d = diff(before, after);
-const scene = buildScene(d, layoutDiff(d));
+const d = await diff(before, after);
+const scene = buildScene(d, await layoutDiff(d));
 
 describe('change list model', () => {
   it('groups hunks by phase with headers and counts', () => {

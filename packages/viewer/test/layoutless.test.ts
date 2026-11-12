@@ -47,22 +47,22 @@ function addAddon(): void {
 }
 
 /** A report with its layout (packed, as the CLI writes it). */
-function report(): ReportPayload {
+async function report(): Promise<ReportPayload> {
   const { before, after } = zoo();
-  const d = diff(before, after);
+  const d = await diff(before, after);
   return {
     format: 'kgdiff.report',
     version: 1,
     diff: packDiffJSON(diffToJSON(d)),
-    layout: layoutToJSON(layoutDiff(d)),
+    layout: layoutToJSON(await layoutDiff(d)),
     meta: { generator: 'test', before: { name: 'zoo v1' }, after: { name: 'zoo v2' } },
     view: { mode: 'replay' },
   };
 }
 
 /** The same report without its layout. */
-function layoutless(): ReportPayload {
-  const { layout: _, ...rest } = report();
+async function layoutless(): Promise<ReportPayload> {
+  const { layout: _, ...rest } = await report();
   return rest;
 }
 
@@ -85,7 +85,7 @@ afterAll(() => {
 describe('a payload without a layout, without the compute add-on', () => {
   it('fails with an error that says what is missing', async () => {
     const c = controller();
-    const error = await c.loadPayload(layoutless()).catch((e: unknown) => e);
+    const error = await c.loadPayload(await layoutless()).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(KgdiffError);
     expect(error).toMatchObject({ code: 'invalid-input' });
     expect((error as Error).message).toMatch(/no layout/);
@@ -103,7 +103,7 @@ describe('a payload without a layout, without the compute add-on', () => {
     );
     const script = document.createElement('script');
     script.type = PAYLOAD_SCRIPT_TYPE;
-    script.textContent = JSON.stringify(layoutless());
+    script.textContent = JSON.stringify(await layoutless());
     document.body.append(v, script);
     await hydrateEmbeddedPayloads();
     expect(v.payload?.layout).toBeUndefined();
@@ -118,7 +118,7 @@ describe('a payload without a layout, without the compute add-on', () => {
 
   it('a payload with a layout still opens', async () => {
     const c = controller();
-    await c.loadPayload(report());
+    await c.loadPayload(await report());
     expect(c.status).toBe('ready');
   });
 });
@@ -126,23 +126,23 @@ describe('a payload without a layout, without the compute add-on', () => {
 describe('a payload without a layout, with the compute add-on', () => {
   it('opens once the add-on arrives after the error, without a reload', async () => {
     const c = controller();
-    await c.loadPayload(layoutless()).catch(() => {});
+    await c.loadPayload(await layoutless()).catch(() => {});
     expect(c.status).toBe('error');
     addAddon();
-    await c.loadPayload(layoutless());
+    await c.loadPayload(await layoutless());
     expect(c.status).toBe('ready');
   });
 
   it('is laid out as layoutDiff lays it out, without running the diff engine', async () => {
     addAddon();
     const c = controller();
-    const payload = layoutless();
+    const payload = await layoutless();
     await c.loadPayload(payload);
     expect(c.status).toBe('ready');
     expect(compute.diff).not.toHaveBeenCalled();
     expect(compute.layoutDiff).toHaveBeenCalledTimes(1);
     const d = diffFromJSON(unpackDiffJSON(payload.diff as PackedDiffJSON));
-    expect(layoutToJSON(c.layout!)).toEqual(layoutToJSON(layoutDiff(d)));
+    expect(layoutToJSON(c.layout!)).toEqual(layoutToJSON(await layoutDiff(d)));
     expect(diffToJSON(c.data!.diff)).toEqual(diffToJSON(d));
     expect(c.data?.layoutOptions).toBeUndefined();
     // The rest of the payload applies as with a layout.
@@ -160,13 +160,13 @@ describe('a payload without a layout, with the compute add-on', () => {
         scene: c.scene!.nodes.map((n) => [n.id, n.x, n.y]),
       };
     };
-    expect(await shown(layoutless())).toEqual(await shown(report()));
+    expect(await shown(await layoutless())).toEqual(await shown(await report()));
   });
 
   it('reads unpacked diffs too', async () => {
     addAddon();
     const c = controller();
-    const payload = layoutless();
+    const payload = await layoutless();
     await c.loadPayload({ ...payload, diff: unpackDiffJSON(payload.diff as PackedDiffJSON) });
     expect(c.status).toBe('ready');
     expect(compute.layoutDiff).toHaveBeenCalledTimes(1);
@@ -175,7 +175,7 @@ describe('a payload without a layout, with the compute add-on', () => {
   it('a payload with a layout computes nothing, even with the add-on present', async () => {
     addAddon();
     const c = controller();
-    await c.loadPayload(report());
+    await c.loadPayload(await report());
     expect(c.status).toBe('ready');
     expect(compute.diff).not.toHaveBeenCalled();
     expect(compute.layoutDiff).not.toHaveBeenCalled();
@@ -185,7 +185,10 @@ describe('a payload without a layout, with the compute add-on', () => {
   it('a payload whose diff does not read fails with that error', async () => {
     addAddon();
     const c = controller();
-    const broken = { ...layoutless(), diff: { format: 'kgdiff.diff', version: 1 } as DiffJSON };
+    const broken = {
+      ...(await layoutless()),
+      diff: { format: 'kgdiff.diff', version: 1 } as DiffJSON,
+    };
     await expect(c.loadPayload(broken)).rejects.toBeInstanceOf(KgdiffError);
     expect(c.status).toBe('error');
     expect(c.error?.message).not.toMatch(/no layout/);

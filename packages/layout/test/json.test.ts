@@ -2,14 +2,13 @@ import { KgdiffError } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import {
-  extendLayout,
   type LayoutJSON,
   type LayoutJSONV1,
   type LayoutJSONV2,
-  layoutDiff,
   layoutFromJSON,
   layoutToJSON,
 } from '../src/index.js';
+import { extendLayout, layoutDiff } from '../src/sync.js';
 import { makeDiff } from './support/diff-builder.js';
 import { changes, components } from './support/fixtures.js';
 

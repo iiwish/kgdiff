@@ -27,6 +27,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./computed": {
+      "types": "./dist/computed.d.ts",
+      "default": "./dist/computed.js"
+    },
     "./schema/graph.v1.json": "./schema/graph.v1.json",
     "./schema/diff.v1.json": "./schema/diff.v1.json",
     "./schema/diff-packed.v1.json": "./schema/diff-packed.v1.json",
@@ -52,5 +56,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@kgdiff/compute": "workspace:*"
+  }
 }

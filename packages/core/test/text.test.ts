@@ -1,8 +1,9 @@
-import { predicateLabel, textSimilarity } from '@kgdiff/core';
+import { predicateLabel } from '@kgdiff/core';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { tripleKey } from '../src/canonical.js';
 import { blockKeys, jaroWinkler, normalizeText, textProfile } from '../src/similarity.js';
+import { textSimilarity } from '../src/sync.js';
 
 describe('normalizeText', () => {
   it('applies NFKC, lowercases, turns punctuation into spaces and collapses whitespace', () => {

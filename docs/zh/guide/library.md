@@ -14,26 +14,26 @@
 | `@kgdiff/compute`  | 编译成 WebAssembly 的 Rust 引擎：[与命令行逐字节相同](#浏览器里的-rust-引擎)。 |
 | `@kgdiff/cli`      | 命令行工具 `kgdiff`：运行原生程序，不导出 JavaScript 接口。                    |
 
-它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行。core 和 formats 都是同步的，不做任何 I/O：传入文本和对象，得到对象。
+它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行，不做任何 I/O：传入文本和对象，得到对象。从 0.11 起，计算类函数（`diff`、`matchNodes`、`textSimilarity`、`parseGraph`、`detectFormat`、`layoutDiff`、`extendLayout`）在 `@kgdiff/compute` 上运行，是异步的；读取和应用类函数（`normalize`、`hashGraph`、`diffFromJSON`、`applyDelta`、`formatHunk`、`layoutFromJSON` 等）仍是同步的。从 0.10 升级见[迁移到 0.11](./migrating-to-0.11.md)。`@kgdiff/formats` 已弃用，解析请用 `@kgdiff/compute` 的 `parseGraph` 和 `detectFormat`。
 
 本页讲的是 TypeScript 包。引擎本身用 Rust 写成，Rust 应用可以直接使用它的 crate：[在 Rust 应用中嵌入 kgdiff](./embedding.md) 从一张图讲到带着你自己布局的报告，再讲到浏览器一侧。
 
 ## 比较两张图
 
 ```sh
-npm install @kgdiff/core @kgdiff/formats
+npm install @kgdiff/core @kgdiff/compute
 ```
 
 ```ts
 import { readFile } from 'node:fs/promises';
 import { diff, formatHunk } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { parseGraph } from '@kgdiff/compute';
 
 const read = async (file: string) => parseGraph(await readFile(file, 'utf8'), { filename: file });
 const before = await read('before.obo');
 const after = await read('after.obo');
 
-const result = diff(before.graph, after.graph, { match: { strategy: 'id' } });
+const result = await diff(before.graph, after.graph, { match: { strategy: 'id' } });
 
 console.log(result.stats.nodes); // { added: 5, removed: 0, modified: 23, unchanged: 156 }
 for (const hunk of result.hunks) {
@@ -51,7 +51,7 @@ for (const hunk of result.hunks) {
 ## 选项
 
 ```ts
-diff(before.graph, after.graph, {
+await diff(before.graph, after.graph, {
   match: { strategy: 'auto', threshold: 0.82 }, // 'id' | 'auto' | 'similarity'
   hierarchyPredicates: ['is_a'], // 替换 DEFAULT_HIERARCHY_PREDICATES
   ignoreAttrs: ['creation_date'],
@@ -135,7 +135,7 @@ const layout = layoutDiffSync(result); // LayoutResult，与 layoutDiff() 相同
 
 **内容安全策略。** 编译 WebAssembly 需要在 `script-src` 中加入 `'wasm-unsafe-eval'`，例如 `Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'`。
 
-到 kgdiff 0.11，`@kgdiff/core` 的 `diff`、`@kgdiff/formats` 的 `parseGraph` 和 `@kgdiff/layout` 的 `layoutDiff` 会改成异步，并在这个包上运行（[RFC 0002 第 6 节](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)，英文）。
+从 0.11 起，`@kgdiff/core` 的 `diff`、`@kgdiff/formats` 的 `parseGraph` 和 `@kgdiff/layout` 的 `layoutDiff` 都是异步的，并在这个包上运行：`await diff(…)` 第一次调用时加载 `compute.wasm`。[迁移到 0.11](./migrating-to-0.11.md) 列出了所有变了签名的函数。
 
 ## 错误
 

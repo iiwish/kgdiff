@@ -126,11 +126,11 @@ Behaviour: [docs/interaction.md](docs/interaction.md).
 
 ```ts
 import { diff, formatHunk, applyDelta, invertDelta } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { parseGraph } from '@kgdiff/compute';
 
-const before = parseGraph(beforeText, { filename: 'v1.obo' }).graph;
-const after = parseGraph(afterText, { filename: 'v2.obo' }).graph;
-const result = diff(before, after);
+const before = (await parseGraph(beforeText, { filename: 'v1.obo' })).graph;
+const after = (await parseGraph(afterText, { filename: 'v2.obo' })).graph;
+const result = await diff(before, after);
 
 for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'en').title);
 // Merged “juvenile diabetes” and “insulin-dependent diabetes mellitus” into “type 1 diabetes mellitus”

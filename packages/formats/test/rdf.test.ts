@@ -1,6 +1,7 @@
 import type { GraphInput, NodeInput } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { type ParseOptions, parseGraph } from '../src/index.js';
+import type { ParseOptions } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 import { catchError, deepFreeze, fixture, parseFixture } from './helpers.js';
 
 const PREFIXES = [

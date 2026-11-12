@@ -1,6 +1,7 @@
 import { hashGraph, normalize } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { type FormatId, parseGraph } from '../src/index.js';
+import type { FormatId } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 
 /**
  * Large inputs in every RDF syntax. These assert results, not speed: wall-clock budgets live

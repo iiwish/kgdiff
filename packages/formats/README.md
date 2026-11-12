@@ -1,9 +1,15 @@
 # @kgdiff/formats
 
+> **Deprecated since 0.11.** Use [`@kgdiff/compute`](../compute): its `parseGraph`,
+> `detectFormat` and `compactIri` are kgdiff's Rust parsers compiled to WebAssembly, the same
+> results as the kgdiff CLI. This package's functions are now asynchronous wrappers over them
+> (`await parseGraph(…)`); its types stay here until it is removed in 2.0. See
+> [Migrating to 0.11](../../docs/guide/migrating-to-0.11.md).
+
 Parsers that turn real-world graph files into [`@kgdiff/core`](../core) graphs: RDF (Turtle,
 N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO 1.4 and the common JSON graph shapes (kgdiff,
-d3 / NetworkX node-link, Cytoscape.js, AntV G6 v5, graphology, vis-network). Synchronous and
-deterministic, with no file-system or network access: you pass text, so it works the same in
+d3 / NetworkX node-link, Cytoscape.js, AntV G6 v5, graphology, vis-network). Deterministic,
+with no file-system or network access: you pass text, so it works the same in
 browsers and Node.
 
 ## Install
@@ -34,13 +40,13 @@ ex:Company rdfs:subClassOf ex:Organization ; rdfs:label "Company"@en .
 ex:Startup rdfs:subClassOf ex:Company ; rdfs:label "Startup"@en .
 `;
 
-const before = parseGraph(v1, { filename: 'v1.ttl' });
-const after = parseGraph(v2, { filename: 'v2.ttl' });
+const before = await parseGraph(v1, { filename: 'v1.ttl' });
+const after = await parseGraph(v2, { filename: 'v2.ttl' });
 before.format; // 'turtle': detected from the file name and the content
 before.graph.nodes.map((node) => node.label); // ['Company', 'Organization']
 before.warnings; // recoverable oddities (merged named graphs, unsupported OBO stanzas, …)
 
-const result = diff(before.graph, after.graph);
+const result = await diff(before.graph, after.graph);
 for (const hunk of result.hunks) console.log(formatHunk(hunk, result).title);
 // Renamed “Organization” → “Organisation”
 // Added “Startup” and 1 relation

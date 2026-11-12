@@ -267,8 +267,8 @@ describe('createDiffGraph edge cases', () => {
     const { layoutDiff } = await import('@kgdiff/layout');
     const { buildScene } = await import('@kgdiff/scene');
     const empty = { nodes: [], edges: [] };
-    const result = diff(empty, empty);
-    const scene = buildScene(result, layoutDiff(result));
+    const result = await diff(empty, empty);
+    const scene = buildScene(result, await layoutDiff(result));
     const { c, graph } = await create(scene);
     expect(graph.getNodeData()).toEqual([]);
     await c.setLayer('after');

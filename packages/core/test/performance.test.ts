@@ -6,8 +6,9 @@
  */
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
-import { applyDelta, diff, hashGraph, matchNodes, normalize } from '@kgdiff/core';
+import { applyDelta, hashGraph, normalize } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff, matchNodes } from '../src/sync.js';
 import { editGraph, extractionPair, syntheticGraph } from './support/synthetic.js';
 
 /** Bytes of heap retained by what `make` returns (returned too, so it stays alive). */

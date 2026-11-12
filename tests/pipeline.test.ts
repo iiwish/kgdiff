@@ -28,11 +28,11 @@ const index = JSON.parse(readFileSync(join(DATASETS, 'index.json'), 'utf8')) as 
   datasets: { id: string }[];
 };
 
-function load(id: string) {
+async function load(id: string) {
   const meta = JSON.parse(readFileSync(join(DATASETS, id, 'meta.json'), 'utf8')) as DatasetMeta;
-  const read = (file: string) =>
-    parseGraph(readFileSync(join(DATASETS, id, file), 'utf8'), { filename: file }).graph;
-  return { meta, before: read(meta.files.before), after: read(meta.files.after) };
+  const read = async (file: string) =>
+    (await parseGraph(readFileSync(join(DATASETS, id, file), 'utf8'), { filename: file })).graph;
+  return { meta, before: await read(meta.files.before), after: await read(meta.files.after) };
 }
 
 function assertFiniteFrame(frame: FrameVisuals): void {
@@ -52,10 +52,19 @@ function assertFiniteFrame(frame: FrameVisuals): void {
   }
 }
 
+// Diff and layout are asynchronous: each dataset is computed before the tests are collected.
+const computed = new Map(
+  await Promise.all(
+    index.datasets.map(async ({ id }) => {
+      const { meta, before, after } = await load(id);
+      const result = await diff(before, after, meta.options);
+      return [id, { meta, result, layout: await layoutDiff(result) }] as const;
+    }),
+  ),
+);
+
 describe.each(index.datasets.map((d) => d.id))('dataset %s', (id) => {
-  const { meta, before, after } = load(id);
-  const result = diff(before, after, meta.options);
-  const layout = layoutDiff(result);
+  const { meta, result, layout } = computed.get(id)!;
 
   it('finds a non-empty, partitioned set of changes', () => {
     expect(result.stats.identical).toBe(false);
@@ -73,12 +82,12 @@ describe.each(index.datasets.map((d) => d.id))('dataset %s', (id) => {
     }
   });
 
-  it('is deterministic and survives JSON transport', () => {
-    const again = diff(load(id).before, load(id).after, meta.options);
+  it('is deterministic and survives JSON transport', async () => {
+    const again = await diff((await load(id)).before, (await load(id)).after, meta.options);
     const json = JSON.stringify(diffToJSON(result));
     expect(JSON.stringify(diffToJSON(again))).toBe(json);
     expect(JSON.stringify(diffToJSON(diffFromJSON(JSON.parse(json))))).toBe(json);
-    expect(JSON.stringify(layoutToJSON(layoutDiff(again)))).toBe(
+    expect(JSON.stringify(layoutToJSON(await layoutDiff(again)))).toBe(
       JSON.stringify(layoutToJSON(layout)),
     );
   });

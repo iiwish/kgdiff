@@ -10,8 +10,10 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { diff, type GraphInput } from '@kgdiff/core';
-import { type LayoutScope, layoutDiff, layoutToJSON } from '../src/index.js';
+import type { GraphInput } from '@kgdiff/core';
+import { diff } from '../../core/src/sync.js';
+import { type LayoutScope, layoutToJSON } from '../src/index.js';
+import { layoutDiff } from '../src/sync.js';
 import { quality } from '../test/support/metrics.js';
 
 const [dir, scopeArg] = process.argv.slice(2);

@@ -41,6 +41,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The playground and its build-time examples compute on @kgdiff/compute's modules.
+      - uses: ./.github/actions/compute-wasm
       - id: pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - name: Build the site and the docs

@@ -28,13 +28,14 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { type DiffResult, diff, type GraphInput } from '../../../packages/core/src/index.js';
+import type { DiffResult, GraphInput } from '../../../packages/core/src/index.js';
+import { diff } from '../../../packages/core/src/sync.js';
 import {
   type LayoutJSON,
   type LayoutOptions,
-  layoutDiff,
   layoutToJSON,
 } from '../../../packages/layout/src/index.js';
+import { layoutDiff } from '../../../packages/layout/src/sync.js';
 
 const ROOT = resolve(dirname(new URL(import.meta.url).pathname), '../../..');
 const RUST = join(ROOT, 'target/release/examples/layout');

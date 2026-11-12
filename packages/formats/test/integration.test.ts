@@ -1,6 +1,7 @@
-import { type DiffResult, diff, diffToJSON, hashGraph, normalize } from '@kgdiff/core';
+import { type DiffResult, diffToJSON, hashGraph, normalize } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { parseGraph } from '../src/index.js';
+import { diff } from '../../core/src/sync.js';
+import { parseGraph } from '../src/sync.js';
 import { fixture } from './helpers.js';
 
 const facetsOf = (result: DiffResult, id: string) =>

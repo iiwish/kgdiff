@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseGraph } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 import { owlTurtle, TRIPLES } from './large-inputs.js';
 
 /**

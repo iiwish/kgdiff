@@ -19,6 +19,8 @@ export default defineProject({
   test: {
     name: 'viewer',
     environment: 'happy-dom',
+    // kgdiff's WebAssembly modules, read from disk (happy-dom cannot fetch them).
+    setupFiles: ['../compute/test/setup-dom.ts'],
     include: ['test/**/*.test.{ts,tsx}'],
     // One copy of Svelte's runtime for the compiled component and `mount`.
     server: { deps: { inline: [/[\\/]svelte[\\/]/] } },

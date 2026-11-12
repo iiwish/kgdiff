@@ -21,8 +21,8 @@ import { layoutDiff } from '@kgdiff/layout';
 import { createMinimap, createRenderer } from '@kgdiff/renderer';
 import { buildScene, createViewState, createVisualResolver, getTheme } from '@kgdiff/scene';
 
-const result = diff(before, after);
-const scene = buildScene(result, layoutDiff(result), { theme: 'dark' });
+const result = await diff(before, after);
+const scene = buildScene(result, await layoutDiff(result), { theme: 'dark' });
 const resolver = createVisualResolver(scene);
 
 // The container needs a size (CSS); the canvas follows it through a ResizeObserver.

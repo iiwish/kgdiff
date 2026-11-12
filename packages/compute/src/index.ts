@@ -14,14 +14,20 @@
  * asynchronous functions (`diff`, `parseGraph`, `layoutDiff`, …) load what they need themselves.
  *
  * Graphs and options are passed to the engine as JSON text. A graph given as an object is
- * written with `JSON.stringify`, so values that JSON cannot hold (NaN, ±Infinity) arrive as
- * `null`.
+ * written with `JSON.stringify` (a normalized `KGraph` with `graphToJSON`), so values that JSON
+ * cannot hold (NaN, ±Infinity) arrive as `null`.
+ *
+ * `@kgdiff/core`'s `diff`, `matchNodes` and `textSimilarity`, `@kgdiff/formats`' parsers and
+ * `@kgdiff/layout`'s layouts call the asynchronous functions of this package.
  */
 import {
+  type DiffJSON,
   type DiffOptions,
   type DiffResult,
   diffFromJSON,
   type GraphInput,
+  graphToJSON,
+  isKGraph,
   type KGraph,
   type MatchOptions,
   type MatchResult,
@@ -29,6 +35,7 @@ import {
   normalize,
   type UnionId,
 } from '@kgdiff/core';
+import { readComputedDiff } from '@kgdiff/core/computed';
 import type { FormatId, ParseOptions, ParseResult } from '@kgdiff/formats';
 import {
   type LayoutJSON,
@@ -95,9 +102,13 @@ export async function init(options: InitOptions = {}): Promise<void> {
   );
 }
 
-/** JSON text as given, or a value written with `JSON.stringify`. */
+/** A graph as the engine takes it: JSON text, a graph as input, or a normalized `KGraph`. */
+export type GraphSource = GraphInput | KGraph | string;
+
+/** JSON text as given, a `KGraph` as `graphToJSON` writes it, else `JSON.stringify`. */
 function text(value: unknown): string {
-  return typeof value === 'string' ? value : JSON.stringify(value);
+  if (typeof value === 'string') return value;
+  return JSON.stringify(isKGraph(value) ? graphToJSON(value) : value);
 }
 
 /** Options as JSON text; none is the empty text. */
@@ -125,35 +136,39 @@ export function version(): string {
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
 export function diffJSON(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: DiffOptions | string,
 ): string {
   return json.diff(before, after, options);
 }
 
 /**
- * `diff` of `@kgdiff/core`, computed by the engine: the `kgdiff.diff` document read with
- * `diffFromJSON`, every consistency check included.
+ * `diff` of `@kgdiff/core`, computed by the engine: the `kgdiff.diff` document it writes, read
+ * back as a `DiffResult`. That document was just written by this build's engine, so it is read
+ * without `diffFromJSON`'s consistency checks (the result is the same object), and the graphs'
+ * node positions, which a diff document does not carry, are put back on its nodes: `layoutDiff`
+ * anchors on them as it does for the diff of the graphs.
  *
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
 export function diffSync(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: DiffOptions,
 ): DiffResult {
-  return diffFromJSON(JSON.parse(json.diff(before, after, options)));
+  return readComputedDiff(json.diff(before, after, options), before, after);
 }
 
 /**
- * `matchNodes` of `@kgdiff/core` on the two graphs, each normalized with the default options.
+ * `matchNodes` of `@kgdiff/core` on the two graphs, each normalized with the default options (a
+ * `KGraph` is passed as `graphToJSON` writes it, which normalizes to itself).
  *
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
 export function matchNodesSync(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: MatchOptions,
 ): MatchResult {
   return JSON.parse(json.matchNodes(before, after, options)) as MatchResult;
@@ -206,8 +221,8 @@ export function layoutGraphSync(graph: KGraph | GraphInput, options?: LayoutOpti
  * @throws KgdiffError `invalid-input` for malformed input or options.
  */
 export function diffAndLayoutSync(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: DiffOptions,
   layoutOptions?: LayoutOptions,
 ): { readonly diff: DiffResult; readonly layout: LayoutResult } {
@@ -215,7 +230,10 @@ export function diffAndLayoutSync(
     diff: unknown;
     layout: LayoutJSON;
   };
-  return { diff: diffFromJSON(diff as never), layout: layoutFromJSON(layout) };
+  return {
+    diff: readComputedDiff(diff as DiffJSON, before, after),
+    layout: layoutFromJSON(layout),
+  };
 }
 
 /** Awaits one module and runs `use`. */
@@ -226,8 +244,8 @@ async function using<R>(names: readonly ModuleName[], use: () => R): Promise<R> 
 
 /** `diffSync`, loading the `compute` module first. */
 export function diff(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: DiffOptions,
 ): Promise<DiffResult> {
   return using(['compute'], () => diffSync(before, after, options));
@@ -235,8 +253,8 @@ export function diff(
 
 /** `matchNodesSync`, loading the `compute` module first. */
 export function matchNodes(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: MatchOptions,
 ): Promise<MatchResult> {
   return using(['compute'], () => matchNodesSync(before, after, options));
@@ -308,8 +326,8 @@ export function layoutAfter(
 
 /** `diffAndLayoutSync`, loading the `compute` module first. */
 export function diffAndLayout(
-  before: GraphInput | string,
-  after: GraphInput | string,
+  before: GraphSource,
+  after: GraphSource,
   options?: DiffOptions,
   layoutOptions?: LayoutOptions,
 ): Promise<{ readonly diff: DiffResult; readonly layout: LayoutResult }> {
@@ -323,18 +341,10 @@ export function diffAndLayout(
  */
 export const json = {
   /** `diffToJSON(diff(before, after, options))`: the `kgdiff.diff` document (`compute`). */
-  diff: (
-    before: GraphInput | string,
-    after: GraphInput | string,
-    options?: DiffOptions | string,
-  ): string =>
+  diff: (before: GraphSource, after: GraphSource, options?: DiffOptions | string): string =>
     computeModule.call((e) => e.diffJSON(text(before), text(after), optionsText(options))),
   /** `matchNodes` on the two graphs: `{ matches, suggestions }` (`compute`). */
-  matchNodes: (
-    before: GraphInput | string,
-    after: GraphInput | string,
-    options?: MatchOptions | string,
-  ): string =>
+  matchNodes: (before: GraphSource, after: GraphSource, options?: MatchOptions | string): string =>
     computeModule.call((e) => e.matchNodesJSON(text(before), text(after), optionsText(options))),
   /** `graphToJSON(normalize(graph, options))` (`compute`). */
   normalize: (graph: GraphInput | string, options?: object | string): string =>
@@ -347,8 +357,8 @@ export const json = {
     computeModule.call((e) => e.hashGraphJSON(text(graph), optionsText(options))),
   /** `{ diff, layout }`, the two documents of the graphs (`compute`). */
   diffLayout: (
-    before: GraphInput | string,
-    after: GraphInput | string,
+    before: GraphSource,
+    after: GraphSource,
     options?: DiffOptions | string,
     layoutOptions?: LayoutOptions,
   ): string =>

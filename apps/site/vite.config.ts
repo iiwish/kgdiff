@@ -29,6 +29,8 @@ const repo = fileURLToPath(new URL('../../', import.meta.url));
 
 const alias: Alias[] = [
   { find: /^@kgdiff\/viewer\/compute$/, replacement: `${repo}packages/viewer/src/compute.ts` },
+  { find: /^@kgdiff\/compute\/layout$/, replacement: `${repo}packages/compute/src/layout.ts` },
+  { find: /^@kgdiff\/core\/computed$/, replacement: `${repo}packages/core/src/computed.ts` },
   { find: /^@kgdiff\/([\w-]+)$/, replacement: `${repo}packages/$1/src/index.ts` },
 ];
 

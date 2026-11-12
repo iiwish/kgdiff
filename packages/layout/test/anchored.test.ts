@@ -1,6 +1,7 @@
 import type { Point } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { type LayoutResult, layoutDiff, layoutToJSON } from '../src/index.js';
+import { type LayoutResult, layoutToJSON } from '../src/index.js';
+import { layoutDiff } from '../src/sync.js';
 import { type GraphSpec, makeDiff, type NodeSpec } from './support/diff-builder.js';
 import { scaleFree, tree } from './support/fixtures.js';
 import { quality } from './support/metrics.js';

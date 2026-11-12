@@ -16,6 +16,9 @@
     "paths": {
       "@kgdiff/viewer/panels": ["./packages/viewer/src/panels.ts"],
       "@kgdiff/viewer/react": ["./packages/viewer/src/react.ts"],
+      "@kgdiff/core/computed": ["./packages/core/src/computed.ts"],
+      "@kgdiff/compute/layout": ["./packages/compute/src/layout.ts"],
+      "@kgdiff/compute": ["./types/compute-stub.d.ts"],
       "@kgdiff/*": ["./packages/*/src/index.ts"]
     }
   }

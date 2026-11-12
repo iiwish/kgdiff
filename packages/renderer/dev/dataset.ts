@@ -68,12 +68,12 @@ export async function loadDataset(id: string): Promise<Dataset> {
     text(id, meta.files.after),
   ]);
   const t0 = performance.now();
-  const before = parseGraph(beforeText, { filename: meta.files.before }).graph;
-  const after = parseGraph(afterText, { filename: meta.files.after }).graph;
+  const before = (await parseGraph(beforeText, { filename: meta.files.before })).graph;
+  const after = (await parseGraph(afterText, { filename: meta.files.after })).graph;
   const t1 = performance.now();
-  const result = diff(before, after, meta.options);
+  const result = await diff(before, after, meta.options);
   const t2 = performance.now();
-  const layout = layoutDiff(result);
+  const layout = await layoutDiff(result);
   const t3 = performance.now();
   return {
     meta,

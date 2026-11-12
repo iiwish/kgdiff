@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { diff, diffToJSON, KgdiffError, matchNodes, normalize, textSimilarity } from '@kgdiff/core';
+import { diffToJSON, KgdiffError, normalize } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff, matchNodes, textSimilarity } from '../../core/src/sync.js';
 import {
   diffJSON,
   diffSync,

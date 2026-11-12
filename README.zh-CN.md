@@ -109,11 +109,11 @@ jobs:
 
 ```ts
 import { diff, formatHunk } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { parseGraph } from '@kgdiff/compute';
 
-const before = parseGraph(beforeText, { filename: 'v12.json' }).graph;
-const after = parseGraph(afterText, { filename: 'v13.json' }).graph;
-const result = diff(before, after);
+const before = (await parseGraph(beforeText, { filename: 'v12.json' })).graph;
+const after = (await parseGraph(afterText, { filename: 'v13.json' })).graph;
+const result = await diff(before, after);
 
 for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'zh-CN').title);
 // 删除「抽查检查」及 2 条关系

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compactIri } from '../src/index.js';
+import { compactIri } from '../src/sync.js';
 
 describe('compactIri', () => {
   it.each([

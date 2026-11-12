@@ -5,6 +5,8 @@
     "types": ["node", "vite/client"],
     "paths": {
       "@kgdiff/viewer/compute": ["../../packages/viewer/src/compute.ts"],
+      "@kgdiff/compute/layout": ["../../packages/compute/src/layout.ts"],
+      "@kgdiff/core/computed": ["../../packages/core/src/computed.ts"],
       "@kgdiff/*": ["../../packages/*/src/index.ts"]
     }
   },

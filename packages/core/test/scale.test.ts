@@ -1,13 +1,13 @@
 import {
   applyDelta,
   type DeltaOp,
-  diff,
   type GraphInput,
   hashGraph,
   invertDelta,
   normalize,
 } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 /**
  * Changes too large to spread into a single call: V8 caps a call's arguments at roughly 10^5 on

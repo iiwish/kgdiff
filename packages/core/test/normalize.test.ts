@@ -1,6 +1,5 @@
 import {
   applyDelta,
-  diff,
   type GraphInput,
   graphToJSON,
   hashGraph,
@@ -10,6 +9,7 @@ import {
   normalize,
 } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 function deepFreeze<T>(value: T): T {
   if (value && typeof value === 'object') {

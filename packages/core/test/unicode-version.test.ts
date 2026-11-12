@@ -11,7 +11,6 @@
  */
 import {
   type DiffJSON,
-  diff,
   diffFromJSON,
   diffToJSON,
   type GraphInput,
@@ -23,6 +22,7 @@ import {
 } from '@kgdiff/core';
 import { describe, expect, it, vi } from 'vitest';
 import { canonicalGraphs } from '../src/json.js';
+import { diff } from '../src/sync.js';
 
 const nativeNormalize = String.prototype.normalize;
 

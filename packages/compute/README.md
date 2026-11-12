@@ -12,9 +12,13 @@ The engine is three modules, and each is loaded only when it is asked for
 | `formats.wasm` | the parsers: kgdiff JSON and five other JSON shapes, RDF, OBO                        | `parseGraphSync`, `detectFormatSync`               |
 | `layout.wasm`  | the layout of a `DiffResult`, on typed arrays, without JSON or Unicode normalization | `layoutDiffSync`, `extendLayoutSync`…              |
 
-The other kgdiff packages do not use it yet: in kgdiff 0.11, `diff` of `@kgdiff/core`,
-`parseGraph` of `@kgdiff/formats` and `layoutDiff` of `@kgdiff/layout` become asynchronous and
-delegate to it ([RFC 0002, §6](../../docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
+The other kgdiff packages run on it since 0.11: `diff`, `matchNodes` and `textSimilarity` of
+`@kgdiff/core`, `parseGraph` and `detectFormat` of `@kgdiff/formats` (deprecated in favour of this
+package) and the layouts of `@kgdiff/layout` are asynchronous and load it with a dynamic
+`import()`, so a bundle that only reads diffs never contains WebAssembly. A diff computed here is
+read back without `diffFromJSON`'s consistency checks (the engine of the same build wrote it), and
+with the node positions of its graphs, so `layoutDiff` anchors on them. See
+[Migrating to 0.11](../../docs/guide/migrating-to-0.11.md).
 
 ```ts
 import { init, diffSync, layoutDiffSync, parseGraphSync } from '@kgdiff/compute';

@@ -80,14 +80,14 @@ const after: GraphInput = {
   ],
 };
 
-function pipeline(): { d: DiffResult; scene: ReturnType<typeof buildScene> } {
-  const d = diff(before, after);
-  return { d, scene: buildScene(d, layoutDiff(d)) };
+async function pipeline(): Promise<{ d: DiffResult; scene: ReturnType<typeof buildScene> }> {
+  const d = await diff(before, after);
+  return { d, scene: buildScene(d, await layoutDiff(d)) };
 }
 
-describe('real pipeline: diff → layoutDiff → buildScene → resolve', () => {
-  const { d, scene } = pipeline();
+const { d, scene } = await pipeline();
 
+describe('real pipeline: diff → layoutDiff → buildScene → resolve', () => {
   it('maps every union element and agrees with core on roles and hunks', () => {
     expect(scene.nodes).toHaveLength(d.nodes.length);
     expect(scene.edges).toHaveLength(d.edges.length);
@@ -105,8 +105,8 @@ describe('real pipeline: diff → layoutDiff → buildScene → resolve', () => 
       expect(families.has(f), f).toBe(true);
   });
 
-  it('titles hunks with the real localized formatter', () => {
-    const zh = buildScene(d, layoutDiff(d), { locale: 'zh-CN' });
+  it('titles hunks with the real localized formatter', async () => {
+    const zh = buildScene(d, await layoutDiff(d), { locale: 'zh-CN' });
     for (const [k, h] of scene.hunks.entries()) {
       expect(h.title.length).toBeGreaterThan(0);
       expect(zh.hunks[k]?.title.length).toBeGreaterThan(0);
@@ -122,8 +122,8 @@ describe('real pipeline: diff → layoutDiff → buildScene → resolve', () => 
     expect(scene.timeline.duration).toBeGreaterThan(0);
   });
 
-  it('is deterministic end to end', () => {
-    const again = pipeline().scene;
+  it('is deterministic end to end', async () => {
+    const again = (await pipeline()).scene;
     expect(again.nodes).toEqual(scene.nodes);
     expect(again.edges).toEqual(scene.edges);
     expect(again.hunks).toEqual(scene.hunks);

@@ -1,5 +1,6 @@
-import { diff, type EdgeInput, type GraphInput } from '@kgdiff/core';
+import type { EdgeInput, GraphInput } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { diff } from '../src/sync.js';
 
 const nodes = ['a', 'b', 'c', 'd'].map((id) => ({ id }));
 const g = (edges: EdgeInput[], options?: { nodes?: GraphInput['nodes'] }): GraphInput => ({

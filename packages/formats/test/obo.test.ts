@@ -1,6 +1,6 @@
 import type { NodeInput } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { parseGraph } from '../src/index.js';
+import { parseGraph } from '../src/sync.js';
 import { catchError, parseFixture } from './helpers.js';
 
 const obo = (text: string) => parseGraph(text, { format: 'obo' });

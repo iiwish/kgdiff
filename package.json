@@ -10,7 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "pnpm -r --filter \"./packages/**\" build",
+    "build": "pnpm --filter @kgdiff/core build && pnpm -r --filter @kgdiff/formats --filter @kgdiff/layout build && pnpm -r --filter \"./packages/**\" --filter \"!@kgdiff/core\" --filter \"!@kgdiff/formats\" --filter \"!@kgdiff/layout\" build",
     "typecheck": "pnpm -r typecheck && tsc -p tests && tsc -p action && tsc -p conformance",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -26,7 +26,7 @@
     "dev:docs": "pnpm --filter @kgdiff/docs dev",
     "build:docs": "pnpm --filter @kgdiff/docs build",
     "build:site": "pnpm vite build --config apps/site/vite.config.ts && pnpm build:docs",
-    "build:viewer-assets": "pnpm --filter \"@kgdiff/viewer...\" build && tsx scripts/viewer-assets.ts",
+    "build:viewer-assets": "pnpm --filter @kgdiff/core build && pnpm -r --filter @kgdiff/formats --filter @kgdiff/layout build && pnpm --filter \"@kgdiff/viewer...\" --filter \"!@kgdiff/core\" --filter \"!@kgdiff/formats\" --filter \"!@kgdiff/layout\" build && tsx scripts/viewer-assets.ts",
     "changeset": "changeset",
     "version-packages": "changeset version && biome format --write packages && tsx scripts/sync-citation.ts && tsx scripts/sync-versions.ts",
     "release": "pnpm check && pnpm build && pnpm check:packages && tsx scripts/npm-platforms.ts publish && changeset publish"

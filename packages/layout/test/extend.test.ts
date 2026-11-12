@@ -1,6 +1,7 @@
 import { KgdiffError } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
-import { extendLayout, layoutDiff, layoutToJSON, nodeRadius } from '../src/index.js';
+import { layoutToJSON, nodeRadius } from '../src/index.js';
+import { extendLayout, layoutDiff } from '../src/sync.js';
 import { makeDiff } from './support/diff-builder.js';
 import { changes, scaleFree } from './support/fixtures.js';
 import { quality } from './support/metrics.js';

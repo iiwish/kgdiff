@@ -2,16 +2,10 @@
  * End-to-end scenarios that read like the specification: realistic change sets, the
  * semantic diff kgdiff should report, and the hunk titles a reviewer would see.
  */
-import {
-  applyDelta,
-  type DiffResult,
-  diff,
-  formatHunk,
-  hashGraph,
-  invertDelta,
-} from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { applyDelta, type DiffResult, formatHunk, hashGraph, invertDelta } from '@kgdiff/core';
 import { describe, expect, it } from 'vitest';
+import { parseGraph } from '../../formats/src/sync.js';
+import { diff } from '../src/sync.js';
 import {
   employmentAfter,
   employmentBefore,
