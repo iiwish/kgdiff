@@ -18,8 +18,10 @@ import { ViewBoundElement } from './view-bound.js';
  * @tagname kgdiff-zoom
  */
 export class KgdiffZoom extends ViewBoundElement implements KgdiffStageBoundElement {
+  /** @internal */
   protected readonly name = 'zoom';
 
+  /** @internal */
   protected build(ui: UiContext, view: StageView): Region {
     const zoom = new ZoomBar(ui, () => view);
     this.shadow.append(zoom.el);

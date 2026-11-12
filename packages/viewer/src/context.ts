@@ -12,6 +12,11 @@
  * subtree sends its request through an element inside it (`via`: the root named by `for`).
  */
 
+/**
+ * A context of the community context protocol: the `context` of a `context-request` event. Public
+ * through `stageContext` (`@kgdiff/viewer/elements/stage`), for content in a stage that requests
+ * the stage context to register itself as an obstacle.
+ */
 export interface Context<T> {
   /**
    * `Symbol.for(name)`: equal across copies of the library on one page (an IIFE report bundle

@@ -130,6 +130,7 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
 
+  /** @internal */
   protected connected(): void {
     if (!this.#ui) this.#build();
     const ui = this.#ui;
@@ -155,11 +156,13 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     document.fonts?.ready?.then(() => this.#ui?.stage.layout()).catch(() => undefined);
   }
 
+  /** @internal */
   protected disconnected(): void {
     for (const fn of this.#cleanup.splice(0)) fn();
     this.controller.detach();
   }
 
+  /** @internal */
   protected override attributeChanged(
     name: string,
     value: string | null,
@@ -200,22 +203,27 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     }
   }
 
+  /** @internal */
   protected override upgradedProperties(): readonly string[] {
     return ['chrome', 'legend', 'panels', 'persist', 'persistKey'];
   }
 
+  /** @internal */
   protected sheets(doc: Document): readonly CSSStyleSheet[] {
     return [stylesheet(doc)];
   }
 
+  /** @internal */
   protected createSession(host: SessionHost, deps: SessionDeps): ViewerController {
     return new ViewerController(host, deps);
   }
 
+  /** @internal */
   protected override keysEnabled(): boolean {
     return this.#ui !== null && this.chrome !== 'none';
   }
 
+  /** @internal */
   protected override interceptKey(e: KeyboardEvent): boolean {
     const ui = this.#ui;
     if (!ui || !(ui.help.open || ui.menu.open)) return false;
@@ -227,6 +235,7 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     return true;
   }
 
+  /** @internal */
   protected override payloadSet(payload: ReportPayload): void {
     // Validated (and warned about) once more when it loads.
     this.#report = sanitizeView(payload.view, true)?.panels ?? {};
@@ -471,7 +480,7 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
     }
   }
 
-  /** What the layout does for the regions: preferences reflect as attributes, panels open. */
+  /** @internal What the layout does for the regions: preferences reflect as attributes, panels open. */
   protected actions(): UiActions {
     return {
       ...this.baseActions(),

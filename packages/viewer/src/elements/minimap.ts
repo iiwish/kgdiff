@@ -25,6 +25,7 @@ import { ViewBoundElement } from './view-bound.js';
  *   Slotted into a stage it hides then, as the stage's own does.
  */
 export class KgdiffMinimap extends ViewBoundElement implements KgdiffMinimapElement {
+  /** @internal */
   protected readonly name = 'minimap';
 
   /** The custom states (`:state(overview)`); null where `ElementInternals` is missing. */
@@ -46,6 +47,7 @@ export class KgdiffMinimap extends ViewBoundElement implements KgdiffMinimapElem
     else states.delete('overview');
   }
 
+  /** @internal */
   protected build(ui: UiContext, view: StageView, release: (fn: () => void) => void): Region {
     const host = h('div', { class: 'minimap-host' });
     this.shadow.append(host);

@@ -30,6 +30,8 @@ More commands:
 ```sh
 pnpm bench                            # performance budgets (vitest bench), not part of `check`
 pnpm build && pnpm check:packages     # what `pnpm publish` would ship: publint, attw, source maps
+pnpm build && pnpm api:check          # the API reports match the built declarations (see below)
+pnpm build && pnpm api:update         # write the API reports again
 pnpm changeset                        # describe a change to a published package (see below)
 ```
 
@@ -99,6 +101,18 @@ run `pnpm changeset`, pick the bump (all packages share one version) and describ
 the changelog. Docs-, test- and tooling-only changes need none. On `main`, the release workflow
 collects the changesets into a "Version Packages" pull request; merging it publishes to npm.
 Details: [docs/releasing.md](docs/releasing.md).
+
+Each entry point of a published npm package has an API report, `packages/<name>/api/*.api.md`:
+its exported names and type signatures as the built declarations have them, written by
+[API Extractor](https://api-extractor.com/), with `// @experimental` and `// @deprecated` above
+the items marked so. CI fails when a report differs from the build (`pnpm api:check`), so a
+change to the public types is visible in review. When a report changes, the pull request changes
+the public API: check that the change is meant, run `pnpm build && pnpm api:update`, commit the
+reports and say in the changeset what changed. Lines added to a report are additions; lines
+removed or changed break code that uses them. From 1.0 on, a removal or a change in a report
+outside the items marked `// @experimental` is a breaking change and needs a major release of
+every package ([docs/versioning.md](docs/versioning.md)); before 1.0 it is a minor one. Doc
+comments are left out of the reports, so a documentation fix does not change them.
 
 ## Commit messages
 

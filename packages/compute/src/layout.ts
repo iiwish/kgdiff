@@ -11,9 +11,9 @@
  */
 import type { DiffResult, KGraph, UnionId } from '@kgdiff/core';
 import type { LayoutOptions, LayoutResult } from '@kgdiff/layout';
-import type * as Glue from '../wasm/layout.js';
+import { layoutModule } from './layout-module.js';
 import { decode, Streams } from './layout-tables.js';
-import { type InitSource, Module } from './loader.js';
+import type { InitSource } from './loader.js';
 
 export type { InitSource } from './loader.js';
 
@@ -26,12 +26,6 @@ const EXTEND = 1;
 const LAYOUT_GRAPH = 2;
 const LAYOUT_DIFF_ON = 3;
 const LAYOUT_AFTER = 4;
-
-export const layoutModule = new Module<typeof Glue>(
-  'layout',
-  () => import('../wasm/layout.js'),
-  () => new URL('../wasm/layout.wasm', import.meta.url),
-);
 
 /**
  * Loads and compiles `layout.wasm`. Call it once before any other function; later calls return at

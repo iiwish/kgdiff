@@ -14,8 +14,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-filters
  */
 export class KgdiffFilters extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'filters';
 
+  /** @internal */
   protected build(ui: UiContext): Region {
     const filters = new Filters(ui);
     this.shadow.append(filters.el);

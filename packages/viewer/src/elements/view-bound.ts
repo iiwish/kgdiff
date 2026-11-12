@@ -21,6 +21,7 @@ export abstract class ViewBoundElement extends HTMLElement {
     return ['stage'];
   }
 
+  /** @internal */
   protected readonly shadow: ShadowRoot;
   #stage: StageViewContext | null = null;
   /** Undone when the element unbinds from its stage. */
@@ -33,10 +34,10 @@ export abstract class ViewBoundElement extends HTMLElement {
     this.shadow = this.attachShadow({ mode: 'open' });
   }
 
-  /** The element's name after `kgdiff-` (its host rules). */
+  /** @internal The element's name after `kgdiff-` (its host rules). */
   protected abstract readonly name: ElementName;
 
-  /** Build the region in the shadow root, for `view`; `release` collects what to undo. */
+  /** @internal Build the region in the shadow root, for `view`; `release` collects what to undo. */
   protected abstract build(
     ui: UiContext,
     view: StageView,

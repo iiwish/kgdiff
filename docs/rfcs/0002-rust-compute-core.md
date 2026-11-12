@@ -11,9 +11,10 @@
   guide. Its sizes and timings were measured once on a quiet machine, and the gaps to the targets
   that 0.11 only measures are listed as work after 0.11
   ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.12, which
-  changes only the Rust API ([Revision 2026-11-12](#revision-2026-11-12)), after a two-week
-  stable period ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase
-  are listed in its results section.
+  readies the public API for 1.0, the Rust API above all
+  ([Revision 2026-11-12](#revision-2026-11-12)), after a two-week stable period
+  ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase are listed in its
+  results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
   results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10; phase 5 moved from 1.0 to 0.11 and 1.0
   defined as a stable 0.11 on 2026-11-11 ([Revision](#revision-2026-11-11)); phase 5 results
@@ -1151,7 +1152,8 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
 
 **Revised 2026-11-11 ([Revision](#revision-2026-11-11)).** This phase was first planned as kgdiff
 1.0. It is now kgdiff **0.11**, one version. kgdiff 1.0 carries no new code: it is 0.12, which
-changes only the Rust API ([Revision 2026-11-12](#revision-2026-11-12)), after a stable period
+readies the public API for 1.0, the Rust API above all
+([Revision 2026-11-12](#revision-2026-11-12)), after a stable period
 ([kgdiff 1.0](#kgdiff-10)). 0.10.0, released before
 it, holds the cleanup this phase needed: the three compatibility shims removed, the read path and
 the compute code split file by file (`tests/read-path.ts`), `ignoreAttrs` carrying the changes of
@@ -1617,8 +1619,16 @@ only known Rust host (Semlia) was still on 0.9 and upgrades once, to 0.12.
 5. **CI checks the Rust API** with `cargo-semver-checks` against the last release on crates.io,
    with the release type the pending changesets ask for (a changeset's minor is its `major`
    before 1.0).
-6. **Nothing else changes:** no JavaScript API, no CLI option, no document format and no output
-   byte. The guide is `docs/guide/migrating-to-0.12.md`.
+6. **The JavaScript API shrinks to what is documented,** with the same rule as `#[doc(hidden)]`:
+   what only kgdiff's own packages use is hidden or named as not covered. API reports
+   (`packages/*/api/*.api.md`, API Extractor) are committed and checked in CI, the TypeScript
+   counterpart of item 5; generating them found types that public signatures used but no entry
+   point exported. The element classes' override hooks are left out of the declarations
+   (subclassing the elements is not covered), `STAGE_REGIONS` and `@kgdiff/compute/layout`'s
+   `layoutModule` are no longer exported, `@kgdiff/core/computed` is named an internal entry
+   point, `@kgdiff/g6` exports `ElementKind`, and `shape2` of the scene's visuals is marked
+   experimental like `shape1`. No CLI option, no document format and no output byte changes.
+   The guide is `docs/guide/migrating-to-0.12.md`.
 
 ## Alternatives considered
 

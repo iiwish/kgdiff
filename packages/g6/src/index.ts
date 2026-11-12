@@ -17,7 +17,7 @@ import { DiffGraphControllerImpl } from './controller.js';
 import { mapFrame } from './map.js';
 import { registerKgdiffNode } from './node.js';
 
-export type { KgdiffDatumData } from './map.js';
+export type { ElementKind, KgdiffDatumData } from './map.js';
 
 export interface ToG6DataOptions {
   /** Prefix for generated G6 element ids (default ''). */

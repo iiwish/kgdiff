@@ -494,6 +494,11 @@ export interface EdgeVisual {
    * @experimental Becomes stable in 1.0.
    */
   shape1?: NodeShape;
+  /**
+   * The shape of the endpoint the line stops at, as `shape1` is the one it starts from.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
   shape2?: NodeShape;
   /** See the curve convention above. */
   curvature: number;
@@ -560,6 +565,11 @@ export interface GlyphVisual {
    * @experimental Becomes stable in 1.0.
    */
   shape1?: NodeShape;
+  /**
+   * The shape of the endpoint the line stops at, as `shape1` is the one it starts from.
+   *
+   * @experimental Becomes stable in 1.0.
+   */
   shape2?: NodeShape;
   color: string;
   /** Absolute; the label's alpha is relative to it. */

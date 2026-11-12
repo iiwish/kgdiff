@@ -18,8 +18,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-actions
  */
 export class KgdiffActions extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'actions';
 
+  /** @internal */
   protected build(ui: UiContext, ctx: ViewerContext, release: (fn: () => void) => void): Region {
     let menu: Menu | null = null;
     let help: HelpDialog | null = null;

@@ -66,14 +66,15 @@ function dropGlueDefault(): Plugin {
     name: 'kgdiff-drop-glue-default',
     enforce: 'pre',
     transform(code, id) {
-      if (id.endsWith('/packages/compute/src/layout.ts')) {
+      if (id.endsWith('/packages/compute/src/layout-module.ts')) {
         // An IIFE has no `import.meta.url` to resolve against (Rolldown writes `"" + {}.url`):
         // import the module as a URL instead, which library mode inlines as a data URL.
         const out = code.replace(
           "new URL('../wasm/layout.wasm', import.meta.url)",
           'new URL(kgdiffLayoutWasm)',
         );
-        if (out === code) this.error('@kgdiff/compute/layout no longer locates layout.wasm so');
+        if (out === code)
+          this.error('packages/compute/src/layout-module.ts no longer locates layout.wasm so');
         return {
           code: `import kgdiffLayoutWasm from '../wasm/layout.wasm?url';\n${out}`,
           map: null,

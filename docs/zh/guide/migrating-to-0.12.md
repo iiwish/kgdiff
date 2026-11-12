@@ -1,6 +1,18 @@
 # 迁移到 0.12
 
-kgdiff 0.12 只改 Rust API：给 1.0 之后计划中的新增留出位置，让它们都不需要升主版本（[版本约定](../versioning.md)）。npm 包、命令行、文档格式和每一个输出字节都和 0.11 相同；对 JavaScript 和命令行来说，升级只是换个版本号。0.12 是最后一个有破坏性变更的版本；1.0 是 0.12 经过稳定期之后的版本（[RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#kgdiff-10)）。
+kgdiff 0.12 为 1.0 整理公开 API。Rust API 给 1.0 之后计划中的新增留出位置，让它们都不需要升主版本（[版本约定](../versioning.md)）。JavaScript API 收到只剩有文档的部分：几个只有 kgdiff 自己的包在用的导出去掉了或隐藏了（[见下文](#javascript)）。命令行、文档格式和每一个输出字节都和 0.11 相同；对命令行来说，升级只是换个版本号。0.12 是最后一个有破坏性变更的版本；1.0 是 0.12 经过稳定期之后的版本（[RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#kgdiff-10)）。
+
+## JavaScript
+
+通过属性、方法和事件使用查看器元素的页面和应用，以及按文档使用其他包的代码，都不用改。改动的地方：
+
+- **`@kgdiff/viewer/elements/*`**：元素类的声明里不再出现子类会去覆盖的成员（`build`、`name`、`shadow`、`context`、`upgradedProperties`，以及 `<kgdiff-root>` 的 `actions`、`connected`、`createSession`、`sheets` 等钩子），也不再有 `KgdiffStage` 的 `view`。继承元素类不属于公开 API（[版本约定](../versioning.md)）：要扩展元素，请用组合的方式（插槽、`addLayer`、`registerObstacle`、事件）。
+- **`@kgdiff/viewer/elements/stage`**：不再导出 `STAGE_REGIONS`。这些区域就是 `@kgdiff/viewer` 的 `StageRegion` 类型：`['dock', 'transport', 'legend', 'zoom', 'minimap']`。`stageContext` 的类型 `Context` 现在一起导出。
+- **`@kgdiff/compute/layout`**：不再导出 `layoutModule`。请调用 `init()` 和这个入口的函数。
+- **`@kgdiff/core/computed`** 是 `@kgdiff/compute` 的内部入口，不受语义化版本保护。
+- **新增**：`@kgdiff/g6` 导出 `ElementKind`，即 `KgdiffDatumData.kgdiff` 的类型。
+- **`@kgdiff/scene`**：`EdgeVisual` 和 `GlyphVisual` 的 `shape2` 和 `shape1` 一样是实验性的（本意一直如此，只是原来的文档只给 `shape1` 标了）。
+- 每个入口现在都有一份 API 报告 `packages/<name>/api/*.api.md`，CI 会把它和构建出的声明文件对比。
 
 ## 选项、输入和结果标了 `#[non_exhaustive]`
 

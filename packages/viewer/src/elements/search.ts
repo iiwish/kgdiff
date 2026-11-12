@@ -18,8 +18,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-search
  */
 export class KgdiffSearch extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'search';
 
+  /** @internal */
   protected build(ui: UiContext): Region {
     const search = new Search(ui);
     this.shadow.append(search.box, search.results);

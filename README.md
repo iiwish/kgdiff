@@ -310,8 +310,9 @@ The same documentation, in English and Chinese, is published at
 ## Roadmap
 
 **0.11** (2026-11-12) moved all computing onto the Rust engine: the CLI natively, everything
-else through `@kgdiff/compute`. **0.12** changes only the Rust API, so that the additions after
-1.0 need no major release ([Migrating to 0.12](docs/guide/migrating-to-0.12.md)); it is the last
+else through `@kgdiff/compute`. **0.12** prepares the public API for 1.0: the Rust API makes room
+for the additions after 1.0, so that they need no major release, and the JavaScript API keeps
+only what is documented ([Migrating to 0.12](docs/guide/migrating-to-0.12.md)); it is the last
 release with breaking changes. **1.0** is 0.12 unchanged after two weeks with only patch
 releases, with its experimental APIs declared stable
 ([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10), [Versioning](docs/versioning.md)).

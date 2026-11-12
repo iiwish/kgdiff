@@ -14,8 +14,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-change-detail
  */
 export class KgdiffChangeDetail extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'change-detail';
 
+  /** @internal */
   protected build(ui: UiContext): Region {
     const detail = new Detail(ui);
     this.shadow.append(detail.el);

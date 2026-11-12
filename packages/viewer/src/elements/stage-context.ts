@@ -28,5 +28,10 @@ export interface StageViewContext extends StageContext {
   watchView(listener: (view: StageView | null) => void): () => void;
 }
 
-/** The stage context's key (`Symbol.for('kgdiff.stage/1')`). */
+/**
+ * The context a `<kgdiff-stage>` (and a `<kgdiff-viewer>`, for its built-in stage) provides to its
+ * descendants, keyed `Symbol.for('kgdiff.stage/1')`: content positioned over the canvas that the
+ * stage does not place requests it with a `context-request` event (the community context
+ * protocol) and registers itself with `registerObstacle`.
+ */
 export const stageContext = createContext<StageContext>('kgdiff.stage/1');

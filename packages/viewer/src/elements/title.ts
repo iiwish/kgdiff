@@ -14,8 +14,10 @@ import { BoundElement, define } from './bound.js';
  * @tagname kgdiff-title
  */
 export class KgdiffTitle extends BoundElement implements KgdiffBoundElement {
+  /** @internal */
   protected readonly name = 'title';
 
+  /** @internal */
   protected build(ui: UiContext): Region {
     const title = new Title(ui);
     this.shadow.append(title.el);

@@ -109,6 +109,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
   readonly controller: S;
   /** @internal The root: session, keyboard map, live region, events, tokens. */
   protected readonly root: ViewerRoot<S>;
+  /** @internal */
   protected readonly shadow: ShadowRoot;
   #currentPayload: ReportPayload | null = null;
   #reflecting = false;
@@ -141,35 +142,35 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
 
   // ─── Hooks ────────────────────────────────────────────────────────────────
 
-  /** What the layout does for the regions (`UiActions`); its closures run later. */
+  /** @internal What the layout does for the regions (`UiActions`); its closures run later. */
   protected abstract actions(): UiActions;
 
-  /** Connected: build and attach what the element shows (before the first render). */
+  /** @internal Connected: build and attach what the element shows (before the first render). */
   protected abstract connected(): void;
 
-  /** Disconnected (after the root stopped providing). */
+  /** @internal Disconnected (after the root stopped providing). */
   protected abstract disconnected(): void;
 
-  /** An observed attribute that is not a root attribute changed (from `_old`). */
+  /** @internal An observed attribute that is not a root attribute changed (from `_old`). */
   protected attributeChanged(_name: string, _value: string | null, _old: string | null): void {}
 
-  /** The session this root holds (the default layout's has its canvas built in). */
+  /** @internal The session this root holds (the default layout's has its canvas built in). */
   protected abstract createSession(host: SessionHost, deps: SessionDeps): S;
 
-  /** The sheets the shadow root adopts before the token set. */
+  /** @internal The sheets the shadow root adopts before the token set. */
   protected abstract sheets(doc: Document): readonly CSSStyleSheet[];
 
-  /** Properties of the subclass a page may set before the element is defined. */
+  /** @internal Properties of the subclass a page may set before the element is defined. */
   protected upgradedProperties(): readonly string[] {
     return [];
   }
 
-  /** Whether keys do anything at all (`chrome="none"` turns them off in the default layout). */
+  /** @internal Whether keys do anything at all (`chrome="none"` turns them off in the default layout). */
   protected keysEnabled(): boolean {
     return true;
   }
 
-  /** A key reached the root: return true when the layout took it (an open popover). */
+  /** @internal A key reached the root: return true when the layout took it (an open popover). */
   protected interceptKey(_e: KeyboardEvent): boolean {
     return false;
   }
@@ -248,6 +249,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
    * Apply a preference from an attribute or a property. Valid values are explicit (a report's
    * `view` does not override them); invalid ones fall back to the default (`overlay`, `all`,
    * `auto`, `default`, the browser's language). Properties reflect the normalized value.
+   * @internal
    */
   protected applyPreference(
     name: 'mode' | 'scope' | 'theme' | 'palette' | 'locale',
@@ -428,7 +430,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     });
   }
 
-  /** A valid payload was set, before it loads. */
+  /** @internal A valid payload was set, before it loads. */
   protected payloadSet(_payload: ReportPayload): void {}
 
   // ─── Methods ──────────────────────────────────────────────────────────────
@@ -493,6 +495,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
 
   // ─── Internals ────────────────────────────────────────────────────────────
 
+  /** @internal */
   protected reflect(name: string, value: string | null): void {
     if (this.getAttribute(name) === value) return;
     this.#reflecting = true;
@@ -504,7 +507,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     }
   }
 
-  /** The actions every root has: preferences reflect as attributes. */
+  /** @internal The actions every root has: preferences reflect as attributes. */
   protected baseActions(): Pick<
     UiActions,
     'tr' | 'setMode' | 'toggleScope' | 'setThemePreference' | 'setPalette' | 'setLocale'
@@ -525,7 +528,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     };
   }
 
-  /** The pointer entered or left the graph (holds a looping replay with `pause-on-hover`). */
+  /** @internal The pointer entered or left the graph (holds a looping replay with `pause-on-hover`). */
   protected pointerOver(over: boolean): void {
     this.#pointerOver = over;
     this.#applyHold();
@@ -536,7 +539,7 @@ export abstract class RootElement<S extends DiffSession = DiffSession> extends H
     this.controller.hold(this.#pointerOver && this.loop && this.pauseOnHover);
   }
 
-  /** Reflect what the session changed (mode, scope, theme) back to the attributes. */
+  /** @internal Reflect what the session changed (mode, scope, theme) back to the attributes. */
   protected reflectSession(topics: ReadonlySet<Topic>): void {
     const c = this.controller;
     if (topics.has('mode')) {
