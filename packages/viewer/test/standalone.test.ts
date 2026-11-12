@@ -16,7 +16,7 @@ const configFile = fileURLToPath(new URL('../vite.config.ts', import.meta.url));
 const src = (file: string): string => fileURLToPath(new URL(`../src/${file}`, import.meta.url));
 const outDir = mkdtempSync(join(tmpdir(), 'kgdiff-viewer-standalone-'));
 
-/** Target for the standalone viewer, min + gzip, without formats: not met yet. */
+/** Target for the standalone viewer, min + gzip, without the parsers: not met yet. */
 const BUDGET_KB = 90;
 /**
  * Enforced ceiling (docs/architecture.md §Budgets). zlib builds compress differently: the
@@ -58,7 +58,7 @@ describe('standalone bundle', () => {
     );
     expect(viewer.text.startsWith('var KgdiffViewer=')).toBe(true);
     // Parsers and the compute module are loaded on demand, never bundled.
-    expect(viewer.text).toContain('import(`@kgdiff/formats`)');
+    expect(viewer.text).toContain('import(`@kgdiff/compute`)');
     expect(viewer.text).toContain('import(`@kgdiff/viewer/compute`)');
     expect(viewer.text).not.toMatch(/forceSimulation|N3\.Parser/);
     expect(viewer.text).toContain('customElements.define');

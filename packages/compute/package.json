@@ -54,7 +54,6 @@
   },
   "dependencies": {
     "@kgdiff/core": "workspace:*",
-    "@kgdiff/formats": "workspace:*",
     "@kgdiff/layout": "workspace:*"
   },
   "devDependencies": {

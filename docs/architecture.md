@@ -42,7 +42,7 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 
 ```
 @kgdiff/core       model and read path: normalize, JSON transports, delta, hunk titles; diff  (compute)
-@kgdiff/formats    deprecated: RDF, OBO, JSON → GraphInput, on @kgdiff/compute's parsers      (compute)
+@kgdiff/formats    deprecated: re-exports the parsers of @kgdiff/compute and their types      (compute)
 @kgdiff/layout     layout document, radii, label widths; stable union layout                  (compute)
 @kgdiff/compute    kgdiff's Rust engine in WebAssembly: diff, parsers, layout
 @kgdiff/scene      diff semantics → visual primitives: tokens, encodings, replay, focus
@@ -59,15 +59,17 @@ apps/site          landing page + playground (drag two files in, get a diff)
 Dependency graph (arrows point at dependencies):
 
 ```
-core ◀── formats
 core ◀── layout ◀── scene ◀── renderer ◀── viewer
-                    scene ◀── g6               ▲
-          formats ◀─────────────────── viewer ─┘
+                    scene ◀── g6
 ```
 
-`@kgdiff/compute` is not in the graph either: `core`, `formats` and `layout` load it with a
-dynamic `import()` when a function that computes is first called (it depends on them for their
-types and read path), so a bundle that only reads reports contains no WebAssembly. Since 0.11
+`@kgdiff/compute` is not in the graph: `core` and `layout` load it with a dynamic `import()` when
+a function that computes is first called (it depends on them for their types and read path), and
+the viewer loads it on demand too (layouts, diffs, and the parsers for text sources), so a bundle
+that only reads reports contains no WebAssembly. The parsers' types (`ParseOptions`,
+`ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are `@kgdiff/compute`'s. `@kgdiff/formats`
+(deprecated, removed in 2.0) is not in the graph either: it depends on `@kgdiff/compute`,
+re-exports those and calls its parsers, and no other package depends on it. Since 0.11
 TypeScript keeps only what reads a computed diff synchronously (`tests/read-path.ts`); the
 engine itself is the Rust one. `@kgdiff/cli` is not in the graph: it holds no TypeScript compute, only a launcher of the Rust
 `kgdiff` binary. The Rust crates (`kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`,
@@ -78,7 +80,7 @@ byte-identical (RFC 0002, `docs/rfcs/0002-rust-compute-core.md`).
 ## Data flow
 
 ```
-text ──formats.parseGraph──▶ GraphInput ×2
+text ──compute.parseGraph─▶ GraphInput ×2
      ──core.diff──────────▶ DiffResult        (union graph + facets + hunks + delta + stats)
      ──layout.layoutDiff──▶ LayoutResult      (one position per union node)
      ──scene.buildScene───▶ Scene             (indices, roles, families, titles, timeline)
@@ -219,7 +221,7 @@ and D-11).
 | `buildScene`, 10k nodes                                                   | < 50 ms                                                                                 |
 | `resolve` per frame, 5k nodes / 10k edges                                 | < 4 ms, zero steady-state allocations                                                   |
 | pan / zoom, 5k nodes / 10k edges                                          | 60 fps                                                                                  |
-| viewer standalone bundle (min + gzip, without formats and compute add-on) | < 130 kB (target 90 kB)                                                                 |
+| viewer standalone bundle (min + gzip, without parsers and compute add-on) | < 130 kB (target 90 kB)                                                                 |
 | HTML report overhead (without data or compute add-on)                     | < 135 kB gzip                                                                           |
 | `compute.wasm` (core and layout, no parsers), gzip                        | < 400 kB                                                                                |
 

@@ -8,7 +8,8 @@
  *   loaded (`ready`). The add-on carries that module inlined, so a single-file report expands
  *   groups offline.
  * - `diff` (`load()` with graphs) runs on the full engine, loaded and compiled on first use
- *   through `@kgdiff/core`; parsing text, through `@kgdiff/formats`, on the parsers.
+ *   through `@kgdiff/core`. Parsing text does not come through here: `pipeline.ts` imports
+ *   `@kgdiff/compute` for it.
  */
 import { extendLayoutSync, init, layoutDiffSync } from '@kgdiff/compute/layout';
 import type { DiffResult, UnionId } from '@kgdiff/core';

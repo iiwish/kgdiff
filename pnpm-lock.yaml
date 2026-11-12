@@ -106,9 +106,6 @@ importers:
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../core
-      '@kgdiff/formats':
-        specifier: workspace:*
-        version: link:../formats
       '@kgdiff/layout':
         specifier: workspace:*
         version: link:../layout
@@ -180,9 +177,6 @@ importers:
       '@kgdiff/core':
         specifier: workspace:*
         version: link:../core
-      '@kgdiff/formats':
-        specifier: workspace:*
-        version: link:../formats
       '@kgdiff/layout':
         specifier: workspace:*
         version: link:../layout

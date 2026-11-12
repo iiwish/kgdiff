@@ -129,7 +129,6 @@
   "dependencies": {
     "@kgdiff/compute": "workspace:*",
     "@kgdiff/core": "workspace:*",
-    "@kgdiff/formats": "workspace:*",
     "@kgdiff/layout": "workspace:*",
     "@kgdiff/renderer": "workspace:*",
     "@kgdiff/scene": "workspace:*"

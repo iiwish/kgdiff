@@ -13,9 +13,11 @@ The engine is three modules, and each is loaded only when it is asked for
 | `layout.wasm`  | the layout of a `DiffResult`, on typed arrays, without JSON or Unicode normalization | `layoutDiffSync`, `extendLayoutSync`…              |
 
 The other kgdiff packages run on it since 0.11: `diff`, `matchNodes` and `textSimilarity` of
-`@kgdiff/core`, `parseGraph` and `detectFormat` of `@kgdiff/formats` (deprecated in favour of this
-package) and the layouts of `@kgdiff/layout` are asynchronous and load it with a dynamic
-`import()`, so a bundle that only reads diffs never contains WebAssembly. A diff computed here is
+`@kgdiff/core` and the layouts of `@kgdiff/layout` are asynchronous and load it with a dynamic
+`import()`, so a bundle that only reads diffs never contains WebAssembly. The parsers are this
+package's: `@kgdiff/formats` (deprecated, removed in 2.0) re-exports their types and
+`FORMAT_EXTENSIONS` from here and calls `parseGraph`, `detectFormat` and `compactIri`, and no
+other kgdiff package depends on it. A diff computed here is
 read back without `diffFromJSON`'s consistency checks (the engine of the same build wrote it), and
 with the node positions of its graphs, so `layoutDiff` anchors on them. See
 [Migrating to 0.11](../../docs/guide/migrating-to-0.11.md).
@@ -66,9 +68,9 @@ twin without the suffix (`diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `
 | `matchNodesSync(before, after, options?)`             | `compute` | `matchNodes` on the two graphs: a `KGraph` with its own edge identity, a `GraphInput` normalized with the default options.                                                                                       |
 | `textSimilaritySync(a, b)`                            | `compute` | `textSimilarity`.                                                                                                                                                                                                |
 | `diffAndLayoutSync(before, after, options?, layout?)` | `compute` | `{ diff, layout }` in one call, for an application that starts from graphs.                                                                                                                                      |
-| `parseGraphSync(text, options?)`                      | `formats` | `parseGraph` of `@kgdiff/formats`, `jsonld.documentLoader` included.                                                                                                                                             |
-| `detectFormatSync(text, filename?)`                   | `formats` | `detectFormat`.                                                                                                                                                                                                  |
-| `compactIriSync(iri, prefixes?)`                      | `formats` | `compactIri`.                                                                                                                                                                                                    |
+| `parseGraphSync(text, options?)`                      | `formats` | Parses graph text (`ParseOptions` → `ParseResult`), `jsonld.documentLoader` included; what `parseGraph` of `@kgdiff/formats` calls.                                                                              |
+| `detectFormatSync(text, filename?)`                   | `formats` | The `FormatId` of a text, from its file name (`FORMAT_EXTENSIONS`) and content.                                                                                                                                  |
+| `compactIriSync(iri, prefixes?)`                      | `formats` | Compacts an IRI with the well-known prefixes and `prefixes`, for display.                                                                                                                                        |
 | `layoutDiffSync(diff, options?)`                      | `layout`  | `layoutDiff` of `@kgdiff/layout`, on the Rust engine.                                                                                                                                                            |
 | `extendLayoutSync(diff, layout, nodes, options?)`     | `layout`  | `extendLayout`: adds nodes without moving any node placed.                                                                                                                                                       |
 | `layoutGraphSync(graph, options?)`                    | `layout`  | The layout of one graph (`layout_graph` of the `kgdiff-layout` crate); a `GraphInput` is normalized first.                                                                                                       |
@@ -77,6 +79,11 @@ twin without the suffix (`diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `
 | `estimateLabelWidthSync`, `nodeRadiusSync`            | `layout`  | As `@kgdiff/layout` has them.                                                                                                                                                                                    |
 | `version()`                                           | any       | The version of the kgdiff crates the modules were built from.                                                                                                                                                    |
 | `json.*`                                              | each      | The low-level interface, JSON text in and out: `diff`, `matchNodes`, `normalize`, `issues`, `hashGraph`, `diffLayout`, `layoutGraph`, `parseGraph`, `layoutDiff`, `extendLayout`, `layoutDiffOn`, `layoutAfter`. |
+
+The parsers' types are exported too (`FormatId`, `ParseOptions`, `ParseResult`, `ParseWarning`,
+`ParseWarningCode`, `RdfOptions`, `JsonOptions`, `JsonLdOptions`, `JsonDialect`), with
+`FORMAT_EXTENSIONS`, the file extensions `detectFormat` knows. Since 0.11.1 they are defined here;
+`@kgdiff/formats` re-exports the same declarations.
 
 Graphs and options can be given as objects or as JSON text. An object is written with
 `JSON.stringify`, so values that JSON cannot hold (NaN, ±Infinity) arrive as `null`. Failures are

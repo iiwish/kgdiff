@@ -32,8 +32,8 @@ The package is ESM only and runs in evergreen browsers.
 
 Give the element a height. `load()` takes each side as one of:
 
-- `{ text, filename }`: parsed with `@kgdiff/formats`, the format detected from the file name and
-  the content; `parse` passes parser options;
+- `{ text, filename }`: parsed with `parseGraph` of `@kgdiff/compute`, the format detected from
+  the file name and the content; `parse` passes parser options (`ParseOptions`);
 - a graph object `{ nodes, edges }` in [kgdiff JSON](../formats.md#kgdiff-json);
 - a normalized graph from `@kgdiff/core`.
 

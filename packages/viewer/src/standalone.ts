@@ -1,7 +1,7 @@
 /**
  * Entry of the standalone IIFE bundle (`dist/standalone/kgdiff-viewer.js`): defines
  * `<kgdiff-viewer>` and hydrates embedded report payloads once the document is parsed.
- * `@kgdiff/formats` is not bundled; `load()` with text sources imports it on demand.
+ * The parsers are not bundled; `load()` with text sources imports `@kgdiff/compute` on demand.
  */
 import { hydrateEmbeddedPayloads } from './index.js';
 
