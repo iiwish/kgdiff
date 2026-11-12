@@ -82,25 +82,25 @@ fn parse_side(dir: &Path, spec: &Value, side: &str) -> ParseResult {
     if parse.get("allowEmpty") == Some(&Value::Bool(true))
         && kgdiff_core::js::trim(&text).is_empty()
     {
-        let options = ParseOptions {
-            format: Some(FormatId::Json),
-            filename,
-            ..ParseOptions::default()
-        };
+        let mut options = ParseOptions::default();
+        options.format = Some(FormatId::Json);
+        options.filename = filename;
         return parse_graph("{\"nodes\":[],\"edges\":[]}", &options).unwrap();
     }
     let format = match parse.get("format").and_then(Value::as_str) {
         None | Some("auto") => None,
         Some(id) => FormatId::from_id(id),
     };
-    let options = ParseOptions {
-        format,
-        filename,
-        rdf: RdfOptions {
-            languages,
-            ..RdfOptions::default()
-        },
-        ..ParseOptions::default()
+    let options = {
+        let mut o = ParseOptions::default();
+        o.format = format;
+        o.filename = filename;
+        o.rdf = {
+            let mut o = RdfOptions::default();
+            o.languages = languages;
+            o
+        };
+        o
     };
     parse_graph(&text, &options).unwrap()
 }
@@ -271,28 +271,24 @@ fn text_outputs_are_byte_identical() {
                 .into_iter()
                 .map(str::to_owned)
                 .collect();
-            let ctx = TextContext {
-                paint: Painter::plain(),
-                locale,
-                width,
-                limit,
-                watch: if watch.is_empty() {
+            let ctx = {
+                let mut o = TextContext::new(Painter::plain(), locale);
+                o.width = width;
+                o.limit = limit;
+                o.watch = if watch.is_empty() {
                     None
                 } else {
                     Some(watch.clone())
-                },
+                };
+                o
             };
             let title = case.title();
             let actual = if args.iter().any(|a| a == "--markdown") {
-                render_markdown(
-                    &case.result,
-                    &MarkdownOptions {
-                        locale,
-                        title: &title,
-                        generator: "kgdiff 9.9.9",
-                        watch: if watch.is_empty() { None } else { Some(&watch) },
-                    },
-                )
+                render_markdown(&case.result, &{
+                    let mut o = MarkdownOptions::new(locale, &title, "kgdiff 9.9.9");
+                    o.watch = if watch.is_empty() { None } else { Some(&watch) };
+                    o
+                })
                 .unwrap()
                 .replace("kgdiff 9.9.9", "kgdiff <version>")
             } else {
@@ -365,23 +361,26 @@ fn report_payloads_match_report_json_and_layouts_their_contract() {
                 .and_then(|i| i.get(key))
                 .and_then(Value::as_str)
                 .unwrap();
-            ReportSide {
-                name: graph_label(r.graph.get("meta"), display),
-                format: Some(r.format.id().to_owned()),
-            }
+            ReportSide::new(
+                graph_label(r.graph.get("meta"), display),
+                Some(r.format.id().to_owned()),
+            )
         };
-        let info = ReportInfo {
-            title: case.title(),
-            generator: "kgdiff <version>".to_owned(),
-            generated_at: None,
-            before: side(&case.before, "before"),
-            after: side(&case.after, "after"),
-            mode: None,
-            scope: None,
-            theme: None,
-            locale,
-            panels: None,
-            shapes: None,
+        let info = {
+            let mut o = ReportInfo::new(
+                case.title(),
+                "kgdiff <version>".to_owned(),
+                side(&case.before, "before"),
+                side(&case.after, "after"),
+            );
+            o.generated_at = None;
+            o.mode = None;
+            o.scope = None;
+            o.theme = None;
+            o.locale = locale;
+            o.panels = None;
+            o.shapes = None;
+            o
         };
         let mut payload = kgdiff_report::html::report_payload(&case.result, &info);
         let errors = schemas.errors("report.v1.json", &payload);

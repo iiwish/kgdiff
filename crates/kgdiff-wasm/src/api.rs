@@ -67,10 +67,10 @@ fn normalize_options(text: &str) -> Result<NormalizeOptions> {
             ));
         }
     };
-    Ok(NormalizeOptions {
-        edge_identity,
-        dangling_edges,
-    })
+    let mut options = NormalizeOptions::default();
+    options.edge_identity = edge_identity;
+    options.dangling_edges = dangling_edges;
+    Ok(options)
 }
 
 /// `diffToJSON(diff(before, after, options))`: the `kgdiff.diff` document of two graphs.
@@ -188,15 +188,12 @@ pub fn apply_delta_json(graph: &str, delta: &str, options_text: &str) -> Result<
             }
         },
     };
-    let base = normalize_text(
-        graph,
-        "the graph",
-        NormalizeOptions {
-            edge_identity: delta.edge_identity,
-            ..NormalizeOptions::default()
-        },
-    )?;
-    let (applied, skipped) = apply_delta(&base, &delta, ApplyOptions { strict })?;
+    let mut normalize_options = NormalizeOptions::default();
+    normalize_options.edge_identity = delta.edge_identity;
+    let base = normalize_text(graph, "the graph", normalize_options)?;
+    let mut apply_options = ApplyOptions::default();
+    apply_options.strict = strict;
+    let (applied, skipped) = apply_delta(&base, &delta, apply_options)?;
     let mut out = Object::new();
     out.insert("graph", graph_to_json(&applied));
     let skipped = skipped

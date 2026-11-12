@@ -70,7 +70,8 @@
 //!     "edges":[{"source":"a","target":"b","predicate":"p"},
 //!              {"source":"b","target":"c","predicate":"p"}]}"#)?;
 //! let next = normalize(&next, NormalizeOptions::default())?;
-//! let pinned = LayoutOptions { pinned: previous.positions.clone(), ..LayoutOptions::default() };
+//! let mut pinned = LayoutOptions::default();
+//! pinned.pinned = previous.positions.clone();
 //! let grown = layout_graph(&next, &pinned)?;
 //! assert_eq!(grown.stats.strategy, LayoutStrategy::Anchored);
 //! assert_eq!(grown.positions["a"], previous.positions["a"]);
@@ -154,7 +155,8 @@
 //!     "edges":[{"source":"a","target":"b","predicate":"p"},
 //!              {"source":"b","target":"c","predicate":"p"}]}"#)?;
 //! let result = diff(&before, &after, &DiffOptions::default())?;
-//! let options = LayoutOptions { scope: Some(LayoutScope::Changes), ..LayoutOptions::default() };
+//! let mut options = LayoutOptions::default();
+//! options.scope = Some(LayoutScope::Changes);
 //! let focused = layout_diff(&result, &options)?;
 //! assert_eq!(focused.hidden["b"], 1); // c is left out
 //!
@@ -294,7 +296,7 @@ pub fn layout_diff<'a>(
 /// The graph is diffed with itself to build the union, which costs about 30 ms for 10k nodes and
 /// 30k edges.
 ///
-/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+/// New in 0.9 (RFC 0003, part 1).
 ///
 /// # Errors
 ///
@@ -306,14 +308,9 @@ pub fn layout_graph(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutRes
 
 /// The layout of the diff of `graph` with itself.
 fn of_the_identical_diff(graph: &KGraph, options: &LayoutOptions) -> Result<LayoutResult> {
-    let identical = diff_graphs(
-        graph.clone(),
-        graph.clone(),
-        DiffOptions {
-            edge_identity: graph.edge_identity(),
-            ..DiffOptions::default()
-        },
-    )?;
+    let mut diff_options = DiffOptions::default();
+    diff_options.edge_identity = graph.edge_identity();
+    let identical = diff_graphs(graph.clone(), graph.clone(), diff_options)?;
     pipeline::layout(
         &table::LayoutTable::from(LayoutInput::from(&identical)),
         options,
@@ -348,10 +345,10 @@ fn of_the_identical_diff(graph: &KGraph, options: &LayoutOptions) -> Result<Layo
 ///   of versions.
 ///
 /// [`layout_after`] then gives the after version its layout from this one. In that order a
-/// version, the next one and their diff share one map; `LayoutOptions { pinned:
-/// previous.positions.clone(), .. }` on [`layout_graph`] gives that only when no id changes.
+/// version, the next one and their diff share one map; [`layout_graph`] with
+/// `options.pinned = previous.positions.clone()` gives that only when no id changes.
 ///
-/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+/// New in 0.9 (RFC 0003, part 1).
 ///
 /// # Errors
 ///
@@ -383,7 +380,7 @@ pub fn layout_diff_on<'a>(
 /// - `stats.iterations` is 0, and `stats.strategy` is `Anchored` unless the after version is
 ///   empty.
 ///
-/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+/// New in 0.9 (RFC 0003, part 1).
 ///
 /// # Errors
 ///

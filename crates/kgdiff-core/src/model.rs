@@ -26,6 +26,7 @@ pub struct Point {
 
 /// How edges are identified within a version and matched across versions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
 pub enum EdgeIdentity {
     /// An edge is its (source, predicate, target) triple.
     #[default]
@@ -53,6 +54,7 @@ impl EdgeIdentity {
 
 /// Codes of the issues `normalize` reports.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum GraphIssueCode {
     DuplicateNode,
     DanglingEdge,
@@ -75,6 +77,7 @@ impl GraphIssueCode {
 
 /// Something `normalize` repaired.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct GraphIssue {
     pub code: GraphIssueCode,
     pub message: String,
@@ -183,6 +186,7 @@ impl SetChange {
 
 /// How a merge or split was found.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Via {
     Hint,
     Heuristic,
@@ -199,6 +203,7 @@ impl Via {
 
 /// Why an edge endpoint changed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Cause {
     Edit,
     Merge,
@@ -235,6 +240,7 @@ impl End {
 
 /// Every facet kind, in canonical facet order (`FACET_ORDER`, docs/algorithms.md §4).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum FacetKind {
     Rekey,
     Rename,
@@ -308,11 +314,14 @@ impl FacetKind {
 
 /// A semantic change of a node.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum NodeFacet {
+    #[non_exhaustive]
     Rename {
         from: JsStr,
         to: JsStr,
     },
+    #[non_exhaustive]
     Rekey {
         from: Id,
         to: Id,
@@ -320,35 +329,43 @@ pub enum NodeFacet {
     },
     Types(SetChange),
     Aliases(SetChange),
+    #[non_exhaustive]
     Attrs {
         changes: Vec<AttrChange>,
     },
     /// Parents removed and added (union ids, sorted) under a hierarchy predicate.
+    #[non_exhaustive]
     Move {
         predicate: JsStr,
         from: Vec<UnionId>,
         to: Vec<UnionId>,
     },
+    #[non_exhaustive]
     Deprecate {
         deprecated: bool,
     },
+    #[non_exhaustive]
     Replacement {
         replaces: SetChange,
         replaced_by: SetChange,
     },
+    #[non_exhaustive]
     MergedInto {
         target: UnionId,
         confidence: f64,
         via: Via,
     },
+    #[non_exhaustive]
     MergeTarget {
         sources: Vec<UnionId>,
     },
+    #[non_exhaustive]
     SplitFrom {
         source: UnionId,
         confidence: f64,
         via: Via,
     },
+    #[non_exhaustive]
     SplitInto {
         targets: Vec<UnionId>,
     },
@@ -440,28 +457,24 @@ impl NodeFacet {
 
 /// A semantic change of an edge.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum EdgeFacet {
+    #[non_exhaustive]
     Retarget {
         end: End,
         from: UnionId,
         to: UnionId,
         cause: Cause,
     },
-    Predicate {
-        from: JsStr,
-        to: JsStr,
-    },
-    Label {
-        from: JsStr,
-        to: JsStr,
-    },
-    Attrs {
-        changes: Vec<AttrChange>,
-    },
+    #[non_exhaustive]
+    Predicate { from: JsStr, to: JsStr },
+    #[non_exhaustive]
+    Label { from: JsStr, to: JsStr },
+    #[non_exhaustive]
+    Attrs { changes: Vec<AttrChange> },
     /// Removed because, after a merge, it would duplicate the union edge `into`.
-    Collapsed {
-        into: UnionId,
-    },
+    #[non_exhaustive]
+    Collapsed { into: UnionId },
 }
 
 impl EdgeFacet {
@@ -515,6 +528,7 @@ pub struct Degree {
 /// A node of the union graph (`UnionNode`): `added` has only `after`, `removed` only `before`,
 /// `unchanged` and `modified` both.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct UnionNode {
     pub id: UnionId,
     pub status: ChangeStatus,
@@ -543,6 +557,7 @@ impl UnionNode {
 
 /// An edge of the union graph (`UnionEdge`).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct UnionEdge {
     pub id: UnionId,
     /// Endpoints in the after version (the before version for removed edges).
@@ -661,6 +676,7 @@ impl CountTriplet {
 
 /// What a hunk owns, counted.
 #[derive(Clone, Debug, PartialEq, Default)]
+#[non_exhaustive]
 pub struct HunkSummary {
     pub nodes: CountTriplet,
     pub edges: CountTriplet,
@@ -688,6 +704,7 @@ impl HunkSummary {
 
 /// A review unit: a partition of the changed union elements (`Hunk`).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Hunk {
     /// `${kind}:${anchor}`, unique in a diff. It depends on the kind and the anchor only: the
     /// same two graphs and options give the same ids, and the id says where the hunk is, not
@@ -737,6 +754,7 @@ impl Hunk {
 
 /// `id`, `hint` or `similarity`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum MatchMethod {
     Id,
     Hint,
@@ -755,6 +773,7 @@ impl MatchMethod {
 
 /// Per-signal similarity breakdown, each in [0, 1]; missing signals are 0.
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[non_exhaustive]
 pub struct MatchEvidence {
     pub label: f64,
     pub neighbors: f64,
@@ -775,6 +794,7 @@ impl MatchEvidence {
 
 /// An accepted match.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct NodeMatch {
     pub before: Id,
     pub after: Id,
@@ -816,6 +836,7 @@ impl SuggestionReason {
 
 /// A plausible pairing that was not applied.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct MatchSuggestion {
     pub before: Id,
     pub after: Id,
@@ -875,6 +896,7 @@ impl CountDelta {
 
 /// Counts per node type.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct TypeStat {
     pub r#type: JsStr,
     pub counts: CountDelta,
@@ -882,6 +904,7 @@ pub struct TypeStat {
 
 /// Diff statistics (docs/algorithms.md §9).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct DiffStats {
     pub nodes: CountDelta,
     pub edges: CountDelta,

@@ -51,13 +51,12 @@ fn text_read_in_one_pass_or_whole_gives_the_graph_of_its_value() {
         r#"{}"#,
         r#"{"nodes":[{"id":"a"}],"edges":null}"#,
     ];
-    for options in [
-        NormalizeOptions::default(),
-        NormalizeOptions {
-            edge_identity: EdgeIdentity::Id,
-            dangling_edges: DanglingEdges::Error,
-        },
-    ] {
+    for options in [NormalizeOptions::default(), {
+        let mut o = NormalizeOptions::default();
+        o.edge_identity = EdgeIdentity::Id;
+        o.dangling_edges = DanglingEdges::Error;
+        o
+    }] {
         for text in documents {
             assert_eq!(
                 outcome(normalize_json(text, options)),
@@ -73,54 +72,62 @@ fn values_give_the_graph_of_their_json() {
     let mut attrs = kgdiff_core::js::Object::new();
     attrs.insert("w", f64::NAN);
     attrs.insert("n", 1.5);
-    let input = GraphInput {
-        meta: json::parse(r#"{"name":"typed"}"#)
+    let input = {
+        let mut o = GraphInput::default();
+        o.meta = json::parse(r#"{"name":"typed"}"#)
             .ok()
             .and_then(|v| v.as_object().cloned())
-            .unwrap_or_default(),
-        nodes: vec![
-            NodeInput {
-                label: Some("Ａ".into()),
-                types: vec!["t2".into(), "t1".into(), "t1".into()],
-                aliases: vec!["a".into(), "x".into()],
-                attrs: attrs.clone(),
-                position: Some(Point { x: 1.0, y: 2.0 }),
-                ..NodeInput::new("a")
+            .unwrap_or_default();
+        o.nodes = vec![
+            {
+                let mut o = NodeInput::new("a");
+                o.label = Some("Ａ".into());
+                o.types = vec!["t2".into(), "t1".into(), "t1".into()];
+                o.aliases = vec!["a".into(), "x".into()];
+                o.attrs = attrs.clone();
+                o.position = Some(Point { x: 1.0, y: 2.0 });
+                o
             },
-            NodeInput {
-                label: Some(String::new().into()),
-                deprecated: true,
-                replaces: vec!["old".into()],
-                ..NodeInput::new("b")
+            {
+                let mut o = NodeInput::new("b");
+                o.label = Some(String::new().into());
+                o.deprecated = true;
+                o.replaces = vec!["old".into()];
+                o
             },
             NodeInput::new(""),
-            NodeInput {
-                position: Some(Point {
+            {
+                let mut o = NodeInput::new("a");
+                o.position = Some(Point {
                     x: f64::INFINITY,
                     y: 0.0,
-                }),
-                label: Some("again".into()),
-                ..NodeInput::new("a")
+                });
+                o.label = Some("again".into());
+                o
             },
-        ],
-        edges: vec![
-            EdgeInput {
-                id: Some("e1".into()),
-                attrs,
-                ..EdgeInput::new("a", "p", "b")
+        ];
+        o.edges = vec![
+            {
+                let mut o = EdgeInput::new("a", "p", "b");
+                o.id = Some("e1".into());
+                o.attrs = attrs;
+                o
             },
-            EdgeInput {
-                id: Some("e1".into()),
-                label: Some("Named".into()),
-                ..EdgeInput::new("b", "p", "a")
+            {
+                let mut o = EdgeInput::new("b", "p", "a");
+                o.id = Some("e1".into());
+                o.label = Some("Named".into());
+                o
             },
             EdgeInput::new("a", "", "ghost"),
             EdgeInput::new("", "p", "a"),
-            EdgeInput {
-                id: Some(String::new().into()),
-                ..EdgeInput::new("a", "p", "b")
+            {
+                let mut o = EdgeInput::new("a", "p", "b");
+                o.id = Some(String::new().into());
+                o
             },
-        ],
+        ];
+        o
     };
     for edge_identity in [EdgeIdentity::Structure, EdgeIdentity::Id] {
         for dangling_edges in [
@@ -128,10 +135,9 @@ fn values_give_the_graph_of_their_json() {
             DanglingEdges::Drop,
             DanglingEdges::Error,
         ] {
-            let options = NormalizeOptions {
-                edge_identity,
-                dangling_edges,
-            };
+            let mut options = NormalizeOptions::default();
+            options.edge_identity = edge_identity;
+            options.dangling_edges = dangling_edges;
             assert_eq!(
                 outcome(normalize_input(input.clone(), options)),
                 outcome(normalize(&input.to_value(), options)),
@@ -139,13 +145,11 @@ fn values_give_the_graph_of_their_json() {
             );
         }
     }
-    let failed = normalize_input(
-        input,
-        NormalizeOptions {
-            dangling_edges: DanglingEdges::Error,
-            ..NormalizeOptions::default()
-        },
-    );
+    let failed = normalize_input(input, {
+        let mut o = NormalizeOptions::default();
+        o.dangling_edges = DanglingEdges::Error;
+        o
+    });
     assert_eq!(
         failed.map(|_| ()).unwrap_err().code,
         ErrorCode::DanglingEdge

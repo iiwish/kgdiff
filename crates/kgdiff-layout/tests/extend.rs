@@ -14,10 +14,8 @@ use support::{changes, distance, json, quality, scale_free};
 const L: f64 = 56.0;
 
 fn scoped(diff: &DiffResult) -> LayoutResult {
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
     layout_diff(diff, &options).unwrap()
 }
 
@@ -244,12 +242,10 @@ fn packs_nodes_without_a_placed_neighbour_beside_the_bounds() {
 fn extends_an_empty_layout_with_finite_positions() {
     // TypeScript packs the new block by the bounds of nothing (infinities); here it stays put.
     let diff = changes(17).diff();
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        large_graph_threshold: Some(0.0),
-        context_hops: Some(0),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
+    options.large_graph_threshold = Some(0.0);
+    options.context_hops = Some(0);
     let none = layout_diff(
         &support::tree(10, 7, support::english_label).diff(),
         &options,

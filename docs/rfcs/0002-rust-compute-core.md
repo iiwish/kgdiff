@@ -10,8 +10,9 @@
   TypeScript compute modules in the browser, with the Rust corpus generator and the migration
   guide. Its sizes and timings were measured once on a quiet machine, and the gaps to the targets
   that 0.11 only measures are listed as work after 0.11
-  ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.11 after a
-  two-week stable period ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase
+  ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.12, which
+  changes only the Rust API ([Revision 2026-11-12](#revision-2026-11-12)), after a two-week
+  stable period ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase
   are listed in its results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
   results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10; phase 5 moved from 1.0 to 0.11 and 1.0
@@ -1149,8 +1150,9 @@ the corpus ownership, the npm launcher, the Action and D-3 are merged for 0.8.0
 #### Phase 5 — `@kgdiff/compute` replaces TypeScript compute in the browser (kgdiff 0.11)
 
 **Revised 2026-11-11 ([Revision](#revision-2026-11-11)).** This phase was first planned as kgdiff
-1.0. It is now kgdiff **0.11**, one version, the last with breaking changes. kgdiff 1.0 is 0.11
-after a stable period and carries no new code ([kgdiff 1.0](#kgdiff-10)). 0.10.0, released before
+1.0. It is now kgdiff **0.11**, one version. kgdiff 1.0 carries no new code: it is 0.12, which
+changes only the Rust API ([Revision 2026-11-12](#revision-2026-11-12)), after a stable period
+([kgdiff 1.0](#kgdiff-10)). 0.10.0, released before
 it, holds the cleanup this phase needed: the three compatibility shims removed, the read path and
 the compute code split file by file (`tests/read-path.ts`), `ignoreAttrs` carrying the changes of
 ignored attributes in the delta, RFC 0001's elements made stable without `::part()`, node shapes
@@ -1412,23 +1414,25 @@ differential run no longer exists to compare with.
 
 #### kgdiff 1.0
 
-Added 2026-11-11. kgdiff 1.0 carries **no new code**. It is the last 0.x minor, after its stable
+Added 2026-11-11; the last 0.x minor became 0.12 on 2026-11-12
+([Revision 2026-11-12](#revision-2026-11-12)). kgdiff 1.0 carries **no new code**. It is the last 0.x minor, after its stable
 period, republished unchanged under a new version number; the only differences are that the
 `@experimental` marks are removed from the APIs that carry them and that the version is 1.0.0.
 One package is not republished: the deprecated `@kgdiff/formats`, whose functions and types
 `@kgdiff/core` exports since 0.11.1 and on which no other package depends. Its 0.11.x releases
 stay on npm and keep working, so leaving it out breaks no installed code; it is not a breaking
 change in the sense of this section (decided 2026-11-12).
-0.11 is the last release with breaking changes.
+0.12 is the last release with breaking changes. [Versioning](../versioning.md) says what the
+version number promises from then on.
 
 Conditions for 1.0:
 
-1. Two weeks have passed since 0.11 was published, and in that time only patch releases were
+1. Two weeks have passed since 0.12 was published, and in that time only patch releases were
    made, none with a breaking change.
-2. At least one real embedding host runs on 0.11
+2. At least one real embedding host runs on 0.12
    ([RFC 0003](./0003-embedding-hosts.md)).
 3. The gates of [§7](#7-size-and-performance-budgets) as revised on 2026-11-11, which used to be
-   "gates of 1.0", were met in 0.11, and the figures 0.11 only measures (the sizes of the layout
+   "gates of 1.0", were met in 0.11 and still are in 0.12, and the figures 0.11 only measures (the sizes of the layout
    and parser modules, `diff` with the transport, memory) were reviewed.
 
 If a breaking change cannot be avoided during the stable period, it ships as 0.12 and the two
@@ -1575,6 +1579,46 @@ version. The RFC changed as follows:
    WebAssembly) are unchanged.
 
 No phase result, measurement, pull request or commit recorded above changed.
+
+### Revision 2026-11-12
+
+A review of the public API before 1.0 found that the Rust crates could not grow without a major
+release: none of their roughly 140 public types was `#[non_exhaustive]`, every options struct
+was built with struct expressions, and modules the crates share among themselves (`js`'s
+helpers, `canonical`, `text`, `util`, the CLI's argument parser) were documented as public API.
+After 1.0, a new error code, format, locale or option field would then be a breaking change, and
+since the crates share the npm packages' version, a kgdiff 2.0 for every package, the
+JavaScript ones included. The maintainer decided to fix it before 1.0, as **0.12**, rather than
+in a 0.11 patch: Cargo treats 0.11.x releases as compatible, so a patch could not carry it
+without breaking hosts that depend on `0.11`, and the stable period's rule is that a breaking
+change ships as 0.12 and restarts the two weeks. The cost is a few days on the date of 1.0; the
+only known Rust host (Semlia) was still on 0.9 and upgrades once, to 0.12.
+
+1. **Enums that will grow are `#[non_exhaustive]`:** codes (errors, graph issues, parse
+   warnings), formats and JSON dialects, locales, strategies, facet kinds and facets, delta ops.
+   The variants of `NodeFacet` and `EdgeFacet` with named fields are too. Closed taxonomies of the
+   model stay exhaustive, so that hosts and kgdiff's own report code keep the compiler's check
+   that every variant is handled: `ChangeStatus`, `HunkKind`, `ReplayPhase`, `SuggestionReason`,
+   `End`, `js::Value`, and the outcomes of reading JSON (`js::json::ErrorKind`,
+   `JsonTextError`).
+2. **Options, inputs and results are `#[non_exhaustive]`.** Their fields stay public; hosts start
+   from `Default::default()` or the constructors added for the report's types
+   (`ReportInfo::new`, `ReportSide::new`, `ViewerBundles::new`, `MarkdownOptions::new`,
+   `TextContext::new`). Small closed value types (`Point`, `Rect`, `Degree`, the count triplets,
+   `LayoutInput`) are not.
+3. **Shared internals are `#[doc(hidden)]`,** not private, because kgdiff's crates use them and
+   require each other at one exact version; `docs/versioning.md` says they are not covered.
+   `kgdiff_core::js` keeps `Value`, `Object`, `JsStr`, `json`, `IndexMap` and `IndexSet`, which
+   hosts use; the CLI crate keeps `cli`, `io`, `system` and `testing`, its embedding interface.
+4. **No dependency's type changes kgdiff's types unannounced:** `js::BuildHasher`, the hasher
+   of the public `IndexMap` and `IndexSet`, wraps foldhash (0.x) in a type of kgdiff's. The
+   CLI crate's embedding interface names no hidden type: `CliIo::viewer_bundle` returns
+   `ViewerMissing`, and `FileStat`, `ViewerBundle` and `SystemIo` are `#[non_exhaustive]`.
+5. **CI checks the Rust API** with `cargo-semver-checks` against the last release on crates.io,
+   with the release type the pending changesets ask for (a changeset's minor is its `major`
+   before 1.0).
+6. **Nothing else changes:** no JavaScript API, no CLI option, no document format and no output
+   byte. The guide is `docs/guide/migrating-to-0.12.md`.
 
 ## Alternatives considered
 

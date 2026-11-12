@@ -104,10 +104,8 @@ fn places_new_nodes_next_to_their_neighbours_without_overlap() {
 #[test]
 fn preserves_pins_exactly_and_pins_win_over_node_positions() {
     let Grown { first, grown, .. } = grown();
-    let options = LayoutOptions {
-        pinned: support::points(&[("s0001", 1234.5678, -98.7654), ("new-a", 10.001, 20.002)]),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = support::points(&[("s0001", 1234.5678, -98.7654), ("new-a", 10.001, 20.002)]);
     let layout = layout_diff(&grown.diff(), &options).unwrap();
     assert_eq!(
         layout.positions["s0001"],
@@ -199,10 +197,8 @@ fn packs_components_without_known_positions_beside_the_anchored_region() {
 #[test]
 fn ignores_known_positions_when_union_is_requested() {
     let Grown { first, grown, .. } = grown();
-    let options = LayoutOptions {
-        strategy: Some(LayoutStrategy::Union),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.strategy = Some(LayoutStrategy::Union);
     let union = layout_diff(&grown.diff(), &options).unwrap();
     assert_eq!(union.stats.strategy, LayoutStrategy::Union);
     assert_ne!(union.positions["s0001"], first.positions["s0001"]);
@@ -211,10 +207,8 @@ fn ignores_known_positions_when_union_is_requested() {
 
 #[test]
 fn falls_back_to_a_free_layout_when_nothing_is_known() {
-    let options = LayoutOptions {
-        strategy: Some(LayoutStrategy::Anchored),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.strategy = Some(LayoutStrategy::Anchored);
     let layout = layout_diff(&tree(20, 7, english_label).diff(), &options).unwrap();
     assert_eq!(layout.stats.strategy, LayoutStrategy::Anchored);
     assert_eq!(layout.positions.len(), 20);

@@ -144,10 +144,8 @@ fn lists_components_largest_first_each_node_once() {
 
 #[test]
 fn is_byte_identical_for_the_same_input_and_seed() {
-    let options = LayoutOptions {
-        seed: Some(7.0),
-        ..default()
-    };
+    let mut options = default();
+    options.seed = Some(7.0);
     let a = layout_diff(&changes(17).diff(), &options).unwrap();
     let b = layout_diff(&changes(17).diff(), &options).unwrap();
     assert_eq!(json(&a), json(&b));
@@ -156,9 +154,10 @@ fn is_byte_identical_for_the_same_input_and_seed() {
 #[test]
 fn differs_for_another_seed() {
     let diff = changes(17).diff();
-    let seed = |s: f64| LayoutOptions {
-        seed: Some(s),
-        ..default()
+    let seed = |s: f64| {
+        let mut o = default();
+        o.seed = Some(s);
+        o
     };
     assert_ne!(
         json(&layout_diff(&diff, &seed(1.0)).unwrap()),
@@ -193,9 +192,10 @@ fn does_not_depend_on_input_order() {
 #[test]
 fn accepts_non_integer_seeds_deterministically() {
     let diff = tree(30, 7, english_label).diff();
-    let seed = |s: f64| LayoutOptions {
-        seed: Some(s),
-        ..default()
+    let seed = |s: f64| {
+        let mut o = default();
+        o.seed = Some(s);
+        o
     };
     let half = json(&layout_diff(&diff, &seed(0.5)).unwrap());
     assert_eq!(half, json(&layout_diff(&diff, &seed(0.5)).unwrap()));
@@ -205,10 +205,8 @@ fn accepts_non_integer_seeds_deterministically() {
 #[test]
 fn chooses_iterations_from_the_size() {
     let ticks = |n: usize, iterations: Option<usize>| {
-        let options = LayoutOptions {
-            iterations,
-            ..default()
-        };
+        let mut options = default();
+        options.iterations = iterations;
         layout_diff(&tree(n, 7, english_label).diff(), &options)
             .unwrap()
             .stats
@@ -222,10 +220,8 @@ fn chooses_iterations_from_the_size() {
 
 #[test]
 fn still_separates_nodes_and_labels_with_zero_iterations() {
-    let options = LayoutOptions {
-        iterations: Some(0),
-        ..default()
-    };
+    let mut options = default();
+    options.iterations = Some(0);
     let layout = layout_diff(&tree(60, 7, english_label).diff(), &options).unwrap();
     assert_eq!(layout.stats.iterations, 0);
     let entries: Vec<(&kgdiff_core::js::JsStr, &Point)> = layout.positions.iter().collect();
@@ -241,11 +237,9 @@ fn still_separates_nodes_and_labels_with_zero_iterations() {
 fn scales_with_the_link_distance() {
     let diff = tree(40, 7, english_label).diff();
     let area = |distance: f64| {
-        let options = LayoutOptions {
-            link_distance: Some(distance),
-            label_aware: Some(false),
-            ..default()
-        };
+        let mut options = default();
+        options.link_distance = Some(distance);
+        options.label_aware = Some(false);
         let b = layout_diff(&diff, &options).unwrap().bounds;
         b.width * b.height
     };
@@ -256,10 +250,8 @@ fn scales_with_the_link_distance() {
 fn reserves_less_room_when_labels_are_ignored() {
     let diff = tree(80, 7, english_label).diff();
     let area = |label_aware: bool| {
-        let options = LayoutOptions {
-            label_aware: Some(label_aware),
-            ..default()
-        };
+        let mut options = default();
+        options.label_aware = Some(label_aware);
         let b = layout_diff(&diff, &options).unwrap().bounds;
         b.width * b.height
     };
@@ -270,33 +262,40 @@ fn reserves_less_room_when_labels_are_ignored() {
 fn rejects_invalid_options_with_invalid_input() {
     let diff = tree(3, 7, english_label).diff();
     let cases = [
-        LayoutOptions {
-            link_distance: Some(0.0),
-            ..default()
+        {
+            let mut o = default();
+            o.link_distance = Some(0.0);
+            o
         },
-        LayoutOptions {
-            link_distance: Some(f64::NAN),
-            ..default()
+        {
+            let mut o = default();
+            o.link_distance = Some(f64::NAN);
+            o
         },
-        LayoutOptions {
-            font_size: Some(-1.0),
-            ..default()
+        {
+            let mut o = default();
+            o.font_size = Some(-1.0);
+            o
         },
-        LayoutOptions {
-            component_gap: Some(f64::INFINITY),
-            ..default()
+        {
+            let mut o = default();
+            o.component_gap = Some(f64::INFINITY);
+            o
         },
-        LayoutOptions {
-            seed: Some(f64::NAN),
-            ..default()
+        {
+            let mut o = default();
+            o.seed = Some(f64::NAN);
+            o
         },
-        LayoutOptions {
-            hub_degree: Some(-1.0),
-            ..default()
+        {
+            let mut o = default();
+            o.hub_degree = Some(-1.0);
+            o
         },
-        LayoutOptions {
-            pinned: support::points(&[("t0000", f64::NAN, 0.0)]),
-            ..default()
+        {
+            let mut o = default();
+            o.pinned = support::points(&[("t0000", f64::NAN, 0.0)]);
+            o
         },
     ];
     for options in &cases {

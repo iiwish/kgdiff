@@ -62,31 +62,28 @@ pub fn parse_input(def: &Definition, side: Side, bytes: &[u8]) -> Result<ParseRe
     let filename = Some(input_filename(input));
     let result = if def.allow_empty && js::trim(&text).is_empty() {
         // --allow-empty: the empty graph, without asking a parser to guess the format of nothing.
-        parse_graph(
-            "{\"nodes\":[],\"edges\":[]}",
-            &ParseOptions {
-                format: Some(FormatId::Json),
-                filename,
-                ..ParseOptions::default()
-            },
-        )
+        parse_graph("{\"nodes\":[],\"edges\":[]}", &{
+            let mut o = ParseOptions::default();
+            o.format = Some(FormatId::Json);
+            o.filename = filename;
+            o
+        })
     } else {
         let format = match def.formats.get(side) {
             None => None,
             Some(id) => Some(FormatId::from_id(id).ok_or_else(|| format!("unknown format {id}"))?),
         };
-        parse_graph(
-            &text,
-            &ParseOptions {
-                format,
-                filename,
-                rdf: RdfOptions {
-                    languages: def.languages.clone(),
-                    ..RdfOptions::default()
-                },
-                ..ParseOptions::default()
-            },
-        )
+        parse_graph(&text, &{
+            let mut o = ParseOptions::default();
+            o.format = format;
+            o.filename = filename;
+            o.rdf = {
+                let mut o = RdfOptions::default();
+                o.languages = def.languages.clone();
+                o
+            };
+            o
+        })
     };
     result.map_err(|e| format!("parse({}): {} {}", side.name(), e.code, e.message))
 }

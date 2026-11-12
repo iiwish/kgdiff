@@ -19,8 +19,8 @@ use std::path::{Path, PathBuf};
 use kgdiff_core::js::{IndexMap, JsStr, Value, json};
 use kgdiff_core::model::{Point, UnionId};
 use kgdiff_core::{
-    DiffOptions, DiffResult, EdgeIdentity, KGraph, MatchOptions, MatchStrategy, NormalizeOptions,
-    Result, diff_graphs, normalize, resolve_options,
+    DiffOptions, DiffResult, EdgeIdentity, KGraph, MatchStrategy, NormalizeOptions, Result,
+    diff_graphs, normalize, resolve_options,
 };
 use kgdiff_layout::{
     LayoutOptions, LayoutResult, LayoutScope, LayoutStrategy, layout_after, layout_diff,
@@ -48,10 +48,11 @@ fn diff_on_by_hand(
     for (id, position) in &options.pinned {
         pinned.insert(id.clone(), *position);
     }
-    let options = LayoutOptions {
-        pinned,
-        scope: Some(LayoutScope::All),
-        ..options.clone()
+    let options = {
+        let mut o = options.clone();
+        o.pinned = pinned;
+        o.scope = Some(LayoutScope::All);
+        o
     };
     layout_diff(diff, &options)
 }
@@ -63,9 +64,10 @@ fn after_by_hand(
     both: &LayoutResult,
     options: &LayoutOptions,
 ) -> Result<LayoutResult> {
-    let options = LayoutOptions {
-        pinned: both.positions.clone(),
-        ..options.clone()
+    let options = {
+        let mut o = options.clone();
+        o.pinned = both.positions.clone();
+        o
     };
     layout_graph(&diff.after, &options)
 }
@@ -111,10 +113,8 @@ fn read(path: &Path) -> Value {
 }
 
 fn graph(value: &Value, edge_identity: EdgeIdentity) -> KGraph {
-    let options = NormalizeOptions {
-        edge_identity,
-        ..NormalizeOptions::default()
-    };
+    let mut options = NormalizeOptions::default();
+    options.edge_identity = edge_identity;
     normalize(value, options).expect("a valid graph")
 }
 
@@ -146,12 +146,14 @@ fn corpus_pairs() -> Vec<Pair> {
 }
 
 fn pair(name: &str, before: &str, after: &str, strategy: MatchStrategy) -> Pair {
-    let options = DiffOptions {
-        r#match: MatchOptions {
-            strategy,
-            ..DiffOptions::default().r#match
-        },
-        ..DiffOptions::default()
+    let options = {
+        let mut o = DiffOptions::default();
+        o.r#match = {
+            let mut o = DiffOptions::default().r#match;
+            o.strategy = strategy;
+            o
+        };
+        o
     };
     let side = |text: &str| graph(&json::parse(text).unwrap(), options.edge_identity);
     Pair {
@@ -441,10 +443,8 @@ fn keeps_the_previous_map_on_every_corpus_case() {
         // The two stored layouts are enough to lay the diff out again: the after version's
         // positions as pins, which win, and the previous ones for the removed nodes. Nothing is
         // left to place, and every node is where the diff had it.
-        let from_both = LayoutOptions {
-            pinned: next.positions.clone(),
-            ..LayoutOptions::default()
-        };
+        let mut from_both = LayoutOptions::default();
+        from_both.pinned = next.positions.clone();
         let again = layout_diff_on(&maps.diff, &previous, &from_both).unwrap();
         assert_eq!(again.positions, maps.both.positions, "{what}");
         assert_eq!(again.radii, maps.both.radii, "{what}");
@@ -494,19 +494,17 @@ fn keeps_the_previous_map_with_other_options_and_the_callers_pins() {
         }
         pinned.insert(JsStr::from("not-a-node"), Point { x: 1.0, y: 2.0 });
         pins += pinned.len() - 1;
-        let options = LayoutOptions {
-            strategy: Some(LayoutStrategy::Anchored),
-            seed: Some(7.0),
-            label_aware: Some(false),
-            font_size: Some(15.0),
-            link_distance: Some(40.0),
-            // Not read: every node is in scope.
-            large_graph_threshold: Some(0.0),
-            context_hops: Some(0),
-            hub_degree: Some(0.0),
-            pinned,
-            ..LayoutOptions::default()
-        };
+        let mut options = LayoutOptions::default();
+        options.strategy = Some(LayoutStrategy::Anchored);
+        options.seed = Some(7.0);
+        options.label_aware = Some(false);
+        options.font_size = Some(15.0);
+        options.link_distance = Some(40.0);
+        // Not read: every node is in scope.
+        options.large_graph_threshold = Some(0.0);
+        options.context_hops = Some(0);
+        options.hub_degree = Some(0.0);
+        options.pinned = pinned;
         let (maps, _) = walk(pair, &previous, &options);
         assert!(
             !maps.next.positions.contains_key("not-a-node"),
@@ -516,10 +514,8 @@ fn keeps_the_previous_map_with_other_options_and_the_callers_pins() {
 
         // The options of the diff's layout are the options of the after version's: the font
         // size is in its bounds, and the pins are not read again.
-        let own = LayoutOptions {
-            pinned: IndexMap::default(),
-            ..options.clone()
-        };
+        let mut own = options.clone();
+        own.pinned = IndexMap::default();
         assert_eq!(
             layout_after(&maps.diff, &maps.both, &own).unwrap(),
             maps.next,
@@ -557,10 +553,8 @@ fn a_node_under_another_id_keeps_its_place() {
 
     // By id, the layout of the after version knows none of its nodes: no position is known, and
     // the whole map is computed again.
-    let by_id = LayoutOptions {
-        pinned: previous.positions.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut by_id = LayoutOptions::default();
+    by_id.pinned = previous.positions.clone();
     let naive = layout_graph(&pair.after, &by_id).unwrap();
     assert_eq!(naive.stats.strategy, LayoutStrategy::Union);
 }
@@ -598,10 +592,8 @@ fn an_id_given_to_another_node_does_not_carry_the_old_position() {
     assert!(same(next.positions["n4"], both.positions["n4"]));
 
     // By id, every node of the after version is pinned where another node was.
-    let by_id = LayoutOptions {
-        pinned: previous.positions.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut by_id = LayoutOptions::default();
+    by_id.pinned = previous.positions.clone();
     let naive = layout_graph(&pair.after, &by_id).unwrap();
     for id in ["n1", "n2", "n3", "n4"] {
         assert!(same(naive.positions[id], previous.positions[id]), "{id}");
@@ -647,12 +639,14 @@ fn review() -> (Pair, DiffResult) {
         name: "review".to_owned(),
         before: graph(&before, EdgeIdentity::Structure),
         after: graph(&after, EdgeIdentity::Structure),
-        options: DiffOptions {
-            r#match: MatchOptions {
-                strategy: MatchStrategy::Id,
-                ..DiffOptions::default().r#match
-            },
-            ..DiffOptions::default()
+        options: {
+            let mut o = DiffOptions::default();
+            o.r#match = {
+                let mut o = DiffOptions::default().r#match;
+                o.strategy = MatchStrategy::Id;
+                o
+            };
+            o
         },
     };
     let diff = pair.diff();
@@ -696,17 +690,13 @@ fn a_node_the_previous_layout_does_not_place_is_placed() {
     let mut empty = full.clone();
     empty.positions = IndexMap::default();
     let free = layout_diff_on(&diff, &empty, &LayoutOptions::default()).unwrap();
-    let all = LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
+    let mut all = LayoutOptions::default();
+    all.scope = Some(LayoutScope::All);
     assert_eq!(free, layout_diff(&diff, &all).unwrap());
     assert_eq!(free.stats.strategy, LayoutStrategy::Union);
     // Asking for `Anchored` changes its name only.
-    let anchored = LayoutOptions {
-        strategy: Some(LayoutStrategy::Anchored),
-        ..LayoutOptions::default()
-    };
+    let mut anchored = LayoutOptions::default();
+    anchored.strategy = Some(LayoutStrategy::Anchored);
     let named = layout_diff_on(&diff, &empty, &anchored).unwrap();
     assert_eq!(named.positions, free.positions);
 }
@@ -742,10 +732,8 @@ fn the_previous_layout_wins_over_positions_on_the_nodes() {
     let diff = spec.diff();
     let mut previous = first_map(&diff.before);
     previous.positions = support::points(&[("a", 10.0, 20.0), ("c", 30.0, 40.0)]);
-    let options = LayoutOptions {
-        pinned: support::points(&[("c", -1.5, -2.5)]),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.pinned = support::points(&[("c", -1.5, -2.5)]);
     let both = layout_diff_on(&diff, &previous, &options).unwrap();
     let position = |id: &str| (both.positions[id].x, both.positions[id].y);
     assert_eq!(position("a"), (10.0, 20.0)); // the previous layout, not the node
@@ -769,10 +757,8 @@ fn every_node_is_in_scope_whatever_the_threshold() {
     let (pair, diff) = review();
     let previous = first_map(&pair.before);
     let reference = layout_diff_on(&diff, &previous, &LayoutOptions::default()).unwrap();
-    let small_threshold = LayoutOptions {
-        large_graph_threshold: Some(10.0),
-        ..LayoutOptions::default()
-    };
+    let mut small_threshold = LayoutOptions::default();
+    small_threshold.large_graph_threshold = Some(10.0);
     // Left to itself, `layout_diff` lays out the changes only.
     let trapped = layout_diff(&diff, &small_threshold).unwrap();
     assert_eq!(trapped.scope, LayoutScope::Changes);
@@ -818,10 +804,8 @@ fn rejects_the_options_that_would_not_keep_the_map() {
     let previous = first_map(&pair.before);
     let both = layout_diff_on(&diff, &previous, &LayoutOptions::default()).unwrap();
 
-    let changes = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut changes = LayoutOptions::default();
+    changes.scope = Some(LayoutScope::Changes);
     let error = expect_invalid(
         layout_diff_on(&diff, &previous, &changes),
         "Invalid layout option scope: expected 'all' (a layout on the previous version's map \
@@ -840,10 +824,8 @@ fn rejects_the_options_that_would_not_keep_the_map() {
     );
 
     // `Union` ignores every known position: the whole map would be computed again.
-    let union = LayoutOptions {
-        strategy: Some(LayoutStrategy::Union),
-        ..LayoutOptions::default()
-    };
+    let mut union = LayoutOptions::default();
+    union.strategy = Some(LayoutStrategy::Union);
     let error = expect_invalid(
         layout_diff_on(&diff, &previous, &union),
         "Invalid layout option strategy: expected 'anchored' (the positions of the previous \
@@ -862,26 +844,31 @@ fn rejects_the_options_that_would_not_keep_the_map() {
     );
 
     // What `layout_diff` rejects is rejected with its message.
-    let all = |options: &LayoutOptions| LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..options.clone()
+    let all = |options: &LayoutOptions| {
+        let mut o = options.clone();
+        o.scope = Some(LayoutScope::All);
+        o
     };
     for options in [
-        LayoutOptions {
-            link_distance: Some(0.0),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.link_distance = Some(0.0);
+            o
         },
-        LayoutOptions {
-            seed: Some(f64::NAN),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.seed = Some(f64::NAN);
+            o
         },
-        LayoutOptions {
-            hub_degree: Some(-1.0),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.hub_degree = Some(-1.0);
+            o
         },
-        LayoutOptions {
-            pinned: support::points(&[("t0000", f64::INFINITY, 0.0)]),
-            ..LayoutOptions::default()
+        {
+            let mut o = LayoutOptions::default();
+            o.pinned = support::points(&[("t0000", f64::INFINITY, 0.0)]);
+            o
         },
     ] {
         let expected = layout_diff(&diff, &all(&options)).unwrap_err();
@@ -910,26 +897,22 @@ fn only_the_font_size_shows_in_the_after_version() {
     let both = layout_diff_on(&diff, &previous, &LayoutOptions::default()).unwrap();
     let next = layout_after(&diff, &both, &LayoutOptions::default()).unwrap();
 
-    let others = LayoutOptions {
-        strategy: Some(LayoutStrategy::Anchored),
-        scope: Some(LayoutScope::All),
-        seed: Some(99.0),
-        iterations: Some(5),
-        link_distance: Some(200.0),
-        label_aware: Some(false),
-        component_gap: Some(0.0),
-        large_graph_threshold: Some(0.0),
-        context_hops: Some(0),
-        hub_degree: Some(0.0),
-        pinned: support::points(&[("t0000", 1.0, 2.0), ("not-a-node", 3.0, 4.0)]),
-        ..LayoutOptions::default()
-    };
+    let mut others = LayoutOptions::default();
+    others.strategy = Some(LayoutStrategy::Anchored);
+    others.scope = Some(LayoutScope::All);
+    others.seed = Some(99.0);
+    others.iterations = Some(5);
+    others.link_distance = Some(200.0);
+    others.label_aware = Some(false);
+    others.component_gap = Some(0.0);
+    others.large_graph_threshold = Some(0.0);
+    others.context_hops = Some(0);
+    others.hub_degree = Some(0.0);
+    others.pinned = support::points(&[("t0000", 1.0, 2.0), ("not-a-node", 3.0, 4.0)]);
     assert_eq!(layout_after(&diff, &both, &others).unwrap(), next);
 
-    let larger = LayoutOptions {
-        font_size: Some(24.0),
-        ..LayoutOptions::default()
-    };
+    let mut larger = LayoutOptions::default();
+    larger.font_size = Some(24.0);
     let with_larger_labels = layout_after(&diff, &both, &larger).unwrap();
     assert_eq!(with_larger_labels.positions, next.positions);
     assert_eq!(with_larger_labels.radii, next.radii);
@@ -946,11 +929,9 @@ fn rejects_a_layout_that_does_not_place_the_after_version() {
     let both = layout_diff_on(&diff, &previous, &LayoutOptions::default()).unwrap();
 
     // A layout of the changes only.
-    let changes = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        context_hops: Some(0),
-        ..LayoutOptions::default()
-    };
+    let mut changes = LayoutOptions::default();
+    changes.scope = Some(LayoutScope::Changes);
+    changes.context_hops = Some(0);
     let focused = layout_diff(&diff, &changes).unwrap();
     assert!(focused.positions.len() < diff.nodes.len());
     let missing = diff

@@ -20,6 +20,7 @@ use crate::width::{byte_at_utf16, sanitize, string_width, wrap};
 
 /// What the text outputs need to know (`TextContext`).
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct TextContext {
     pub paint: Painter,
     pub locale: Locale,
@@ -33,6 +34,18 @@ pub struct TextContext {
 }
 
 impl TextContext {
+    /// A context with the default width (80 columns), every hunk listed and the default watched
+    /// attribute keys.
+    pub fn new(paint: Painter, locale: Locale) -> TextContext {
+        TextContext {
+            paint,
+            locale,
+            width: 80,
+            limit: 0,
+            watch: None,
+        }
+    }
+
     fn watch(&self) -> Vec<String> {
         self.watch.clone().unwrap_or_else(|| {
             DEFAULT_WATCH_ATTRS

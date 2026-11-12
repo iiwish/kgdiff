@@ -50,10 +50,8 @@ fn line(out: &mut String, name: &str, layout: &LayoutResult) {
 
 /// A changes-only layout and the same layout with its hidden neighbours added back.
 fn extended(diff: &kgdiff_core::DiffResult) -> Result<(LayoutResult, LayoutResult), String> {
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
     let focused = layout_diff(diff, &options).map_err(|e| e.message)?;
     let mut expand: Vec<JsStr> = Vec::new();
     for id in focused.hidden.keys() {
@@ -105,10 +103,8 @@ fn run() -> Result<String, String> {
         line(&mut out, &format!("{id}/extended"), &grown);
     }
     // Larger graphs, through every force and both packers.
-    let all = LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
-    };
+    let mut all = LayoutOptions::default();
+    all.scope = Some(LayoutScope::All);
     for (name, spec) in [
         (
             "synthetic/tree-2k",

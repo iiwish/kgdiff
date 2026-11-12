@@ -13,7 +13,8 @@
 //! let turtle = r#"@prefix ex: <http://example.org/> .
 //! @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 //! ex:cat rdfs:label "Cat" ; rdfs:subClassOf ex:animal ."#;
-//! let options = ParseOptions { filename: Some("zoo.ttl".into()), ..ParseOptions::default() };
+//! let mut options = ParseOptions::default();
+//! options.filename = Some("zoo.ttl".into());
 //! let result = parse_graph(turtle, &options)?;
 //! assert_eq!(result.format.id(), "turtle");
 //! // kgdiff JSON, as kgdiff_core::normalize reads it: one node, and an edge to `ex:animal`,
@@ -49,6 +50,7 @@ use crate::shared::{Warnings, make_meta};
 
 /// A graph format `parse_graph` reads (`FormatId`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum FormatId {
     /// kgdiff native JSON and the common JSON graph shapes (auto-detected).
     Json,
@@ -98,6 +100,7 @@ impl FormatId {
 
 /// A JSON graph shape the `json` format recognises (`JsonDialect`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum JsonDialect {
     Kgdiff,
     D3,
@@ -122,6 +125,7 @@ impl JsonDialect {
 
 /// The stable codes of recoverable parse warnings (`ParseWarningCode`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ParseWarningCode {
     /// RDF: quads from named graphs were merged into one graph.
     NamedGraphs,
@@ -179,6 +183,7 @@ impl ParseWarningCode {
 
 /// A recoverable oddity of the input (`ParseWarning`).
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct ParseWarning {
     pub code: ParseWarningCode,
     pub message: String,
@@ -188,6 +193,7 @@ pub struct ParseWarning {
 
 /// Which prefixes compact identities (`RdfOptions.compactWith`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum CompactWith {
     /// Only the well-known prefixes, the OBO PURL rule and `RdfOptions::prefixes`.
     #[default]
@@ -198,6 +204,7 @@ pub enum CompactWith {
 
 /// Mapping options for every RDF syntax (`RdfOptions`).
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct RdfOptions {
     /// Predicates used for node labels, in priority order (IRIs or CURIEs with a known prefix).
     pub label_predicates: Option<Vec<String>>,
@@ -233,6 +240,7 @@ impl Default for RdfOptions {
 
 /// Field overrides for custom JSON shapes (`JsonOptions.fields`): keys or dotted paths.
 #[derive(Clone, Debug, Default)]
+#[non_exhaustive]
 pub struct JsonFields {
     pub id: Option<String>,
     pub label: Option<String>,
@@ -243,6 +251,7 @@ pub struct JsonFields {
 }
 
 /// A JSON-LD context document a loader returns: parsed JSON or JSON text.
+#[non_exhaustive]
 pub enum LoadedDocument {
     Value(Value),
     Text(String),
@@ -253,6 +262,7 @@ pub type DocumentLoader = dyn Fn(&str) -> Result<Option<LoadedDocument>, String>
 
 /// `ParseOptions`.
 #[derive(Default)]
+#[non_exhaustive]
 pub struct ParseOptions<'a> {
     /// `None` is `auto`: detect from `filename` and content.
     pub format: Option<FormatId>,
@@ -267,6 +277,7 @@ pub struct ParseOptions<'a> {
 
 /// What [`parse_graph`] gives (`ParseResult`).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ParseResult {
     /// The graph as kgdiff JSON (`GraphInput`), with its keys in TypeScript's order.
     pub graph: Object,

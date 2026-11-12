@@ -275,12 +275,49 @@ jobs:
           pnpm build
           pnpm check:packages
 
+  # The public Rust API against the last release on crates.io (docs/versioning.md): a change that
+  # breaks it needs a pending changeset that allows it. The crates share the npm packages'
+  # version, so a pending changeset's largest bump is the release type; with none (main after a
+  # release, or the release pull request, which has removed them), cargo-semver-checks takes the
+  # bump of the workspace version. cargo-semver-checks reads versions as Cargo does: in 0.x, a
+  # minor release (0.11 → 0.12) is its "major", so a changeset's minor maps to `major` before 1.0.
+  # Items marked `#[doc(hidden)]` are not checked: they are not part of the public API.
+  semver:
+    name: Rust public API (cargo-semver-checks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the toolchain of rust-toolchain.toml
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: cargo-semver-checks@0.51.0
+      - name: Check the published crates against their last release
+        run: |
+          bump=
+          for level in patch minor major; do
+            if grep -qsE "^['\"][^'\"]+['\"]: $level$" .changeset/*.md; then bump=$level; fi
+          done
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)
+          if [ "$bump" = minor ] && [ "${version%%.*}" = 0 ]; then bump=major; fi
+          release_type=()
+          if [ -n "$bump" ]; then release_type=(--release-type "$bump"); fi
+          echo "Workspace version $version; release type: ${bump:-from the workspace version}"
+          cargo semver-checks "${release_type[@]}" \
+            -p kgdiff-core -p kgdiff-formats -p kgdiff-layout -p kgdiff-report -p kgdiff
+
   # The one check the main branch ruleset requires: it passes only when every job of every
   # matrix passed, so the jobs can change without touching the ruleset.
   passed:
     name: CI passed
     if: always()
-    needs: [check, rust, cargo-deny, targets, targets-equal, compute]
+    needs: [check, rust, cargo-deny, semver, targets, targets-equal, compute]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

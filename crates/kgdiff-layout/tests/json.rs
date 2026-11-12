@@ -13,10 +13,8 @@ use schema::Schemas;
 use support::{GraphSpec, NodeSpec, changes, components};
 
 fn scoped() -> (Value, kgdiff_layout::LayoutResult) {
-    let options = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    options.scope = Some(LayoutScope::Changes);
     let layout = layout_diff(&changes(17).diff(), &options).unwrap();
     (layout_to_json(&layout), layout)
 }
@@ -118,11 +116,9 @@ fn round_trips_through_text() {
     // Any seed: the round trip is idempotent.
     let diff = components(6, 4, 3).diff();
     for seed in [0.0, 1.0, 17.0, 2_147_483_648.0, 0.25] {
-        let options = LayoutOptions {
-            seed: Some(seed),
-            iterations: Some(30),
-            ..LayoutOptions::default()
-        };
+        let mut options = LayoutOptions::default();
+        options.seed = Some(seed);
+        options.iterations = Some(30);
         let once = layout_to_json(&layout_diff(&diff, &options).unwrap());
         let twice = layout_to_json(&layout_from_json(&once).unwrap());
         assert_eq!(json::to_string(&once), json::to_string(&twice));

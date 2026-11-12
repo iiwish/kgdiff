@@ -19,6 +19,7 @@ pub const DEFAULT_HIERARCHY_PREDICATES: [&str; 9] = [
 
 /// How nodes are matched across versions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum MatchStrategy {
     Id,
     Auto,
@@ -37,6 +38,7 @@ impl MatchStrategy {
 
 /// `Required<MatchOptions>`.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct MatchOptions {
     pub strategy: MatchStrategy,
     pub threshold: f64,
@@ -57,6 +59,7 @@ impl Default for MatchOptions {
 
 /// `ResolvedDiffOptions`: every option with its default filled in.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct DiffOptions {
     pub r#match: MatchOptions,
     pub edge_identity: EdgeIdentity,
@@ -260,6 +263,7 @@ pub fn resolve_options(options: Option<&Value>) -> Result<DiffOptions> {
 
 /// What happens to edges whose endpoints are missing (`NormalizeOptions.danglingEdges`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[non_exhaustive]
 pub enum DanglingEdges {
     /// Add an implicit node.
     #[default]
@@ -272,6 +276,7 @@ pub enum DanglingEdges {
 
 /// `NormalizeOptions`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct NormalizeOptions {
     pub edge_identity: EdgeIdentity,
     pub dangling_edges: DanglingEdges,

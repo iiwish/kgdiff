@@ -7,6 +7,7 @@ use crate::model::{Attrs, Id, Point};
 
 /// A graph to normalize. `to_value` is the kgdiff JSON it stands for.
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct GraphInput {
     pub meta: Object,
     pub nodes: Vec<NodeInput>,
@@ -15,6 +16,7 @@ pub struct GraphInput {
 
 /// A node declaration. Everything but the id may be left to its default.
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct NodeInput {
     /// Dropped with an `empty-id` issue when empty.
     pub id: Id,
@@ -34,6 +36,7 @@ pub struct NodeInput {
 
 /// An edge declaration. Everything but the ends may be left to its default.
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct EdgeInput {
     /// A stable id, the edge's key under id identity.
     pub id: Option<Id>,

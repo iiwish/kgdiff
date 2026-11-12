@@ -126,6 +126,7 @@ struct Entry {
 /// A compiled prefix map (`PrefixTable`). Compaction picks the longest matching namespace; when
 /// several prefixes share a namespace, explicit options beat well-known names, which beat file
 /// declarations.
+#[non_exhaustive]
 pub struct PrefixTable {
     /// Name → namespace, sorted by name (`ParseResult.prefixes`).
     pub record: Vec<(String, String)>,

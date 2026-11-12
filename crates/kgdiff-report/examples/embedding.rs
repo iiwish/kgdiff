@@ -47,18 +47,16 @@ pub fn build_graph(
     let mut input = GraphInput::default();
     input.meta.insert("name", name);
     for &(id, label) in concepts {
-        input.nodes.push(NodeInput {
-            label: Some(label.into()),
-            types: vec!["concept".into()],
-            ..NodeInput::new(id)
-        });
+        let mut node = NodeInput::new(id);
+        node.label = Some(label.into());
+        node.types = vec!["concept".into()];
+        input.nodes.push(node);
     }
     for &(id, label, measured_on) in metrics {
-        input.nodes.push(NodeInput {
-            label: Some(label.into()),
-            types: vec!["metric".into()],
-            ..NodeInput::new(id)
-        });
+        let mut node = NodeInput::new(id);
+        node.label = Some(label.into());
+        node.types = vec!["metric".into()];
+        input.nodes.push(node);
         input
             .edges
             .push(EdgeInput::new(id, "measured_on", measured_on));
@@ -108,54 +106,27 @@ pub fn diff_map(
     before: &LayoutResult,
     after: &LayoutResult,
 ) -> Result<LayoutResult> {
-    let options = LayoutOptions {
-        // Pins are keyed by union id, which is its own id for a node of the after version.
-        // They win over the before version's positions, which are left for the removed nodes.
-        pinned: after.positions.clone(),
-        ..LayoutOptions::default()
-    };
+    let mut options = LayoutOptions::default();
+    // Pins are keyed by union id, which is its own id for a node of the after version.
+    // They win over the before version's positions, which are left for the removed nodes.
+    options.pinned = after.positions.clone();
     layout_diff_on(diff, before, &options)
 }
 
 /// The summary `kgdiff` prints to a terminal, and the Markdown summary for a comment or a page.
 pub fn summaries(diff: &DiffResult, title: &str) -> Result<(String, String)> {
-    let context = TextContext {
-        paint: Painter::plain(),
-        locale: Locale::En,
-        width: 80,
-        limit: 50,
-        watch: None,
-    };
+    let mut context = TextContext::new(Painter::plain(), Locale::En);
+    context.limit = 50;
     let text = render_summary(diff, title, &context)?;
-    let options = MarkdownOptions {
-        locale: Locale::En,
-        title,
-        generator: "my-app 1.0",
-        watch: None,
-    };
+    let options = MarkdownOptions::new(Locale::En, title, "my-app 1.0");
     let markdown = render_markdown(diff, &options)?;
     Ok((text, markdown))
 }
 
 /// What a report says about itself.
 pub fn report_info(title: &str, before: &str, after: &str) -> ReportInfo {
-    let side = |name: &str| ReportSide {
-        name: name.to_owned(),
-        format: None,
-    };
-    ReportInfo {
-        title: title.to_owned(),
-        generator: "my-app 1.0".to_owned(),
-        generated_at: None,
-        before: side(before),
-        after: side(after),
-        mode: None,
-        scope: None,
-        theme: None,
-        locale: Locale::En,
-        panels: None,
-        shapes: None,
-    }
+    let side = |name: &str| ReportSide::new(name, None);
+    ReportInfo::new(title, "my-app 1.0", side(before), side(after))
 }
 
 /// The report payload with the application's layout: the `kgdiff.report` document a page hands
@@ -168,10 +139,8 @@ pub fn report(diff: &DiffResult, layout: &LayoutResult, info: &ReportInfo) -> Re
 /// graph with itself, which has no changes, and the graph's layout, as a report payload. The
 /// union ids of that diff are the graph's ids, so the layout of the graph is its layout.
 pub fn graph_payload(graph: &KGraph, layout: &LayoutResult, info: &ReportInfo) -> Result<Value> {
-    let options = DiffOptions {
-        edge_identity: graph.edge_identity(),
-        ..DiffOptions::default()
-    };
+    let mut options = DiffOptions::default();
+    options.edge_identity = graph.edge_identity();
     let unchanged = diff_graphs(graph.clone(), graph.clone(), options)?;
     report_payload_with(&unchanged, ReportLayout::Given(layout), info)
 }

@@ -55,7 +55,12 @@ fn rejects_another_base_and_reports_conflicts() {
     assert_eq!(e.details.unwrap().get("opIndex"), Some(&Value::Number(0.0)));
 
     // Leniently, the ops that do not fit are skipped and reported in op order.
-    let (_, skipped) = apply_delta(&other, &d.delta, ApplyOptions { strict: false }).unwrap();
+    let (_, skipped) = apply_delta(&other, &d.delta, {
+        let mut o = ApplyOptions::default();
+        o.strict = false;
+        o
+    })
+    .unwrap();
     assert!(!skipped.is_empty());
     assert!(skipped.windows(2).all(|w| w[0].index < w[1].index));
     assert_eq!(skipped[0].reason, "edge not found");

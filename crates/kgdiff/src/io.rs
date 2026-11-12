@@ -9,8 +9,6 @@
 use std::borrow::Cow;
 use std::io;
 
-use crate::errors::Failure;
-
 /// Environment variables.
 pub trait Env {
     /// The variable's value, `None` when it is not set.
@@ -19,6 +17,7 @@ pub trait Env {
 
 /// What overwrite checks and size limits need to know about an existing file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct FileStat {
     /// Device and inode (volume and file index on Windows): equal for the same file under any
     /// name (case variant, link).
@@ -27,8 +26,16 @@ pub struct FileStat {
     pub size: u64,
 }
 
-/// The two viewer bundles an HTML report inlines.
+impl FileStat {
+    /// The device, inode and size of a file.
+    pub fn new(dev: u64, ino: u64, size: u64) -> FileStat {
+        FileStat { dev, ino, size }
+    }
+}
+
+/// The viewer bundles an HTML report inlines.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ViewerBundle {
     /// The standalone `<kgdiff-viewer>` element (`@kgdiff/viewer/standalone`).
     Main,
@@ -45,7 +52,30 @@ pub enum StdinError {
     Io(io::Error),
 }
 
+/// A viewer bundle this process does not have: the CLI reports it as a `viewer-missing` error.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct ViewerMissing {
+    /// What is missing and why.
+    pub message: String,
+    /// What to do about it, when known.
+    pub hint: Option<String>,
+}
+
+impl ViewerMissing {
+    /// A missing bundle, with what to do about it when known.
+    pub fn new(message: impl Into<String>, hint: Option<String>) -> ViewerMissing {
+        ViewerMissing {
+            message: message.into(),
+            hint,
+        }
+    }
+}
+
 /// The CLI's view of the process and the file system (`CliIO`).
+///
+/// A host may implement it. Methods added to it later come with a default implementation, so
+/// that an implementation keeps compiling (docs/versioning.md).
 pub trait CliIo: Env {
     fn write_stdout(&mut self, text: &str);
     fn write_stderr(&mut self, text: &str);
@@ -81,5 +111,5 @@ pub trait CliIo: Env {
     /// Opens a file with the platform's default application (the browser, for HTML).
     fn open_file(&mut self, path: &str) -> io::Result<()>;
     /// The source of a viewer bundle, or a `viewer-missing` error.
-    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, Failure>;
+    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, ViewerMissing>;
 }

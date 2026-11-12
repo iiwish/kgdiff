@@ -6,6 +6,7 @@ use crate::js::Object;
 
 /// The stable error codes (`KgdiffErrorCode`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ErrorCode {
     InvalidInput,
     DanglingEdge,
@@ -35,6 +36,7 @@ impl fmt::Display for ErrorCode {
 
 /// An error with a stable code, kgdiff's message and optional details, as `KgdiffError`.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct KgdiffError {
     pub code: ErrorCode,
     pub message: String,

@@ -14,6 +14,7 @@ use crate::pipeline::DiffResult;
 
 /// A locale of the titles and labels.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
 pub enum Locale {
     #[default]
     En,

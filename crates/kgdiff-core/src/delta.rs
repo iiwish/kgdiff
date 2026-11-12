@@ -23,6 +23,7 @@ use crate::util::sorted_unique;
 
 /// A node field `node.set` changes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum NodeField {
     Label,
     Types,
@@ -75,6 +76,7 @@ impl NodeField {
 /// A primitive delta operation (`DeltaOp`). Node and edge snapshots are their JSON forms
 /// (`nodeToJSON`, `edgeToJSON`, or an edge locator).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum DeltaOp {
     NodeRekey {
         from: Id,
@@ -198,6 +200,7 @@ impl DeltaOp {
 /// `edges`) as JSON; a delta read from JSON keeps them as written (`target` may even be absent,
 /// which `checkDelta` allows).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct Delta {
     pub edge_identity: EdgeIdentity,
     pub base: Object,
@@ -1543,6 +1546,7 @@ pub fn with_edge_identity(graph: &KGraph, edge_identity: EdgeIdentity) -> Result
 /// An op skipped in lenient mode: its index, the op and why (the text strict mode would put in
 /// its `delta-conflict` error).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct SkippedOp {
     pub index: usize,
     pub op: DeltaOp,
@@ -1551,6 +1555,7 @@ pub struct SkippedOp {
 
 /// How `apply_delta` treats conflicts (`ApplyOptions`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct ApplyOptions {
     /// Verify `base.hash` and every op's precondition (the default); otherwise skip the ops whose
     /// precondition fails.

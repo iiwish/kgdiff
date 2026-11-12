@@ -21,9 +21,10 @@ fn main() {
 }
 
 fn all() -> LayoutOptions {
-    LayoutOptions {
-        scope: Some(LayoutScope::All),
-        ..LayoutOptions::default()
+    {
+        let mut o = LayoutOptions::default();
+        o.scope = Some(LayoutScope::All);
+        o
     }
 }
 

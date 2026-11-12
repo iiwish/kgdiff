@@ -49,6 +49,7 @@ pub enum ErrorKind {
 
 /// A JSON syntax error and where it is.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Error {
     pub kind: ErrorKind,
     /// Offset of the error in UTF-16 code units (JavaScript string indices).

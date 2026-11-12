@@ -88,6 +88,16 @@ pub enum Failure {
     Unexpected(String, &'static Location<'static>),
 }
 
+impl From<crate::io::ViewerMissing> for Failure {
+    fn from(missing: crate::io::ViewerMissing) -> Failure {
+        Failure::Cli(CliError::new(
+            CliErrorCode::ViewerMissing,
+            missing.message,
+            missing.hint,
+        ))
+    }
+}
+
 impl From<CliError> for Failure {
     fn from(error: CliError) -> Failure {
         Failure::Cli(error)

@@ -13,6 +13,7 @@ use crate::paint::Tone;
 
 /// The five meaning families of docs/visual-language.md.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ChangeFamily {
     Added,
     Removed,
@@ -252,7 +253,7 @@ pub fn watched_changes(diff: &DiffResult, watch: &[String]) -> Vec<(String, Vec<
         let mut keys: IndexSet<&str> = IndexSet::default();
         for id in &hunk.nodes {
             for facet in diff.node(id).map_or(&[][..], |n| &n.facets[..]) {
-                if let NodeFacet::Attrs { changes } = facet {
+                if let NodeFacet::Attrs { changes, .. } = facet {
                     for change in changes {
                         if watched.contains(change.key.as_str()) {
                             keys.insert(change.key.as_str());

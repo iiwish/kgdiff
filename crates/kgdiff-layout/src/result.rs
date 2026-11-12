@@ -28,6 +28,7 @@ impl Rect {
 
 /// A connected component of the layout (over links and merge / split partners).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct LayoutComponent {
     /// Its nodes, in id order.
     pub nodes: Vec<UnionId>,
@@ -37,6 +38,7 @@ pub struct LayoutComponent {
 
 /// How a layout was computed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct LayoutStats {
     pub strategy: LayoutStrategy,
     /// The ticks of the largest simulation run (0 when none ran).
@@ -45,11 +47,24 @@ pub struct LayoutStats {
     pub nodes: usize,
 }
 
+impl LayoutStats {
+    /// Stats of a layout computed elsewhere (the WebAssembly bindings' partial layouts).
+    #[doc(hidden)]
+    pub fn new(strategy: LayoutStrategy, iterations: usize, nodes: usize) -> LayoutStats {
+        LayoutStats {
+            strategy,
+            iterations,
+            nodes,
+        }
+    }
+}
+
 /// A layout: positions and radii of the nodes in scope, their bounds and components.
 ///
 /// Unlike TypeScript's `LayoutResult`, there is no wall-clock time in it (`stats.ms`): no clock
 /// is read, so that the crate is the same on every target (callers time it themselves).
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct LayoutResult {
     /// The position of every node in scope (world units, y down), in id order.
     pub positions: IndexMap<UnionId, Point>,

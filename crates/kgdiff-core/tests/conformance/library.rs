@@ -88,31 +88,28 @@ fn parse_side(case: &Case, side: &str) -> Result<ParseResult, String> {
     let result = if parse.get("allowEmpty") == Some(&Value::Bool(true))
         && kgdiff_core::js::trim(&text).is_empty()
     {
-        parse_graph(
-            "{\"nodes\":[],\"edges\":[]}",
-            &ParseOptions {
-                format: Some(FormatId::Json),
-                filename,
-                ..ParseOptions::default()
-            },
-        )
+        parse_graph("{\"nodes\":[],\"edges\":[]}", &{
+            let mut o = ParseOptions::default();
+            o.format = Some(FormatId::Json);
+            o.filename = filename;
+            o
+        })
     } else {
         let format = match parse.get("format").and_then(Value::as_str) {
             None | Some("auto") => None,
             Some(id) => Some(FormatId::from_id(id).ok_or_else(|| format!("unknown format {id}"))?),
         };
-        parse_graph(
-            &text,
-            &ParseOptions {
-                format,
-                filename,
-                rdf: RdfOptions {
-                    languages,
-                    ..RdfOptions::default()
-                },
-                ..ParseOptions::default()
-            },
-        )
+        parse_graph(&text, &{
+            let mut o = ParseOptions::default();
+            o.format = format;
+            o.filename = filename;
+            o.rdf = {
+                let mut o = RdfOptions::default();
+                o.languages = languages;
+                o
+            };
+            o
+        })
     };
     result.map_err(|e| format!("parse({side}): {} {}", e.code, e.message))
 }
@@ -177,9 +174,10 @@ pub fn graphs(case: &Case) -> Result<[KGraph; 2], String> {
     let options = resolve_options(Some(&options(case)?)).map_err(|e| e.message)?;
     let normalized = |side: &str| -> Result<KGraph, String> {
         let graph = graph_of(case, side)?;
-        let options = NormalizeOptions {
-            edge_identity: options.edge_identity,
-            ..NormalizeOptions::default()
+        let options = {
+            let mut o = NormalizeOptions::default();
+            o.edge_identity = options.edge_identity;
+            o
         };
         normalize(&graph, options)
             .map_err(|e| format!("normalize({side}): {} {}", e.code, e.message))
@@ -244,13 +242,14 @@ fn attrs_of(value: Option<&Value>) -> Option<Object> {
 /// rejects (the typed input cannot hold it).
 fn input_of(graph: &Value) -> Option<GraphInput> {
     let record = graph.as_object()?;
-    let mut input = GraphInput {
-        meta: record
+    let mut input = {
+        let mut o = GraphInput::default();
+        o.meta = record
             .get("meta")
             .and_then(Value::as_object)
             .cloned()
-            .unwrap_or_default(),
-        ..GraphInput::default()
+            .unwrap_or_default();
+        o
     };
     for node in record.get("nodes")?.as_array()? {
         let node = node.as_object()?;
@@ -265,21 +264,23 @@ fn input_of(graph: &Value) -> Option<GraphInput> {
                     y: p.get("y")?.as_f64()?,
                 })
             });
-        input.nodes.push(NodeInput {
-            id: id_of(node.get("id"))?,
-            label: text_of(node.get("label"))?,
-            types,
-            aliases: texts_of(node.get("aliases"))?,
-            attrs: attrs_of(node.get("attrs"))?,
-            deprecated: match node.get("deprecated") {
+        input.nodes.push({
+            let mut o = NodeInput::default();
+            o.id = id_of(node.get("id"))?;
+            o.label = text_of(node.get("label"))?;
+            o.types = types;
+            o.aliases = texts_of(node.get("aliases"))?;
+            o.attrs = attrs_of(node.get("attrs"))?;
+            o.deprecated = match node.get("deprecated") {
                 None | Some(Value::Null) => false,
                 Some(Value::Bool(b)) => *b,
                 Some(_) => return None,
-            },
-            replaces: texts_of(node.get("replaces"))?,
-            replaced_by: texts_of(node.get("replacedBy"))?,
-            implicit: node.get("implicit") == Some(&Value::Bool(true)),
-            position,
+            };
+            o.replaces = texts_of(node.get("replaces"))?;
+            o.replaced_by = texts_of(node.get("replacedBy"))?;
+            o.implicit = node.get("implicit") == Some(&Value::Bool(true));
+            o.position = position;
+            o
         });
     }
     let edges = match record.get("edges") {
@@ -289,13 +290,15 @@ fn input_of(graph: &Value) -> Option<GraphInput> {
     };
     for edge in edges {
         let edge = edge.as_object()?;
-        input.edges.push(EdgeInput {
-            id: id_of(edge.get("id")).filter(|id| !id.is_empty()),
-            source: id_of(edge.get("source"))?,
-            target: id_of(edge.get("target"))?,
-            predicate: text_of(edge.get("predicate"))?.unwrap_or_default(),
-            label: text_of(edge.get("label"))?,
-            attrs: attrs_of(edge.get("attrs"))?,
+        input.edges.push({
+            let mut o = EdgeInput::default();
+            o.id = id_of(edge.get("id")).filter(|id| !id.is_empty());
+            o.source = id_of(edge.get("source"))?;
+            o.target = id_of(edge.get("target"))?;
+            o.predicate = text_of(edge.get("predicate"))?.unwrap_or_default();
+            o.label = text_of(edge.get("label"))?;
+            o.attrs = attrs_of(edge.get("attrs"))?;
+            o
         });
     }
     Some(input)
@@ -321,9 +324,10 @@ fn outcome(graph: &kgdiff_core::Result<KGraph>) -> String {
 /// graph, which must be the expected one.
 fn every_way(case: &Case, side: &str) -> Result<Vec<u8>, String> {
     let options = resolve_options(Some(&options(case)?)).map_err(|e| e.message)?;
-    let options = NormalizeOptions {
-        edge_identity: options.edge_identity,
-        ..NormalizeOptions::default()
+    let options = {
+        let mut o = NormalizeOptions::default();
+        o.edge_identity = options.edge_identity;
+        o
     };
     let graph = graph_of(case, side)?;
     let reference = normalize(&graph, options);
@@ -456,10 +460,8 @@ pub fn apply(case: &Case) -> Result<Vec<u8>, String> {
     let delta = kgdiff_core::Delta::from_value(&read(case, "expected/delta.json")?)
         .map_err(|e| e.message)?;
     let graph = graph_of(case, "before")?;
-    let options = NormalizeOptions {
-        edge_identity: delta.edge_identity,
-        ..NormalizeOptions::default()
-    };
+    let mut options = NormalizeOptions::default();
+    options.edge_identity = delta.edge_identity;
     let before = normalize(&graph, options).map_err(|e| e.message)?;
     let (applied, _) =
         kgdiff_core::apply_delta(&before, &delta, kgdiff_core::ApplyOptions::default())

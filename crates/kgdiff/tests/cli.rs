@@ -34,13 +34,11 @@ fn parse_json(text: &str) -> Value {
 }
 
 fn graph_hash(text: &str, filename: &str) -> String {
-    let parsed = parse_graph(
-        text,
-        &ParseOptions {
-            filename: Some(filename.to_owned()),
-            ..ParseOptions::default()
-        },
-    )
+    let parsed = parse_graph(text, &{
+        let mut o = ParseOptions::default();
+        o.filename = Some(filename.to_owned());
+        o
+    })
     .unwrap();
     hash_graph(&normalize(&Value::Object(parsed.graph), NormalizeOptions::default()).unwrap())
         .to_owned()

@@ -144,9 +144,10 @@ fn check_pins(what: &str, diff: &DiffResult, base: &LayoutResult, options: &Layo
             );
         }
     }
-    let options = LayoutOptions {
-        pinned: pinned.clone(),
-        ..options.clone()
+    let options = {
+        let mut o = options.clone();
+        o.pinned = pinned.clone();
+        o
     };
     let layout = layout_diff(diff, &options).unwrap();
     if pinned.is_empty() {
@@ -188,10 +189,8 @@ fn check_extend(what: &str, diff: &DiffResult, base: &LayoutResult) {
         assert!(p.x.is_finite() && p.y.is_finite(), "{what}");
     }
 
-    let changes = LayoutOptions {
-        scope: Some(LayoutScope::Changes),
-        ..LayoutOptions::default()
-    };
+    let mut changes = LayoutOptions::default();
+    changes.scope = Some(LayoutScope::Changes);
     let focused = layout_diff(diff, &changes).unwrap();
     let mut expand: Vec<JsStr> = Vec::new();
     for id in focused.hidden.keys() {
@@ -281,10 +280,8 @@ fn synthetic_graphs_up_to_10k_nodes() {
     ];
     for (what, spec, max_overlap) in graphs {
         let result = spec.diff();
-        let options = LayoutOptions {
-            scope: Some(LayoutScope::All),
-            ..LayoutOptions::default()
-        };
+        let mut options = LayoutOptions::default();
+        options.scope = Some(LayoutScope::All);
         let layout = layout_diff(&result, &options).unwrap();
         check_layout(what, &result, &layout, max_overlap);
         check_pins(what, &result, &layout, &options);

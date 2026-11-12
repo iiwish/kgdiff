@@ -11,12 +11,13 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use kgdiff_report::{MISSING_VIEWER_HINT, embedded_viewer};
 
-use crate::errors::{CliError, CliErrorCode, Failure, system_error_code};
-use crate::io::{CliIo, Env, FileStat, StdinError, ViewerBundle};
+use crate::errors::system_error_code;
+use crate::io::{CliIo, Env, FileStat, StdinError, ViewerBundle, ViewerMissing};
 use crate::paths;
 
 /// The process as kgdiff sees it.
 #[derive(Debug, Default)]
+#[non_exhaustive]
 pub struct SystemIo;
 
 impl Env for SystemIo {
@@ -298,7 +299,7 @@ impl CliIo for SystemIo {
         }
     }
 
-    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, Failure> {
+    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, ViewerMissing> {
         let (what, specifier) = match part {
             ViewerBundle::Main => ("standalone viewer bundle", "@kgdiff/viewer/standalone"),
             ViewerBundle::Compute => ("viewer compute add-on", "@kgdiff/viewer/standalone/compute"),
@@ -308,12 +309,7 @@ impl CliIo for SystemIo {
             ViewerBundle::Compute => b.compute,
         });
         source.map(Cow::Borrowed).ok_or_else(|| {
-            CliError::new(
-                CliErrorCode::ViewerMissing,
-                format!("The HTML report needs the {what} ({specifier}), which this kgdiff was built without."),
-                Some(MISSING_VIEWER_HINT.to_owned()),
-            )
-            .into()
+            ViewerMissing::new(format!("The HTML report needs the {what} ({specifier}), which this kgdiff was built without."), Some(MISSING_VIEWER_HINT.to_owned()))
         })
     }
 }
