@@ -43,8 +43,11 @@ jobs:
   # something to publish when @kgdiff/cli's version is not on npm yet (one version for every
   # package), or when it is but the release was not finished: the tag v<version>, which
   # "Version or publish" creates once npm has everything, is missing (a run that failed after
-  # publishing some packages, as 0.11.0's did). Then the native builds below run first; otherwise
-  # "Version or publish" runs at once (the version pull request, or nothing to publish).
+  # publishing some packages, as 0.11.0's did). Then the native builds below run first. With
+  # changesets pending, "Version or publish" runs at once and opens or updates the version pull
+  # request. With neither, there is nothing to do and "Version or publish" is skipped: with no
+  # changeset, changesets/action always runs `pnpm release`, whose `pnpm check` needs the modules
+  # of @kgdiff/compute, built only for a release (compute-wasm).
   plan:
     name: Plan the release
     # Not in forks, and not before the first release, which is published by hand: set the
@@ -57,6 +60,8 @@ jobs:
       contents: read
     outputs:
       release: ${{ steps.plan.outputs.release }}
+      # Changesets are pending: "Version or publish" opens or updates the version pull request.
+      changesets: ${{ steps.plan.outputs.changesets }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -70,14 +75,22 @@ jobs:
           tagged=0
           git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/v$version" > /dev/null || tagged=$?
           test "$tagged" = 0 || test "$tagged" = 2
+          if [ "$pending" -gt 0 ]; then
+            echo "changesets=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changesets=false" >> "$GITHUB_OUTPUT"
+          fi
           if [ "$pending" -eq 0 ] && [ -z "$published" ]; then
             echo "Releasing $version"
             echo "release=true" >> "$GITHUB_OUTPUT"
           elif [ "$pending" -eq 0 ] && [ "$tagged" = 2 ]; then
             echo "Finishing the release of $version: @kgdiff/cli is on npm, v$version is not tagged"
             echo "release=true" >> "$GITHUB_OUTPUT"
+          elif [ "$pending" -gt 0 ]; then
+            echo "Not a release: $pending changesets, for the version pull request"
+            echo "release=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Not a release: $pending changesets, @kgdiff/cli@$version ${published:+is }on npm"
+            echo "Nothing to release: no changesets, $version is on npm and tagged v$version"
             echo "release=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -134,9 +147,11 @@ jobs:
   release:
     name: Version or publish
     needs: [plan, native-global, crates-dry-run, npm-smoke, npm-smoke-musl, compute-wasm]
-    # Right away when this push does not release; after every build and check when it does.
+    # Right away for the version pull request; after every build and check when this push
+    # releases; not at all when there is nothing to do (plan).
     if: >-
-      always() && needs.plan.result == 'success' && (needs.plan.outputs.release != 'true' || (
+      always() && needs.plan.result == 'success' && (needs.plan.outputs.changesets == 'true' || (
+      needs.plan.outputs.release == 'true' &&
       needs.native-global.result == 'success' && needs.crates-dry-run.result == 'success' &&
       needs.npm-smoke.result == 'success' && needs.npm-smoke-musl.result == 'success' &&
       needs.compute-wasm.result == 'success'))
