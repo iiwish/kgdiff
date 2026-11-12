@@ -164,7 +164,7 @@ for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'zh-CN').t
 - **确定性**：相同输入得到逐字节相同的差异、布局和报告。
 - **可逆**：`apply(A, diff(A, B).delta) ≅ B`，逆补丁可还原 `A`；按审阅顺序逐组应用补丁一定成功。均由 fast-check 属性测试保证。
 - **测试**：各包合计约 2100 个 TypeScript 测试，加上 Rust 各 crate 自己的测试、两边都要通过的一致性语料，以及让每个示例数据集跑完整条流水线的验收测试。
-- **实测**（M 系列笔记本，0.10 的 TypeScript 引擎；0.11 替换它的 Rust 引擎的测量见 [RFC 0002](docs/rfcs/0002-rust-compute-core.md) §7）：1 万节点 / 3 万边的差异约 0.1 秒；5 万条 RDF 三元组解析约 0.1 秒；1 万节点差异的布局（只布局变更范围）约 1.1 秒；5000 节点每帧视觉计算不到 1 毫秒；独立版查看器 gzip 后约 116 kB。
+- **实测**（M 系列笔记本，0.11：Node 24 下的 Rust 引擎，经 WebAssembly；数字和仍未达到的目标见 [RFC 0002](docs/rfcs/0002-rust-compute-core.md#phase-5-results)）：1 万节点 / 3 万边的差异约 0.14 秒（原生约 30 毫秒）；5 万条 RDF 三元组解析约 0.11 秒；1 万节点差异的布局（只布局变更范围）约 0.5 秒；5000 节点每帧视觉计算不到 1 毫秒；独立版查看器 gzip 后约 119 kB，引擎的 WebAssembly gzip 后约 390 kB，只在需要计算时才加载。
 
 ## 示例数据
 

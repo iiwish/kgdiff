@@ -34,7 +34,7 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 - **Zero-config, fully configurable.** Good defaults for every option, every default documented.
 - **Accessible by construction.** Contrast is tested, color is never the only cue, motion
   respects `prefers-reduced-motion`, everything is keyboard-operable.
-- **Small and fast.** Budgets below are enforced by benchmarks, a heap check and size checks.
+- **Small and fast.** Budgets below are enforced by benchmarks and size checks, or measured and recorded (the engine's, since 0.11).
 - **Isomorphic.** `core`, `formats`, `layout` and `scene` run unchanged in browsers, Node,
   Deno, Bun and workers.
 
@@ -209,18 +209,26 @@ and D-11).
 
 ## Budgets
 
-| What                                                                      | Budget                                |
-| ------------------------------------------------------------------------- | ------------------------------------- |
-| `diff`, exact ids, 10k nodes / 30k edges                                  | < 150 ms (Node, M-class laptop)       |
-| `diff`, exact ids, 100k nodes / 300k edges                                | < 2 s                                 |
-| `normalize` heap retained, 100k nodes / 300k edges                        | < 135 MB (Node; ~111 MB today)        |
-| similarity matching, 5k unmatched on each side                            | < 1.5 s                               |
-| `layoutDiff`, 2k nodes                                                    | < 800 ms                              |
-| `buildScene`, 10k nodes                                                   | < 50 ms                               |
-| `resolve` per frame, 5k nodes / 10k edges                                 | < 4 ms, zero steady-state allocations |
-| pan / zoom, 5k nodes / 10k edges                                          | 60 fps                                |
-| viewer standalone bundle (min + gzip, without formats and compute add-on) | < 130 kB (target 90 kB)               |
-| HTML report overhead (without data or compute add-on)                     | < 135 kB gzip                         |
+| What                                                                      | Budget                                                                                  |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `diff`, exact ids, 10k nodes / 30k edges                                  | < 150 ms (WebAssembly in Node, including the transport to `DiffResult`; M-class laptop) |
+| `diff`, exact ids, 100k nodes / 300k edges                                | < 2 s (same)                                                                            |
+| `normalize` memory, 100k nodes / 300k edges                               | < 80 MB of WebAssembly linear memory; < 50 MB resident growth natively                  |
+| similarity matching, 5k unmatched on each side                            | < 800 ms (WebAssembly)                                                                  |
+| `layoutDiff`, 2k nodes                                                    | < 450 ms (WebAssembly)                                                                  |
+| `buildScene`, 10k nodes                                                   | < 50 ms                                                                                 |
+| `resolve` per frame, 5k nodes / 10k edges                                 | < 4 ms, zero steady-state allocations                                                   |
+| pan / zoom, 5k nodes / 10k edges                                          | 60 fps                                                                                  |
+| viewer standalone bundle (min + gzip, without formats and compute add-on) | < 130 kB (target 90 kB)                                                                 |
+| HTML report overhead (without data or compute add-on)                     | < 135 kB gzip                                                                           |
+| `compute.wasm` (core and layout, no parsers), gzip                        | < 400 kB                                                                                |
+
+The compute rows are the targets of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#7-size-and-performance-budgets)
+and, since 0.11, they are measured and recorded, not enforced by a test: the engine is Rust, its
+native timings are `cargo bench` (divan) and the sizes are CI's limits on the modules. The rows
+from `buildScene` to the viewer bundle are still enforced by Vitest benchmarks and size tests. What
+0.11 measured, and which targets it did not reach, is in the RFC's
+[Phase 5 results](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#phase-5-results).
 
 ## Engineering conventions
 
