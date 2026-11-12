@@ -279,8 +279,9 @@ jobs:
   # breaks it needs a pending changeset that allows it. The crates share the npm packages'
   # version, so a pending changeset's largest bump is the release type; with none (main after a
   # release, or the release pull request, which has removed them), cargo-semver-checks takes the
-  # bump of the workspace version. In 0.x a minor release may break the API, from 1.0 on only a
-  # major. Items marked `#[doc(hidden)]` are not checked: they are not part of the public API.
+  # bump of the workspace version. cargo-semver-checks reads versions as Cargo does: in 0.x, a
+  # minor release (0.11 → 0.12) is its "major", so a changeset's minor maps to `major` before 1.0.
+  # Items marked `#[doc(hidden)]` are not checked: they are not part of the public API.
   semver:
     name: Rust public API (cargo-semver-checks)
     runs-on: ubuntu-latest
@@ -299,11 +300,15 @@ jobs:
           tool: cargo-semver-checks@0.51.0
       - name: Check the published crates against their last release
         run: |
+          bump=
+          for level in patch minor major; do
+            if grep -qsE "^['\"][^'\"]+['\"]: $level$" .changeset/*.md; then bump=$level; fi
+          done
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)
+          if [ "$bump" = minor ] && [ "${version%%.*}" = 0 ]; then bump=major; fi
           release_type=()
-          if grep -qsE "^['\"][^'\"]+['\"]: patch$" .changeset/*.md; then release_type=(--release-type patch); fi
-          if grep -qsE "^['\"][^'\"]+['\"]: minor$" .changeset/*.md; then release_type=(--release-type minor); fi
-          if grep -qsE "^['\"][^'\"]+['\"]: major$" .changeset/*.md; then release_type=(--release-type major); fi
-          echo "Release type: ${release_type[*]:-from the workspace version}"
+          if [ -n "$bump" ]; then release_type=(--release-type "$bump"); fi
+          echo "Workspace version $version; release type: ${bump:-from the workspace version}"
           cargo semver-checks "${release_type[@]}" \
             -p kgdiff-core -p kgdiff-formats -p kgdiff-layout -p kgdiff-report -p kgdiff
 
