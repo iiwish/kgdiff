@@ -1,13 +1,22 @@
 //! The diff engine of [kgdiff](https://github.com/iiwish/kgdiff): a semantic, reviewable diff of
-//! two versions of a knowledge graph, and the invertible delta between them. A byte-for-byte port
-//! of the TypeScript package `@kgdiff/core` (RFC 0002, phase 2): the same input gives the same
-//! `kgdiff.diff`, `kgdiff.diff.packed`, `kgdiff.delta` and `kgdiff.graph` documents, byte for
-//! byte, the same content hashes and the same hunk titles.
+//! two versions of a knowledge graph, and the invertible delta between them.
 //!
-//! What the crate computes is specified by the conformance corpus in the repository's
-//! `conformance/` directory; `cargo test -p kgdiff-core --test conformance` checks every case.
-//! Everything JavaScript does implicitly (number formatting, UTF-16 string order, object key
-//! order, `JSON.parse`) lives in [`js`].
+//! Given two graphs, [`diff`] normalizes both, matches their nodes (by id, by replacement hints
+//! or by similarity), detects renames, moves, merges and splits, classifies every node and edge
+//! as added, removed, modified or unchanged, groups the changes into reviewable hunks, and emits
+//! the delta that turns the first graph into the second. The result is deterministic: the same
+//! input gives the same output, byte for byte, on every platform. [`diff_to_json`] writes it as
+//! the `kgdiff.diff` document, and [`format_hunk`] words a hunk in English or Simplified
+//! Chinese.
+//!
+//! Graphs come in as kgdiff JSON (`{ "nodes": [...], "edges": [...] }`, read with [`js::json`])
+//! or as [`GraphInput`] values; the `kgdiff-formats` crate reads RDF, OBO and other JSON graph
+//! shapes into the same form. How the diff is computed is described in the repository's
+//! `docs/algorithms.md`, the delta in `docs/delta-format.md`, and the conformance corpus in its
+//! `conformance/` directory pins the output; `cargo test -p kgdiff-core --test conformance`
+//! checks every case. JSON values, numbers and strings are kgdiff's own types in [`js`], which
+//! follow JavaScript's number formatting and string order so that documents are identical to
+//! the npm packages'.
 //!
 //! # Diffing two graphs
 //!
@@ -84,6 +93,13 @@
 //! assert_eq!(json::to_string(&diff_to_json(&result)), text);
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
+
+#![warn(missing_docs)]
+
+/// The README's examples, run as tests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
 
 #[doc(hidden)]
 pub mod canonical;

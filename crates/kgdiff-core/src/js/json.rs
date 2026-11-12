@@ -51,11 +51,13 @@ pub enum ErrorKind {
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Error {
+    /// What is wrong.
     pub kind: ErrorKind,
     /// Offset of the error in UTF-16 code units (JavaScript string indices).
     pub offset: usize,
     /// 1-based line (lines end at `\n`) and column in UTF-16 code units of `offset`.
     pub line: usize,
+    /// The column, counted in the same way.
     pub column: usize,
 }
 
@@ -85,6 +87,10 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// `JSON.parse(text)` (see the module documentation for where it differs).
+///
+/// # Errors
+///
+/// Returns an [`Error`] when `text` is not valid JSON, or is nested deeper than the parser allows.
 pub fn parse(text: &str) -> Result<Value, Error> {
     Parser::new(text).parse()
 }
@@ -116,6 +122,7 @@ fn slot(text: &[u8]) -> usize {
 type Fail<T> = Result<T, (usize, ErrorKind)>;
 
 impl<'a> Parser<'a> {
+    /// Creates a parser for `text`.
     pub fn new(text: &'a str) -> Parser<'a> {
         Parser {
             text,
@@ -133,6 +140,11 @@ impl<'a> Parser<'a> {
         self
     }
 
+    /// Parses the whole text as one JSON value.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`Error`] when the text is not valid JSON, or is nested deeper than the limit.
     pub fn parse(mut self) -> Result<Value, Error> {
         let result = self.value(0).and_then(|value| {
             self.space();

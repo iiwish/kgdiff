@@ -1,6 +1,6 @@
 [package]
 name = "kgdiff-formats"
-description = "Graph file parsers for kgdiff: kgdiff JSON and five other JSON graph shapes, RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) and OBO, byte-compatible with @kgdiff/formats."
+description = "Graph file parsers for kgdiff: kgdiff JSON and five other JSON graph shapes, RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) and OBO."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

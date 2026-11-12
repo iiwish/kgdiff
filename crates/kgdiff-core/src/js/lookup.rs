@@ -26,24 +26,29 @@ impl<K, V> Default for Lookup<K, V> {
 }
 
 impl<K: Hash + Eq, V> Lookup<K, V> {
+    /// Creates an empty map.
     pub fn new() -> Self {
         Lookup::default()
     }
 
+    /// Creates an empty map with room for `capacity` entries.
     pub fn with_capacity(capacity: usize) -> Self {
         Lookup {
             map: HashMap::with_capacity_and_hasher(capacity, super::BuildHasher::default()),
         }
     }
 
+    /// The number of entries.
     pub fn len(&self) -> usize {
         self.map.len()
     }
 
+    /// Whether the map has no entries.
     pub fn is_empty(&self) -> bool {
         self.map.is_empty()
     }
 
+    /// The value for `key`, if any.
     pub fn get<Q: Hash + Eq + ?Sized>(&self, key: &Q) -> Option<&V>
     where
         K: Borrow<Q>,
@@ -51,6 +56,7 @@ impl<K: Hash + Eq, V> Lookup<K, V> {
         self.map.get(key)
     }
 
+    /// The value for `key`, mutably.
     pub fn get_mut<Q: Hash + Eq + ?Sized>(&mut self, key: &Q) -> Option<&mut V>
     where
         K: Borrow<Q>,
@@ -58,6 +64,7 @@ impl<K: Hash + Eq, V> Lookup<K, V> {
         self.map.get_mut(key)
     }
 
+    /// Whether `key` has a value.
     pub fn contains_key<Q: Hash + Eq + ?Sized>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
@@ -65,10 +72,12 @@ impl<K: Hash + Eq, V> Lookup<K, V> {
         self.map.contains_key(key)
     }
 
+    /// Sets the value for `key`, returning the previous one.
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         self.map.insert(key, value)
     }
 
+    /// Removes `key`, returning its value.
     pub fn remove<Q: Hash + Eq + ?Sized>(&mut self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,

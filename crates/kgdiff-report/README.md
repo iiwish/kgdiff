@@ -4,10 +4,27 @@ The text outputs and HTML reports of [kgdiff](https://github.com/iiwish/kgdiff) 
 terminal summary, `--stat`, `--name-status` and the Markdown summary of a
 [`kgdiff-core`](https://crates.io/crates/kgdiff-core) diff, in English or Simplified Chinese, and
 the single-file HTML report. They are the bytes `kgdiff` (and npm's
-[`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli), which runs it) prints. No I/O: an application that
-embeds the engine renders the same summary as `kgdiff` without its argument parsing and files.
+[`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli), which runs it) prints. No I/O: an
+application that embeds the engine renders the same summary as `kgdiff` without its argument
+parsing and files.
 
-Part of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md).
+```rust
+use kgdiff_core::js::json;
+use kgdiff_core::{DiffOptions, Locale, diff};
+use kgdiff_report::{Painter, TextContext, render_summary};
+
+let before = json::parse(r#"{"nodes":[{"id":"a","label":"Ada"}],"edges":[]}"#)?;
+let after = json::parse(r#"{"nodes":[{"id":"a","label":"Ada Lovelace"}],"edges":[]}"#)?;
+let result = diff(&before, &after, &DiffOptions::default())?;
+
+let mut ctx = TextContext::new(Painter::plain(), Locale::En);
+ctx.limit = 50;
+let text = render_summary(&result, "v1 → v2", &ctx)?;
+assert!(text.starts_with("kgdiff  v1 → v2"));
+assert!(text.contains("Renamed “Ada” → “Ada Lovelace”"));
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
 The corpus's text runs (`conformance/`) render byte for byte the same: `cargo test -p
 kgdiff-report` checks every summary, `--stat`, `--name-status` and Markdown run, the payload of
 every `report.json`, and each report's layout against the case's layout contract.
@@ -27,6 +44,13 @@ with other options) passes it with `report_payload_with` or `build_report_html_w
 2), so that it neither computes a second layout nor puts the payload together itself:
 
 ```rust
+# use kgdiff_core::js::json;
+# use kgdiff_core::{DiffOptions, Locale, diff};
+# use kgdiff_report::{ReportInfo, ReportSide};
+# let before = json::parse(r#"{"nodes":[{"id":"a","label":"Ada"}],"edges":[]}"#)?;
+# let after = json::parse(r#"{"nodes":[{"id":"a","label":"Ada Lovelace"}],"edges":[]}"#)?;
+# let diff = diff(&before, &after, &DiffOptions::default())?;
+# let info = ReportInfo::new("v1 → v2", "my-app 1.0", ReportSide::new("v1", None), ReportSide::new("v2", None));
 use kgdiff_layout::{LayoutOptions, layout_diff};
 use kgdiff_report::{ReportLayout, report_payload_with};
 
@@ -34,6 +58,7 @@ let mut options = LayoutOptions::default();
 options.seed = Some(7.0);
 let layout = layout_diff(&diff, &options)?;
 let payload = report_payload_with(&diff, ReportLayout::Given(&layout), &info)?;
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
 | `ReportLayout`   | The payload's `layout`                                                                |

@@ -1,4 +1,4 @@
-//! Option defaults and validation (`options.ts`).
+//! Option defaults and validation.
 
 use crate::error::{KgdiffError, Result};
 use crate::js::{JsStr, Object, Value};
@@ -21,12 +21,16 @@ pub const DEFAULT_HIERARCHY_PREDICATES: [&str; 9] = [
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum MatchStrategy {
+    /// Equal ids only (and 1:1 replacement hints).
     Id,
+    /// Equal ids first, then 1:1 replacement hints, then similarity for the leftovers. The default.
     Auto,
+    /// Ignore ids entirely (for example LLM extractions with random ids); 1:1 replacement hints still match.
     Similarity,
 }
 
 impl MatchStrategy {
+    /// The name used in options JSON (`"id"`, `"auto"` or `"similarity"`).
     pub fn as_str(self) -> &'static str {
         match self {
             MatchStrategy::Id => "id",
@@ -36,13 +40,17 @@ impl MatchStrategy {
     }
 }
 
-/// `Required<MatchOptions>`.
+/// How nodes are matched across versions. [`Default`] gives the defaults named on each field.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct MatchOptions {
+    /// How nodes are matched. Default [`MatchStrategy::Auto`].
     pub strategy: MatchStrategy,
+    /// Minimum score, in [0, 1], to accept a similarity match. Default 0.82.
     pub threshold: f64,
+    /// Minimum score, in [0, 1], to offer a pair as a suggestion. Default 0.6.
     pub suggest_threshold: f64,
+    /// Candidate pairs considered per node: a positive integer, stored as a number. Default 8.
     pub max_candidates: f64,
 }
 
@@ -57,14 +65,19 @@ impl Default for MatchOptions {
     }
 }
 
-/// `ResolvedDiffOptions`: every option with its default filled in.
+/// Every option of a diff. [`Default`] gives the defaults named on each field.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct DiffOptions {
+    /// How nodes are matched across versions.
     pub r#match: MatchOptions,
+    /// How edges are identified. Default [`EdgeIdentity::Structure`].
     pub edge_identity: EdgeIdentity,
+    /// Predicates that place a node in a hierarchy (child → parent); changing a node's parents is reported as a `move`. Default [`DEFAULT_HIERARCHY_PREDICATES`].
     pub hierarchy_predicates: Vec<JsStr>,
+    /// Whether to detect N→1 merges. Default `true`.
     pub detect_merges: bool,
+    /// Whether to detect 1→N splits. Default `true`.
     pub detect_splits: bool,
     /// Sorted, unique.
     pub ignore_attrs: Vec<JsStr>,
@@ -87,7 +100,7 @@ impl Default for DiffOptions {
 }
 
 impl DiffOptions {
-    /// The options as `diffToJSON` writes them (`ResolvedDiffOptions`).
+    /// The options as `diffToJSON` writes them (see [`DiffOptions`]).
     pub fn to_value(&self) -> Value {
         let m = &self.r#match;
         let mut matching = Object::new();
@@ -152,6 +165,10 @@ fn string_list(value: Option<&Value>, fallback: &[&str], option: &str) -> Result
 }
 
 /// `resolveMatchOptions`.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when `options` is not an object, `strategy` is not `id`, `auto` or `similarity`, `threshold` or `suggestThreshold` is not a number between 0 and 1, or `maxCandidates` is not a positive integer.
 pub fn resolve_match_options(options: Option<&Value>) -> Result<MatchOptions> {
     let defaults = MatchOptions::default();
     let Some(options) = options else {
@@ -207,6 +224,10 @@ pub fn resolve_match_options(options: Option<&Value>) -> Result<MatchOptions> {
 }
 
 /// `resolveEdgeIdentity`.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when `value` is given and is not `"structure"` or `"id"`.
 pub fn resolve_edge_identity(
     value: Option<&Value>,
     fallback: EdgeIdentity,
@@ -227,6 +248,10 @@ pub fn resolve_edge_identity(
 
 /// `resolveOptions`: `DiffOptions` given as JSON (`undefined` members absent), every default
 /// filled in; lists de-duplicated, `ignoreAttrs` sorted.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when `options` is not an object or any option has the wrong type or range (see [`resolve_match_options`]).
 pub fn resolve_options(options: Option<&Value>) -> Result<DiffOptions> {
     let empty = Object::new();
     let o = match options {
@@ -278,7 +303,9 @@ pub enum DanglingEdges {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct NormalizeOptions {
+    /// How edges are identified. Default [`EdgeIdentity::Structure`].
     pub edge_identity: EdgeIdentity,
+    /// What happens to edges whose endpoints are missing. Default [`DanglingEdges::Create`].
     pub dangling_edges: DanglingEdges,
 }
 

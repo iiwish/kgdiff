@@ -14,6 +14,7 @@ pub fn number_to_string(x: f64) -> String {
 pub struct NumberText(ryu_js::Buffer);
 
 impl NumberText {
+    /// Creates a buffer.
     pub fn new() -> NumberText {
         NumberText(ryu_js::Buffer::new())
     }

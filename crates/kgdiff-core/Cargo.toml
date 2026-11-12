@@ -1,6 +1,6 @@
 [package]
 name = "kgdiff-core"
-description = "Semantic diff engine for knowledge graphs: matching, change classification, hunks and invertible deltas, byte-compatible with @kgdiff/core."
+description = "Semantic diff engine for knowledge graphs: node matching, change classification, hunks, deterministic JSON documents and invertible deltas."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

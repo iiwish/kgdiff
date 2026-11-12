@@ -33,6 +33,7 @@ pub enum JsonTextError {
     Syntax {
         /// UTF-16 offset of the problem.
         offset: usize,
+        /// What was expected at that position.
         message: String,
     },
     /// Valid JSON with a lone surrogate escape (RFC 0002, D-2): `JSON.parse` would accept it.
@@ -55,6 +56,10 @@ fn lone_reason(escape: &str) -> String {
 
 /// `JSON.parse(text)` as kgdiff reads JSON: any depth, with a lone surrogate escape refused once
 /// the text is otherwise valid JSON. No byte order mark is skipped.
+///
+/// # Errors
+///
+/// Returns a [`JsonTextError`] when `text` is not valid JSON or contains a lone surrogate escape.
 pub fn parse_deep_json(text: &str) -> Result<Value, JsonTextError> {
     match json::Parser::new(text).max_depth(MAX_NESTING).parse() {
         Ok(value) => Ok(value),

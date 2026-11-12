@@ -17,11 +17,14 @@ use crate::pipeline::DiffResult;
 #[non_exhaustive]
 pub enum Locale {
     #[default]
+    /// English.
     En,
+    /// Simplified Chinese.
     ZhCn,
 }
 
 impl Locale {
+    /// The locale's tag (`"en"` or `"zh-CN"`).
     pub fn as_str(self) -> &'static str {
         match self {
             Locale::En => "en",

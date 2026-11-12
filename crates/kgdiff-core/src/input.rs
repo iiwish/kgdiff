@@ -9,8 +9,11 @@ use crate::model::{Attrs, Id, Point};
 #[derive(Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub struct GraphInput {
+    /// Free-form metadata about the graph (for example `name` and `version`).
     pub meta: Object,
+    /// The nodes, in any order.
     pub nodes: Vec<NodeInput>,
+    /// The edges, in any order.
     pub edges: Vec<EdgeInput>,
 }
 
@@ -22,11 +25,17 @@ pub struct NodeInput {
     pub id: Id,
     /// Defaults to the id.
     pub label: Option<JsStr>,
+    /// The node's types.
     pub types: Vec<JsStr>,
+    /// Other names of the node.
     pub aliases: Vec<JsStr>,
+    /// Arbitrary JSON attributes.
     pub attrs: Attrs,
+    /// Whether the node is obsolete.
     pub deprecated: bool,
+    /// Ids of the nodes this one replaces.
     pub replaces: Vec<Id>,
+    /// Ids of the nodes this one is replaced by.
     pub replaced_by: Vec<Id>,
     /// Written for a node created at an edge end the graph does not describe.
     pub implicit: bool,
@@ -40,11 +49,15 @@ pub struct NodeInput {
 pub struct EdgeInput {
     /// A stable id, the edge's key under id identity.
     pub id: Option<Id>,
+    /// The id of the source node.
     pub source: Id,
+    /// The id of the target node.
     pub target: Id,
+    /// The relation, usually an IRI or a CURIE.
     pub predicate: JsStr,
     /// Defaults to a label made from the predicate.
     pub label: Option<JsStr>,
+    /// Arbitrary JSON attributes.
     pub attrs: Attrs,
 }
 

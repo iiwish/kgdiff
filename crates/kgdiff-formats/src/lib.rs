@@ -1,8 +1,14 @@
-//! Real-world graph files as kgdiff graphs: a port of the TypeScript package `@kgdiff/formats`
-//! (RFC 0002, phase 3). [`parse_graph`] reads kgdiff JSON and five other JSON graph dialects,
-//! RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) and OBO into the same `GraphInput`
-//! conventions, so diffs across formats behave identically, and gives what the TypeScript
-//! function gives: the same graph, prefixes, relation labels and warnings, the same errors.
+//! The graph file parsers of [kgdiff](https://github.com/iiwish/kgdiff): real-world files read
+//! into the graphs [`kgdiff_core`] diffs.
+//!
+//! [`parse_graph`] reads kgdiff JSON and five other JSON graph dialects (d3 / NetworkX,
+//! Cytoscape.js, AntV G6, graphology, vis-network), RDF (Turtle, N-Triples, N-Quads, TriG,
+//! RDF/XML, JSON-LD) and OBO, from text, into the same `{ nodes, edges }` conventions, so that
+//! diffs across formats behave identically. [`detect_format`] picks the format from the file
+//! name and the content. Besides the graph, the result carries the prefixes, the display names
+//! of relations and the warnings about input that was repaired or skipped; syntax errors are
+//! `invalid-input` errors with the line. `docs/formats.md` in the repository lists the formats
+//! and how RDF and OBO are mapped.
 //!
 //! Output is deterministic: nodes sorted by id, edges by (source, predicate, target), attribute
 //! keys sorted, multi-valued fields as sorted arrays. Nothing is ever fetched.
@@ -24,6 +30,13 @@
 //! # Ok::<(), kgdiff_core::KgdiffError>(())
 //! ```
 
+#![warn(missing_docs)]
+
+/// The README's examples, run as tests.
+#[cfg(doctest)]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
+
 mod detect;
 mod iri;
 mod json;
@@ -41,14 +54,14 @@ use kgdiff_core::KgdiffError;
 use kgdiff_core::js::{JsStr, Object, Value};
 
 pub use detect::FORMAT_EXTENSIONS;
-/// `JSON.parse` as kgdiff reads JSON documents: any depth, lone surrogate escapes refused
-/// (RFC 0002, D-2). `kgdiff apply` reads deltas with it.
+/// Parses a JSON document as kgdiff reads it: any depth, and lone surrogate escapes refused.
+/// `kgdiff apply` reads deltas with it.
 pub use json::{JsonTextError, parse_deep_json};
 pub use prefixes::{PrefixTable, WELL_KNOWN_PREFIXES};
 
 use crate::shared::{Warnings, make_meta};
 
-/// A graph format `parse_graph` reads (`FormatId`).
+/// A graph format `parse_graph` reads.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum FormatId {
@@ -56,12 +69,17 @@ pub enum FormatId {
     Json,
     /// JSON-LD 1.1, with inline contexts or contexts from a document loader.
     JsonLd,
+    /// Turtle.
     Turtle,
+    /// N-Triples.
     NTriples,
+    /// N-Quads; named graphs are merged, with a warning.
     NQuads,
+    /// TriG; named graphs are merged, with a warning.
     TriG,
     /// RDF/XML, including OWL ontologies saved by Protégé, the OWL API or ROBOT.
     RdfXml,
+    /// OBO 1.4: synonyms, `is_a`, relationships, obsoletion with `replaced_by` and `alt_id`.
     Obo,
 }
 
@@ -78,7 +96,7 @@ impl FormatId {
         FormatId::Obo,
     ];
 
-    /// The id as written in TypeScript (`json`, `jsonld`, …).
+    /// The format's id, as `--format` takes it (`json`, `jsonld`, `turtle`, `ntriples`, `nquads`, `trig`, `rdfxml` or `obo`).
     pub fn id(self) -> &'static str {
         match self {
             FormatId::Json => "json",
@@ -98,19 +116,26 @@ impl FormatId {
     }
 }
 
-/// A JSON graph shape the `json` format recognises (`JsonDialect`).
+/// A JSON graph shape the `json` format recognises .
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum JsonDialect {
+    /// kgdiff's own JSON (`{ nodes, edges }`).
     Kgdiff,
+    /// d3 / NetworkX node-link data.
     D3,
+    /// Cytoscape.js elements.
     Cytoscape,
+    /// AntV G6 data.
     G6,
+    /// graphology's serialized graph.
     Graphology,
+    /// vis-network data.
     Vis,
 }
 
 impl JsonDialect {
+    /// The dialect's name (`kgdiff`, `d3`, `cytoscape`, `g6`, `graphology` or `vis`).
     pub fn id(self) -> &'static str {
         match self {
             JsonDialect::Kgdiff => "kgdiff",
@@ -160,6 +185,7 @@ pub enum ParseWarningCode {
 }
 
 impl ParseWarningCode {
+    /// The code as written in warnings (`named-graphs`, `obo-duplicate-id`, …).
     pub fn as_str(self) -> &'static str {
         match self {
             ParseWarningCode::NamedGraphs => "named-graphs",
@@ -185,7 +211,9 @@ impl ParseWarningCode {
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct ParseWarning {
+    /// What kind of oddity this is.
     pub code: ParseWarningCode,
+    /// A human-readable description.
     pub message: String,
     /// 1-based line, when known.
     pub line: Option<usize>,
@@ -218,6 +246,7 @@ pub struct RdfOptions {
     pub languages: Option<Vec<String>>,
     /// Extra prefixes used to compact IRIs, as `(name, namespace)` in insertion order.
     pub prefixes: Option<Vec<(String, String)>>,
+    /// Which prefixes compact identities. Default [`CompactWith::WellKnown`].
     pub compact_with: CompactWith,
     /// Fold statement annotations into the attributes of the annotated edge.
     pub fold_annotations: bool,
@@ -242,18 +271,26 @@ impl Default for RdfOptions {
 #[derive(Clone, Debug, Default)]
 #[non_exhaustive]
 pub struct JsonFields {
+    /// Field holding the node id.
     pub id: Option<String>,
+    /// Field holding the node label.
     pub label: Option<String>,
+    /// Field holding the node type.
     pub r#type: Option<String>,
+    /// Field holding the edge source.
     pub source: Option<String>,
+    /// Field holding the edge target.
     pub target: Option<String>,
+    /// Field holding the edge predicate.
     pub predicate: Option<String>,
 }
 
 /// A JSON-LD context document a loader returns: parsed JSON or JSON text.
 #[non_exhaustive]
 pub enum LoadedDocument {
+    /// The parsed JSON document.
     Value(Value),
+    /// The document as JSON text.
     Text(String),
 }
 
@@ -270,8 +307,11 @@ pub struct ParseOptions<'a> {
     pub filename: Option<String>,
     /// Base IRI for relative IRIs in RDF.
     pub base_iri: Option<String>,
+    /// How RDF is mapped to a graph.
     pub rdf: RdfOptions,
+    /// Field overrides for custom JSON shapes.
     pub json: JsonFields,
+    /// Provides remote JSON-LD contexts; `None` (the default) means nothing is fetched.
     pub document_loader: Option<&'a DocumentLoader>,
 }
 
@@ -279,7 +319,7 @@ pub struct ParseOptions<'a> {
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct ParseResult {
-    /// The graph as kgdiff JSON (`GraphInput`), with its keys in TypeScript's order.
+    /// The graph as kgdiff JSON (`GraphInput`), with its keys in kgdiff's canonical order.
     pub graph: Object,
     /// The format that was read: requested or detected (JSON-LD read as `json` is `jsonld`).
     pub format: FormatId,
@@ -289,11 +329,12 @@ pub struct ParseResult {
     pub prefixes: Object,
     /// Display names the source gives its relations, by edge predicate.
     pub predicate_labels: Object,
+    /// Recoverable oddities of the input, in the order they were met.
     pub warnings: Vec<ParseWarning>,
 }
 
 impl ParseResult {
-    /// The result as JSON, as `JSON.stringify` of the TypeScript `ParseResult` writes it.
+    /// The result as JSON: `graph`, `format`, `dialect` (when there is one), `prefixes`, `predicateLabels` and `warnings`.
     pub fn to_value(&self) -> Value {
         let mut out = Object::new();
         out.insert("graph", Value::Object(self.graph.clone()));
@@ -334,6 +375,10 @@ struct Parsed {
 
 /// Parses graph text in any supported format (`parseGraph`). `invalid-input` with line
 /// information on syntax errors.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error, with the line when known, when the text is not valid in its format, is in a format that is recognised but not read (such as OWL/XML or GraphML), or when a JSON-LD context cannot be loaded.
 pub fn parse_graph(text: &str, options: &ParseOptions<'_>) -> Result<ParseResult, KgdiffError> {
     let filename = options.filename.as_deref();
     let mut format = match options.format {
@@ -445,6 +490,10 @@ fn from_rdf(out: rdf::RdfParseOutput) -> Parsed {
 }
 
 /// Best-effort format detection from the file name and content sniffing (`detectFormat`).
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when the content is a format kgdiff recognises but does not read, or cannot be told apart from any supported format.
 pub fn detect_format(text: &str, filename: Option<&str>) -> Result<FormatId, KgdiffError> {
     detect::detect(text, filename)
 }

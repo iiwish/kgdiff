@@ -1,9 +1,10 @@
-//! What JavaScript does implicitly, done explicitly (RFC 0002, §4).
+//! What JavaScript does implicitly, done explicitly.
 //!
-//! The TypeScript implementation's results depend on JavaScript's built-ins: how numbers become
-//! text, how strings order, which keys an object enumerates first, what `trim` removes, how
-//! `Math.round` rounds. This module reproduces each of them, and nothing else in the Rust code
-//! formats numbers, compares strings or orders object keys on its own.
+//! kgdiff's documents and hashes are the same in Rust and in the npm packages, so they depend on
+//! JavaScript's built-ins: how numbers become text, how strings order, which keys an object
+//! enumerates first, what `trim` removes, how `Math.round` rounds. This module reproduces each of
+//! them, and nothing else in the Rust code formats numbers, compares strings or orders object
+//! keys on its own.
 //!
 //! The part a host uses is the JSON data kgdiff reads and writes:
 //!

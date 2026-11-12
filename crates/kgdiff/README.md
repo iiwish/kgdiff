@@ -13,13 +13,11 @@ kgdiff a.ttl b.ttl --markdown >> "$GITHUB_STEP_SUMMARY"
 kgdiff a.json b.json --delta patch.json && kgdiff apply a.json patch.json -o b.json
 ```
 
-It is the binary npm's [`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli) runs, and it
-replaced the TypeScript CLI byte for byte: the same arguments, messages, outputs and exit codes.
-It records every CLI run of the conformance corpus, which is replayed against it on Linux, macOS
-and Windows (`pnpm conformance:replay`), and the TypeScript CLI's test suites are ported
-(`cargo test -p kgdiff`).
+It is the binary npm's [`@kgdiff/cli`](https://www.npmjs.com/package/@kgdiff/cli) runs. Every CLI
+run of the conformance corpus is replayed against it on Linux, macOS and Windows
+(`pnpm conformance:replay`): the same arguments give the same messages, outputs and exit codes on
+each. `docs/cli.md` in the repository lists every option.
 
-Part of [RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md):
 HTML reports carry the layout of [`kgdiff-layout`](https://crates.io/crates/kgdiff-layout) and
 open instantly; the viewer's compute add-on is inlined only for layouts that cover just the
 changes of a large graph, and `--no-compute` leaves it out. The viewer bundles are compiled in by
@@ -27,6 +25,19 @@ the feature `embed-viewer` (on by default) after `pnpm build:viewer-assets` in t
 build without them works for everything but `-o` / `--open`, which then names the missing step.
 
 As a library, `kgdiff::cli::run(argv, io)` runs the command line against any
-`kgdiff::io::CliIo`; `kgdiff::testing::MemoryIo` keeps files and streams in memory.
+`kgdiff::io::CliIo`, so that a host can embed kgdiff; `kgdiff::testing::MemoryIo` keeps files and
+streams in memory:
+
+```rust
+use kgdiff::testing::MemoryIo;
+
+let mut io = MemoryIo::new("/work")
+    .file("a.json", r#"{"nodes":[{"id":"ada","label":"Ada"}],"edges":[]}"#)
+    .file("b.json", r#"{"nodes":[{"id":"ada","label":"Ada Lovelace"}],"edges":[]}"#);
+let code = kgdiff::cli::run(&["a.json".into(), "b.json".into(), "--name-status".into()], &mut io);
+assert_eq!(code, 0);
+assert_eq!(io.stdout, "R	ada	Renamed “Ada” → “Ada Lovelace”
+");
+```
 
 Licensed under the MIT license.

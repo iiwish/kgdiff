@@ -18,11 +18,13 @@ use crate::model::{
 use crate::paint::{Painter, Tone};
 use crate::width::{byte_at_utf16, sanitize, string_width, wrap};
 
-/// What the text outputs need to know (`TextContext`).
+/// What the text outputs need to know.
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub struct TextContext {
+    /// Applies colors and text attributes; [`Painter::plain`] for none.
     pub paint: Painter,
+    /// The language of the output.
     pub locale: Locale,
     /// Maximum line width in columns.
     pub width: usize,
@@ -491,6 +493,10 @@ fn header_natural(diff: &DiffResult, title: &str, ctx: &TextContext, ov: &Overvi
 }
 
 /// The default terminal output.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when `diff` is inconsistent, for example when a hunk does not belong to it.
 pub fn render_summary(
     diff: &DiffResult,
     title: &str,
@@ -744,6 +750,10 @@ fn type_lines(diff: &DiffResult, ctx: &TextContext, width: i64) -> Vec<String> {
 
 /// `--name-status`: one line per hunk in review order. Tab-separated
 /// unless `aligned`, which pads the columns for a terminal.
+///
+/// # Errors
+///
+/// Returns an `invalid-input` error when `diff` is inconsistent, for example when a hunk does not belong to it.
 pub fn render_name_status(
     diff: &DiffResult,
     ctx: &TextContext,

@@ -24,18 +24,22 @@ impl<K, V> Default for OrderedMap<K, V> {
 }
 
 impl<K: Hash + Eq + Clone, V> OrderedMap<K, V> {
+    /// Creates an empty map.
     pub fn new() -> Self {
         OrderedMap::default()
     }
 
+    /// The number of entries.
     pub fn len(&self) -> usize {
         self.index.len()
     }
 
+    /// Whether the map has no entries.
     pub fn is_empty(&self) -> bool {
         self.index.is_empty()
     }
 
+    /// Whether `key` has an entry.
     pub fn contains_key<Q: Hash + Eq + ?Sized>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
@@ -43,6 +47,7 @@ impl<K: Hash + Eq + Clone, V> OrderedMap<K, V> {
         self.index.contains_key(key)
     }
 
+    /// The value for `key`, if any.
     pub fn get<Q: Hash + Eq + ?Sized>(&self, key: &Q) -> Option<&V>
     where
         K: Borrow<Q>,
@@ -51,6 +56,7 @@ impl<K: Hash + Eq + Clone, V> OrderedMap<K, V> {
         self.entries[at].as_ref().map(|(_, v)| v)
     }
 
+    /// The value for `key`, mutably.
     pub fn get_mut<Q: Hash + Eq + ?Sized>(&mut self, key: &Q) -> Option<&mut V>
     where
         K: Borrow<Q>,
@@ -110,10 +116,12 @@ impl<K: Hash + Eq + Clone, V> OrderedMap<K, V> {
             .filter_map(|e| e.as_ref().map(|(k, v)| (k, v)))
     }
 
+    /// Keys in insertion order.
     pub fn keys(&self) -> impl Iterator<Item = &K> {
         self.iter().map(|(k, _)| k)
     }
 
+    /// Values in insertion order.
     pub fn values(&self) -> impl Iterator<Item = &V> {
         self.iter().map(|(_, v)| v)
     }
