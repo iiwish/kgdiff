@@ -112,6 +112,100 @@ Then add the trusted publisher of each (owner `iiwish`, repository `kgdiff`, wor
 `release.yml`, environment `npm`), as for the other packages, and let the release take over.
 `node scripts/npm-smoke.mjs target/npm` runs the same smoke test locally.
 
+## Adding a package
+
+A package that is new on npm cannot be published by `release.yml`: trusted publishing needs the
+package to exist (`E404 … PUT https://registry.npmjs.org/@kgdiff%2f<name>`). `changeset publish`
+publishes the packages in dependency order and stops at the first failure, after the ones before
+it are out. 0.11.0 met this with `@kgdiff/compute`: `@kgdiff/core`, which depends on it, was
+already `latest` and could not be installed until `@kgdiff/compute` followed.
+
+So publish the new package's first version **before** the version pull request that releases it
+is merged:
+
+1. Make the package public (`"private"` gone, `publishConfig`, `repository` with its
+   `directory`), add it to the `fixed` group of `.changeset/config.json` (a test checks that
+   every public package is in it at one version) and let `pnpm check:packages` cover it.
+2. Pack the version the release will publish. Take what the build needs from a run of the release
+   workflow on the commit (Actions → Release → Run workflow builds everything and publishes
+   nothing), not from a local build, so that the tarball holds what the release would have
+   published; `pnpm pack` writes the workspace's versions into its dependencies. For
+   `@kgdiff/compute`:
+
+   ```sh
+   gh run download <run id> -R iiwish/kgdiff -n compute-wasm -D packages/compute/
+   pnpm install --frozen-lockfile && pnpm build
+   (cd packages/compute && pnpm pack --pack-destination ../../target/npm-manual)
+   tar -tzf target/npm-manual/kgdiff-compute-<version>.tgz   # the three .wasm, no test/
+   ```
+
+3. Publish it by hand, at the official registry whatever the machine installs from:
+
+   ```sh
+   npm login --registry=https://registry.npmjs.org/
+   npm publish target/npm-manual/kgdiff-<name>-<version>.tgz --access public \
+     --registry=https://registry.npmjs.org/
+   ```
+
+   This version has no provenance attestation; later ones do.
+4. Add its trusted publisher on npmjs.com (owner `iiwish`, repository `kgdiff`, workflow
+   `release.yml`, environment `npm`, direct publishing allowed). npm expires a configuration
+   that has not completed a publish within two days ([One-time setup](#one-time-setup)), and the
+   release that follows skips the version published by hand, so the configuration is first used
+   by the next release: make that one within two days, or add the publisher again before it.
+5. Merge the version pull request. The release finds the new package's version on npm and
+   publishes the others.
+
+A new crate is the same on crates.io ([Native binaries and crates](#native-binaries-and-crates)):
+`crates-publish` skips a crate that does not exist there, with a notice, instead of failing.
+
+## When a release stops half-way
+
+A release run builds and checks everything before it publishes anything, so most failures leave
+nothing behind: fix the cause in a pull request, and the push to `main` releases again (the
+version is not on npm, so `plan` says "Releasing").
+
+When the run fails **after** publishing some packages, nothing is taken back: a version cannot
+be published twice or removed. Find out what is out before doing anything else:
+
+```sh
+# npm, at the official registry (a mirror lags; so does the registry itself for a few minutes
+# after a publish, when one query may say 200 and the next 404)
+for p in core formats layout scene renderer viewer g6 cli compute; do
+  curl -s -o /dev/null -w "$p %{http_code}\n" "https://registry.npmjs.org/@kgdiff/$p/<version>"
+done
+curl -s https://crates.io/api/v1/crates/kgdiff-core | jq -r .crate.max_version
+gh release view v<version> -R iiwish/kgdiff
+```
+
+Then:
+
+- **Remove the cause** (a missing first version of a package: [Adding a package](#adding-a-package);
+  a broken step: a pull request).
+- **Run the release again.** Either re-run the failed jobs of the run (Actions → the run →
+  Re-run failed jobs), or push the fix to `main`. Every step skips what exists: the platform
+  packages and `changeset publish` skip versions on npm, the tag and the GitHub release are
+  created once, `crates-publish` skips versions on crates.io.
+- **The run finishes a release that an earlier run began.** `plan` treats a push as a release
+  also when `@kgdiff/cli`'s version is on npm but the tag `v<version>` does not exist, and
+  "Version or publish" then takes the committed version, once every public package is on npm at
+  it, to create the tag, move `v<major>`, write the GitHub release and let the crates publish.
+  Before 0.11.0 those steps asked whether _this run_ had published `@kgdiff/cli`, so a re-run
+  that published only the remaining packages ended green without a tag, a release or the crates.
+  `v<version>` then points at the commit of the run that finished the release, which may be
+  later than the one that published the packages (0.11.0: the `<package>@0.11.0` tags are on the
+  release commit, `v0.11.0` on the fix of the workflow).
+- **While a dependency is missing**, a package that is already `latest` cannot be installed. If
+  the cause takes long to remove, point `latest` back and forward again afterwards (the re-run
+  does not move it: the version is already published):
+
+  ```sh
+  npm dist-tag add @kgdiff/<name>@<previous version> latest --registry=https://registry.npmjs.org/
+  ```
+
+If a published version itself is wrong, the remedy is a patch release, not a second attempt at
+the same version.
+
 ## One-time setup
 
 The repository is `iiwish/kgdiff` (package metadata, `release.yml`, `CITATION.cff`,
@@ -136,7 +230,8 @@ num2048@163.com.
    git push --follow-tags
    ```
 
-4. **Trusted publishers.** For each of the eight packages on npmjs.com, open Settings → Trusted
+4. **Trusted publishers.** For each of the packages on npmjs.com (nine since 0.11, with
+   `@kgdiff/compute`), open Settings → Trusted
    publishing and add GitHub Actions with the owner `iiwish`, repository `kgdiff`, workflow
    `release.yml` and environment `npm`, allowing direct publishing (not only staged publishing).
    npm expires a configuration that has not completed a publish within two days, so do this
