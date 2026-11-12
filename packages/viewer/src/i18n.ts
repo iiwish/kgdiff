@@ -200,7 +200,7 @@ const en = {
   'announce.unreviewed': 'Marked as not reviewed. {progress}',
   'announce.finished': 'Replay finished',
   'announce.chapter': '{phase}: {n} changes',
-  'error.formats': 'Parsing text needs @kgdiff/formats (import it, or pass parsed graphs).',
+  'error.formats': 'Parsing text needs @kgdiff/compute (import it, or pass parsed graphs).',
   'error.notLoaded': 'Nothing is loaded yet.',
   'error.noLayout':
     'This report has no layout, and laying it out in the browser needs the compute module: add kgdiff-viewer-compute.js (@kgdiff/viewer/standalone/compute) after the viewer, or import @kgdiff/viewer as a module.',
@@ -401,7 +401,7 @@ const zhCN: Messages = {
   'announce.unreviewed': '已标记为未审阅。{progress}',
   'announce.finished': '回放结束',
   'announce.chapter': '{phase}：{n} 项变更',
-  'error.formats': '解析文本需要 @kgdiff/formats（请引入它，或传入已解析的图）。',
+  'error.formats': '解析文本需要 @kgdiff/compute（请引入它，或传入已解析的图）。',
   'error.notLoaded': '尚未载入任何内容。',
   'error.noLayout':
     '这份报告没有布局，在浏览器中布局需要计算模块：请在查看器之后加入 kgdiff-viewer-compute.js（@kgdiff/viewer/standalone/compute），或以模块方式引入 @kgdiff/viewer。',

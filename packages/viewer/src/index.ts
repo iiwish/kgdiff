@@ -15,6 +15,8 @@
  * `i18n.ts`, `styles.ts`, `theme.ts`, `review-store.ts`, `hash-sync.ts`, `payload.ts`,
  * `text-diff.ts`, `keyboard.ts`.
  */
+
+import type { ParseOptions } from '@kgdiff/compute';
 import type {
   Delta,
   DiffJSON,
@@ -25,7 +27,6 @@ import type {
   Locale,
   PackedDiffJSON,
 } from '@kgdiff/core';
-import type { ParseOptions } from '@kgdiff/formats';
 import type { LayoutJSON, LayoutOptions } from '@kgdiff/layout';
 import type { RendererLayer } from '@kgdiff/renderer';
 import type { NodeShape, PaletteName } from '@kgdiff/scene';
@@ -180,7 +181,7 @@ export interface ReportPayload {
   };
 }
 
-/** A graph to load: already structured, or text to parse with @kgdiff/formats. */
+/** A graph to load: already structured, or text to parse with `parseGraph` of @kgdiff/compute. */
 export type GraphSource =
   | GraphInput
   | KGraph

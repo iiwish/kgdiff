@@ -62,7 +62,7 @@ describe('load pipeline', () => {
     expect(host.events[0]?.type).toBe('ready');
   });
 
-  it('adds a parse step for text sources and parses them with @kgdiff/formats', async () => {
+  it('adds a parse step for text sources and parses them with @kgdiff/compute', async () => {
     const { before, after } = zoo();
     await c.load({
       before: { text: JSON.stringify(before), filename: 'zoo-v1.json' },

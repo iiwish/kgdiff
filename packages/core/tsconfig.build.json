@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "paths": { "@kgdiff/compute": ["../../types/compute-stub.d.ts"] }
+    "paths": { "@kgdiff/compute": ["../../types/compute-stub-build.d.ts"] }
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts"]

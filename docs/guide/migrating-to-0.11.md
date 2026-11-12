@@ -101,7 +101,9 @@ them: `diff` keeps the positions of its graphs on the nodes of the result.
 
 Its functions are asynchronous wrappers over the parsers of `@kgdiff/compute` now: use `parseGraph`,
 `detectFormat` and `compactIri` of `@kgdiff/compute` (or their `*Sync` forms after `init()`). Its
-types stay in `@kgdiff/formats` until the package is removed in 2.0. `@kgdiff/cli` is no longer a
+types and `FORMAT_EXTENSIONS` are exported by `@kgdiff/compute` since 0.11.1, and `@kgdiff/formats`
+re-exports the same declarations until the package is removed in 2.0; no other kgdiff package
+depends on it since then. `@kgdiff/cli` is no longer a
 JavaScript library since 0.10: use `@kgdiff/compute` for the computations, the kgdiff CLI or the
 `kgdiff-report` crate for reports.
 
@@ -110,7 +112,8 @@ JavaScript library since 0.10: use `@kgdiff/compute` for the computations, the k
 `<kgdiff-viewer>`'s API is unchanged. `load()` parses, diffs and lays out on `@kgdiff/compute`.
 The standalone add-on `kgdiff-viewer-compute.js` carries the layout-only module inlined, so a
 single-file report expands collapsed groups offline; `load()` with graphs in the standalone viewer
-also needs `@kgdiff/compute` in the page's import map, as text sources need `@kgdiff/formats`.
+also needs `@kgdiff/compute` in the page's import map, and so do text sources (in 0.11.0 they
+imported `@kgdiff/formats`, which imports `@kgdiff/compute`).
 
 ## What does not change
 

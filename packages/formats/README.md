@@ -3,7 +3,8 @@
 > **Deprecated since 0.11.** Use [`@kgdiff/compute`](../compute): its `parseGraph`,
 > `detectFormat` and `compactIri` are kgdiff's Rust parsers compiled to WebAssembly, the same
 > results as the kgdiff CLI. This package's functions are now asynchronous wrappers over them
-> (`await parseGraph(…)`); its types stay here until it is removed in 2.0. See
+> (`await parseGraph(…)`); its types and `FORMAT_EXTENSIONS` are `@kgdiff/compute`'s (since
+> 0.11.1), re-exported here until it is removed in 2.0. No other kgdiff package depends on it. See
 > [Migrating to 0.11](../../docs/guide/migrating-to-0.11.md).
 
 Parsers that turn real-world graph files into [`@kgdiff/core`](../core) graphs: RDF (Turtle,

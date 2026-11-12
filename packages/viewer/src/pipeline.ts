@@ -3,7 +3,7 @@
  * (laid out here when the report has none).
  * Each step is announced through `onStep`, which the controller awaits so the loading state
  * can paint between the (CPU-bound) steps. Parsing, diffing and laying out run kgdiff's engine in
- * WebAssembly (`@kgdiff/compute`, through `compute.ts` and `@kgdiff/formats`).
+ * WebAssembly (`@kgdiff/compute`: diffing and laying out through `compute.ts`, parsing directly).
  */
 import {
   type DiffResult,
@@ -47,19 +47,23 @@ function isGraphInput(value: unknown): value is GraphInput {
   return Array.isArray(v.nodes) && (v.edges === undefined || Array.isArray(v.edges));
 }
 
-type Formats = typeof import('@kgdiff/formats');
+type Parsers = Pick<typeof import('@kgdiff/compute'), 'parseGraph'>;
 
-let formatsPromise: Promise<Formats> | null = null;
+let parsersPromise: Promise<Parsers> | null = null;
 
-/** Loaded lazily so the standalone bundle (reports) never pays for the parsers. */
-function loadFormats(): Promise<Formats> {
-  formatsPromise ??= import('@kgdiff/formats').catch((error: unknown) => {
-    formatsPromise = null;
+/**
+ * `@kgdiff/compute`, loaded lazily so the standalone bundle (reports) never pays for the parsers:
+ * it stays external there (an import map entry), and its `formats` module is compiled on the
+ * first `parseGraph`.
+ */
+function loadParsers(): Promise<Parsers> {
+  parsersPromise ??= import('@kgdiff/compute').catch((error: unknown) => {
+    parsersPromise = null;
     throw new KgdiffError('invalid-input', translate('en', 'error.formats'), {
       cause: error instanceof Error ? error.message : String(error),
     });
   });
-  return formatsPromise;
+  return parsersPromise;
 }
 
 interface Resolved {
@@ -76,7 +80,7 @@ async function resolveSource(source: GraphSource, side: 'before' | 'after'): Pro
     );
   }
   if (isTextSource(source)) {
-    const { parseGraph } = await loadFormats();
+    const { parseGraph } = await loadParsers();
     const parsed = await parseGraph(source.text, {
       ...source.parse,
       ...(source.filename !== undefined ? { filename: source.filename } : {}),

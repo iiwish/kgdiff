@@ -14,13 +14,13 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { type DiffOptions, type DiffResult, diffFromJSON, normalize } from '@kgdiff/core';
-import type { FormatId, ParseOptions } from '@kgdiff/formats';
 import { type LayoutOptions, type LayoutResult, layoutToJSON } from '@kgdiff/layout';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { decodeInput } from '../../../conformance/inputs.js';
 import {
   estimateLabelWidthSync,
   extendLayoutSync,
+  type FormatId,
   init,
   json,
   layoutAfterSync,
@@ -28,6 +28,7 @@ import {
   layoutDiffSync,
   layoutGraphSync,
   nodeRadiusSync,
+  type ParseOptions,
   parseGraphSync,
   textSimilaritySync,
 } from '../src/index.js';

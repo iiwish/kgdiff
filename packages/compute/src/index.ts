@@ -21,8 +21,10 @@
  * graphs are `KGraph`s with the same edge identity and the options name none (as `diff` of
  * `@kgdiff/core` 0.10 did), and the matching functions normalize each `KGraph` with its own.
  *
- * `@kgdiff/core`'s `diff`, `matchNodes` and `textSimilarity`, `@kgdiff/formats`' parsers and
- * `@kgdiff/layout`'s layouts call the asynchronous functions of this package.
+ * `@kgdiff/core`'s `diff`, `matchNodes` and `textSimilarity` and `@kgdiff/layout`'s layouts call
+ * the asynchronous functions of this package. The parsers' types (`ParseOptions`, `ParseResult`,
+ * `FormatId`, …) and `FORMAT_EXTENSIONS` are exported here; `@kgdiff/formats` (deprecated)
+ * re-exports them and its functions call this package's.
  */
 import {
   type DiffJSON,
@@ -40,7 +42,6 @@ import {
   type UnionId,
 } from '@kgdiff/core';
 import { type GraphIssues, readComputedDiff } from '@kgdiff/core/computed';
-import type { FormatId, ParseOptions, ParseResult } from '@kgdiff/formats';
 import {
   type LayoutJSON,
   type LayoutOptions,
@@ -50,6 +51,7 @@ import {
 } from '@kgdiff/layout';
 import type * as ComputeGlue from '../wasm/compute.js';
 import type * as FormatsGlue from '../wasm/formats.js';
+import type { FormatId, ParseOptions, ParseResult } from './formats.js';
 import {
   estimateLabelWidthSync,
   extendLayoutSync,
@@ -62,6 +64,18 @@ import {
 } from './layout.js';
 import { type InitSource, Module } from './loader.js';
 
+export {
+  FORMAT_EXTENSIONS,
+  type FormatId,
+  type JsonDialect,
+  type JsonLdOptions,
+  type JsonOptions,
+  type ParseOptions,
+  type ParseResult,
+  type ParseWarning,
+  type ParseWarningCode,
+  type RdfOptions,
+} from './formats.js';
 export type { InitSource };
 export {
   estimateLabelWidthSync,
@@ -266,7 +280,19 @@ export function textSimilaritySync(a: string, b: string): number {
 }
 
 /**
- * `parseGraph` of `@kgdiff/formats`.
+ * Parse graph text in any supported format.
+ *
+ * - `format` defaults to `auto` (`detectFormat(text, filename)`).
+ * - `meta.source` is set to `filename` when given.
+ * - Every RDF syntax (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) maps through the same
+ *   conventions, so one graph gives the same `GraphInput` in any of them.
+ * - Offline: JSON-LD remote contexts come only from `jsonld.documentLoader` (called
+ *   synchronously).
+ * - Recoverable oddities (named graphs merged, unsupported OBO stanzas, d3 index ids, …) are
+ *   reported in `warnings` instead of failing.
+ *
+ * Output is deterministic: nodes sorted by id, edges by (source, predicate, target), attribute
+ * keys sorted and multi-valued fields as sorted arrays.
  *
  * @throws KgdiffError `invalid-input` with line information on syntax errors.
  */
@@ -275,15 +301,29 @@ export function parseGraphSync(source: string, options?: ParseOptions): ParseRes
 }
 
 /**
- * `detectFormat` of `@kgdiff/formats`.
+ * Best-effort format detection from file name and content sniffing.
  *
- * @throws KgdiffError `invalid-input` when the format cannot be detected.
+ * The extension wins when it is known (`FORMAT_EXTENSIONS`, case-insensitive; query strings
+ * are ignored), with two refinements: `.json` holding JSON-LD is `jsonld`, and `.owl` — which
+ * Protégé also uses for Turtle, OWL/XML and Functional Syntax — is decided by its content
+ * (RDF/XML when that cannot tell). Otherwise the content decides: JSON → json, or jsonld when a
+ * top-level key is a JSON-LD keyword; XML with an `rdf:RDF` root → rdfxml; OBO headers or
+ * stanzas → obo; Turtle directives → turtle, or trig with a graph block; line-based statements
+ * → ntriples or nquads. Empty input is an (empty) Turtle graph.
+ *
+ * @throws KgdiffError `invalid-input`, with a conversion hint for recognisably unsupported
+ *   formats (OWL/XML, OWL Functional / Manchester Syntax, GraphML, GEXF, other XML), when the
+ *   format cannot be detected.
  */
 export function detectFormatSync(source: string, filename?: string): FormatId {
   return formatsModule.call((e) => e.detectFormat(source, filename)) as FormatId;
 }
 
-/** `compactIri` of `@kgdiff/formats`. */
+/**
+ * Compact an IRI with a prefix map: `http://purl.obolibrary.org/obo/GO_0008150` → `GO:0008150`.
+ * Uses the well-known prefixes overlaid with `prefixes`; returns `iri` unchanged when nothing
+ * matches. For display only: node ids keep full IRIs.
+ */
 export function compactIriSync(iri: string, prefixes?: Readonly<Record<string, string>>): string {
   return formatsModule.call((e) => e.compactIri(iri, optionsText(prefixes)));
 }

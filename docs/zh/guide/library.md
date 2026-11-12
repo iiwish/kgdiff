@@ -5,7 +5,7 @@
 | 包                 | 作用                                                                           |
 | ------------------ | ------------------------------------------------------------------------------ |
 | `@kgdiff/core`     | diff 模型：规范化、匹配、分类、分组、可反向的增量。由 `@kgdiff/compute` 计算。 |
-| `@kgdiff/formats`  | 0.11 起弃用：解析请用 `@kgdiff/compute` 的 `parseGraph` 和 `detectFormat`。    |
+| `@kgdiff/formats`  | 已弃用：重新导出 `@kgdiff/compute` 的解析器，到 2.0 移除。                     |
 | `@kgdiff/layout`   | 确定性、考虑标签的布局，两个版本共用。                                         |
 | `@kgdiff/scene`    | 把 diff 转成视觉元素：设计令牌、编码、回放时间线。                             |
 | `@kgdiff/renderer` | Canvas 2D 渲染器：相机、细节层级、标签、拾取、小地图。                         |

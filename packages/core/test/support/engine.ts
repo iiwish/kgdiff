@@ -11,8 +11,8 @@
  */
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import type { ParseOptions, ParseResult } from '@kgdiff/compute';
 import type { DiffOptions, DiffResult, GraphInput, KGraph } from '@kgdiff/core';
-import type { ParseOptions, ParseResult } from '@kgdiff/formats';
 import type { LayoutOptions, LayoutResult } from '@kgdiff/layout';
 
 type GraphSource = GraphInput | KGraph | string;

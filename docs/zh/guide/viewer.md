@@ -31,7 +31,7 @@ npm install @kgdiff/viewer
 
 记得给元素设置高度。`load()` 的每一侧可以是：
 
-- `{ text, filename }`：用 `@kgdiff/formats` 解析，格式根据文件名和内容判断；`parse` 用来传解析选项；
+- `{ text, filename }`：用 `@kgdiff/compute` 的 `parseGraph` 解析，格式根据文件名和内容判断；`parse` 用来传解析选项（`ParseOptions`）；
 - [kgdiff JSON](../formats.md#kgdiff-json) 形式的图对象 `{ nodes, edges }`；
 - `@kgdiff/core` 规范化后的图。
 

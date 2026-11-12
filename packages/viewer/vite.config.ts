@@ -3,8 +3,8 @@
  *
  * - `dist/standalone/kgdiff-viewer.js` (default mode): defines `<kgdiff-viewer>` and hydrates
  *   embedded payloads. Bundles core, scene, renderer and the report path of layout, and never any
- *   WebAssembly. Left out: `@kgdiff/formats` (parsers) and the compute module, which the viewer
- *   imports on demand — from an import map, or from the add-on below.
+ *   WebAssembly. Left out: `@kgdiff/compute` (the parsers, for text sources) and the compute
+ *   module, which the viewer imports on demand — from an import map, or from the add-on below.
  * - `dist/standalone/kgdiff-viewer-compute.js` (`--mode compute`): optional add-on that
  *   provides the compute module as `globalThis.KgdiffCompute`, with kgdiff's layout-only
  *   WebAssembly module inlined (Vite inlines the `new URL('…/layout.wasm', import.meta.url)` of
@@ -96,7 +96,7 @@ export default defineConfig(({ mode }) => {
     logLevel: 'warn',
     plugins: addon ? [dropGlueDefault()] : [minifyCss(), externalCompute()],
     resolve: {
-      // Bundle the workspace packages from source; formats stays external.
+      // Bundle the workspace packages from source; `@kgdiff/compute` stays external.
       alias: [
         {
           find: /^@kgdiff\/(core|layout|scene|renderer)$/,
@@ -123,7 +123,7 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         // The parsers and the full engine are imported on demand (an import map entry).
-        external: ['@kgdiff/formats', '@kgdiff/compute'],
+        external: ['@kgdiff/compute'],
       },
     },
   };

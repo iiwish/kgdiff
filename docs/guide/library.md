@@ -5,7 +5,7 @@ The CLI and the viewer are built from packages you can use directly:
 | Package            | What it does                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------ |
 | `@kgdiff/core`     | The diff model: normalize, match, classify, hunks, invertible deltas. Computes on `@kgdiff/compute`.   |
-| `@kgdiff/formats`  | Deprecated since 0.11: the parsers are `parseGraph` and `detectFormat` of `@kgdiff/compute`.           |
+| `@kgdiff/formats`  | Deprecated: the parsers of `@kgdiff/compute`, re-exported until 2.0.                                   |
 | `@kgdiff/layout`   | A deterministic, label-aware layout that both versions share.                                          |
 | `@kgdiff/scene`    | Turns a diff into visual primitives: design tokens, encodings, replay timeline.                        |
 | `@kgdiff/renderer` | A Canvas 2D renderer: camera, level of detail, labels, picking, minimap.                               |

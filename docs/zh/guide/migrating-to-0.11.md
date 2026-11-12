@@ -83,14 +83,14 @@ Node 22 及以上会解析它，并把文件作为资源复制出去；esbuild �
 ## `@kgdiff/formats` 已弃用
 
 它的函数现在只是 `@kgdiff/compute` 解析器外面的一层异步包装：请改用 `@kgdiff/compute` 的 `parseGraph`、`detectFormat`
-和 `compactIri`（或 `init()` 之后的 `*Sync` 版本）。类型仍留在 `@kgdiff/formats`，直到 2.0 移除这个包。`@kgdiff/cli`
+和 `compactIri`（或 `init()` 之后的 `*Sync` 版本）。从 0.11.1 起，它的类型和 `FORMAT_EXTENSIONS` 由 `@kgdiff/compute` 导出，`@kgdiff/formats` 重新导出同样的声明，直到 2.0 移除这个包；其他 kgdiff 包从那时起都不再依赖它。`@kgdiff/cli`
 从 0.10 起不再是 JavaScript 库：计算请用 `@kgdiff/compute`，生成报告请用 kgdiff 命令行或 `kgdiff-report` crate。
 
 ## 查看器
 
 `<kgdiff-viewer>` 的 API 不变。`load()` 的解析、差异和布局都在 `@kgdiff/compute` 上进行。独立版附加脚本
 `kgdiff-viewer-compute.js` 内联了仅布局的模块，所以单文件报告离线也能展开折叠的分组；在独立版查看器里用 `load()`
-传入图时，页面的 import map 里还需要有 `@kgdiff/compute`，就像文本输入需要 `@kgdiff/formats` 一样。
+传入图时，页面的 import map 里还需要有 `@kgdiff/compute`，文本输入也一样（0.11.0 里文本输入导入的是 `@kgdiff/formats`，它再导入 `@kgdiff/compute`）。
 
 ## 不变的部分
 

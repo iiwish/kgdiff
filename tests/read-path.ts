@@ -1,15 +1,16 @@
 /**
  * What stays in TypeScript (RFC 0002, "What stays in TypeScript"): the read path of
  * `@kgdiff/core` and `@kgdiff/layout`, file by file, and the entry of each package, including
- * `@kgdiff/formats`, whose parsers kgdiff's engine (`@kgdiff/compute`) replaced. 0.11 deleted the
+ * `@kgdiff/formats`, whose parsers kgdiff's engine (`@kgdiff/compute`) replaced (since 0.11.1 it
+ * re-exports the parsers' types and `FORMAT_EXTENSIONS` of `@kgdiff/compute`). 0.11 deleted the
  * TypeScript compute code; this list is checked against the code (`read-path.test.ts`) so that
  * none comes back unnoticed: every source file of these packages is listed, and adding one means
  * adding it here, where a reviewer sees it.
  *
  * - `keep`: the read path, synchronous, without WebAssembly (what the viewer needs to read a
  *   report). Only `import type` of the entry, for the public types it declares.
- * - `entry`: the package's public entry. Its compute functions are asynchronous and load
- *   `@kgdiff/compute` with a dynamic `import()`.
+ * - `entry`: the package's public entry. Its compute functions are asynchronous and run on
+ *   `@kgdiff/compute`, which core and layout load with a dynamic `import()`.
  *
  * Paths are relative to the package's `src` directory.
  */
