@@ -2,7 +2,7 @@
 # crate, equal to the npm packages' version: `pnpm version-packages` writes it here
 # (scripts/sync-versions.ts) and tests/release.test.ts fails when the two drift apart.
 [workspace]
-members = ["crates/*"]
+members = ["crates/*", "xtask"]
 resolver = "3"
 
 [workspace.package]

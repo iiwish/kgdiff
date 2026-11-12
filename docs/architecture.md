@@ -221,7 +221,8 @@ and D-11).
 - TypeScript 7, strict, `noUncheckedIndexedAccess`, ESM only, Node ≥ 22, evergreen browsers.
 - Rust (`crates/`, one Cargo workspace): `cargo test --workspace`, `cargo clippy`, `cargo fmt`; the
   crates and the TypeScript packages share one version number and are checked against the same
-  conformance corpus (`pnpm conformance:update`, `pnpm conformance:replay`).
+  conformance corpus, which the Rust crates generate (`cargo xtask conformance`; `pnpm
+  conformance:replay` replays its CLI runs).
 - Relative imports use `.js` extensions (NodeNext). Cross-package imports use the package name;
   in development `@kgdiff/*` resolves to `packages/*/src/index.ts` (see `tsconfig.base.json`,
   `vitest.shared.ts`), so nothing needs building before tests.

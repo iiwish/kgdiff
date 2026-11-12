@@ -1,0 +1,24 @@
+# Repository tasks, run with `cargo xtask <task>` (the alias is in .cargo/config.toml). Never
+# published: it exists for this repository's own tooling, such as generating the conformance
+# corpus (`cargo xtask conformance`, conformance/README.md).
+[package]
+name = "xtask"
+description = "Repository tasks of kgdiff (not published): `cargo xtask conformance` generates the conformance corpus."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+base64 = "0.22"
+flate2 = "1.1"
+kgdiff-core.workspace = true
+kgdiff-formats.workspace = true
+kgdiff-layout.workspace = true
+sha2 = "0.11"
+
+[lints]
+workspace = true

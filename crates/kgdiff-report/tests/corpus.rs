@@ -444,8 +444,9 @@ fn report_payloads_match_report_json_and_layouts_their_contract() {
     );
 }
 
-/// `layoutContract` of `conformance/corpus.ts`, from a layout document: the part of the layout
-/// that does not depend on floating-point simulation (iteration counts of union layouts only).
+/// The layout contract of `xtask/src/conformance/library.rs`, from a layout document: the part
+/// of the layout that does not depend on floating-point simulation (iteration counts of union
+/// layouts only).
 fn layout_contract(layout: &Value) -> Value {
     let mut out = Object::new();
     out.insert("options", Object::new());
