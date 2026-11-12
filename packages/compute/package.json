@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/compute",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "kgdiff's Rust engine compiled to WebAssembly: diff, parsers and layout, the same bytes as the kgdiff CLI in every JavaScript engine.",
   "keywords": [
     "kgdiff",
