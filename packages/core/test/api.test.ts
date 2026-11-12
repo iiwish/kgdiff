@@ -64,10 +64,7 @@ describe('public API', () => {
     expect(core.hashGraph(core.applyDelta(d.before, d.delta))).toBe(core.hashGraph(d.after));
   });
 
-  // Known regression of 0.11 (#102): `diff` of `@kgdiff/compute` writes a normalized graph with
-  // `graphToJSON` and takes the default edge identity instead of the graph's. `it.fails` keeps
-  // the assertions as they were and turns red once that is fixed.
-  it.fails('accepts normalized graphs and keeps their edge identity', () => {
+  it('accepts normalized graphs and keeps their edge identity', () => {
     const a = core.normalize(
       { nodes: [{ id: 'a' }], edges: [{ id: 'e', source: 'a', target: 'a', predicate: 'p' }] },
       { edgeIdentity: 'id' },

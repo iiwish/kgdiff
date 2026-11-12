@@ -11,8 +11,20 @@ pub fn diff_json(before: &str, after: &str, options: &str) -> Result<String, JsV
 }
 
 #[wasm_bindgen(js_name = matchNodesJSON)]
-pub fn match_nodes_json(before: &str, after: &str, options: &str) -> Result<String, JsValue> {
-    thrown(api::match_nodes_json(before, after, options))
+pub fn match_nodes_json(
+    before: &str,
+    after: &str,
+    options: &str,
+    before_normalize: &str,
+    after_normalize: &str,
+) -> Result<String, JsValue> {
+    thrown(api::match_nodes_json(
+        before,
+        after,
+        options,
+        before_normalize,
+        after_normalize,
+    ))
 }
 
 #[wasm_bindgen(js_name = textSimilarity)]
@@ -124,6 +136,23 @@ pub fn diff_layout_json(
         after,
         diff_options,
         layout_options,
+    ))
+}
+
+#[wasm_bindgen(js_name = computedDiffJSON)]
+pub fn computed_diff_json(
+    before: &str,
+    after: &str,
+    diff_options: &str,
+    layout_options: &str,
+    with_layout: bool,
+) -> Result<String, JsValue> {
+    thrown(api::computed_diff_json(
+        before,
+        after,
+        diff_options,
+        layout_options,
+        with_layout,
     ))
 }
 

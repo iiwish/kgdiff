@@ -75,24 +75,28 @@ fn normalize_options(text: &str) -> Result<NormalizeOptions> {
 
 /// `diffToJSON(diff(before, after, options))`: the `kgdiff.diff` document of two graphs.
 pub fn diff_json(before: &str, after: &str, options_text: &str) -> Result<String> {
-    let options = resolve_options(options(options_text, "the diff options")?.as_ref())?;
-    let result = diff(
-        &parse(before, "the before graph")?,
-        &parse(after, "the after graph")?,
-        &options,
-    )?;
+    let result = diff_text(before, after, options_text)?;
     Ok(json::to_string(&diff_to_json(&result)))
 }
 
-/// `matchNodes(normalize(before), normalize(after), options)`: `{ matches, suggestions }`.
-pub fn match_nodes_json(before: &str, after: &str, options_text: &str) -> Result<String> {
+/// `matchNodes(normalize(before, beforeNormalize), normalize(after, afterNormalize), options)`:
+/// `{ matches, suggestions }`. Each graph has its own normalize options (empty text: the
+/// defaults), so that a normalized graph passed as JSON keeps its edge identity: with `id`, edges
+/// that share a triple stay apart, and the degrees and neighbourhoods matching reads count them.
+pub fn match_nodes_json(
+    before: &str,
+    after: &str,
+    options_text: &str,
+    before_normalize: &str,
+    after_normalize: &str,
+) -> Result<String> {
     let options = resolve_match_options(options(options_text, "the match options")?.as_ref())?;
-    let graph = |text: &str, what: &str| -> Result<_> {
-        normalize_text(text, what, NormalizeOptions::default())
+    let graph = |text: &str, what: &str, given: &str| -> Result<_> {
+        normalize_text(text, what, normalize_options(given)?)
     };
     let (matches, suggestions) = match_nodes(
-        &graph(before, "the before graph")?,
-        &graph(after, "the after graph")?,
+        &graph(before, "the before graph", before_normalize)?,
+        &graph(after, "the after graph", after_normalize)?,
         &options,
     );
     let mut out = Object::new();
@@ -121,12 +125,7 @@ pub fn normalize_json(graph: &str, options_text: &str) -> Result<String> {
 /// `normalize(graph, options).issues`.
 pub fn graph_issues_json(graph: &str, options_text: &str) -> Result<String> {
     let graph = normalize_text(graph, "the graph", normalize_options(options_text)?)?;
-    let issues = graph
-        .issues()
-        .iter()
-        .map(|issue| issue.to_value())
-        .collect();
-    Ok(json::to_string(&Value::Array(issues)))
+    Ok(json::to_string(&issues_value(&graph)))
 }
 
 /// `hashGraph(normalize(graph, options))`.
@@ -273,17 +272,56 @@ pub fn diff_layout_json(
     diff_options: &str,
     layout_options_text: &str,
 ) -> Result<String> {
-    let options = resolve_options(options(diff_options, "the diff options")?.as_ref())?;
-    let result = diff(
-        &parse(before, "the before graph")?,
-        &parse(after, "the after graph")?,
-        &options,
-    )?;
+    let result = diff_text(before, after, diff_options)?;
     let layout = layout_diff(&result, &layout_options(layout_options_text)?)?;
     let mut out = Object::new();
     out.insert("diff", diff_to_json(&result));
     out.insert("layout", layout_to_json(&layout));
     Ok(json::to_string(&Value::Object(out)))
+}
+
+/// The diff of two graphs as `@kgdiff/compute` reads it back into a `DiffResult`:
+/// `{ diff, issues: { before, after } }`, with `layout` (the `kgdiff.layout` document, laid out
+/// with `layout_options_text`) when `with_layout`. A `kgdiff.diff` document does not carry the
+/// issues found normalizing the graphs, which a `DiffResult`'s graphs do.
+pub fn computed_diff_json(
+    before: &str,
+    after: &str,
+    diff_options: &str,
+    layout_options_text: &str,
+    with_layout: bool,
+) -> Result<String> {
+    let result = diff_text(before, after, diff_options)?;
+    let mut out = Object::new();
+    out.insert("diff", diff_to_json(&result));
+    let mut issues = Object::new();
+    issues.insert("before", issues_value(&result.before));
+    issues.insert("after", issues_value(&result.after));
+    out.insert("issues", Value::Object(issues));
+    if with_layout {
+        let layout = layout_diff(&result, &layout_options(layout_options_text)?)?;
+        out.insert("layout", layout_to_json(&layout));
+    }
+    Ok(json::to_string(&Value::Object(out)))
+}
+
+fn diff_text(before: &str, after: &str, diff_options: &str) -> Result<kgdiff_core::DiffResult> {
+    let options = resolve_options(options(diff_options, "the diff options")?.as_ref())?;
+    Ok(diff(
+        &parse(before, "the before graph")?,
+        &parse(after, "the after graph")?,
+        &options,
+    )?)
+}
+
+fn issues_value(graph: &KGraph) -> Value {
+    Value::Array(
+        graph
+            .issues()
+            .iter()
+            .map(|issue| issue.to_value())
+            .collect(),
+    )
 }
 
 /// `layoutToJSON(layoutDiff(diffFromJSON(document), options))`.
@@ -380,6 +418,53 @@ mod tests {
     }
 
     #[test]
+    fn computed_diffs_carry_the_issues() {
+        let before = r#"{"nodes":[{"id":"a"},{"id":"a"}],"edges":[{"source":"a","target":"z"}]}"#;
+        let computed =
+            json::parse(&computed_diff_json(before, AFTER, "", "", false).unwrap()).unwrap();
+        let document = diff_json(before, AFTER, "").unwrap();
+        assert_eq!(json::to_string(computed.get("diff").unwrap()), document);
+        let issues = computed.get("issues").unwrap();
+        assert_eq!(
+            json::to_string(issues.get("before").unwrap()),
+            graph_issues_json(before, "").unwrap()
+        );
+        assert_eq!(json::to_string(issues.get("after").unwrap()), "[]");
+        assert!(computed.get("layout").is_none());
+        let both = json::parse(&diff_layout_json(before, AFTER, "", "{}").unwrap()).unwrap();
+        let computed =
+            json::parse(&computed_diff_json(before, AFTER, "", "{}", true).unwrap()).unwrap();
+        assert_eq!(computed.get("layout"), both.get("layout"));
+    }
+
+    #[test]
+    fn matches_each_graph_with_its_normalize_options() {
+        // Two edges sharing a triple and content, apart only by id: one edge with `structure`.
+        let graph = |label: &str, many: &str| {
+            format!(
+                r#"{{"nodes":[{{"id":"{label}","label":"Alpha {label}"}},{{"id":"h"}},{{"id":"k"}}],
+                "edges":[{{"id":"1","source":"{label}","target":"h","predicate":"p"}},
+                {{"id":"2","source":"{label}","target":"k","predicate":"q"}},
+                {{"id":"3","source":"{label}","target":"{}","predicate":"{many}"}}]}}"#,
+                if many == "p" { "h" } else { "k" }
+            )
+        };
+        let (before, after) = (graph("Beta", "p"), graph("Betas", "q"));
+        let id = r#"{"edgeIdentity":"id"}"#;
+        let by_id = match_nodes_json(&before, &after, "", id, id).unwrap();
+        assert_ne!(
+            by_id,
+            match_nodes_json(&before, &after, "", "", "").unwrap()
+        );
+        assert_eq!(
+            by_id,
+            match_nodes_json(&before, &after, "null", id, id).unwrap()
+        );
+        let failure = match_nodes_json(&before, &after, "", "[]", "").unwrap_err();
+        assert_eq!(failure.code, "invalid-input");
+    }
+
+    #[test]
     fn applies_and_inverts_the_delta() {
         let document = diff_json(BEFORE, AFTER, "null").unwrap();
         let delta = delta_of_diff(&document).unwrap();
@@ -409,7 +494,7 @@ mod tests {
 
     #[test]
     fn matches_and_labels() {
-        let matched = match_nodes_json(BEFORE, AFTER, "").unwrap();
+        let matched = match_nodes_json(BEFORE, AFTER, "", "", "").unwrap();
         assert!(matched.starts_with(r#"{"matches":["#));
         assert_eq!(text_similarity("Cat", "cat"), 1.0);
         assert_eq!(predicate_label("rdfs:subClassOf"), "subClassOf");

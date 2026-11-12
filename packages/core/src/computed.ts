@@ -13,13 +13,18 @@
  *   `layoutDiff` would lay it out from scratch instead of anchoring it. They are taken from the
  *   graphs the diff was computed from, as `normalize` reads them, so that the result is the
  *   `DiffResult` the diff of those graphs is.
+ * - So do the graphs' `issues`, which a `kgdiff.diff` document does not carry either: the ones the
+ *   engine found normalizing each graph or, for a `KGraph` of the diff's edge identity (which the
+ *   engine reads from its canonical JSON, without the issues its normalization found), the
+ *   graph's own, as `diff` of 0.10 kept them.
  */
-import { diffFromTrustedJSON } from './json.js';
+import { diffFromTrustedJSON, type GraphIssues } from './json.js';
 import { isKGraph, normalize } from './normalize.js';
 import type {
   DiffJSON,
   DiffResult,
   GraphInput,
+  GraphIssue,
   Id,
   KGraph,
   NodeJSON,
@@ -31,10 +36,13 @@ import { isRecord } from './util.js';
 /** A graph as the engine was given it: normalized, as input, or as JSON text. */
 export type ComputedGraph = GraphInput | KGraph | string;
 
+export type { GraphIssues };
+
 /**
  * The `DiffResult` of a `kgdiff.diff` document the engine computed from `before` and `after`
  * (its text, or the value just parsed from it), read without `diffFromJSON`'s checks and with
- * the graphs' node positions.
+ * the graphs' node positions and, given the issues the engine found normalizing them, their
+ * issues (without them, a graph's issues are the ones of reading the document: none).
  *
  * @internal For `@kgdiff/compute` of the same version. Never call it on a document from
  *   anywhere else: a report payload or a caller's JSON goes through `diffFromJSON`.
@@ -43,12 +51,20 @@ export function readComputedDiff(
   document: string | DiffJSON,
   before: ComputedGraph,
   after: ComputedGraph,
+  issues?: GraphIssues,
 ): DiffResult {
   // A parsed document is the engine's, freshly parsed: positions are put on it in place.
   const json = typeof document === 'string' ? (JSON.parse(document) as DiffJSON) : document;
   const positions = { before: positionsOf(before), after: positionsOf(after) };
   if (positions.before || positions.after) withPositions(json, positions);
-  return diffFromTrustedJSON(json);
+  if (!issues) return diffFromTrustedJSON(json);
+  const mode = (json.options as { readonly edgeIdentity?: unknown } | undefined)?.edgeIdentity;
+  const own = (graph: ComputedGraph, found: readonly GraphIssue[]): readonly GraphIssue[] =>
+    isKGraph(graph) && graph.edgeIdentity === mode ? graph.issues : found;
+  return diffFromTrustedJSON(json, {
+    before: own(before, issues.before),
+    after: own(after, issues.after),
+  });
 }
 
 /** The positions of a graph's nodes by normalized id, or undefined when it has none. */
