@@ -41,8 +41,10 @@ concurrency:
 jobs:
   # Whether this push releases: changesets/action publishes when no changeset is left, and there is
   # something to publish when @kgdiff/cli's version is not on npm yet (one version for every
-  # package). Then the native builds below run first; otherwise "Version or publish" runs at once
-  # (the version pull request, or nothing to publish).
+  # package), or when it is but the release was not finished: the tag v<version>, which
+  # "Version or publish" creates once npm has everything, is missing (a run that failed after
+  # publishing some packages, as 0.11.0's did). Then the native builds below run first; otherwise
+  # "Version or publish" runs at once (the version pull request, or nothing to publish).
   plan:
     name: Plan the release
     # Not in forks, and not before the first release, which is published by hand: set the
@@ -64,8 +66,15 @@ jobs:
           version=$(jq -r .version packages/cli/package.json)
           pending=$(find .changeset -name '*.md' ! -name README.md | wc -l)
           published=$(npm view "@kgdiff/cli@$version" version 2> /dev/null || true)
+          # 0: the tag exists; 2: it does not; anything else is an error and fails the step.
+          tagged=0
+          git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/v$version" > /dev/null || tagged=$?
+          test "$tagged" = 0 || test "$tagged" = 2
           if [ "$pending" -eq 0 ] && [ -z "$published" ]; then
             echo "Releasing $version"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          elif [ "$pending" -eq 0 ] && [ "$tagged" = 2 ]; then
+            echo "Finishing the release of $version: @kgdiff/cli is on npm, v$version is not tagged"
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
             echo "Not a release: $pending changesets, @kgdiff/cli@$version ${published:+is }on npm"
@@ -186,21 +195,35 @@ jobs:
       # would install them first (pnpm checks the manifests before it runs anything) and fail on
       # the frozen lockfile, as the release notes of 0.8.0 did.
       - name: Restore the committed package manifests
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' || needs.plan.outputs.release == 'true'
         run: |
           git checkout -- packages/cli/package.json
           test -z "$(git status --porcelain -- packages)"
       # The GitHub Action (action.yml) runs the @kgdiff/cli version of its commit: tag the release
       # commit v<version> for `uses: iiwish/kgdiff@v0.2.0` (and Dependabot), and move v<major>
       # there for `uses: iiwish/kgdiff@v0`. Prereleases only get their own tag.
+      # The version is @kgdiff/cli's when this run published it. When an earlier run did and this
+      # one finishes the release (plan), it is the committed version, once every public package of
+      # the workspace is on npm at it: `changeset publish` succeeded with nothing left to publish.
       - name: Tag the GitHub Action
         id: tag
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' || needs.plan.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PUBLISHED: ${{ steps.changesets.outputs.published-packages }}
+          RELEASING: ${{ needs.plan.outputs.release }}
         run: |
-          version=$(jq -r '.[] | select(.name == "@kgdiff/cli") | .version' <<<"$PUBLISHED")
+          version=$(jq -r '.[] | select(.name == "@kgdiff/cli") | .version' <<<"${PUBLISHED:-[]}")
+          if [ -z "$version" ] && [ "$RELEASING" = true ]; then
+            version=$(jq -r .version packages/cli/package.json)
+            for manifest in packages/*/package.json; do
+              if [ "$(jq -r '.private // false' "$manifest")" = true ]; then continue; fi
+              name=$(jq -r .name "$manifest")
+              test "$(jq -r .version "$manifest")" = "$version"
+              test "$(npm view "$name@$version" version)" = "$version"
+            done
+            echo "Finishing the release of $version: every package is on npm"
+          fi
           if [ -z "$version" ]; then exit 0; fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
           refs="repos/$GITHUB_REPOSITORY/git/refs"
