@@ -27,6 +27,11 @@ version, as do the crates.
    (`scripts/release-notes.ts`) merge the packages' changelog sections, list each change once
    with the packages it changed, and leave out the "Updated dependencies" entries. Releases up to
    0.4.0 were created per package (`@kgdiff/cli@0.4.0`, …).
+4. A push with no changeset and nothing to publish (the version is on npm and tagged
+   `v<version>`, as after every finished release) skips "Version or publish": `plan` says
+   "Nothing to release". Without a changeset, `changesets/action` always runs `pnpm release`,
+   whose `pnpm check` needs the WebAssembly modules of `@kgdiff/compute`, and those are built only
+   for a release (`compute-wasm`); before this, every push to `main` after 0.11.0 failed there.
 
 The version pull request is opened with the workflow's `GITHUB_TOKEN`, and GitHub holds the CI
 run of a pull request created that way until a maintainer approves it (the run shows "action

@@ -9,8 +9,9 @@
   ([#80](https://github.com/iiwish/kgdiff/pull/80), d3e1dac). See [0.9 results](#09-results).
   Of the [open decisions](#open-decisions), D-2, D-8 and D-9 are taken with those merges. Part
   4b is implemented for 0.10 (bfe4b0d), with D-3 and D-4 taken: see [4b results](#4b-results).
-  All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Parts 3, 4c and 4d are not
-  started: part 3 comes with 0.11 (RFC 0002, phase 5, moved there from 1.0 on 2026-11-11), 4c and 4d after 1.0.
+  All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Part 3, the typed graph
+  input, is merged for 0.11 ([#98](https://github.com/iiwish/kgdiff/pull/98), 3024eb1; RFC 0002,
+  phase 5, moved there from 1.0 on 2026-11-11). Parts 4c and 4d are not started and come after 1.0.
 - **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
