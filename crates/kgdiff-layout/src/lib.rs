@@ -296,7 +296,7 @@ pub fn layout_diff<'a>(
 /// The graph is diffed with itself to build the union, which costs about 30 ms for 10k nodes and
 /// 30k edges.
 ///
-/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+/// New in 0.9 (RFC 0003, part 1).
 ///
 /// # Errors
 ///
@@ -348,7 +348,7 @@ fn of_the_identical_diff(graph: &KGraph, options: &LayoutOptions) -> Result<Layo
 /// version, the next one and their diff share one map; [`layout_graph`] with
 /// `options.pinned = previous.positions.clone()` gives that only when no id changes.
 ///
-/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+/// New in 0.9 (RFC 0003, part 1).
 ///
 /// # Errors
 ///
@@ -380,7 +380,7 @@ pub fn layout_diff_on<'a>(
 /// - `stats.iterations` is 0, and `stats.strategy` is `Anchored` unless the after version is
 ///   empty.
 ///
-/// New in 0.9 and experimental for one minor release (RFC 0003, part 1).
+/// New in 0.9 (RFC 0003, part 1).
 ///
 /// # Errors
 ///

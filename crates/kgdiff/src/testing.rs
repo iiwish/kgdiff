@@ -6,8 +6,7 @@ use kgdiff_core::js::IndexMap;
 use std::borrow::Cow;
 use std::io;
 
-use crate::errors::{CliError, CliErrorCode, Failure};
-use crate::io::{CliIo, Env, FileStat, StdinError, ViewerBundle};
+use crate::io::{CliIo, Env, FileStat, StdinError, ViewerBundle, ViewerMissing};
 use crate::paths;
 
 /// A stand-in for the viewer bundle.
@@ -297,18 +296,14 @@ impl CliIo for MemoryIo {
         Ok(())
     }
 
-    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, Failure> {
+    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, ViewerMissing> {
         let source = match part {
             ViewerBundle::Main => &self.bundle,
             ViewerBundle::Compute => &self.compute,
         };
-        source.clone().map(Cow::Owned).map_err(|message| {
-            CliError::new(
-                CliErrorCode::ViewerMissing,
-                message,
-                Some("Build it.".to_owned()),
-            )
-            .into()
-        })
+        source
+            .clone()
+            .map(Cow::Owned)
+            .map_err(|message| ViewerMissing::new(message, Some("Build it.".to_owned())))
     }
 }

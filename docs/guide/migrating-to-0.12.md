@@ -80,7 +80,26 @@ exhaustive: a host is expected to handle each of their variants.
 These are still public, because kgdiff's crates share them, but hidden from the documentation and
 not covered by semantic versioning: in `kgdiff-core` the modules `canonical`, `text` and `util`,
 and in `kgdiff_core::js` everything except `Value`, `Object`, `JsStr`, `json`, `IndexMap`,
-`IndexSet` and `BuildHasher`; in `kgdiff-report` the modules `locale`, `model` and `width` (the
-functions the crate root re-exports from them stay covered); in `kgdiff` every module except
-`cli`, `io`, `system` and `testing`. Code that uses them keeps compiling with 0.12, but may break
-in any later release.
+`IndexSet` and `BuildHasher`; in `kgdiff-report` the modules `locale`, `model` and `width`, and
+the locale functions the crate root re-exports from them (`format_int`, `match_locale`,
+`messages`, `resolve_locale`); in `kgdiff` every module except `cli`, `io`, `system` and
+`testing`. Code that uses them keeps compiling with 0.12, but may break in any later release.
+
+## `js::BuildHasher` is kgdiff's own type
+
+`IndexMap` and `IndexSet` are `indexmap`'s maps with `kgdiff_core::js::BuildHasher`, which was
+`foldhash::fast::RandomState` and is now a type of kgdiff's (with its `Hasher`), so that a
+foldhash upgrade cannot change kgdiff's public types. Code that names the maps as
+`kgdiff_core::js::IndexMap` is unchanged; code that wrote `foldhash::fast::RandomState` for them
+uses `kgdiff_core::js::BuildHasher`.
+
+## The command line crate's embedding interface
+
+For a host that runs `kgdiff::cli::run` with its own `CliIo`:
+
+- `CliIo::viewer_bundle` returns `Result<Cow<'static, str>, ViewerMissing>`
+  (`kgdiff::io::ViewerMissing::new(message, hint)`) instead of the crate's internal `Failure`.
+  Methods added to `CliIo` later come with a default implementation.
+- `FileStat` is `#[non_exhaustive]`: `FileStat::new(dev, ino, size)`.
+- `ViewerBundle` is `#[non_exhaustive]`: a `match` on it needs a `_` arm.
+- `SystemIo` is `#[non_exhaustive]`: `SystemIo::default()` instead of `SystemIo`.

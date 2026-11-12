@@ -10,6 +10,6 @@ fn main() -> ExitCode {
         .skip(1)
         .map(|a| a.to_string_lossy().into_owned())
         .collect();
-    let code = kgdiff::cli::run(&argv, &mut kgdiff::system::SystemIo);
+    let code = kgdiff::cli::run(&argv, &mut kgdiff::system::SystemIo::default());
     ExitCode::from(code)
 }

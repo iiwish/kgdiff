@@ -77,6 +77,7 @@ pub use html::{
     build_report_html_with, describe_diff, embedded_viewer, needs_compute, report_payload,
     report_payload_with,
 };
+#[doc(hidden)]
 pub use locale::{format_int, match_locale, messages, resolve_locale};
 pub use markdown::{MarkdownOptions, escape_markdown, render_markdown};
 pub use paint::{ColorLevel, Painter, Tone, ansi256, strip_ansi};

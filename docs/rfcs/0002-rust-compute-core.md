@@ -1610,9 +1610,14 @@ only known Rust host (Semlia) was still on 0.9 and upgrades once, to 0.12.
    require each other at one exact version; `docs/versioning.md` says they are not covered.
    `kgdiff_core::js` keeps `Value`, `Object`, `JsStr`, `json`, `IndexMap` and `IndexSet`, which
    hosts use; the CLI crate keeps `cli`, `io`, `system` and `testing`, its embedding interface.
-4. **CI checks the Rust API** with `cargo-semver-checks` against the last release on crates.io,
-   with the release type the pending changesets ask for.
-5. **Nothing else changes:** no JavaScript API, no CLI option, no document format and no output
+4. **No dependency's type changes kgdiff's types unannounced:** `js::BuildHasher`, the hasher
+   of the public `IndexMap` and `IndexSet`, wraps foldhash (0.x) in a type of kgdiff's. The
+   CLI crate's embedding interface names no hidden type: `CliIo::viewer_bundle` returns
+   `ViewerMissing`, and `FileStat`, `ViewerBundle` and `SystemIo` are `#[non_exhaustive]`.
+5. **CI checks the Rust API** with `cargo-semver-checks` against the last release on crates.io,
+   with the release type the pending changesets ask for (a changeset's minor is its `major`
+   before 1.0).
+6. **Nothing else changes:** no JavaScript API, no CLI option, no document format and no output
    byte. The guide is `docs/guide/migrating-to-0.12.md`.
 
 ## Alternatives considered

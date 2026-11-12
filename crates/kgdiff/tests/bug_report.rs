@@ -150,7 +150,7 @@ impl kgdiff::io::CliIo for Panicking {
     fn viewer_bundle(
         &mut self,
         part: kgdiff::io::ViewerBundle,
-    ) -> Result<std::borrow::Cow<'static, str>, kgdiff::errors::Failure> {
+    ) -> Result<std::borrow::Cow<'static, str>, kgdiff::io::ViewerMissing> {
         self.0.viewer_bundle(part)
     }
 }

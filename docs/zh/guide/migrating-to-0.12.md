@@ -59,4 +59,17 @@ if let NodeFacet::Attrs { changes, .. } = facet { /* … */ }
 
 ## 从文档里隐藏的内部实现
 
-下面这些仍然是公开的（kgdiff 的几个 crate 之间要共用），但从文档里隐藏了，不受语义化版本保护：`kgdiff-core` 的 `canonical`、`text`、`util` 模块，以及 `kgdiff_core::js` 里除 `Value`、`Object`、`JsStr`、`json`、`IndexMap`、`IndexSet`、`BuildHasher` 以外的所有东西；`kgdiff-report` 的 `locale`、`model`、`width` 模块（crate 根从它们重新导出的函数仍在承诺之内）；`kgdiff` 里除 `cli`、`io`、`system`、`testing` 以外的所有模块。用到它们的代码在 0.12 上还能编译，但之后任何一个版本都可能破坏它。
+下面这些仍然是公开的（kgdiff 的几个 crate 之间要共用），但从文档里隐藏了，不受语义化版本保护：`kgdiff-core` 的 `canonical`、`text`、`util` 模块，以及 `kgdiff_core::js` 里除 `Value`、`Object`、`JsStr`、`json`、`IndexMap`、`IndexSet`、`BuildHasher` 以外的所有东西；`kgdiff-report` 的 `locale`、`model`、`width` 模块，以及 crate 根从中重新导出的语言相关函数（`format_int`、`match_locale`、`messages`、`resolve_locale`）；`kgdiff` 里除 `cli`、`io`、`system`、`testing` 以外的所有模块。用到它们的代码在 0.12 上还能编译，但之后任何一个版本都可能破坏它。
+
+## `js::BuildHasher` 改成 kgdiff 自己的类型
+
+`IndexMap` 和 `IndexSet` 是 `indexmap` 的映射加上 `kgdiff_core::js::BuildHasher`。它原来就是 `foldhash::fast::RandomState`，现在是 kgdiff 自己的类型（连同它的 `Hasher`），这样升级 foldhash 不会改变 kgdiff 的公开类型。用 `kgdiff_core::js::IndexMap` 这个名字的代码不用改；原来为它们写 `foldhash::fast::RandomState` 的代码改用 `kgdiff_core::js::BuildHasher`。
+
+## 命令行 crate 的嵌入接口
+
+给用自己的 `CliIo` 运行 `kgdiff::cli::run` 的宿主：
+
+- `CliIo::viewer_bundle` 的返回类型从 crate 内部的 `Failure` 改为 `Result<Cow<'static, str>, ViewerMissing>`（`kgdiff::io::ViewerMissing::new(message, hint)`）。以后给 `CliIo` 加的方法都带默认实现。
+- `FileStat` 标了 `#[non_exhaustive]`：用 `FileStat::new(dev, ino, size)`。
+- `ViewerBundle` 标了 `#[non_exhaustive]`：对它 `match` 时要有 `_` 分支。
+- `SystemIo` 标了 `#[non_exhaustive]`：用 `SystemIo::default()` 代替 `SystemIo`。

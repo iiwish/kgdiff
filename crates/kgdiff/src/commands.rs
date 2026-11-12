@@ -196,8 +196,8 @@ fn load_compute(o: &DiffCommandOptions, io: &mut dyn CliIo, ctx: &OutputContext)
     }
     match io.viewer_bundle(ViewerBundle::Compute) {
         Ok(source) => Some(source.into_owned()),
-        Err(failure) => {
-            let (message, _) = crate::errors::describe(&failure, None);
+        Err(missing) => {
+            let (message, _) = crate::errors::describe(&Failure::from(missing), None);
             let text = format_warning(
                 &format!(
                     "{message} The report is written without it: collapsed groups cannot be expanded. Pass --no-compute to skip it."

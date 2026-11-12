@@ -15,7 +15,7 @@ kgdiff 遵循[语义化版本](https://semver.org/lang/zh-CN/)。本页说明版
 ## 承诺范围
 
 - **JavaScript API**：`@kgdiff/*` 导出的一切及其类型，标了 `@experimental` 的除外（见下文）。
-- **Rust API**：`kgdiff-core`、`kgdiff-formats`、`kgdiff-layout`、`kgdiff-report` 和 `kgdiff` 在 docs.rs 文档里显示的公开项。标了 `#[doc(hidden)]` 的不在承诺之内：它们是引擎自己的、在 kgdiff 的几个 crate 之间共用的东西（`kgdiff_core::js` 里除 `Value`、`Object`、`JsStr`、`json`、`IndexMap`、`IndexSet` 以外的 JavaScript 辅助函数；`canonical`、`text`、`util` 模块；`kgdiff_report` 的 `locale`、`model`、`width`；`kgdiff` crate 里除 `cli`、`io`、`system`、`testing` 以外的所有模块）。
+- **Rust API**：`kgdiff-core`、`kgdiff-formats`、`kgdiff-layout`、`kgdiff-report` 和 `kgdiff` 在 docs.rs 文档里显示的公开项。标了 `#[doc(hidden)]` 的不在承诺之内：它们是引擎自己的、在 kgdiff 的几个 crate 之间共用的东西（`kgdiff_core::js` 里除 `Value`、`Object`、`JsStr`、`json`、`IndexMap`、`IndexSet` 以外的 JavaScript 辅助函数；`canonical`、`text`、`util` 模块；`kgdiff_report` 的 `locale`、`model`、`width`；`kgdiff` crate 里除 `cli`、`io`、`system`、`testing` 以外的所有模块）。宿主会去实现的 trait（`kgdiff::io::CliIo`）以后加的方法都带默认实现。只有一个依赖的类型属于公开 API：`IndexMap` 和 `IndexSet` 是 `indexmap` 2 的类型，所以 `indexmap` 升主版本就是 kgdiff 的主版本。
 - **命令行**：命令、选项、退出码，以及它写出的文件和机器可读的输出（`--json`、`--delta`、`--markdown`、HTML 报告）。提示信息和终端摘要的措辞可以在次版本里改。
 - **文档格式**：差异 JSON、增量、布局文档和报告载荷都带格式版本号。同一版本的文档含义不变；读取方遇到比自己认识的更新的版本时拒绝读取（[增量格式](./delta-format.md)）。
 - **输出字节**：同样的输入和选项，在所有平台、所有包里得到同样的字节。补丁版本从不改变它们；次版本可以改，比如布局算法改进时。这时新算法写出的布局会带一个不同的 `generator`（`kgdiff-layout/1`），缓存的布局据此就能分清新旧。
@@ -31,6 +31,8 @@ kgdiff 遵循[语义化版本](https://semver.org/lang/zh-CN/)。本页说明版
   let mut options = DiffOptions::default();
   options.edge_identity = EdgeIdentity::Id;
   ```
+
+在 TypeScript 里，这些列表是字符串联合类型（`KgdiffErrorCode`、`FormatId`、`ParseWarningCode` 等）：新成员会在次版本里出现，所以对它们 `switch` 时要有 `default` 分支。选项对象新增的可选成员、结果新增的成员也都算新增。
 
 有些枚举是模型里封闭的分类，代码应当逐个处理每个成员：`ChangeStatus`、`HunkKind`、`ReplayPhase`、`SuggestionReason`、`End` 和 `js::Value`。给它们加成员属于破坏性变更。
 

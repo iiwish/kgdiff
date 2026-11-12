@@ -26,7 +26,10 @@ them.
   (the JavaScript helpers of `kgdiff_core::js` other than `Value`, `Object`, `JsStr`, `json`,
   `IndexMap` and `IndexSet`; the modules `canonical`, `text` and `util`; `kgdiff_report`'s
   `locale`, `model` and `width`; every module of the `kgdiff` crate except `cli`, `io`, `system`
-  and `testing`).
+  and `testing`). Methods added to a trait a host implements (`kgdiff::io::CliIo`) come with a
+  default implementation. One dependency's types are part of the API: `IndexMap` and
+  `IndexSet` are `indexmap` 2's, so a new major version of `indexmap` would be a major release
+  of kgdiff.
 - **The command line**: commands, options, exit codes, and the files and machine-readable
   outputs it writes (`--json`, `--delta`, `--markdown`, HTML reports). The wording of messages
   and of the terminal summary may change in a minor release.
@@ -52,6 +55,10 @@ they are additions there too:
   let mut options = DiffOptions::default();
   options.edge_identity = EdgeIdentity::Id;
   ```
+
+In TypeScript the same lists are string unions (`KgdiffErrorCode`, `FormatId`, `ParseWarningCode`
+and the others): a new member comes in a minor release, so a `switch` over one needs a `default`
+branch. Optional members of option objects and new members of results are additions as well.
 
 Some enums are closed taxonomies of the model, and code is expected to handle every variant:
 `ChangeStatus`, `HunkKind`, `ReplayPhase`, `SuggestionReason`, `End` and `js::Value`. A new

@@ -9,9 +9,9 @@ use std::io::Write;
 
 use common::{dataset, io, re, run, run_with};
 use kgdiff::commands::output_width;
-use kgdiff::errors::Failure;
+
 use kgdiff::inputs::{DEFAULT_MAX_INPUT, max_input_bytes};
-use kgdiff::io::{CliIo, Env, FileStat, StdinError, ViewerBundle};
+use kgdiff::io::{CliIo, Env, FileStat, StdinError, ViewerBundle, ViewerMissing};
 use kgdiff::style::{ColorMode, resolve_color_level};
 use kgdiff::system::SystemIo;
 use kgdiff::testing::MemoryIo;
@@ -161,7 +161,7 @@ impl CliIo for RealFs {
     fn open_file(&mut self, path: &str) -> std::io::Result<()> {
         self.mem.open_file(path)
     }
-    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, Failure> {
+    fn viewer_bundle(&mut self, part: ViewerBundle) -> Result<Cow<'static, str>, ViewerMissing> {
         self.mem.viewer_bundle(part)
     }
 }
@@ -185,7 +185,7 @@ impl TempDir {
     fn io(&self) -> RealFs {
         RealFs {
             mem: MemoryIo::new("/"),
-            sys: SystemIo,
+            sys: SystemIo::default(),
             cwd: self.0.to_string_lossy().into_owned(),
         }
     }
@@ -462,7 +462,7 @@ fn reads_kgdiff_max_input() {
     assert_eq!(limit(Some("2K")).unwrap(), 2048);
     assert_eq!(limit(Some("512M")).unwrap(), 512 * 1024 * 1024);
     assert_eq!(limit(Some("4G")).unwrap(), 4 * 1024 * 1024 * 1024);
-    let Err(Failure::Cli(e)) = limit(Some("lots")) else {
+    let Err(kgdiff::errors::Failure::Cli(e)) = limit(Some("lots")) else {
         panic!("expected an error")
     };
     assert!(e.message.starts_with("Invalid KGDIFF_MAX_INPUT"));
