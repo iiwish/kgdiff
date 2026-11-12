@@ -21,10 +21,11 @@
  * graphs are `KGraph`s with the same edge identity and the options name none (as `diff` of
  * `@kgdiff/core` 0.10 did), and the matching functions normalize each `KGraph` with its own.
  *
- * `@kgdiff/core`'s `diff`, `matchNodes` and `textSimilarity` and `@kgdiff/layout`'s layouts call
- * the asynchronous functions of this package. The parsers' types (`ParseOptions`, `ParseResult`,
- * `FormatId`, …) and `FORMAT_EXTENSIONS` are exported here; `@kgdiff/formats` (deprecated)
- * re-exports them and its functions call this package's.
+ * `@kgdiff/core`'s `diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat` and
+ * `compactIri` and `@kgdiff/layout`'s layouts call the asynchronous functions of this package. The
+ * parsers' types (`ParseOptions`, `ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are
+ * exported here (`@kgdiff/core`'s declarations); `@kgdiff/formats` (deprecated) re-exports them
+ * and its functions call this package's.
  */
 import {
   type DiffJSON,

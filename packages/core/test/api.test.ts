@@ -16,8 +16,11 @@ describe('public API', () => {
   it('exports exactly the documented runtime surface', () => {
     expect(Object.keys(core).sort()).toEqual([
       'DEFAULT_HIERARCHY_PREDICATES',
+      'FORMAT_EXTENSIONS',
       'KgdiffError',
       'applyDelta',
+      'compactIri',
+      'detectFormat',
       'diff',
       'diffFromJSON',
       'diffToJSON',
@@ -30,6 +33,7 @@ describe('public API', () => {
       'matchNodes',
       'normalize',
       'packDiffJSON',
+      'parseGraph',
       'predicateLabel',
       'resolveOptions',
       'textSimilarity',

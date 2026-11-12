@@ -82,8 +82,9 @@ Node 22 及以上会解析它，并把文件作为资源复制出去；esbuild �
 
 ## `@kgdiff/formats` 已弃用
 
-它的函数现在只是 `@kgdiff/compute` 解析器外面的一层异步包装：请改用 `@kgdiff/compute` 的 `parseGraph`、`detectFormat`
-和 `compactIri`（或 `init()` 之后的 `*Sync` 版本）。从 0.11.1 起，它的类型和 `FORMAT_EXTENSIONS` 由 `@kgdiff/compute` 导出，`@kgdiff/formats` 重新导出同样的声明，直到 2.0 移除这个包；其他 kgdiff 包从那时起都不再依赖它。`@kgdiff/cli`
+它的函数现在只是 `@kgdiff/compute` 解析器外面的一层异步包装。从 0.11.1 起，`@kgdiff/core` 导出它的全部接口（`parseGraph`、`detectFormat`、`compactIri`、
+`FORMAT_EXTENSIONS` 和解析器的类型），签名和结果都相同，所以迁移只需改导入路径：`@kgdiff/formats` → `@kgdiff/core`。要用同步版本（`init()` 之后的
+`parseGraphSync` 等），请用 `@kgdiff/compute`。这些类型和 `FORMAT_EXTENSIONS` 在各个包里是同一份声明：由 `@kgdiff/core` 定义，`@kgdiff/compute` 重新导出，`@kgdiff/formats` 重新导出同样的声明，直到 2.0 移除这个包；其他 kgdiff 包从那时起都不再依赖它。`@kgdiff/cli`
 从 0.10 起不再是 JavaScript 库：计算请用 `@kgdiff/compute`，生成报告请用 kgdiff 命令行或 `kgdiff-report` crate。
 
 ## 查看器

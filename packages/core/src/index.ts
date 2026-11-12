@@ -4,8 +4,10 @@
  * Signatures and documented behaviour are final (docs/architecture.md). Since 0.11 `diff`,
  * `matchNodes` and `textSimilarity` run kgdiff's engine compiled to WebAssembly
  * (`@kgdiff/compute`, loaded with a dynamic `import()` on first use, so a bundle that only reads
- * diffs never contains it) and are asynchronous. What stays in TypeScript is the model and the
- * read path, synchronous, in dedicated modules (`tests/read-path.ts` lists them):
+ * diffs never contains it) and are asynchronous, and so are the parsers, `parseGraph`, `detectFormat`
+ * and `compactIri` (since 0.11.1, the same functions as `@kgdiff/formats`, deprecated). What stays
+ * in TypeScript is the model and the read path, synchronous, in dedicated modules
+ * (`tests/read-path.ts` lists them):
  *
  *   options.ts       defaults and validation
  *   normalize.ts     GraphInput → KGraph (§1)
@@ -17,10 +19,17 @@
  *   consistency.ts   checks of diffs read from JSON
  *   packed.ts        PackedDiffJSON, the packed transport of reports
  *   i18n.ts          formatHunk, facetLabel
+ *   formats.ts       the parsers' types and FORMAT_EXTENSIONS
  *   computed.ts      reading back what @kgdiff/compute computed (`@kgdiff/core/computed`)
+ *
+ * The rule: the model packages (`@kgdiff/core`, `@kgdiff/layout`) give asynchronous entries that
+ * load the engine on the first call. For the synchronous API (`init()` and the `*Sync`
+ * functions), for choosing where the `.wasm` files are loaded from, or for the low-level JSON
+ * functions, use `@kgdiff/compute`.
  */
 
 import { applyDelta as apply, invertDelta as invert } from './delta.js';
+import type { FormatId, ParseOptions, ParseResult } from './formats.js';
 import { hashGraph as hash, graphToJSON as toGraphJSON } from './graph-json.js';
 import { formatHunk as format, facetLabel as labelOfFacet } from './i18n.js';
 import { diffFromJSON as fromJSON, diffToJSON as toJSON } from './json.js';
@@ -48,6 +57,18 @@ import type {
 } from './types.js';
 
 export { KgdiffError } from './errors.js';
+export {
+  FORMAT_EXTENSIONS,
+  type FormatId,
+  type JsonDialect,
+  type JsonLdOptions,
+  type JsonOptions,
+  type ParseOptions,
+  type ParseResult,
+  type ParseWarning,
+  type ParseWarningCode,
+  type RdfOptions,
+} from './formats.js';
 export { DEFAULT_HIERARCHY_PREDICATES } from './options.js';
 export * from './types.js';
 
@@ -60,6 +81,9 @@ interface CoreEngine {
   ): Promise<DiffResult>;
   matchNodes(before: KGraph, after: KGraph, options?: MatchOptions): Promise<MatchResult>;
   textSimilarity(a: string, b: string): Promise<number>;
+  parseGraph(source: string, options?: ParseOptions): Promise<ParseResult>;
+  detectFormat(source: string, filename?: string): Promise<FormatId>;
+  compactIri(iri: string, prefixes?: Readonly<Record<string, string>>): Promise<string>;
 }
 
 let engine: Promise<CoreEngine> | undefined;
@@ -247,4 +271,71 @@ export function formatHunk(
 /** Localized short name of a facet kind, e.g. `rename` → “Renamed” / “改名”. */
 export function facetLabel(kind: FacetKind, locale?: Locale): string {
   return labelOfFacet(kind, locale);
+}
+
+/**
+ * Parse graph text in any supported format. Throws `KgdiffError('invalid-input')` with line
+ * info on syntax errors.
+ *
+ * - `format` defaults to `auto` (`detectFormat(text, filename)`).
+ * - `meta.source` is set to `filename` when given.
+ * - Every RDF syntax (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD) maps through the same
+ *   conventions, so one graph gives the same `GraphInput` in any of them.
+ * - Offline: JSON-LD remote contexts come only from `jsonld.documentLoader` (called
+ *   synchronously).
+ * - Recoverable oddities (named graphs merged, unsupported OBO stanzas, d3 index ids, …) are
+ *   reported in `warnings` instead of failing.
+ *
+ * Output is deterministic: the same text and options always give an identical result, with
+ * nodes sorted by id, edges by (source, predicate, target), attribute keys sorted and
+ * multi-valued fields as sorted arrays. Linear in the input size (plus sorting the output).
+ *
+ * Asynchronous: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded and
+ * compiled on the first call), so the result is the kgdiff CLI's. Since 0.11.1; the same function
+ * as `parseGraph` of `@kgdiff/formats` (deprecated). After `await init()` of `@kgdiff/compute`,
+ * its `parseGraphSync` gives the same result synchronously.
+ */
+export async function parseGraph(text: string, options: ParseOptions = {}): Promise<ParseResult> {
+  return (await compute()).parseGraph(text, options);
+}
+
+/**
+ * Best-effort format detection from file name and content sniffing.
+ *
+ * The extension wins when it is known (`FORMAT_EXTENSIONS`, case-insensitive; query strings
+ * are ignored), with two refinements: `.json` holding JSON-LD is `jsonld`, and `.owl` — which
+ * Protégé also uses for Turtle, OWL/XML and Functional Syntax — is decided by its content
+ * (RDF/XML when that cannot tell). Otherwise: `{` (or a JSON array) → json, or jsonld when a
+ * top-level key is `@context`, `@graph`, `@id`, `@type`…; XML → rdfxml for an `rdf:RDF` root
+ * (or a root using the RDF namespace); `format-version:` or a `[Term]` / `[Typedef]` /
+ * `[Instance]` line → obo; Turtle directives → turtle, or trig when a `{ … }` graph block
+ * appears; line-based statements → ntriples (3 terms) or nquads (4 terms). Empty input is an
+ * (empty) Turtle graph. Throws `KgdiffError('invalid-input')` with a conversion hint for
+ * recognisably unsupported formats (OWL/XML, OWL Functional / Manchester Syntax, GraphML,
+ * GEXF, other XML) and for unrecognisable text.
+ *
+ * Asynchronous, like `parseGraph` (since 0.11.1; the same function as `detectFormat` of
+ * `@kgdiff/formats`). `detectFormatSync` of `@kgdiff/compute` after its `init()`.
+ */
+export async function detectFormat(text: string, filename?: string): Promise<FormatId> {
+  return (await compute()).detectFormat(text, filename);
+}
+
+/**
+ * Compact an IRI with a prefix map: `http://purl.obolibrary.org/obo/GO_0008150` → `GO:0008150`.
+ *
+ * Uses the well-known prefixes (rdf, rdfs, owl, xsd, skos, schema, dcterms, dc, foaf, prov,
+ * oboInOwl, obo) overlaid with `prefixes`; OBO PURLs follow the OBO rule unless `prefixes`
+ * binds that id space elsewhere. The longest matching namespace wins; when several names share
+ * one namespace, names from `prefixes` win over well-known ones. Returns `iri` unchanged when
+ * nothing matches. For display only: node ids keep full IRIs.
+ *
+ * Asynchronous, like `parseGraph` (since 0.11.1; the same function as `compactIri` of
+ * `@kgdiff/formats`). `compactIriSync` of `@kgdiff/compute` after its `init()`.
+ */
+export async function compactIri(
+  iri: string,
+  prefixes?: Readonly<Record<string, string>>,
+): Promise<string> {
+  return (await compute()).compactIri(iri, prefixes);
 }
