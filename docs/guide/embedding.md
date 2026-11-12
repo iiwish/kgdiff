@@ -37,13 +37,13 @@ kgdiff-report = "0.11"
 ```
 
 - **The crates move together.** Each crate requires the others at exactly its own version
-  (`kgdiff-report` 0.11.0 depends on `kgdiff-core = "=0.11.0"`), so Cargo resolves the three to
+  (`kgdiff-report` 0.11.1 depends on `kgdiff-core = "=0.11.1"`), so Cargo resolves the three to
   one release, and refuses requirements that allow no common one. Give all of them the same
   requirement and update them together.
-- **The npm packages have the same version number** as the crates: kgdiff 0.11.0 names one
+- **The npm packages have the same version number** as the crates: kgdiff 0.11.1 names one
   consistent set, tested together. Install the packages at the version of your crates
-  (`npm install @kgdiff/viewer@^0.11.0`).
-- Before 1.0 a minor release may change an API. `"0.11"` in Cargo and `^0.11.0` in npm both stay
+  (`npm install @kgdiff/viewer@^0.11.1`).
+- Before 1.0 a minor release may change an API. `"0.11"` in Cargo and `^0.11.1` in npm both stay
   within 0.11.
 - The documents that cross from the server to the browser are versioned on their own
   (`kgdiff.report` 1, `kgdiff.diff.packed` 1, `kgdiff.layout` 2) and have JSON Schemas in
