@@ -58,6 +58,26 @@ cargo xtask conformance --check                 # compare it with the files inst
 cargo build --release -p kgdiff && pnpm conformance:replay
 ```
 
+### Fuzzing
+
+`fuzz/` holds [cargo-fuzz](https://rust-fuzz.github.io/book/cargo-fuzz.html) targets for what
+kgdiff reads from untrusted files: `parse_graph` (every format, and auto-detection), `detect_format`,
+`json_parse`, `diff_from_json`, `unpack_diff_json`, `delta` (read, invert, apply) and `diff`. It is
+outside the workspace, so `cargo build` and `cargo test` never need it. It needs a nightly
+toolchain and `cargo install cargo-fuzz --locked`.
+
+```sh
+cd fuzz
+./seed-corpus.sh                                        # seeds from conformance/ and examples/datasets/
+cargo +nightly fuzz run parse_graph -- -max_total_time=300 -timeout=10 -rss_limit_mb=2048
+cargo +nightly fuzz run parse_graph artifacts/parse_graph/crash-…   # replay one finding
+```
+
+A crash, a hang (`-timeout`) or an out-of-memory (`-rss_limit_mb`) leaves its input in
+`fuzz/artifacts/<target>/`. Fix it and add the input as a regression test in the crate's `tests/`
+(it has to pass in the normal `cargo test`). The `Fuzz` workflow runs every target weekly and on
+demand (Actions → Fuzz → Run workflow) and uploads the inputs that failed.
+
 ## Where things live
 
 - `packages/core`: the diff engine. Start with `src/types.ts` and `docs/algorithms.md`.

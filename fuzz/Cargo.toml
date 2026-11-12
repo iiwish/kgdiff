@@ -1,0 +1,67 @@
+# Fuzz targets for the inputs kgdiff reads from untrusted files (cargo-fuzz, needs nightly).
+# Not a member of the root workspace: `cargo build` and `cargo test --workspace` never touch it.
+# See "Fuzzing" in CONTRIBUTING.md.
+[package]
+name = "kgdiff-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+kgdiff-core = { path = "../crates/kgdiff-core" }
+kgdiff-formats = { path = "../crates/kgdiff-formats" }
+
+[workspace]
+
+[[bin]]
+name = "parse_graph"
+path = "fuzz_targets/parse_graph.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "detect_format"
+path = "fuzz_targets/detect_format.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "json_parse"
+path = "fuzz_targets/json_parse.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "diff_from_json"
+path = "fuzz_targets/diff_from_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "unpack_diff_json"
+path = "fuzz_targets/unpack_diff_json.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "delta"
+path = "fuzz_targets/delta.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "diff"
+path = "fuzz_targets/diff.rs"
+test = false
+doc = false
+bench = false
