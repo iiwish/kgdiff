@@ -53,6 +53,11 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      # The TypeScript counterpart of the semver job (docs/releasing.md, "The API reports"): each
+      # public entry point's committed packages/*/api/*.api.md must match the built declarations.
+      - name: Check the API reports (API Extractor)
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 24
+        run: pnpm api:check
       - name: Check the packed packages (README, LICENSE, source maps, publint, attw)
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         run: pnpm check:packages

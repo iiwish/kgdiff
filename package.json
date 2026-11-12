@@ -29,13 +29,16 @@
     "build:viewer-assets": "pnpm --filter @kgdiff/core build && pnpm --filter @kgdiff/layout build && pnpm --filter \"@kgdiff/viewer...\" --filter \"!@kgdiff/core\" --filter \"!@kgdiff/layout\" build && tsx scripts/viewer-assets.ts",
     "changeset": "changeset",
     "version-packages": "changeset version && biome format --write packages && tsx scripts/sync-citation.ts && tsx scripts/sync-versions.ts",
-    "release": "pnpm check && pnpm build && pnpm check:packages && tsx scripts/npm-platforms.ts publish && changeset publish"
+    "release": "pnpm check && pnpm build && pnpm check:packages && tsx scripts/npm-platforms.ts publish && changeset publish",
+    "api:check": "tsx scripts/api-report.ts --check",
+    "api:update": "tsx scripts/api-report.ts --update"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@biomejs/biome": "2.6.4",
     "@changesets/cli": "3.0.3",
     "@custom-elements-manifest/analyzer": "0.11.0",
+    "@microsoft/api-extractor": "7.59.4",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

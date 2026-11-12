@@ -39,6 +39,32 @@ required"). `main` requires the `CI passed` check (see [Repository settings](#re
 so approve the run on the pull request before merging it, close and reopen the pull request, or
 give `changesets/action` a GitHub App token through `github-token`.
 
+## The API reports
+
+The TypeScript counterpart of the `semver` job's cargo-semver-checks is a report per public entry
+point, committed under `packages/<name>/api/` (`index.api.md` for `.`, `elements-root.api.md` for
+`./elements/root`, …). `scripts/api-report.ts` writes them with API Extractor from `dist/*.d.ts`:
+every `exports` entry with a `types` condition, plus the modules the viewer's standalone bundles
+are built from. `@kgdiff/formats` (deprecated, no 1.0) and `@kgdiff/cli` (a command) have none.
+The `check` job runs `pnpm api:check` after `pnpm build`, once (Linux, Node 24), and fails when
+a report differs from the build. Unlike cargo-semver-checks it compares with the commit, not with
+the last release, so a report that changed in a pull request still differs from the last
+release's when the version pull request is reviewed: `git diff v<last version> -- 'packages/*/api'`
+lists every change to the public types since then.
+
+A report that changed means the public API changed. An added line is an addition; a removed or
+changed line breaks code that uses it, unless the item is marked `// @experimental`. Before 1.0
+that is a minor release, as any breaking change. From 1.0 on it is a major release of every
+package ([Versioning](./versioning.md)), so a version pull request with a pending `minor` or
+`patch` changeset and a removed or changed line in a report is not merged as it is. 1.0 itself
+removes the `@experimental` marks of the renderer's layers, the scene's node shapes and the
+report's `shapes`: the `// @experimental` lines go from the reports with them, and from then on
+those items are covered like the rest.
+
+API Extractor's messages stay in the reports: `ae-forgotten-export` names a type that a public
+signature uses but no entry point exports, and `ae-internal-missing-underscore` an export marked
+`@internal`.
+
 ## The GitHub Action
 
 [`action.yml`](../action.yml), at the root of the repository, is the kgdiff GitHub Action
