@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/formats",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Parsers that turn RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO and common JSON graph shapes into kgdiff graphs.",
   "keywords": [
     "kgdiff",
