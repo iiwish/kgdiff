@@ -1,0 +1,70 @@
+name: Fuzz
+
+# The cargo-fuzz targets of fuzz/ (see "Fuzzing" in CONTRIBUTING.md): every input kgdiff reads from
+# an untrusted file, run for a fixed time each. A crash, hang or out-of-memory fails the target's
+# job and uploads the input that triggered it as an artifact. Not part of CI: it runs weekly and
+# by hand.
+on:
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Seconds to fuzz each target
+        default: "300"
+        type: string
+  schedule:
+    - cron: "17 3 * * 1" # Mondays, 03:17 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - parse_graph
+          - detect_format
+          - json_parse
+          - diff_from_json
+          - unpack_diff_json
+          - delta
+          - diff
+    env:
+      CARGO_TERM_COLOR: always
+      # parse_graph is the widest target (eight formats and their readers): twice the time.
+      SECONDS_PER_TARGET: ${{ inputs.seconds || '300' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # cargo-fuzz needs a nightly compiler (sanitizers); the workspace's own builds keep the
+      # toolchain of rust-toolchain.toml.
+      - name: Install the nightly toolchain
+        run: rustup toolchain install nightly --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: fuzz
+      - uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: cargo-fuzz@0.13.2
+      - name: Seed the corpus from conformance/ and examples/datasets/
+        run: fuzz/seed-corpus.sh
+      - name: Fuzz
+        working-directory: fuzz
+        shell: bash
+        run: |
+          seconds="$SECONDS_PER_TARGET"
+          if [ "${{ matrix.target }}" = parse_graph ]; then seconds=$((seconds * 2)); fi
+          cargo +nightly fuzz run "${{ matrix.target }}" -- \
+            -max_total_time="$seconds" -timeout=10 -rss_limit_mb=2048 -max_len=65536
+      - name: Upload the input that triggered the failure
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-crash-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}/
+          if-no-files-found: warn
