@@ -88,9 +88,12 @@ changes does.
 
 ## Layouts
 
-Positions are computed by kgdiff's Rust layout engine, so they differ from 0.10's for the same
-input; they are the CLI's. Layouts written since 0.11 are layout documents of version 2, with a
-`generator`; `layoutFromJSON` reads versions 1 and 2. Positions stored by 0.10 stay valid pins
+Positions are computed by kgdiff's Rust layout engine, the one the CLI has used since 0.7. For
+the same input and options they are the positions 0.10's TypeScript engine computed: through
+0.10 the conformance corpus checked on every case that the two engines agreed, and RFC 0002
+records the same on synthetic graphs of 1,000 to 10,000 nodes, so a stored layout needs no
+recomputing. What changes is the document: layouts written since 0.11 are layout documents of
+version 2, with a `generator`; `layoutFromJSON` reads versions 1 and 2. Positions stored by 0.10 stay valid pins
 (`pinned`, `layoutDiffOn`). Graphs whose nodes carry a `position` are still laid out anchored on
 them: `diff` keeps the positions of its graphs on the nodes of the result.
 
@@ -112,7 +115,8 @@ also needs `@kgdiff/compute` in the page's import map, as text sources need `@kg
 ## What does not change
 
 - Every JSON document (graphs, diffs, packed diffs, deltas, layouts), every hash, hunk title,
-  summary and delta is byte-identical to the CLI's, and to 0.10's except for layout positions.
+  summary and delta is byte-identical to the CLI's, and to 0.10's except that layouts are written
+  as version 2 documents (their positions are unchanged).
 - Error codes and messages: failures are `KgdiffError`s with the same `code`.
 - The read path stays synchronous and needs no WebAssembly: `normalize`, `isKGraph`,
   `graphToJSON`, `hashGraph`, `diffFromJSON`, `diffToJSON`, `packDiffJSON`, `unpackDiffJSON`,

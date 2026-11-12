@@ -76,7 +76,7 @@ Node 22 及以上会解析它，并把文件作为资源复制出去；esbuild �
 
 ## 布局
 
-位置由 kgdiff 的 Rust 布局引擎计算，所以同样的输入得到的位置和 0.10 不同，和命令行一致。0.11 起写出的布局文档是第 2 版，
+位置由 kgdiff 的 Rust 布局引擎计算，也就是命令行从 0.7 起使用的那一个。同样的输入和选项下，得到的位置与 0.10 的 TypeScript 引擎相同：直到 0.10，一致性语料都在每个用例上检查两个引擎的结果一致，RFC 0002 记录了在 1,000 到 10,000 个节点的合成图上也是如此，所以已经存下的布局不需要重算。变的是文档：0.11 起写出的布局文档是第 2 版，
 带 `generator` 字段；`layoutFromJSON` 能读第 1 版和第 2 版。0.10 存下的位置仍可作为钉位使用（`pinned`、`layoutDiffOn`）。
 节点带 `position` 的图仍会锚定这些位置布局：`diff` 会把输入图里的位置保留在结果的节点上。
 
@@ -94,7 +94,7 @@ Node 22 及以上会解析它，并把文件作为资源复制出去；esbuild �
 
 ## 不变的部分
 
-- 所有 JSON 文档（图、差异、打包的差异、增量、布局）、哈希、分组标题、摘要和增量都与命令行逐字节相同；除了布局位置，也与 0.10 相同。
+- 所有 JSON 文档（图、差异、打包的差异、增量、布局）、哈希、分组标题、摘要和增量都与命令行逐字节相同；也与 0.10 相同，只是布局写成了第 2 版的文档（位置没有变）。
 - 错误码和错误信息：失败时抛出的仍是 `code` 相同的 `KgdiffError`。
 - 读取路径仍是同步的，不需要 WebAssembly：`normalize`、`isKGraph`、`graphToJSON`、`hashGraph`、`diffFromJSON`、
   `diffToJSON`、`packDiffJSON`、`unpackDiffJSON`、`applyDelta`、`invertDelta`、`formatHunk`、`facetLabel`、
