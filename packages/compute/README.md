@@ -15,7 +15,7 @@ The engine is three modules, and each is loaded only when it is asked for
 The other kgdiff packages run on it since 0.11: `diff`, `matchNodes` and `textSimilarity` of
 `@kgdiff/core` and the layouts of `@kgdiff/layout` are asynchronous and load it with a dynamic
 `import()`, so a bundle that only reads diffs never contains WebAssembly. The parsers are this
-package's: `@kgdiff/formats` (deprecated, removed in 2.0) re-exports their types and
+package's: `@kgdiff/formats` (deprecated, not published from 1.0 on) re-exports their types and
 `FORMAT_EXTENSIONS` from here and calls `parseGraph`, `detectFormat` and `compactIri`, and no
 other kgdiff package depends on it. A diff computed here is
 read back without `diffFromJSON`'s consistency checks (the engine of the same build wrote it), and

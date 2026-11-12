@@ -5,7 +5,8 @@
  * which runs kgdiff's Rust parsers compiled to WebAssembly. Since 0.11.1 `@kgdiff/core` exports
  * everything it does, with the same signatures and results: import from `@kgdiff/core` instead
  * (or use `init()` and the `*Sync` forms of `@kgdiff/compute`). Its types and `FORMAT_EXTENSIONS`
- * are `@kgdiff/compute`'s, re-exported here until the package is removed in 2.0.
+ * are `@kgdiff/core`'s, re-exported through `@kgdiff/compute`. 1.0 is not published for this
+ * package: 0.11.x stays on npm and keeps working.
  *
  * Isomorphic (browser + Node), no file-system or network access: callers pass text. Every parser
  * maps its source into the same `GraphInput` conventions (docs/architecture.md §Formats) so

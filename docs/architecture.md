@@ -67,8 +67,9 @@ core ◀── layout ◀── scene ◀── renderer ◀── viewer
 a function that computes is first called (it depends on them for their types and read path), and
 the viewer loads it on demand too (layouts, diffs, and the parsers for text sources), so a bundle
 that only reads reports contains no WebAssembly. The parsers' types (`ParseOptions`,
-`ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are `@kgdiff/compute`'s. `@kgdiff/formats`
-(deprecated, removed in 2.0) is not in the graph either: it depends on `@kgdiff/compute`,
+`ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are defined by `@kgdiff/core` and
+re-exported by `@kgdiff/compute`. `@kgdiff/formats` (deprecated, not published from 1.0 on) is not
+in the graph either: it depends on `@kgdiff/compute`,
 re-exports those and calls its parsers, and no other package depends on it. Since 0.11
 TypeScript keeps only what reads a computed diff synchronously (`tests/read-path.ts`); the
 engine itself is the Rust one. `@kgdiff/cli` is not in the graph: it holds no TypeScript compute, only a launcher of the Rust
