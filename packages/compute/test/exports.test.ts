@@ -1,5 +1,6 @@
 /**
- * The parsers' types and `FORMAT_EXTENSIONS` are this package's since 0.11.1:
+ * The parsers' types and `FORMAT_EXTENSIONS` are exported by this package since 0.11.1 (the
+ * declarations of `@kgdiff/core`, which `core-formats.test.ts` compares with formats):
  *
  * - `@kgdiff/formats` (deprecated) re-exports exactly what it exported in 0.11.0, with the same
  *   types, and `FORMAT_EXTENSIONS` is this package's object;

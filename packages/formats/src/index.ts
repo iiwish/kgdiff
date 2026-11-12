@@ -2,10 +2,10 @@
  * @kgdiff/formats: turn real-world graph files into kgdiff `GraphInput`s.
  *
  * @deprecated Since 0.11 this package is a thin asynchronous layer over `@kgdiff/compute`,
- * which runs kgdiff's Rust parsers compiled to WebAssembly: use `parseGraph`, `detectFormat` and
- * `compactIri` of `@kgdiff/compute` (or `init()` and their `*Sync` forms) instead. Its types and
- * `FORMAT_EXTENSIONS` are `@kgdiff/compute`'s, re-exported here until the package is removed in
- * 2.0.
+ * which runs kgdiff's Rust parsers compiled to WebAssembly. Since 0.11.1 `@kgdiff/core` exports
+ * everything it does, with the same signatures and results: import from `@kgdiff/core` instead
+ * (or use `init()` and the `*Sync` forms of `@kgdiff/compute`). Its types and `FORMAT_EXTENSIONS`
+ * are `@kgdiff/compute`'s, re-exported here until the package is removed in 2.0.
  *
  * Isomorphic (browser + Node), no file-system or network access: callers pass text. Every parser
  * maps its source into the same `GraphInput` conventions (docs/architecture.md §Formats) so
@@ -24,7 +24,7 @@ import {
   type ParseResult,
 } from '@kgdiff/compute';
 
-// Defined by `@kgdiff/compute` since 0.11.1, which exports the same declarations.
+// Defined by `@kgdiff/core` since 0.11.1; `@kgdiff/compute` exports the same declarations.
 export {
   FORMAT_EXTENSIONS,
   type FormatId,
@@ -56,7 +56,8 @@ export {
  * Asynchronous since 0.11: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded
  * and compiled on the first call), so the result is the kgdiff CLI's.
  *
- * @deprecated Use `parseGraph` of `@kgdiff/compute`, or `parseGraphSync` after its `init()`.
+ * @deprecated Use `parseGraph` of `@kgdiff/core` (the same function), or `parseGraphSync` of
+ * `@kgdiff/compute` after its `init()`.
  */
 export async function parseGraph(text: string, options: ParseOptions = {}): Promise<ParseResult> {
   return computeParseGraph(text, options);
@@ -80,7 +81,8 @@ export async function parseGraph(text: string, options: ParseOptions = {}): Prom
  * Asynchronous since 0.11: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded
  * and compiled on the first call), so the result is the kgdiff CLI's.
  *
- * @deprecated Use `detectFormat` of `@kgdiff/compute`, or `detectFormatSync` after its `init()`.
+ * @deprecated Use `detectFormat` of `@kgdiff/core` (the same function), or `detectFormatSync` of
+ * `@kgdiff/compute` after its `init()`.
  */
 export async function detectFormat(text: string, filename?: string): Promise<FormatId> {
   return computeDetectFormat(text, filename);
@@ -98,7 +100,8 @@ export async function detectFormat(text: string, filename?: string): Promise<For
  * Asynchronous since 0.11: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded
  * and compiled on the first call), so the result is the kgdiff CLI's.
  *
- * @deprecated Use `compactIri` of `@kgdiff/compute`, or `compactIriSync` after its `init()`.
+ * @deprecated Use `compactIri` of `@kgdiff/core` (the same function), or `compactIriSync` of
+ * `@kgdiff/compute` after its `init()`.
  */
 export async function compactIri(
   iri: string,

@@ -99,11 +99,14 @@ them: `diff` keeps the positions of its graphs on the nodes of the result.
 
 ## `@kgdiff/formats` is deprecated
 
-Its functions are asynchronous wrappers over the parsers of `@kgdiff/compute` now: use `parseGraph`,
-`detectFormat` and `compactIri` of `@kgdiff/compute` (or their `*Sync` forms after `init()`). Its
-types and `FORMAT_EXTENSIONS` are exported by `@kgdiff/compute` since 0.11.1, and `@kgdiff/formats`
-re-exports the same declarations until the package is removed in 2.0; no other kgdiff package
-depends on it since then. `@kgdiff/cli` is no longer a
+Its functions are asynchronous wrappers over the parsers of `@kgdiff/compute` now. Since 0.11.1
+`@kgdiff/core` exports everything it does (`parseGraph`, `detectFormat`, `compactIri`,
+`FORMAT_EXTENSIONS` and the parsers' types), with the same signatures and results, so moving off it
+means changing the import path only: `@kgdiff/formats` → `@kgdiff/core`. For the synchronous forms
+(`parseGraphSync` and the others, after `init()`), use `@kgdiff/compute`. The types and
+`FORMAT_EXTENSIONS` are the same declarations in every package: `@kgdiff/core` defines them,
+`@kgdiff/compute` re-exports them, and `@kgdiff/formats` re-exports the same declarations until the
+package is removed in 2.0; no other kgdiff package depends on it since then. `@kgdiff/cli` is no longer a
 JavaScript library since 0.10: use `@kgdiff/compute` for the computations, the kgdiff CLI or the
 `kgdiff-report` crate for reports.
 

@@ -25,7 +25,7 @@ import { layoutDiff } from '@kgdiff/layout';
 import { buildScene } from '@kgdiff/scene';
 import { createDiffGraph } from '@kgdiff/g6';
 
-// before / after: GraphInput ({ nodes, edges }) — or parse files with parseGraph of @kgdiff/compute.
+// before / after: GraphInput ({ nodes, edges }) — or parse files with parseGraph of @kgdiff/core.
 const result = await diff(before, after);
 const scene = buildScene(result, await layoutDiff(result), { theme: 'dark', locale: 'en' });
 

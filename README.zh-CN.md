@@ -133,8 +133,7 @@ jobs:
 ### 在代码里
 
 ```ts
-import { diff, formatHunk } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/compute';
+import { diff, formatHunk, parseGraph } from '@kgdiff/core';
 
 const before = (await parseGraph(beforeText, { filename: 'v12.json' })).graph;
 const after = (await parseGraph(afterText, { filename: 'v13.json' })).graph;
@@ -146,7 +145,7 @@ for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'zh-CN').t
 // …
 ```
 
-引擎用 Rust 编写，在 JavaScript 里以 WebAssembly 运行，输出与命令行逐字节相同。详见[在代码中使用引擎](docs/zh/guide/library.md) · [在 Rust 应用中嵌入](docs/zh/guide/embedding.md) · [迁移到 0.11](docs/zh/guide/migrating-to-0.11.md)。
+只需 `npm install @kgdiff/core`。引擎用 Rust 编写，在 JavaScript 里以 WebAssembly 运行（`@kgdiff/compute`，第一次调用时加载），输出与命令行逐字节相同。详见[在代码中使用引擎](docs/zh/guide/library.md) · [在 Rust 应用中嵌入](docs/zh/guide/embedding.md) · [迁移到 0.11](docs/zh/guide/migrating-to-0.11.md)。
 
 ## 能识别哪些变化
 
@@ -229,13 +228,13 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 | --------------------------------------- | ---------------------------------------------------------------------- |
 | [`@kgdiff/cli`](packages/cli)           | 命令行工具：安装并运行适合本机平台的原生 `kgdiff`。                    |
 | [`@kgdiff/viewer`](packages/viewer)     | `<kgdiff-viewer>` Web 组件，以及组成它的各个元素。                     |
-| [`@kgdiff/core`](packages/core)         | 差异模型：规范化、`diff`、JSON 传输、可逆补丁、变更组标题。            |
+| [`@kgdiff/core`](packages/core)         | 差异模型：解析、`diff`、JSON 传输、可逆补丁、变更组标题。              |
 | [`@kgdiff/compute`](packages/compute)   | 编译为 WebAssembly 的 kgdiff Rust 引擎：差异、解析、布局。             |
 | [`@kgdiff/layout`](packages/layout)     | 确定性、为标签留空间的并集布局；支持锚定模式和只布局变更的模式。       |
 | [`@kgdiff/scene`](packages/scene)       | 把差异语义转成视觉图元：设计令牌、编码规则、回放时间线、聚焦。         |
 | [`@kgdiff/renderer`](packages/renderer) | Canvas 2D 引擎：平滑镜头、细节分级、标签布局、拾取、滑动对比、小地图。 |
 | [`@kgdiff/g6`](packages/g6)             | 在 AntV G6 v5 中渲染 kgdiff 场景。                                     |
-| [`@kgdiff/formats`](packages/formats)   | 0.11 起弃用：请用 `@kgdiff/compute` 的 `parseGraph`。                  |
+| [`@kgdiff/formats`](packages/formats)   | 0.11 起弃用：已移到 `@kgdiff/core`（函数相同）。                       |
 
 | crates.io                                 |                                                      |
 | ----------------------------------------- | ---------------------------------------------------- |

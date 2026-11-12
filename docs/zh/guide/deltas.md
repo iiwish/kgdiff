@@ -44,8 +44,7 @@ hint: If it is the same graph, parse it as when the delta was made: --format and
 
 ```ts
 import { readFile } from 'node:fs/promises';
-import { applyDelta, invertDelta, normalize } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/compute';
+import { applyDelta, invertDelta, normalize, parseGraph } from '@kgdiff/core';
 
 const delta = JSON.parse(await readFile('patch.json', 'utf8'));
 const after = await parseGraph(await readFile('after.obo', 'utf8'), { filename: 'after.obo' });

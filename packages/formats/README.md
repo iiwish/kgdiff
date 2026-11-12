@@ -1,10 +1,13 @@
 # @kgdiff/formats
 
-> **Deprecated since 0.11.** Use [`@kgdiff/compute`](../compute): its `parseGraph`,
-> `detectFormat` and `compactIri` are kgdiff's Rust parsers compiled to WebAssembly, the same
-> results as the kgdiff CLI. This package's functions are now asynchronous wrappers over them
-> (`await parseGraph(…)`); its types and `FORMAT_EXTENSIONS` are `@kgdiff/compute`'s (since
-> 0.11.1), re-exported here until it is removed in 2.0. No other kgdiff package depends on it. See
+> **Deprecated since 0.11: moved to [`@kgdiff/core`](../core).** Since 0.11.1 `@kgdiff/core`
+> exports everything this package does (`parseGraph`, `detectFormat`, `compactIri`,
+> `FORMAT_EXTENSIONS` and the types), with the same signatures and results: change the import path
+> from `@kgdiff/formats` to `@kgdiff/core` and nothing else. They run kgdiff's Rust parsers compiled
+> to WebAssembly (`@kgdiff/compute`, which also has their synchronous forms), the same results as
+> the kgdiff CLI. This package's functions are asynchronous wrappers over them
+> (`await parseGraph(…)`); its types and `FORMAT_EXTENSIONS` are the same declarations, re-exported
+> here until it is removed in 2.0. No other kgdiff package depends on it. See
 > [Migrating to 0.11](../../docs/guide/migrating-to-0.11.md).
 
 Parsers that turn real-world graph files into [`@kgdiff/core`](../core) graphs: RDF (Turtle,

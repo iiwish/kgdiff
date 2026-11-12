@@ -161,8 +161,7 @@ elements. Behaviour and events: [Viewer: interaction and API](docs/interaction.m
 ### In code
 
 ```ts
-import { diff, formatHunk } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/compute';
+import { diff, formatHunk, parseGraph } from '@kgdiff/core';
 
 const before = (await parseGraph(beforeText, { filename: 'v1.obo' })).graph;
 const after = (await parseGraph(afterText, { filename: 'v2.obo' })).graph;
@@ -174,8 +173,9 @@ for (const hunk of result.hunks) console.log(formatHunk(hunk, result, 'en').titl
 // …
 ```
 
-The engine is written in Rust; in JavaScript it runs as WebAssembly, with the same bytes out as
-the CLI. [Use the engine in code](docs/guide/library.md) ·
+`npm install @kgdiff/core` is all it takes. The engine is written in Rust; in JavaScript it runs
+as WebAssembly (`@kgdiff/compute`, loaded on the first call), with the same bytes out as the CLI.
+[Use the engine in code](docs/guide/library.md) ·
 [Embed kgdiff in a Rust application](docs/guide/embedding.md) ·
 [Migrating to 0.11](docs/guide/migrating-to-0.11.md).
 
@@ -272,13 +272,13 @@ kgdiff does not reason over OWL axioms: for axiom-level review, run `robot diff`
 | --------------------------------------- | ------------------------------------------------------------------------------------- |
 | [`@kgdiff/cli`](packages/cli)           | The command-line tool: installs and runs the native `kgdiff` of your platform.        |
 | [`@kgdiff/viewer`](packages/viewer)     | The `<kgdiff-viewer>` web component and the elements it is made of.                   |
-| [`@kgdiff/core`](packages/core)         | Diff model: normalize, `diff`, JSON transports, invertible delta, hunk titles.        |
+| [`@kgdiff/core`](packages/core)         | Diff model: `parseGraph`, `diff`, JSON transports, invertible delta, hunk titles.     |
 | [`@kgdiff/compute`](packages/compute)   | kgdiff's Rust engine in WebAssembly: diff, parsers, layout.                           |
 | [`@kgdiff/layout`](packages/layout)     | Deterministic, label-aware union layout; anchored and changes-only modes.             |
 | [`@kgdiff/scene`](packages/scene)       | Diff semantics → visual primitives: design tokens, encodings, replay timeline, focus. |
 | [`@kgdiff/renderer`](packages/renderer) | Canvas 2D engine: smooth camera, LOD, label placement, picking, swipe, minimap.       |
 | [`@kgdiff/g6`](packages/g6)             | Render kgdiff scenes inside AntV G6 v5 graphs.                                        |
-| [`@kgdiff/formats`](packages/formats)   | Deprecated since 0.11: use `parseGraph` of `@kgdiff/compute`.                         |
+| [`@kgdiff/formats`](packages/formats)   | Deprecated since 0.11: moved to `@kgdiff/core` (same functions).                      |
 
 | crates.io                                 |                                                                        |
 | ----------------------------------------- | ---------------------------------------------------------------------- |

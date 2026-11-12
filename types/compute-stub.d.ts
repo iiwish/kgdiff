@@ -1,8 +1,8 @@
 /**
  * What the workspace's type-checks see of `@kgdiff/compute` (`tsconfig.base.json`): the parsers'
- * types and `FORMAT_EXTENSIONS` (`packages/compute/src/formats.ts`, which imports no WebAssembly
- * glue and no DOM types) and the asynchronous parser functions, which `@kgdiff/formats` and
- * `@kgdiff/viewer` call. `@kgdiff/core` and `@kgdiff/layout` import the package with a dynamic
+ * types and `FORMAT_EXTENSIONS` (`packages/compute/src/formats.ts`, which re-exports
+ * `@kgdiff/core`'s and imports no WebAssembly glue and no DOM types) and the asynchronous parser
+ * functions, which `@kgdiff/formats` and `@kgdiff/viewer` call. `@kgdiff/core` and `@kgdiff/layout` import the package with a dynamic
  * `import()` typed by an interface of their own and are built against `compute-stub-build.d.ts`.
  * So no program but compute's own includes its sources (written for the DOM's `fetch` types).
  * Vitest, Vite and every bundler resolve the real package; `packages/compute/test/stub.test.ts`
