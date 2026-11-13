@@ -1,6 +1,6 @@
 {
   "name": "@kgdiff/core",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Semantic diff engine for knowledge graphs: matching, change classification, hunks and invertible deltas.",
   "keywords": [
     "kgdiff",
