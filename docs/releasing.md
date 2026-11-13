@@ -206,6 +206,7 @@ for p in core formats layout scene renderer viewer g6 cli compute; do
   curl -s -o /dev/null -w "$p %{http_code}\n" "https://registry.npmjs.org/@kgdiff/$p/<version>"
 done
 curl -s https://crates.io/api/v1/crates/kgdiff-core | jq -r .crate.max_version
+curl -s https://pypi.org/pypi/pykgdiff/<version>/json | jq -r '.urls[].filename'
 gh release view v<version> -R iiwish/kgdiff
 ```
 
@@ -216,7 +217,7 @@ Then:
 - **Run the release again.** Either re-run the failed jobs of the run (Actions → the run →
   Re-run failed jobs), or push the fix to `main`. Every step skips what exists: the platform
   packages and `changeset publish` skip versions on npm, the tag and the GitHub release are
-  created once, `crates-publish` skips versions on crates.io.
+  created once, `crates-publish` skips versions on crates.io, `pypi-publish` the wheels PyPI has.
 - **The run finishes a release that an earlier run began.** `plan` treats a push as a release
   also when `@kgdiff/cli`'s version is on npm but the tag `v<version>` does not exist, and
   "Version or publish" then takes the committed version, once every public package is on npm at
@@ -325,9 +326,64 @@ Publishing stays off until these are done:
    the `v<version>` GitHub release, and commits `Formula/kgdiff.rb` to the tap.
 
 Releases before these steps still build and check everything; the artifacts stay with the
-workflow run. The Python package, `pykgdiff` (D-6), publishes the same way with its own job and
-the `pypi` environment (trusted publisher: owner `iiwish`, repository `kgdiff`, workflow
-`release.yml`) once it exists; PyPI can take its first upload from CI through a pending publisher.
+workflow run.
+
+## PyPI: pykgdiff
+
+The Python distribution [`pykgdiff`](https://pypi.org/project/pykgdiff/) (`kgdiff` is taken on
+PyPI, [RFC 0002](rfcs/0002-rust-compute-core.md), D-6) is, for now, the command line only:
+`pipx install pykgdiff`, `uvx --from pykgdiff kgdiff …`. Each wheel holds one target's `kgdiff`
+binary as `pykgdiff-<version>.data/scripts/kgdiff`, which pip and uv install on the `PATH`, and
+nothing else: no Python module (`import pykgdiff` and `python -m pykgdiff` are kept for the
+Python API after 1.0, D-7). Its metadata is [`python/pyproject.toml`](../python/pyproject.toml),
+whose version `scripts/sync-versions.ts` sets to the workspace's (PEP 440 spelling for
+prereleases: `1.0.0-rc.1` → `1.0.0rc1`); `tests/release.test.ts` fails when it differs.
+
+[`scripts/pypi-wheels.py`](../scripts/pypi-wheels.py) (Python ≥ 3.11, standard library) writes the
+wheels from dist's archives, as `npm-platforms.ts` writes the platform packages: each archive
+checked against its `.sha256`, the dist manifests against the version, so the wheels hold the
+very binaries npm and the GitHub release do, with the viewer bundles `native-viewer` built once.
+The platform tag comes from the binary: the minimum macOS of its Mach-O header
+(`macosx_11_0_arm64`, `macosx_10_12_x86_64`), the newest glibc symbol version it needs for
+manylinux (`manylinux_2_34_*` while dist builds on Ubuntu 22.04: Linux with glibc ≥ 2.34, as for
+`@kgdiff/cli-linux-*-gnu`), `musllinux_1_2_*` for the static musl builds, `win_amd64`; it fails on
+a binary of the wrong architecture or one that links a library a manylinux wheel may not need.
+The wheels are byte-identical for identical archives. There is no sdist: building from source
+needs Rust and the viewer bundles, and `cargo install kgdiff` already is that build.
+
+In `release.yml`, `pypi-wheels` assembles them, and `pypi-smoke` / `pypi-smoke-musl` install them
+with pip into a fresh virtual environment from the wheels alone (pip has to pick the machine's by
+its tag) on Linux (x64 and Arm64, glibc, and Alpine), macOS and Windows and run `kgdiff`
+(`scripts/pypi-smoke.py`, which also checks that `import pykgdiff` fails). "Version or publish"
+waits for them like for the npm smoke tests, and pull requests that change the workflow,
+`python/` or the scripts run them. After npm, `pypi-publish` uploads the wheels with PyPI trusted
+publishing (OIDC, `pypa/gh-action-pypi-publish`, with attestations), no token stored; it skips a
+version whose wheels PyPI has, and a rerun after a partial upload adds only the missing ones.
+Locally, on the archive of one target:
+
+```sh
+dist build --tag=v<version> --artifacts=local --target=aarch64-apple-darwin --output-format=json \
+  > target/distrib/aarch64-apple-darwin-dist-manifest.json   # after pnpm build:viewer-assets
+uv run --no-project --python 3.12 python scripts/pypi-wheels.py target/distrib --target aarch64-apple-darwin
+python3 scripts/pypi-smoke.py target/pypi
+```
+
+Publishing stays off until these are done, once, before the first release that should upload
+(0.12.1):
+
+1. **A pending trusted publisher on PyPI.** PyPI can create a project from its first upload
+   through CI. Logged in at pypi.org, open Your account → Publishing → Add a new pending
+   publisher → GitHub, and enter the PyPI project name `pykgdiff`, owner `iiwish`, repository
+   `kgdiff`, workflow `release.yml` and environment `pypi`. A pending publisher does not reserve
+   the name: until the first upload, anyone can still register `pykgdiff`, so do this shortly
+   before the release. Once the project exists, the publisher becomes its ordinary trusted
+   publisher (Manage → Publishing).
+2. **The `pypi` environment** (it exists): deployment branches limited to `main`.
+3. **Turn it on.** Set the repository variable `PYPI_RELEASE_ENABLED` to `true`. The next release
+   uploads the wheels; a release that ran before can be finished by re-running its failed or
+   skipped `pypi-publish` job, which takes the wheels of that run.
+4. **Lock it down**, after the first upload: on pypi.org, turn on 2FA for the account if it is
+   not, and check that the project has no API tokens.
 
 ## Repository settings
 
@@ -360,7 +416,9 @@ there.
 ## What ships
 
 `@kgdiff/cli` publishes its launcher (`bin`, `lib`), `README.md`, `package.json` and `LICENSE`;
-each platform package its binary, `README.md`, `package.json` and `LICENSE`. Every other package
+each platform package its binary, `README.md`, `package.json` and `LICENSE`; each wheel of
+`pykgdiff` its binary and, in `.dist-info`, `METADATA` (with `python/README.md`), `WHEEL`,
+`RECORD` and `licenses/LICENSE`. Every other package
 publishes `dist` (JavaScript, declarations and their source maps), `src` (the
 TypeScript the maps point to), `README.md`, `package.json` and the root `LICENSE`, which pnpm adds
 to every package. Shipping `src` keeps both `.js.map` and `.d.ts.map` resolvable: stack traces,

@@ -19,7 +19,15 @@ npm install --global @kgdiff/cli     # 全局可用的 kgdiff 命令
 npm install --save-dev @kgdiff/cli   # 在项目里固定版本，用 npx @kgdiff/cli 运行
 ```
 
-kgdiff 是原生程序，支持 macOS、Linux（glibc 和 musl）和 Windows：npm 会随 `@kgdiff/cli` 一起装上对应平台的二进制文件。没有 Node.js 时，可以从 crates.io 编译安装：`cargo install kgdiff`。
+kgdiff 是原生程序，支持 macOS、Linux（glibc 和 musl）和 Windows：npm 会随 `@kgdiff/cli` 一起装上对应平台的二进制文件。没有 Node.js 时，可以从 PyPI 安装同一个二进制，包名是 `pykgdiff`（只带命令行，还没有 Python API），或者从 crates.io 编译安装：
+
+```sh
+pipx install pykgdiff                # 或者 uv tool install pykgdiff、pip install pykgdiff
+uvx --from pykgdiff kgdiff before.ttl after.ttl   # 不安装，直接运行
+cargo install kgdiff                 # 用 Rust 编译
+```
+
+无论哪种方式，得到的都是同一个 `kgdiff` 命令。
 
 ## 第一次 diff
 

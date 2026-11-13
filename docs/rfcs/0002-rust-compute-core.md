@@ -758,6 +758,13 @@ and the GitHub release with the Homebrew tap), `scripts/sync-versions.ts` has no
 to write and the `maturin` build and the PyPI step below are not run. The rest of this section
 is the design the Python package will join.
 
+**Update 2026-11-13:** PyPI is the fourth registry from 0.12.1 on, for the command line only
+([Revision 2026-11-13](#revision-2026-11-13)): `scripts/sync-versions.ts` writes
+`python/pyproject.toml`, and `release.yml` assembles a wheel per target from dist's archives
+(`scripts/pypi-wheels.py`, no `maturin`), installs them with pip on Linux, macOS and Windows and
+publishes them with trusted publishing after npm. `maturin` and `crates/kgdiff-python` come with
+the Python API.
+
 The single version number stays: kgdiff `X.Y.Z` names one consistent set of npm packages,
 crates, the Python package and the binaries. Changesets stays the source of truth;
 `pnpm version-packages` also runs `scripts/sync-versions.ts`, which writes the version into the
@@ -1506,8 +1513,8 @@ weeks start again from there. After 1.0 the public API follows semver; the Pytho
 | D-3  | Layout version 2 with `generator`, or keep version 1                                                        | **Taken.** Version 2 (§2), written back by TypeScript's `layoutToJSON` too ([#73](https://github.com/iiwish/kgdiff/pull/73)); the alternative is silent change of what a stored layout means                                                                                                                                                                                                                                                                                               |
 | D-4  | `kgdiff-report` as its own crate, or a feature of `kgdiff`                                                  | Its own crate (an embedding application depends on it without the CLI's dependencies)                                                                                                                                                                                                                                                                                                                                                                                                      |
 | D-5  | Ship the viewer's layout-less payloads before phase 2 or with phase 3                                       | Before phase 2: small and additive; applications that compute diffs themselves can use the viewer at once                                                                                                                                                                                                                                                                                                                                                                                  |
-| D-6  | Registry names                                                                                              | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now. **2026-11-11:** the PyPI name stays reserved, but the package is published after 1.0                                                                                                                                                                                                     |
-| D-7  | Python package in phase 3 or later                                                                          | **Moved (2026-11-11): after 1.0**, purely additive. Originally: after the CLI (phase 3), when both parsers and reports exist                                                                                                                                                                                                                                                                                                                                                               |
+| D-6  | Registry names                                                                                              | Crates `kgdiff`, `kgdiff-core`, `-formats`, `-layout`, `-report` (free); PyPI **`pykgdiff`** (`kgdiff` is taken), import name `pykgdiff`, console script `kgdiff`; the existing tap; reserve now. **2026-11-11:** the PyPI name stays reserved, but the package is published after 1.0. **2026-11-13:** the name is taken now, with 0.12.1: `pykgdiff` ships wheels holding only the `kgdiff` binary (the console command, no module), so `import pykgdiff` stays free for the Python API  |
+| D-7  | Python package in phase 3 or later                                                                          | **Moved (2026-11-11): after 1.0**, purely additive. Originally: after the CLI (phase 3), when both parsers and reports exist. **2026-11-13:** the Python API stays after 1.0; the command line alone ships as wheels from 0.12.1, a patch, because it adds no API ([Revision 2026-11-13](#revision-2026-11-13))                                                                                                                                                                            |
 | D-8  | MSRV and edition                                                                                            | Edition 2024; MSRV no newer than the stable release of six months before, raised only in minor releases                                                                                                                                                                                                                                                                                                                                                                                    |
 | D-9  | `oxrdfxml` / `oxjsonld` or ports of kgdiff's readers                                                        | **Taken** (spike of 2026-11-09, `spike/d9/` on branch `claude/rust-phase3-d9-spike`): `oxttl`, strict, re-reading leniently when only IRI validation fails (§5); ports of `rdfxml.ts` / `xml.ts` and `jsonld.ts`, as `oxrdfxml` and `oxjsonld` each differ on both corpus inputs. Left different from n3: such a re-read text that n3 also rejects for another reason is read; error wording; blank labels (only `multiple-ontologies` can name one)                                       |
 | D-10 | Phase 3 reports without a precomputed layout, or swap phases 3 and 4                                        | Keep the order and accept the bounded regression on the native channels only (phase 3); swapping would delay the CLI, the larger win, behind the riskiest port                                                                                                                                                                                                                                                                                                                             |
@@ -1629,6 +1636,32 @@ only known Rust host (Semlia) was still on 0.9 and upgrades once, to 0.12.
    point, `@kgdiff/g6` exports `ElementKind`, and `shape2` of the scene's visuals is marked
    experimental like `shape1`. No CLI option, no document format and no output byte changes.
    The guide is `docs/guide/migrating-to-0.12.md`.
+
+### Revision 2026-11-13
+
+kgdiff 0.12.0 was released on 2026-11-13. The maintainer decided to publish the Python
+distribution `pykgdiff` before 1.0 after all, for the command line only, in 0.12.1, for two
+reasons: Python users get kgdiff without installing Node.js or Rust, and the name `pykgdiff`,
+which a pending publisher on PyPI does not reserve, is taken before someone else registers it.
+A patch release can carry it, inside the stable period that leads to 1.0: it adds no API, and
+the command line it ships is already covered by the version promise.
+
+1. **D-6:** `pykgdiff` is published from 0.12.1, at the workspace's version. Each wheel holds the
+   `kgdiff` binary of one dist target as a script of the wheel (`pykgdiff-<v>.data/scripts/`),
+   the console command `kgdiff`, and no Python module. `pip install pykgdiff`, `pipx install
+   pykgdiff` and `uvx --from pykgdiff kgdiff` work; `import pykgdiff` and `python -m pykgdiff`
+   do not.
+2. **D-7:** the Python API (`pykgdiff.parse`, `diff`, `apply`, `hash_graph`, the abi3 wheels of
+   `crates/kgdiff-python` with PyO3 and maturin, `python -m pykgdiff`) stays after 1.0 and stays
+   additive: it will add the module to the same distribution; the `kgdiff` command does not change.
+3. **§8, one binary everywhere:** the wheels are assembled from the archives dist built, with the
+   viewer bundles `native-viewer` built once, not compiled again: the binary in a wheel is
+   byte-for-byte the one in `@kgdiff/cli`'s platform package and the GitHub release. The tags are
+   read from the binaries (`macosx_11_0_arm64`, `macosx_10_12_x86_64`, `manylinux_2_34_*`,
+   `musllinux_1_2_*`, `win_amd64`). No sdist: building from source needs Rust and the viewer
+   bundles, which `cargo install kgdiff` covers.
+
+No phase result, measurement, pull request or commit recorded above changed.
 
 ## Alternatives considered
 

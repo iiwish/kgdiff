@@ -87,7 +87,12 @@ npx @kgdiff/cli a.ttl b.ttl -o report.html        # 单文件交互式报告，�
 npx @kgdiff/cli a.ttl b.ttl --exit-code -q        # 有差异时退出码为 1
 ```
 
-kgdiff 是原生程序，支持 macOS、Linux（glibc 和 musl）和 Windows。`npx` 需要 Node.js ≥ 22，会装上适合本机的二进制；没有 Node.js 时用 `cargo install kgdiff`。
+kgdiff 是原生程序，支持 macOS、Linux（glibc 和 musl）和 Windows。`npx` 需要 Node.js ≥ 22，会装上适合本机的二进制。没有 Node.js 时，可以从 PyPI 安装同一个二进制 `pykgdiff`（只带命令行），或者用 `cargo install kgdiff` 编译：
+
+```sh
+pipx install pykgdiff                             # 或者 uv tool install pykgdiff、pip install pykgdiff
+uvx --from pykgdiff kgdiff a.ttl b.ttl            # 不安装，直接运行
+```
 
 <p align="center">
   <img src="docs/images/terminal-zh.webp" alt="kgdiff 的终端摘要：企业信用知识图谱本体两个版本之间的删除、合并、迁移、改名和新增，按变化类别着色" width="720">
@@ -217,6 +222,7 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 | 你想要……                       | 安装                                                                    |
 | ------------------------------ | ----------------------------------------------------------------------- |
 | 在终端或 CI 里比较图谱文件     | `@kgdiff/cli`（`npx @kgdiff/cli a.ttl b.ttl`），或者 GitHub Action      |
+| ……用 Python 工具，不装 Node.js | PyPI 上的 `pykgdiff`（`pipx install pykgdiff`）：同一个 `kgdiff`        |
 | 在网页里展示差异，不写渲染代码 | `@kgdiff/viewer`（`<kgdiff-viewer>` Web 组件）                          |
 | 在代码里计算差异，自己画       | `@kgdiff/core` 和 `@kgdiff/compute`，再按需加 `layout`、`scene` 或 `g6` |
 | 在 Rust 应用里嵌入引擎         | crate `kgdiff-core`、`kgdiff-layout`、`kgdiff-report`                   |

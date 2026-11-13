@@ -11,6 +11,15 @@ npx @kgdiff/cli a.json b.json --markdown             # PR 评论 / 作业摘要
 npx @kgdiff/cli apply a.json patch.json -o b.json    # 应用增量
 ```
 
+`npx @kgdiff/cli` 需要 Node.js ≥ 22。没有 Node.js 时，可以从 PyPI 安装同一个 `kgdiff`，包名是 `pykgdiff`（只带命令行），也可以从 crates.io 安装；下面的例子都直接写 `kgdiff`：
+
+```sh
+npm install --global @kgdiff/cli     # Node.js
+pipx install pykgdiff                # Python 工具：或者 uv tool install pykgdiff、pip install pykgdiff
+uvx --from pykgdiff kgdiff a.ttl b.ttl   # 不安装，运行一次
+cargo install kgdiff                 # Rust
+```
+
 ## 用法
 
 ```

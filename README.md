@@ -107,7 +107,13 @@ npx @kgdiff/cli a.ttl b.ttl --exit-code -q        # exit 1 when the graphs diffe
 ```
 
 kgdiff is a native program for macOS, Linux (glibc and musl) and Windows. `npx` needs
-Node.js ≥ 22 and installs the binary for your machine; without Node.js, `cargo install kgdiff`.
+Node.js ≥ 22 and installs the binary for your machine. Without Node.js, the same binary comes
+from PyPI as `pykgdiff` (the command line only), or build it with `cargo install kgdiff`:
+
+```sh
+pipx install pykgdiff                             # or: uv tool install pykgdiff, pip install pykgdiff
+uvx --from pykgdiff kgdiff a.ttl b.ttl            # run it without installing
+```
 
 <p align="center">
   <img src="docs/images/terminal-en.webp" alt="kgdiff's terminal summary of an OBO ontology release: merges, moves, a split, renames and additions, colored by kind of change" width="720">
@@ -261,6 +267,7 @@ kgdiff does not reason over OWL axioms: for axiom-level review, run `robot diff`
 | You want to…                                      | Install                                                              |
 | ------------------------------------------------- | -------------------------------------------------------------------- |
 | Compare graph files in the terminal or in CI      | `@kgdiff/cli` (`npx @kgdiff/cli a.ttl b.ttl`), or the GitHub Action  |
+| … with Python tools, without Node.js              | `pykgdiff` from PyPI (`pipx install pykgdiff`): the same `kgdiff`    |
 | Show a diff in a web page, without rendering code | `@kgdiff/viewer` (the `<kgdiff-viewer>` web component)               |
 | Compute diffs in your code, draw them yourself    | `@kgdiff/core` and `@kgdiff/compute`, plus `layout`, `scene` or `g6` |
 | Embed the engine in a Rust application            | the crates `kgdiff-core`, `kgdiff-layout`, `kgdiff-report`           |

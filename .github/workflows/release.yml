@@ -12,12 +12,15 @@ name: Release
 # changesets left, and @kgdiff/cli's version not on npm yet), the native kgdiff is built for every
 # target with dist (dist-workspace.toml), its crates are packaged (`cargo publish --dry-run`), and
 # the platform packages of @kgdiff/cli are assembled from dist's archives and run through the
-# launcher on Linux (glibc and musl), macOS and Windows; only then does "Version or publish"
-# publish them, @kgdiff/cli (which lists them as optional dependencies) and the other packages.
+# launcher on Linux (glibc and musl), macOS and Windows, and the wheels of the Python package
+# pykgdiff (the command line only) are assembled from the same archives and installed with pip on
+# the same platforms; only then does "Version or publish" publish the platform packages,
+# @kgdiff/cli (which lists them as optional dependencies) and the other packages.
 # A pull request that changes this setup, or a run by hand (workflow_dispatch), builds and checks
 # all of it without publishing. The crates, the GitHub release's archives and the Homebrew
-# formula are published after npm, once the repository variables CRATES_RELEASE_ENABLED and
-# NATIVE_RELEASE_ENABLED are set (docs/releasing.md, "Native binaries and crates").
+# formula, and the wheels on PyPI are published after npm, once the repository variables
+# CRATES_RELEASE_ENABLED, NATIVE_RELEASE_ENABLED and PYPI_RELEASE_ENABLED are set
+# (docs/releasing.md, "Native binaries and crates" and "PyPI").
 
 on:
   push:
@@ -27,8 +30,11 @@ on:
       - .github/workflows/release.yml
       - dist-workspace.toml
       - packages/cli/**
+      - python/**
       - scripts/npm-platforms.ts
       - scripts/npm-smoke.mjs
+      - scripts/pypi-smoke.py
+      - scripts/pypi-wheels.py
   workflow_dispatch:
 
 permissions: {}
@@ -146,7 +152,17 @@ jobs:
 
   release:
     name: Version or publish
-    needs: [plan, native-global, crates-dry-run, npm-smoke, npm-smoke-musl, compute-wasm]
+    needs:
+      [
+        plan,
+        native-global,
+        crates-dry-run,
+        npm-smoke,
+        npm-smoke-musl,
+        pypi-smoke,
+        pypi-smoke-musl,
+        compute-wasm,
+      ]
     # Right away for the version pull request; after every build and check when this push
     # releases; not at all when there is nothing to do (plan).
     if: >-
@@ -154,6 +170,7 @@ jobs:
       needs.plan.outputs.release == 'true' &&
       needs.native-global.result == 'success' && needs.crates-dry-run.result == 'success' &&
       needs.npm-smoke.result == 'success' && needs.npm-smoke-musl.result == 'success' &&
+      needs.pypi-smoke.result == 'success' && needs.pypi-smoke-musl.result == 'success' &&
       needs.compute-wasm.result == 'success'))
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -554,6 +571,148 @@ jobs:
           name: npm-packages
           path: target/npm/
       - run: node scripts/npm-smoke.mjs target/npm
+
+  # ─── PyPI: pykgdiff, the command line only (RFC 0002, D-6 / D-7) ─────────────────────────────
+  # One wheel per target, holding the binary of dist's archive (scripts/pypi-wheels.py): the same
+  # kgdiff, with the same viewer bundles, as npm and the GitHub release, never a build of its own.
+  # No sdist: building from source needs Rust and the viewer bundles; `cargo install kgdiff` is that.
+  pypi-wheels:
+    name: Assemble the wheels of pykgdiff
+    needs: native-build
+    if: always() && needs.native-build.result == 'success'
+    # Its Python 3.12 (the script needs >= 3.11, standard library only).
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: native-*
+          path: target/distrib/
+      - run: python3 scripts/pypi-wheels.py target/distrib target/pypi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pypi-wheels
+          path: target/pypi/*.whl
+          if-no-files-found: error
+
+  # `pip install pykgdiff` from the wheels alone, so that pip has to pick this machine's by its
+  # platform tag, then `kgdiff` on an example dataset (scripts/pypi-smoke.py): no PyPI involved.
+  pypi-smoke:
+    name: Run kgdiff from the pykgdiff wheel (${{ matrix.name }})
+    needs: pypi-wheels
+    if: always() && needs.pypi-wheels.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64-gnu
+            runner: ubuntu-latest
+            python: python3
+          - name: linux-arm64-gnu
+            runner: ubuntu-24.04-arm
+            python: python3
+          - name: darwin-arm64
+            runner: macos-15
+            python: python3
+          - name: win32-x64
+            runner: windows-latest
+            python: python
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pypi-wheels
+          path: target/pypi/
+      # The runner's own Python: the wheels need none in particular.
+      - run: ${{ matrix.python }} scripts/pypi-smoke.py target/pypi
+
+  # The same on musl (Alpine), where pip must pick the musllinux wheel.
+  pypi-smoke-musl:
+    name: Run kgdiff from the pykgdiff wheel (linux-x64-musl)
+    needs: pypi-wheels
+    if: always() && needs.pypi-wheels.result == 'success'
+    runs-on: ubuntu-latest
+    container: python:3.13-alpine
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pypi-wheels
+          path: target/pypi/
+      - run: python3 scripts/pypi-smoke.py target/pypi
+
+  # Off until PYPI_RELEASE_ENABLED is true (docs/releasing.md, "PyPI"): PyPI trusted publishing
+  # (OIDC), no token stored; the first upload creates the project through the pending publisher
+  # configured on pypi.org. The wheels tested above, uploaded with attestations. A version PyPI
+  # has already is skipped, and a rerun after a partial upload adds only the missing wheels.
+  pypi-publish:
+    name: Publish pykgdiff to PyPI
+    needs: [release, pypi-smoke, pypi-smoke-musl]
+    if: >-
+      always() && vars.PYPI_RELEASE_ENABLED == 'true' && github.event_name == 'push' &&
+      needs.release.outputs.version != '' && needs.pypi-smoke.result == 'success' &&
+      needs.pypi-smoke-musl.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Restrict the environment to the main branch in the repository settings and name it in the
+    # trusted publisher configuration on pypi.org.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/pykgdiff/
+    permissions:
+      id-token: write # PyPI trusted publishing and attestations
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pypi-wheels
+          path: dist/
+      - name: Check the wheels against the release, and what PyPI has
+        id: pypi
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          # The version as PyPI spells it (scripts/sync-versions.ts, pep440).
+          version=$(sed -E 's/-alpha\./a/; s/-beta\./b/; s/-rc\./rc/' <<<"$VERSION")
+          wheels=$(cd dist && ls pykgdiff-*.whl)
+          # One wheel per dist target, all of this version.
+          test "$(grep -c . <<<"$wheels")" = 7
+          test -z "$(grep -v "^pykgdiff-$version-py3-none-" <<<"$wheels" || true)"
+          agent="kgdiff release workflow (https://github.com/iiwish/kgdiff)"
+          status=$(curl -sS -o "$RUNNER_TEMP/pypi.json" -w '%{http_code}' -A "$agent" \
+            "https://pypi.org/pypi/pykgdiff/$version/json")
+          if [ "$status" = 200 ]; then
+            uploaded=$(jq -r '.urls[].filename' "$RUNNER_TEMP/pypi.json")
+            if [ -z "$(grep -vxF -f <(echo "$uploaded") <<<"$wheels" || true)" ]; then
+              echo "Skipped: pykgdiff $version is on PyPI with every wheel already."
+              echo "publish=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "pykgdiff $version is on PyPI without some wheels: uploading the others."
+          else
+            test "$status" = 404
+          fi
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+      - if: steps.pypi.outputs.publish == 'true'
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: dist/
+          skip-existing: true
 
   # Off until NATIVE_RELEASE_ENABLED is true (docs/releasing.md, "Native binaries"): attests the
   # archives, uploads them with the installers and checksums to the release's GitHub release, and

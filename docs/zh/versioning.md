@@ -48,6 +48,7 @@ kgdiff 遵循[语义化版本](https://semver.org/lang/zh-CN/)。本页说明版
 - **Node.js**：`engines` 列出的版本线（22 及以后），每条都在 CI 里测试。
 - **Rust**：crate 的 `rust-version`（最低支持的 Rust 版本）不晚于六个月前的稳定版，只在次版本里提高。
 - **浏览器**：能运行 WebAssembly 和查看器自定义元素的浏览器；查看器包本身不含 WebAssembly。
+- **Python**：PyPI 上的 `pykgdiff` 只带命令行：wheel 里只有原生的 `kgdiff` 二进制（和 `@kgdiff/cli` 的是同一个），装上后得到 `kgdiff` 命令，版本号和其他包相同。它的承诺就是命令行的承诺（见上文）；wheel 不要求特定的 Python 版本，也不运行 Python 代码。现在还没有 Python API，所以也谈不上承诺：`import pykgdiff` 和 `python -m pykgdiff` 都用不了，这个名字留给 1.0 之后计划中的 Python API，到时是新增。wheel 覆盖原生二进制构建的全部目标（macOS x64 和 Arm64，Linux x64 和 Arm64 的 glibc ≥ 2.34 或 musl，Windows x64）。
 
 ## 弃用
 
