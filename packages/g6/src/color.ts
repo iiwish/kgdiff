@@ -9,7 +9,9 @@
 export type Rgba = readonly [number, number, number, number];
 
 const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
-const FUNC = /^rgba?\(\s*([^)]*)\)$/i;
+// No `\s*` before the group: `[^)]*` takes the spaces too (the split below drops them), and two
+// quantifiers that both match spaces made the match quadratic in a long unclosed `rgb(`.
+const FUNC = /^rgba?\(([^)]*)\)$/i;
 
 function clampByte(v: number): number {
   return Math.min(255, Math.max(0, Math.round(v)));
