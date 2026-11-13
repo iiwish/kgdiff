@@ -1497,7 +1497,7 @@
                   "text": "() => void"
                 }
               },
-              "experimental": "New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes stable."
+              "experimental": "New in 0.9 (RFC 0003, part 4a); experimental, and stays so after 1.0."
             },
             {
               "kind": "field",

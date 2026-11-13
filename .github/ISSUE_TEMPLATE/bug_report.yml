@@ -13,7 +13,6 @@ body:
       options:
         - kgdiff (CLI or HTML report)
         - "@kgdiff/core"
-        - "@kgdiff/formats"
         - "@kgdiff/layout"
         - "@kgdiff/scene"
         - "@kgdiff/renderer"

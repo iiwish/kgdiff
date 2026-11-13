@@ -1,7 +1,8 @@
 # RFC 0002: A Rust compute core
 
-- **Status:** Draft, proposed; implemented through phase 5. **Phase 5 is complete on `main`
-  (2026-11-12) and kgdiff 0.11.0 was published the same day.** 0.7.0 shipped the phase 1 to 3 work
+- **Status:** Implemented: 0.11 completed it (phase 5 was complete on `main` on 2026-11-12 and
+  kgdiff 0.11.0 was published the same day) and 0.12 (published 2026-11-13) closed it out, with
+  the Rust API and the JavaScript API readied for 1.0 ([Revision 2026-11-12](#revision-2026-11-12)). 0.7.0 shipped the phase 1 to 3 work
   and the layout crate, and 0.8.0 the native CLI, the npm launcher and the Action on the binary
   ([Phase 1](#phase-1--conformance-corpus-this-change), [Phase 2 results](#phase-2-results),
   [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 and
@@ -10,16 +11,14 @@
   TypeScript compute modules in the browser, with the Rust corpus generator and the migration
   guide. Its sizes and timings were measured once on a quiet machine, and the gaps to the targets
   that 0.11 only measures are listed as work after 0.11
-  ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.12, which
-  readies the public API for 1.0, the Rust API above all
-  ([Revision 2026-11-12](#revision-2026-11-12)), after a two-week stable period
-  ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase are listed in its
+  ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.12 with a new version
+  number, after a two-week stable period ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase are listed in its
   results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
   results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10; phase 5 moved from 1.0 to 0.11 and 1.0
   defined as a stable 0.11 on 2026-11-11 ([Revision](#revision-2026-11-11)); phase 5 results
   2026-11-12.
-- **Affects:** `@kgdiff/core`, `@kgdiff/formats`, `@kgdiff/layout` and `@kgdiff/cli`
+- **Affects:** `@kgdiff/core`, `@kgdiff/formats` (not published since 0.12.1), `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
 
@@ -1418,12 +1417,14 @@ differential run no longer exists to compare with.
 
 Added 2026-11-11; the last 0.x minor became 0.12 on 2026-11-12
 ([Revision 2026-11-12](#revision-2026-11-12)). kgdiff 1.0 carries **no new code**. It is the last 0.x minor, after its stable
-period, republished unchanged under a new version number; the only differences are that the
-`@experimental` marks are removed from the APIs that carry them and that the version is 1.0.0.
+period, republished unchanged under a new version number; the only difference is that the
+version is 1.0.0. The `@experimental` marks stay (changed 2026-11-13: no host has used those APIs
+yet; [Versioning](../versioning.md#experimental-apis)).
 One package is not republished: the deprecated `@kgdiff/formats`, whose functions and types
-`@kgdiff/core` exports since 0.11.1 and on which no other package depends. Its 0.11.x releases
-stay on npm and keep working, so leaving it out breaks no installed code; it is not a breaking
-change in the sense of this section (decided 2026-11-12).
+`@kgdiff/core` exports since 0.11.1 and on which no other package depends. Its releases stay on
+npm and keep working, so leaving it out breaks no installed code; it is not a breaking change in
+the sense of this section (decided 2026-11-12). It was removed from the repository, and no
+longer published, in 0.12.1 (decided 2026-11-13).
 0.12 is the last release with breaking changes. [Versioning](../versioning.md) says what the
 version number promises from then on.
 

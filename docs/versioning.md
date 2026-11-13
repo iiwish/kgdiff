@@ -36,7 +36,7 @@ them.
   (the JavaScript helpers of `kgdiff_core::js` other than `Value`, `Object`, `JsStr`, `json`,
   `IndexMap` and `IndexSet`; the modules `canonical`, `text` and `util`; `kgdiff_report`'s
   `locale`, `model` and `width`; every module of the `kgdiff` crate except `cli`, `io`, `system`
-  and `testing`). Methods added to a trait a host implements (`kgdiff::io::CliIo`) come with a
+  and `testing`). Those four are experimental ([below](#experimental-apis)). Methods added to a trait a host implements (`kgdiff::io::CliIo`) come with a
   default implementation. One dependency's types are part of the API: `IndexMap` and
   `IndexSet` are `indexmap` 2's, so a new major version of `indexmap` would be a major release
   of kgdiff.
@@ -76,9 +76,17 @@ variant of one of them is a breaking change.
 
 ## Experimental APIs
 
-An API marked `@experimental` in its documentation may change in a minor release. Before 1.0 the
-renderer's layers (`addLayer`), the node shapes of `@kgdiff/scene` and the report's `shapes`
-carry the mark; 1.0 removes it, and they are covered from then on.
+An API marked `@experimental` in its documentation may change in a minor release, from 1.0 on
+too. These are the renderer's `addLayer`, `LayerView` and `RendererLayer`, the node shapes of
+`@kgdiff/scene`, `shape1` and `shape2`, and the report's `shapes`. They are designed for embedding
+hosts, and no host has used them yet. The mark stays until one has: then a minor release removes
+it, and removing the mark is an addition, not a breaking change.
+
+The embedding interface of the `kgdiff` crate is experimental too: its `cli`, `io`, `system` and
+`testing` modules may change in a minor release. `CliIo` still has the shape of its JavaScript
+origin (`columns() -> Option<f64>`, `now() -> io::Result<String>`, paths as `&str`), and no
+external host uses it. Once the Python bindings have, these modules join the promise.
+`kgdiff-core`, `kgdiff-formats`, `kgdiff-layout` and `kgdiff-report` are not affected.
 
 ## Platforms
 
@@ -91,8 +99,9 @@ carry the mark; 1.0 removes it, and they are covered from then on.
 ## Deprecation
 
 Something deprecated keeps working until the next major release (before 1.0: the next minor),
-and its documentation names the replacement. `@kgdiff/formats` is deprecated in favour of
-`@kgdiff/core`; its 0.x releases stay on npm, and no 1.0 is published for it.
+and its documentation names the replacement. `@kgdiff/formats` was deprecated in
+0.11.1 in favour of `@kgdiff/core`, which has the same functions; it is no longer published from
+0.12.1 on, and its earlier releases stay on npm.
 
 ## Security fixes
 

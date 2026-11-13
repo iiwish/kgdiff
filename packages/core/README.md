@@ -57,8 +57,8 @@ hashGraph(undone) === hashGraph(result.before); // true
 
 - Graph files (RDF, OBO, JSON graph formats): `parseGraph(text, { filename })` detects the format
   and gives the `graph` with the `format` read and `warnings`; `detectFormat`, `compactIri` and
-  `FORMAT_EXTENSIONS` too. They are the functions and types of `@kgdiff/formats` (deprecated):
-  moving off it means changing the import path only.
+  `FORMAT_EXTENSIONS` too. They are the functions and types of
+  `@kgdiff/formats`, which stopped at 0.12.0 (see [Versioning](../../docs/versioning.md)).
 - Ids that mean nothing across versions, such as two LLM extraction runs: match by label and
   neighbourhood with `diff(a, b, { match: { strategy: 'similarity' } })`.
 - `formatHunk(hunk, result, 'zh-CN')` gives Chinese titles.

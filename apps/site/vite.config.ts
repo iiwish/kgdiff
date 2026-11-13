@@ -83,7 +83,6 @@ export default defineConfig({
             .find((m) => m !== null);
           if (data) return `assets/data-${data[1]}-${data[2]}-[hash].js`;
           if (has('/crates/kgdiff/tests/snapshots/')) return 'assets/cli-output-[hash].js';
-          if (has('/packages/formats/')) return 'assets/formats-[hash].js';
           if (has('/packages/viewer/src/element.ts')) return 'assets/viewer-[hash].js';
           if (has('/packages/core/') || has('/packages/layout/')) return 'assets/engine-[hash].js';
           if (chunk.name === 'preload-helper') return 'assets/shared-[hash].js';

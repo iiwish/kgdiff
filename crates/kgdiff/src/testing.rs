@@ -1,3 +1,8 @@
+//! **Experimental.** This module may change in a minor release: the embedding interface of the
+//! `kgdiff` crate still has the shape of its JavaScript origin, and no external host uses it yet.
+//! It joins the semver promise once the Python bindings have used it
+//! (see `docs/versioning.md`, "Experimental APIs").
+//!
 //! An in-memory [`CliIo`] for tests and examples:
 //! captured streams, files in memory, writes kept apart, a fixed clock, injected viewer
 //! bundles, links and an optional case-insensitive file system.

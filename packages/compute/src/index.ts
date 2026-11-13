@@ -24,8 +24,7 @@
  * `@kgdiff/core`'s `diff`, `matchNodes`, `textSimilarity`, `parseGraph`, `detectFormat` and
  * `compactIri` and `@kgdiff/layout`'s layouts call the asynchronous functions of this package. The
  * parsers' types (`ParseOptions`, `ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are
- * exported here (`@kgdiff/core`'s declarations); `@kgdiff/formats` (deprecated) re-exports them
- * and its functions call this package's.
+ * exported here (`@kgdiff/core`'s declarations).
  */
 import {
   type DiffJSON,

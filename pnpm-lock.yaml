@@ -124,15 +124,6 @@ importers:
         specifier: workspace:*
         version: link:../compute
 
-  packages/formats:
-    dependencies:
-      '@kgdiff/compute':
-        specifier: workspace:*
-        version: link:../compute
-      '@kgdiff/core':
-        specifier: workspace:*
-        version: link:../core
-
   packages/g6:
     dependencies:
       '@kgdiff/core':

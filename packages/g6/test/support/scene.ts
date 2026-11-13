@@ -1,12 +1,11 @@
 /// <reference types="node" />
 /**
- * The real pipeline for tests: example dataset → formats `parseGraph` → core `diff` →
+ * The real pipeline for tests: example dataset → core `parseGraph` → core `diff` →
  * layout `layoutDiff` → scene `buildScene`. Diff and layout are memoized per dataset.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { type DiffOptions, type DiffResult, diff } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { type DiffOptions, type DiffResult, diff, parseGraph } from '@kgdiff/core';
 import { type LayoutResult, layoutDiff } from '@kgdiff/layout';
 import { buildScene, type Scene, type SceneOptions } from '@kgdiff/scene';
 

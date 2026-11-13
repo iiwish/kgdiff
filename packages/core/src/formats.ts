@@ -2,8 +2,8 @@
  * The types of kgdiff's parsers, and the file extensions `detectFormat` knows. Values: only the
  * `FORMAT_EXTENSIONS` constant, so the package's entry exports it without loading the parsers
  * (`parseGraph`, `detectFormat` and `compactIri` load `@kgdiff/compute` on the first call).
- * `@kgdiff/compute` re-exports these declarations, and `@kgdiff/formats` (deprecated) re-exports
- * compute's: every package has the same types and the same `FORMAT_EXTENSIONS` object.
+ * `@kgdiff/compute` re-exports these declarations: both packages have the same types and the same
+ * `FORMAT_EXTENSIONS` object.
  */
 import type { GraphInput } from './types.js';
 

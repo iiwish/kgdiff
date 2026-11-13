@@ -7,7 +7,8 @@
 //! This library is the command line without the process around it: [`cli::run`] runs a command
 //! against any [`io::CliIo`], so that a host can embed kgdiff and tests can run it in memory
 //! with [`testing::MemoryIo`]; [`system::SystemIo`] is the real process. The same arguments give
-//! the same messages, outputs and exit codes on Linux, macOS and Windows.
+//! the same messages, outputs and exit codes on Linux, macOS and Windows. The modules `cli`, `io`,
+//! `system` and `testing` are experimental and may change in a minor release.
 //!
 //! ```
 //! use kgdiff::testing::MemoryIo;

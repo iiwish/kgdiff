@@ -216,7 +216,7 @@ describe.runIf(enabled)('the WebAssembly build reproduces the corpus', () => {
     });
   });
 
-  it('the other inputs of the parsers give what @kgdiff/formats’ TypeScript parsers gave', () => {
+  it('the other inputs of the parsers give what the TypeScript parsers gave', () => {
     // Kept in typescript-engine.json since those parsers are deleted (0.11).
     for (const { text, options, result } of typescript.parse) {
       expect(parseGraphSync(text, options as ParseOptions)).toEqual(result);

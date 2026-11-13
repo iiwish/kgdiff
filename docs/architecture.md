@@ -35,14 +35,13 @@ re-run force layout so everything jumps. kgdiff is built around four ideas:
 - **Accessible by construction.** Contrast is tested, color is never the only cue, motion
   respects `prefers-reduced-motion`, everything is keyboard-operable.
 - **Small and fast.** Budgets below are enforced by benchmarks and size checks, or measured and recorded (the engine's, since 0.11).
-- **Isomorphic.** `core`, `formats`, `layout` and `scene` run unchanged in browsers, Node,
+- **Isomorphic.** `core`, `layout` and `scene` run unchanged in browsers, Node,
   Deno, Bun and workers.
 
 ## Packages
 
 ```
 @kgdiff/core       model and read path: normalize, JSON transports, delta, hunk titles; diff  (compute)
-@kgdiff/formats    deprecated: re-exports the parsers of @kgdiff/compute and their types      (compute)
 @kgdiff/layout     layout document, radii, label widths; stable union layout                  (compute)
 @kgdiff/compute    kgdiff's Rust engine in WebAssembly: diff, parsers, layout
 @kgdiff/scene      diff semantics → visual primitives: tokens, encodings, replay, focus
@@ -73,13 +72,11 @@ few functions they call instead of importing its types (`compute`'s tests check 
 viewer loads it on demand too (layouts, diffs, and the parsers for text sources), so a bundle
 that only reads reports contains no WebAssembly. The parsers' types (`ParseOptions`,
 `ParseResult`, `FormatId`, …) and `FORMAT_EXTENSIONS` are defined by `@kgdiff/core` and
-re-exported by `@kgdiff/compute`. `@kgdiff/formats` (deprecated, not published from 1.0 on) is not
-in the graph either: it depends on `@kgdiff/compute`,
-re-exports those and calls its parsers, and no other package depends on it. Since 0.11
+re-exported by `@kgdiff/compute`. Since 0.11
 TypeScript keeps only what reads a computed diff synchronously (`tests/read-path.ts`); the
 engine itself is the Rust one. `@kgdiff/cli` is not in the graph: it holds no TypeScript compute, only a launcher of the Rust
 `kgdiff` binary. The Rust crates (`kgdiff-core`, `kgdiff-formats`, `kgdiff-layout`,
-`kgdiff-report`) implement the same contracts as `core`, `formats` and `layout`; the
+`kgdiff-report`) implement the same contracts as `core` and `layout`; the
 [conformance corpus](https://github.com/iiwish/kgdiff/blob/main/conformance/README.md) keeps both
 byte-identical (RFC 0002, `docs/rfcs/0002-rust-compute-core.md`).
 
@@ -115,7 +112,6 @@ hashes in the delta check it, so a report opens the same way in every browser.
 | Package  | Main API                                                                                                                                                                                                  |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | core     | `normalize`, `diff`, `matchNodes`, `applyDelta`, `invertDelta`, `hashGraph`, `diffToJSON`/`diffFromJSON`, `packDiffJSON`/`unpackDiffJSON`, `formatHunk`, `facetLabel`, `textSimilarity`, `predicateLabel` |
-| formats  | `parseGraph`, `detectFormat`, `compactIri`                                                                                                                                                                |
 | layout   | `layoutDiff`, `extendLayout`, `nodeRadius`, `estimateLabelWidth`, `layoutToJSON`/`layoutFromJSON`                                                                                                         |
 | scene    | `getTheme`, `buildScene`, `createVisualResolver`, `createViewState`, `computeFocus`, `frameBounds`, `contrastRatio`, `hunkFamily`; experimental `shapes` option and outline functions                     |
 | renderer | `createRenderer` (`setFrame`, `camera`, `pick`, `toDataURL`; experimental `addLayer`: the host draws under and over the graph), `createMinimap`, `labelFootprint`                                         |

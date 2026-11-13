@@ -1,3 +1,8 @@
+//! **Experimental.** This module may change in a minor release: the embedding interface of the
+//! `kgdiff` crate still has the shape of its JavaScript origin, and no external host uses it yet.
+//! It joins the semver promise once the Python bindings have used it
+//! (see `docs/versioning.md`, "Experimental APIs").
+//!
 //! Everything the CLI needs from the outside world, behind a trait so that
 //! [`crate::cli::run`] runs in memory in tests (captured streams, in-memory files, a fixed clock,
 //! injected viewer bundles) and for real in the binary ([`crate::system::SystemIo`]).

@@ -234,7 +234,6 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 | [`@kgdiff/scene`](packages/scene)       | 把差异语义转成视觉图元：设计令牌、编码规则、回放时间线、聚焦。         |
 | [`@kgdiff/renderer`](packages/renderer) | Canvas 2D 引擎：平滑镜头、细节分级、标签布局、拾取、滑动对比、小地图。 |
 | [`@kgdiff/g6`](packages/g6)             | 在 AntV G6 v5 中渲染 kgdiff 场景。                                     |
-| [`@kgdiff/formats`](packages/formats)   | 0.11 起弃用：已移到 `@kgdiff/core`（函数相同）。                       |
 
 | crates.io                                 |                                                      |
 | ----------------------------------------- | ---------------------------------------------------- |
@@ -261,7 +260,7 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 
 ## 路线图
 
-**0.11**（2026-11-12）把所有计算都搬到了 Rust 引擎上：命令行原生运行，其他一切通过 `@kgdiff/compute`。**0.12** 为 1.0 整理公开 API：Rust API 给 1.0 之后的新增留出位置，让它们都不需要升主版本，JavaScript API 只保留有文档的部分（[迁移到 0.12](docs/zh/guide/migrating-to-0.12.md)），它是最后一个带破坏性变更的版本。**1.0** 就是 0.12 在只发补丁版本的两周之后原样发布，并把实验性接口转为稳定（[RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10)、[版本约定](docs/zh/versioning.md)）。
+**0.11**（2026-11-12）把所有计算都搬到了 Rust 引擎上：命令行原生运行，其他一切通过 `@kgdiff/compute`。**0.12** 为 1.0 整理公开 API：Rust API 给 1.0 之后的新增留出位置，让它们都不需要升主版本，JavaScript API 只保留有文档的部分（[迁移到 0.12](docs/zh/guide/migrating-to-0.12.md)），它是最后一个带破坏性变更的版本，已于 2026-11-13 发布。**1.0** 就是 0.12 原样发布，条件是只发补丁版本的稳定期满两周，并且至少有一个真实宿主在 0.12 上跑通。实验性接口是为嵌入宿主设计的，1.0 之后继续保持实验性，等宿主用过再说（[RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10)、[版本约定](docs/zh/versioning.md#实验性-api)）。
 
 1.0 之后，只做增量添加：读取 GraphML 和 GEXF · 导出 KGCL 和 RDF Patch · MCP 服务，让 Agent 审阅自己对图谱的修改 · Python 与 Jupyter · 面向嵌入宿主的单图朴素视图和分组背景（[RFC 0003](docs/rfcs/0003-embedding-hosts.md)）· Cytoscape.js 与 Sigma.js 适配器 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器。进展和可以认领的事项见[路线图 issue](https://github.com/iiwish/kgdiff/issues/21)。
 

@@ -1,3 +1,8 @@
+//! **Experimental.** This module may change in a minor release: the embedding interface of the
+//! `kgdiff` crate still has the shape of its JavaScript origin, and no external host uses it yet.
+//! It joins the semver promise once the Python bindings have used it
+//! (see `docs/versioning.md`, "Experimental APIs").
+//!
 //! The entry point: parse the command line, dispatch, and turn every failure into a
 //! friendly message on stderr and an exit code.
 

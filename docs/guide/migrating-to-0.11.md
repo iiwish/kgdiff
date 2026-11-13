@@ -108,8 +108,8 @@ means changing the import path only: `@kgdiff/formats` → `@kgdiff/core`. For t
 (`parseGraphSync` and the others, after `init()`), use `@kgdiff/compute`. The types and
 `FORMAT_EXTENSIONS` are the same declarations in every package: `@kgdiff/core` defines them,
 `@kgdiff/compute` re-exports them, and so does `@kgdiff/formats`; no other kgdiff package depends
-on it since 0.11.1. 1.0 is not published for `@kgdiff/formats`: 0.11.x stays on npm and keeps
-working, so change the import before you upgrade the other packages to 1.0. `@kgdiff/cli` is no longer a
+on it since 0.11.1. `@kgdiff/formats` is not published from 0.12.1 on: its releases stay on npm and keep
+working, so change the import before you upgrade the other packages. `@kgdiff/cli` is no longer a
 JavaScript library since 0.10: use `@kgdiff/compute` for the computations, the kgdiff CLI or the
 `kgdiff-report` crate for reports.
 

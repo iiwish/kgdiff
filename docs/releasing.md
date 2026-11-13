@@ -45,7 +45,7 @@ The TypeScript counterpart of the `semver` job's cargo-semver-checks is a report
 point, committed under `packages/<name>/api/` (`index.api.md` for `.`, `elements-root.api.md` for
 `./elements/root`, …). `scripts/api-report.ts` writes them with API Extractor from `dist/*.d.ts`:
 every `exports` entry with a `types` condition, plus the modules the viewer's standalone bundles
-are built from. `@kgdiff/formats` (deprecated, no 1.0) and `@kgdiff/cli` (a command) have none.
+are built from. `@kgdiff/cli` (a command) has none.
 The `check` job runs `pnpm api:check` after `pnpm build`, once (Linux, Node 24), and fails when
 a report differs from the build. Unlike cargo-semver-checks it compares with the commit, not with
 the last release, so a report that changed in a pull request still differs from the last
@@ -202,7 +202,7 @@ be published twice or removed. Find out what is out before doing anything else:
 ```sh
 # npm, at the official registry (a mirror lags; so does the registry itself for a few minutes
 # after a publish, when one query may say 200 and the next 404)
-for p in core formats layout scene renderer viewer g6 cli compute; do
+for p in core layout scene renderer viewer g6 cli compute; do
   curl -s -o /dev/null -w "$p %{http_code}\n" "https://registry.npmjs.org/@kgdiff/$p/<version>"
 done
 curl -s https://crates.io/api/v1/crates/kgdiff-core | jq -r .crate.max_version

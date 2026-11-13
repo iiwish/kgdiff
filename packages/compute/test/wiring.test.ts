@@ -1,5 +1,5 @@
 /**
- * How `@kgdiff/core`, `@kgdiff/formats` and `@kgdiff/layout` run on this package since 0.11:
+ * How `@kgdiff/core` and `@kgdiff/layout` run on this package since 0.11:
  *
  * - their asynchronous functions give what the `*Sync` functions here give, and what the
  *   TypeScript engine they replaced gave (the corpus, and `typescript-engine.json` for inputs it
@@ -12,18 +12,20 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
+  compactIri,
   type DiffOptions,
   type DiffResult,
+  detectFormat,
   diff,
   diffFromJSON,
   diffToJSON,
   type GraphInput,
   matchNodes,
   normalize,
+  parseGraph,
   textSimilarity,
 } from '@kgdiff/core';
 import { readComputedDiff } from '@kgdiff/core/computed';
-import { compactIri, detectFormat, parseGraph } from '@kgdiff/formats';
 import {
   extendLayout,
   layoutAfter,
