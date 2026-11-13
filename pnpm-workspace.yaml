@@ -10,3 +10,7 @@ overrides:
   # fixes the dev server advisories (fixed in vite 6.4.4) or esbuild's (fixed in 0.25.0, which
   # vite 6.4 requires). Drop this once a stable VitePress depends on a patched vite.
   vitepress>vite: 6.4.5
+  # API Extractor (development only: the API reports) pins minimatch 10.2.3, which has a denial of
+  # service advisory fixed in 11.0.1. API Extractor calls only `minimatch(name, pattern)`, which
+  # 11 keeps. Drop this once API Extractor depends on a patched minimatch.
+  "@microsoft/api-extractor>minimatch": 11.0.3

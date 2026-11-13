@@ -14,6 +14,11 @@ describe('parseColor', () => {
     expect(parseColor('rgba(52,211,153,0.16)')).toEqual([52, 211, 153, 0.16]);
     expect(parseColor('rgb(255 0 0 / 50%)')).toEqual([255, 0, 0, 0.5]);
     expect(parseColor('rgb(100%, 0%, 0%)')).toEqual([255, 0, 0, 1]);
+    expect(parseColor('rgb(   1, 2, 3   )')).toEqual([1, 2, 3, 1]);
+  });
+
+  it('rejects a long unclosed rgb( in one pass', () => {
+    expect(parseColor(`rgb(${' '.repeat(100_000)}`)).toBeNull();
   });
 
   it('returns null for anything else', () => {
