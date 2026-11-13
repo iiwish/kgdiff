@@ -20,14 +20,14 @@ kgdiff 的引擎是一组 Rust crate，画面是一组 npm 包。本指南跟着
 
 ```toml
 [dependencies]
-kgdiff-core = "0.11"
-kgdiff-layout = "0.11"
-kgdiff-report = "0.11"
+kgdiff-core = "0.12"
+kgdiff-layout = "0.12"
+kgdiff-report = "0.12"
 ```
 
-- **几个 crate 一起升级。** 每个 crate 都要求其他 crate 与自己的版本完全相同（`kgdiff-report` 0.11.1 依赖 `kgdiff-core = "=0.11.1"`），所以 Cargo 会把三者解析到同一个发布版本；如果你写的版本要求之间没有共同的版本，解析会失败。给它们写相同的版本要求，并一起更新。
-- **npm 包与 crate 是同一个版本号**：kgdiff 0.11.1 指的是一套互相一致、一起测试过的包。npm 包装成与 crate 相同的版本（`npm install @kgdiff/viewer@^0.11.1`）。
-- 1.0 之前，次版本可能改动接口。Cargo 里的 `"0.11"` 和 npm 里的 `^0.11.1` 都只在 0.11 之内升级。
+- **几个 crate 一起升级。** 每个 crate 都要求其他 crate 与自己的版本完全相同（`kgdiff-report` 0.12.0 依赖 `kgdiff-core = "=0.12.0"`），所以 Cargo 会把三者解析到同一个发布版本；如果你写的版本要求之间没有共同的版本，解析会失败。给它们写相同的版本要求，并一起更新。
+- **npm 包与 crate 是同一个版本号**：kgdiff 0.12.0 指的是一套互相一致、一起测试过的包。npm 包装成与 crate 相同的版本（`npm install @kgdiff/viewer@^0.12.0`）。
+- 1.0 之前，次版本可能改动接口。Cargo 里的 `"0.12"` 和 npm 里的 `^0.12.0` 都只在 0.12 之内升级。
 - 从服务端传到浏览器的文档各有自己的版本（`kgdiff.report` 1、`kgdiff.diff.packed` 1、`kgdiff.layout` 2），JSON Schema 在 [`@kgdiff/core/schema/`](../formats.md#格式标记与-json-schema) 里。
 
 本页的函数共用这些导入：
