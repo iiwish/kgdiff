@@ -2,7 +2,9 @@
 
 - **Status:** Implemented: 0.11 completed it (phase 5 was complete on `main` on 2026-11-12 and
   kgdiff 0.11.0 was published the same day) and 0.12 (published 2026-11-13) closed it out, with
-  the Rust API and the JavaScript API readied for 1.0 ([Revision 2026-11-12](#revision-2026-11-12)). 0.7.0 shipped the phase 1 to 3 work
+  the Rust API and the JavaScript API readied for 1.0 ([Revision 2026-11-12](#revision-2026-11-12)).
+  **Plan changed 2026-11-14:** 1.0 is no longer 0.12 republished after two weeks; kgdiff stays on 0.x
+  until conditions are met ([Revision 2026-11-14](#revision-2026-11-14), [kgdiff 1.0](#kgdiff-10)). 0.7.0 shipped the phase 1 to 3 work
   and the layout crate, and 0.8.0 the native CLI, the npm launcher and the Action on the binary
   ([Phase 1](#phase-1--conformance-corpus-this-change), [Phase 2 results](#phase-2-results),
   [Phase 3 results](#phase-3-results), [Phase 4 progress](#phase-4-progress)); 0.9.0 and
@@ -11,13 +13,14 @@
   TypeScript compute modules in the browser, with the Rust corpus generator and the migration
   guide. Its sizes and timings were measured once on a quiet machine, and the gaps to the targets
   that 0.11 only measures are listed as work after 0.11
-  ([Phase 5 results](#phase-5-results)). kgdiff 1.0 carries no new code: it is 0.12 with a new version
-  number, after a two-week stable period ([kgdiff 1.0](#kgdiff-10)). The pull requests and commits of every phase are listed in its
+  ([Phase 5 results](#phase-5-results)). (Superseded 2026-11-14: "kgdiff 1.0 carries no new code, after a
+  two-week stable period" no longer holds; 1.0 comes when its conditions are met, not on a date
+  ([kgdiff 1.0](#kgdiff-10)).) The pull requests and commits of every phase are listed in its
   results section.
 - **Date:** 2026-11-06; revised 2026-11-07 after review ([Review](#review)); phase 2 and phase 3
   results, phase 4 progress 2026-11-09; phase 4 complete 2026-11-10; phase 5 moved from 1.0 to 0.11 and 1.0
   defined as a stable 0.11 on 2026-11-11 ([Revision](#revision-2026-11-11)); phase 5 results
-  2026-11-12.
+  2026-11-12; 1.0 made conditional, not a date, 2026-11-14 ([Revision](#revision-2026-11-14)).
 - **Affects:** `@kgdiff/core`, `@kgdiff/formats` (not published since 0.12.1), `@kgdiff/layout` and `@kgdiff/cli`
   (reimplemented in Rust), the viewer's compute add-on, the HTML report, CI and release tooling,
   docs. `@kgdiff/scene`, `@kgdiff/renderer`, `@kgdiff/viewer` and `@kgdiff/g6` stay in TypeScript.
@@ -41,7 +44,7 @@ its own way, and the layout document goes to version 2.
 
 Five phases, each releasable on its own: the corpus; `kgdiff-core`; `kgdiff-formats` with the
 Rust CLI; `kgdiff-layout`; and `@kgdiff/compute` replacing the TypeScript compute code in the
-browser, which is kgdiff 0.11 (1.0 is that release after a stable period, with no new code).
+browser, which is kgdiff 0.11 (the text of 2026-11-11 had 1.0 as that release after a stable period; since 2026-11-14 1.0 is conditional, [Revision 2026-11-14](#revision-2026-11-14)).
 
 ## Motivation
 
@@ -1422,32 +1425,36 @@ differential run no longer exists to compare with.
 
 #### kgdiff 1.0
 
-Added 2026-11-11; the last 0.x minor became 0.12 on 2026-11-12
-([Revision 2026-11-12](#revision-2026-11-12)). kgdiff 1.0 carries **no new code**. It is the last 0.x minor, after its stable
-period, republished unchanged under a new version number; the only difference is that the
-version is 1.0.0. The `@experimental` marks stay (changed 2026-11-13: no host has used those APIs
-yet; [Versioning](../versioning.md#experimental-apis)).
-One package is not republished: the deprecated `@kgdiff/formats`, whose functions and types
+Added 2026-11-11 as "0.11 after a stable period"; became "0.12 after two weeks, with no new
+code" on 2026-11-12. **Rewritten 2026-11-14** ([Revision 2026-11-14](#revision-2026-11-14)): 1.0 is
+no longer a republished 0.12 and has no date. kgdiff stays on 0.x until the conditions below are
+met, and 1.0 is the release after that, whatever 0.x it then follows. (The history of the earlier
+plan is in the revisions below; nothing there is changed.)
+
+The `@experimental` marks stay until a host has used the APIs ([Versioning](../versioning.md#experimental-apis)).
+One package is not published any more: the deprecated `@kgdiff/formats`, whose functions and types
 `@kgdiff/core` exports since 0.11.1 and on which no other package depends. Its releases stay on
-npm and keep working, so leaving it out breaks no installed code; it is not a breaking change in
-the sense of this section (decided 2026-11-12). It was removed from the repository, and no
-longer published, in 0.12.1 (decided 2026-11-13).
-0.12 is the last release with breaking changes. [Versioning](../versioning.md) says what the
-version number promises from then on.
+npm and keep working (decided 2026-11-12; removed from the repository, and no longer published,
+in 0.12.1, decided 2026-11-13).
 
-Conditions for 1.0:
+**Versions before 1.0** follow Cargo's convention for `0.x`: the second number is the major
+version's part and the third the minor's. A 0.12.x patch release carries fixes and additions and
+breaks no public API and changes no output byte; a breaking change waits for 0.13, and breaking
+changes are gathered into one release instead of one per change. From 1.0 on, patches are fixes
+only, minors are additions only, and a major release breaks ([Versioning](../versioning.md)).
 
-1. Two weeks have passed since 0.12 was published, and in that time only patch releases were
-   made, none with a breaking change.
-2. At least one real embedding host runs on 0.12
-   ([RFC 0003](./0003-embedding-hosts.md)).
-3. The gates of [§7](#7-size-and-performance-budgets) as revised on 2026-11-11, which used to be
-   "gates of 1.0", were met in 0.11 and still are in 0.12, and the figures 0.11 only measures (the sizes of the layout
-   and parser modules, `diff` with the transport, memory) were reviewed.
+**Conditions for 1.0** (all five, no date):
 
-If a breaking change cannot be avoided during the stable period, it ships as 0.12 and the two
-weeks start again from there. After 1.0 the public API follows semver; the Python package, parts
-4c and 4d of RFC 0003 and the other items of the roadmap are additive and come after it.
+1. At least one real embedding host (Semlia, [RFC 0003](./0003-embedding-hosts.md)) has run on the
+   current version for a while, about a month.
+2. The experimental APIs have been used by a host and are made stable or fixed.
+3. The Python API is settled, or kgdiff states that only the command line is promised.
+4. The viewer's accessibility review ([issue #16](https://github.com/iiwish/kgdiff/issues/16)) is done.
+5. A while, about two minor releases or a month, has passed without a breaking change.
+
+The gates of [§7](#7-size-and-performance-budgets) as revised on 2026-11-11 were met in 0.11 and
+0.12. After 1.0 the public API follows semver; parts 4c and 4d of RFC 0003 and the other items of
+the roadmap are additive.
 
 ### 10. Risks
 
@@ -1663,6 +1670,28 @@ the command line it ships is already covered by the version promise.
    bundles, which `cargo install kgdiff` covers.
 
 No phase result, measurement, pull request or commit recorded above changed.
+
+### Revision 2026-11-14
+
+The maintainer changed the plan for 1.0. It had been "0.12 republished unchanged, after two
+weeks with only patch releases and a real host" ([Revision 2026-11-12](#revision-2026-11-12)); it
+is now **conditional, with no date**, and kgdiff continues on 0.x until the conditions are met
+([kgdiff 1.0](#kgdiff-10)). Reasons: the project is young (a little over two weeks old); the
+experimental APIs have no host that used them yet, the Python API does not exist, and the
+viewer's accessibility review is not done; and once 1.0 is out, a mistake in any of these
+means kgdiff 2.0 for every package, because everything shares one version.
+
+1. **0.x follows Cargo's convention:** the second number acts as the major, the third as the
+   minor. 0.12.x patch releases may carry fixes and additions, and may not break the public API
+   or change output bytes; breaking changes go into 0.13, gathered together.
+2. **Five conditions for 1.0:** a real host on the current version for about a month; the
+   experimental APIs used and settled; the Python API settled or only the command line
+   promised; the accessibility review done; about two minors or a month without a breaking change.
+3. **Changesets in 0.x:** additions and fixes are `patch`, breaking changes are `minor`;
+   cargo-semver-checks and the API reports in CI stop a break under a `patch` changeset
+   ([releasing.md](../releasing.md)).
+4. **What does not change:** the rules from 1.0 on, the experimental marks, and every phase
+   result, measurement and revision above.
 
 ## Alternatives considered
 

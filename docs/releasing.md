@@ -11,8 +11,10 @@ version, as do the crates.
 ## Day to day
 
 1. A pull request that changes a published package adds a changeset: `pnpm changeset`, pick the
-   bump, write one or two sentences for the changelog. Before 1.0, breaking changes are minor
-   bumps. Docs-, test- and tooling-only changes need no changeset.
+   bump, write one or two sentences for the changelog. Before 1.0 (Cargo's convention for `0.x`):
+   additions and fixes are `patch`, breaking changes are `minor`, and `major` is not used. CI's
+   cargo-semver-checks and the API reports stop a break under a `patch` changeset (below). From
+   1.0 on, fixes are `patch`, additions `minor` and breaking changes `major`. Docs-, test- and tooling-only changes need no changeset.
 2. On every push to `main`, [`release.yml`](../.github/workflows/release.yml) collects the
    pending changesets into a "chore: release packages" pull request that bumps the versions and
    updates each `CHANGELOG.md` (`pnpm version-packages`: `changeset version`, then Biome formats
@@ -54,9 +56,11 @@ lists every change to the public types since then.
 
 A report that changed means the public API changed. An added line is an addition; a removed or
 changed line breaks code that uses it, unless the item is marked `// @experimental`. Before 1.0
-that is a minor release, as any breaking change. From 1.0 on it is a major release of every
-package ([Versioning](./versioning.md)), so a version pull request with a pending `minor` or
-`patch` changeset and a removed or changed line in a report is not merged as it is. 1.0 itself
+that is a `minor` release (0.12 → 0.13), as any breaking change, and a `patch` changeset with a
+removed or changed line in a report is wrong: the line must be an addition, or the changeset
+`minor`. From 1.0 on it is a major release of every package ([Versioning](./versioning.md)), so a
+version pull request with a pending `minor` or `patch` changeset and a removed or changed line in
+a report is not merged as it is. 1.0 itself
 removes the `@experimental` marks of the renderer's layers, the scene's node shapes and the
 report's `shapes`: the `// @experimental` lines go from the reports with them, and from then on
 those items are covered like the rest.

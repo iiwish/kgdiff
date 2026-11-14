@@ -266,9 +266,19 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 
 ## 路线图
 
-**0.11**（2026-11-12）把所有计算都搬到了 Rust 引擎上：命令行原生运行，其他一切通过 `@kgdiff/compute`。**0.12** 为 1.0 整理公开 API：Rust API 给 1.0 之后的新增留出位置，让它们都不需要升主版本，JavaScript API 只保留有文档的部分（[迁移到 0.12](docs/zh/guide/migrating-to-0.12.md)），它是最后一个带破坏性变更的版本，已于 2026-11-13 发布。**1.0** 就是 0.12 原样发布，条件是只发补丁版本的稳定期满两周，并且至少有一个真实宿主在 0.12 上跑通。实验性接口是为嵌入宿主设计的，1.0 之后继续保持实验性，等宿主用过再说（[RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10)、[版本约定](docs/zh/versioning.md#实验性-api)）。
+**0.11**（2026-11-12）把所有计算都搬到了 Rust 引擎上：命令行原生运行，其他一切通过 `@kgdiff/compute`。**0.12**（2026-11-13）为公开 API 的增长做了准备：Rust API 给新增留出位置，加东西不必发破坏性版本，JavaScript API 只保留有文档的部分（[迁移到 0.12](docs/zh/guide/migrating-to-0.12.md)）。
 
-1.0 之后，只做增量添加：读取 GraphML 和 GEXF · 导出 KGCL 和 RDF Patch · MCP 服务，让 Agent 审阅自己对图谱的修改 · Python 与 Jupyter · 面向嵌入宿主的单图朴素视图和分组背景（[RFC 0003](docs/rfcs/0003-embedding-hosts.md)）· Cytoscape.js 与 Sigma.js 适配器 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器。进展和可以认领的事项见[路线图 issue](https://github.com/iiwish/kgdiff/issues/21)。
+**kgdiff 现在是 0.x，1.0 不定日期。** 1.0 之前的版本号按 Cargo 的约定：第二位相当于主版本号，第三位相当于次版本号。补丁版本（0.12.x）可以带修复和新增，不破坏公开 API，不改输出字节；破坏性变更等下一个次版本（0.13），攒起来一起发（[版本约定](docs/zh/versioning.md)）。**1.0** 要等下面五条都满足：
+
+1. 至少一个真实宿主（Semlia）在当前版本上跑了一段时间，约一个月。
+2. 实验性 API 有宿主用过，转正或改好。
+3. Python API 定下来，或者明确只承诺命令行。
+4. 查看器的可访问性审查（[#16](https://github.com/iiwish/kgdiff/issues/16)）做完。
+5. 约两个次版本或一个月内没有破坏性变更。
+
+1.0 之后，补丁版本只修复，次版本只新增，主版本才能破坏。实验性接口是为嵌入宿主设计的，继续保持实验性，等宿主用过再说（[RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10)、[版本约定](docs/zh/versioning.md#实验性-api)）。
+
+接下来都是增量添加，不定先后：读取 GraphML 和 GEXF · 导出 KGCL 和 RDF Patch · MCP 服务，让 Agent 审阅自己对图谱的修改 · Python 与 Jupyter · 面向嵌入宿主的单图朴素视图和分组背景（[RFC 0003](docs/rfcs/0003-embedding-hosts.md)）· Cytoscape.js 与 Sigma.js 适配器 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器。进展和可以认领的事项见[路线图 issue](https://github.com/iiwish/kgdiff/issues/21)。
 
 ## 参与贡献
 

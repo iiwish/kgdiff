@@ -14,6 +14,8 @@
   All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Part 3, the typed graph
   input, is merged for 0.11 ([#98](https://github.com/iiwish/kgdiff/pull/98), 3024eb1; RFC 0002,
   phase 5, moved there from 1.0 on 2026-11-11). Parts 4c and 4d are not started and come after 1.0.
+  1.0 itself has no date since 2026-11-14: it waits for its conditions, one of which is that a
+  host has used the experimental APIs of this RFC ([Revision 2026-11-14](#revision-2026-11-14)).
 - **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
@@ -26,7 +28,7 @@ The first application that embeds kgdiff's crates (an ontology editor: Rust on t
 scene and the renderer in its web pages) checked what it needs against 0.8.0 and found four
 gaps. Each has a workaround, so none blocks it; each will be met again by the next host. This
 RFC says which to close, how, and when, around the work that is already planned
-([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 is 0.12, which readies the public API for 1.0, the Rust API above all, after a stable period):
+([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 has no date and comes when its conditions are met, [RFC 0002, Revision 2026-11-14](./0002-rust-compute-core.md#revision-2026-11-14)):
 
 | Part | What                                                         | Release   | Size   |
 | ---- | ------------------------------------------------------------ | --------- | ------ |
@@ -434,13 +436,13 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
 
 ## Rollout
 
-| Release   | Parts                       | Where                            | Depends on                       |
-| --------- | --------------------------- | -------------------------------- | -------------------------------- |
-| 0.9       | 1, 2 (`report.v1.json`), 4a | Rust crates; `@kgdiff/renderer`  | nothing                          |
-| 0.10      | 4b                          | scene, renderer, g6, viewer      | the Positioning rules accepted   |
-| 0.11      | 3                           | `kgdiff-core`                    | the compact graph representation |
-| 1.0       | none (marks removed)        | the experimental APIs            | 0.11 stable for two weeks        |
-| after 1.0 | 4c, 4d                      | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
+| Release   | Parts                          | Where                            | Depends on                       |
+| --------- | ------------------------------ | -------------------------------- | -------------------------------- |
+| 0.9       | 1, 2 (`report.v1.json`), 4a    | Rust crates; `@kgdiff/renderer`  | nothing                          |
+| 0.10      | 4b                             | scene, renderer, g6, viewer      | the Positioning rules accepted   |
+| 0.11      | 3                              | `kgdiff-core`                    | the compact graph representation |
+| 1.0       | none (marks removed once used) | the experimental APIs            | its conditions (no date)         |
+| after 1.0 | 4c, 4d                         | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
 
 0.9 is the part the first host waits for: with it, its ontology graph and its reports need no
 copy of kgdiff's payload and no second canvas. Each later release adds something its users can
@@ -613,6 +615,16 @@ kgdiff 0.12.0 was published on 2026-11-13. What the RFC delivered, and what it l
   `@kgdiff/scene`, `shape1`, `shape2`, the report's `shapes`), so 1.0 does not remove them; a
   minor release does once a real host has, and removing a mark is an addition
   ([Versioning](../versioning.md#experimental-apis)). This replaces "stable in 1.0" above.
+
+## Revision 2026-11-14
+
+RFC 0002 made 1.0 conditional and dateless ([RFC 0002, Revision 2026-11-14](./0002-rust-compute-core.md#revision-2026-11-14)):
+"0.12 republished after two weeks" is gone, and 0.x continues until a real host has run on the
+current version for about a month, the experimental APIs have been used and settled, and the
+other conditions there are met. For this RFC: the release table's 1.0 row follows those
+conditions, parts 4c and 4d stay unscheduled (4d changes layout bytes, so it cannot be a patch
+release before 1.0), and the experimental marks stay until a host has used the APIs, as
+decided on 2026-11-13.
 
 ## References
 
