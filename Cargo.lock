@@ -550,7 +550,7 @@ dependencies = [
 
 [[package]]
 name = "kgdiff"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "base64",
  "flate2",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "kgdiff-core"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "divan",
  "flate2",
@@ -584,7 +584,7 @@ dependencies = [
 
 [[package]]
 name = "kgdiff-formats"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "kgdiff-core",
  "oxrdf",
@@ -593,7 +593,7 @@ dependencies = [
 
 [[package]]
 name = "kgdiff-layout"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "divan",
  "icu_properties",
@@ -604,7 +604,7 @@ dependencies = [
 
 [[package]]
 name = "kgdiff-report"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "base64",
  "flate2",
@@ -617,7 +617,7 @@ dependencies = [
 
 [[package]]
 name = "kgdiff-wasm"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "getrandom 0.3.4",
  "js-sys",
@@ -1293,7 +1293,7 @@ checksum = "3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc"
 
 [[package]]
 name = "xtask"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "base64",
  "flate2",
