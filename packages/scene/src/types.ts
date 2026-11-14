@@ -139,7 +139,7 @@ export type NodeRole =
  * (docs/visual-language.md §Shape says what kind). Every shape fits the square of half side `r`
  * around the node's center, so the layout does not depend on it.
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export type NodeShape = 'circle' | 'square' | 'diamond' | 'hexagon';
 
@@ -179,7 +179,7 @@ export interface SceneNode {
   /**
    * From `SceneOptions.shapes`; absent means a circle.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   readonly shape?: NodeShape;
   /**
@@ -307,7 +307,7 @@ export interface Scene {
    * The entries of `SceneOptions.shapes` in use, in their order, for legends. Absent without
    * `shapes` or when no node has one of its types.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   readonly shapes?: readonly SceneShape[];
 }
@@ -330,7 +330,7 @@ export interface SceneOptions {
    * its types (the after version's; the before version's for a removed node); with none, a
    * circle. A change of type does not animate the shape.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   readonly shapes?: Readonly<Record<string, NodeShape>>;
 }
@@ -473,7 +473,7 @@ export interface NodeVisual {
    * Absent means `circle`; a renderer that does not read it draws circles. The ring, the light
    * halo, the pulse and the ghost's dashes follow the outline; the dark glow stays radial.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   shape?: NodeShape;
 }
@@ -491,13 +491,13 @@ export interface EdgeVisual {
    * Shapes of the endpoints, whose outlines at size `r1` / `r2` the line stops at. Absent means
    * `circle`.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   shape1?: NodeShape;
   /**
    * The shape of the endpoint the line stops at, as `shape1` is the one it starts from.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   shape2?: NodeShape;
   /** See the curve convention above. */
@@ -562,13 +562,13 @@ export interface GlyphVisual {
   /**
    * Shapes of the endpoints, like `EdgeVisual.shape1` / `shape2`.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   shape1?: NodeShape;
   /**
    * The shape of the endpoint the line stops at, as `shape1` is the one it starts from.
    *
-   * @experimental Becomes stable in 1.0.
+   * @experimental Stays experimental after 1.0.
    */
   shape2?: NodeShape;
   color: string;

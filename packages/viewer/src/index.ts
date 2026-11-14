@@ -62,7 +62,7 @@ export type ViewerLegend = 'auto' | 'full' | 'mini' | 'none';
  * What `<kgdiff-stage>`'s `addLayer` takes, and what a layer is told about its frame: the
  * renderer's types (`@kgdiff/renderer`), where the rules for layers are documented.
  *
- * @experimental New in 0.9 (RFC 0003, part 4a); stable in 1.0.
+ * @experimental New in 0.9 (RFC 0003, part 4a); stays experimental after 1.0.
  */
 export type { LayerView, RendererLayer } from '@kgdiff/renderer';
 export type { NodeShape } from '@kgdiff/scene';
@@ -175,7 +175,7 @@ export interface ReportPayload {
      * this order, among its types; the legend lists those in use. Entries with a shape this
      * viewer does not know are left out, with a warning.
      *
-     * @experimental Becomes stable in 1.0.
+     * @experimental Stays experimental after 1.0.
      */
     readonly shapes?: Readonly<Record<string, NodeShape>>;
   };
@@ -509,8 +509,8 @@ export interface KgdiffStageElement extends KgdiffBoundElement {
    * without a `draw` function or with another `order`. `<kgdiff-viewer>`'s built-in stage has
    * no such method.
    *
-   * @experimental New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes
-   * stable.
+   * @experimental New in 0.9 (RFC 0003, part 4a); experimental, and stays so
+   * after 1.0.
    */
   addLayer(layer: RendererLayer): () => void;
 }

@@ -5,7 +5,6 @@ The CLI and the viewer are built from packages you can use directly:
 | Package            | What it does                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------ |
 | `@kgdiff/core`     | The diff model and the parsers: parse, normalize, match, classify, hunks, invertible deltas.           |
-| `@kgdiff/formats`  | Deprecated since 0.11: moved to `@kgdiff/core`, which has the same functions and types.                |
 | `@kgdiff/layout`   | A deterministic, label-aware layout that both versions share.                                          |
 | `@kgdiff/scene`    | Turns a diff into visual primitives: design tokens, encodings, replay timeline.                        |
 | `@kgdiff/renderer` | A Canvas 2D renderer: camera, level of detail, labels, picking, minimap.                               |
@@ -19,8 +18,8 @@ you pass text and objects in and get objects out. Since 0.11, computing (`diff`,
 `textSimilarity`, `parseGraph`, `detectFormat`, `layoutDiff`, `extendLayout`) runs on
 `@kgdiff/compute` and is asynchronous; reading and applying (`normalize`, `hashGraph`,
 `diffFromJSON`, `applyDelta`, `formatHunk`, `layoutFromJSON`, …) stays synchronous. Upgrading
-from 0.10: [Migrating to 0.11](./migrating-to-0.11.md). `@kgdiff/formats` is deprecated: its
-parsers are in `@kgdiff/core` since 0.11.1, so moving off it means changing the import path only.
+from 0.10: [Migrating to 0.11](./migrating-to-0.11.md). The parsers of `@kgdiff/formats`, which is no longer published from 0.12.1 on, are in
+`@kgdiff/core` since 0.11.1; moving off it means changing the import path only.
 
 The rule: the model packages (`@kgdiff/core`, `@kgdiff/layout`) give asynchronous entries that
 load the engine on the first call. For the synchronous API, for choosing where the `.wasm` files

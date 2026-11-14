@@ -5,7 +5,7 @@
  * `matchNodes` and `textSimilarity` run kgdiff's engine compiled to WebAssembly
  * (`@kgdiff/compute`, loaded with a dynamic `import()` on first use, so a bundle that only reads
  * diffs never contains it) and are asynchronous, and so are the parsers, `parseGraph`, `detectFormat`
- * and `compactIri` (since 0.11.1, the same functions as `@kgdiff/formats`, deprecated). What stays
+ * and `compactIri` (since 0.11.1, the functions that `@kgdiff/formats` had). What stays
  * in TypeScript is the model and the read path, synchronous, in dedicated modules
  * (`tests/read-path.ts` lists them):
  *
@@ -291,8 +291,7 @@ export function facetLabel(kind: FacetKind, locale?: Locale): string {
  * multi-valued fields as sorted arrays. Linear in the input size (plus sorting the output).
  *
  * Asynchronous: kgdiff's parsers run it (`@kgdiff/compute`'s `formats` module, loaded and
- * compiled on the first call), so the result is the kgdiff CLI's. Since 0.11.1; the same function
- * as `parseGraph` of `@kgdiff/formats` (deprecated). After `await init()` of `@kgdiff/compute`,
+ * compiled on the first call), so the result is the kgdiff CLI's. Since 0.11.1. After `await init()` of `@kgdiff/compute`,
  * its `parseGraphSync` gives the same result synchronously.
  */
 export async function parseGraph(text: string, options: ParseOptions = {}): Promise<ParseResult> {
@@ -314,8 +313,7 @@ export async function parseGraph(text: string, options: ParseOptions = {}): Prom
  * recognisably unsupported formats (OWL/XML, OWL Functional / Manchester Syntax, GraphML,
  * GEXF, other XML) and for unrecognisable text.
  *
- * Asynchronous, like `parseGraph` (since 0.11.1; the same function as `detectFormat` of
- * `@kgdiff/formats`). `detectFormatSync` of `@kgdiff/compute` after its `init()`.
+ * Asynchronous, like `parseGraph` (since 0.11.1). `detectFormatSync` of `@kgdiff/compute` after its `init()`.
  */
 export async function detectFormat(text: string, filename?: string): Promise<FormatId> {
   return (await compute()).detectFormat(text, filename);
@@ -330,8 +328,7 @@ export async function detectFormat(text: string, filename?: string): Promise<For
  * one namespace, names from `prefixes` win over well-known ones. Returns `iri` unchanged when
  * nothing matches. For display only: node ids keep full IRIs.
  *
- * Asynchronous, like `parseGraph` (since 0.11.1; the same function as `compactIri` of
- * `@kgdiff/formats`). `compactIriSync` of `@kgdiff/compute` after its `init()`.
+ * Asynchronous, like `parseGraph` (since 0.11.1). `compactIriSync` of `@kgdiff/compute` after its `init()`.
  */
 export async function compactIri(
   iri: string,

@@ -61,7 +61,7 @@ In short, after `diff(parse(before), parse(after), meta.options)`:
 - `notes` record the parser conventions each file relies on.
 
 All five files were checked against an independent re-implementation of docs/algorithms.md and
-against the `@kgdiff/core` + `@kgdiff/formats` sources, including variants of the text-similarity
+against the `@kgdiff/core` sources, including variants of the text-similarity
 details (set vs multiset bigrams, stop-word handling) for the similarity-matched datasets.
 
 ## Synthetic graphs

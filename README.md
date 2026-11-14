@@ -278,7 +278,6 @@ kgdiff does not reason over OWL axioms: for axiom-level review, run `robot diff`
 | [`@kgdiff/scene`](packages/scene)       | Diff semantics → visual primitives: design tokens, encodings, replay timeline, focus. |
 | [`@kgdiff/renderer`](packages/renderer) | Canvas 2D engine: smooth camera, LOD, label placement, picking, swipe, minimap.       |
 | [`@kgdiff/g6`](packages/g6)             | Render kgdiff scenes inside AntV G6 v5 graphs.                                        |
-| [`@kgdiff/formats`](packages/formats)   | Deprecated since 0.11: moved to `@kgdiff/core` (same functions).                      |
 
 | crates.io                                 |                                                                        |
 | ----------------------------------------- | ---------------------------------------------------------------------- |
@@ -313,9 +312,11 @@ The same documentation, in English and Chinese, is published at
 else through `@kgdiff/compute`. **0.12** prepares the public API for 1.0: the Rust API makes room
 for the additions after 1.0, so that they need no major release, and the JavaScript API keeps
 only what is documented ([Migrating to 0.12](docs/guide/migrating-to-0.12.md)); it is the last
-release with breaking changes. **1.0** is 0.12 unchanged after two weeks with only patch
-releases, with its experimental APIs declared stable
-([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10), [Versioning](docs/versioning.md)).
+release with breaking changes, and was published on 2026-11-13. **1.0** is 0.12 unchanged,
+once two weeks with only patch releases have passed and at least one real host runs on 0.12.
+The experimental APIs, designed for embedding hosts, stay experimental after 1.0 until a host has
+used them ([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10),
+[Versioning](docs/versioning.md#experimental-apis)).
 
 After 1.0, additive: GraphML and GEXF input · KGCL and RDF Patch export · an MCP server, so
 agents can review the graph edits they make · Python and Jupyter · a plain view of one graph and

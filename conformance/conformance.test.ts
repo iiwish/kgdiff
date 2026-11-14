@@ -17,7 +17,7 @@
  * and so does the report payload: `report.json` with the packed diff it was recorded without.
  *
  * It imports only the read path (`tests/read-path.ts`, `keep`, through the packages' entries),
- * never the compute code or `@kgdiff/formats`. Whether the corpus is up to date with the Rust
+ * never the compute code. Whether the corpus is up to date with the Rust
  * implementation is checked by `cargo xtask conformance --check` and `cargo test`.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';

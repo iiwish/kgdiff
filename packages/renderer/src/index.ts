@@ -91,8 +91,8 @@ export interface RendererEvents {
 /**
  * What a layer is told about the frame it draws into.
  *
- * @experimental New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes
- * stable.
+ * @experimental New in 0.9 (RFC 0003, part 4a); experimental, and stays so
+ * after 1.0.
  */
 export interface LayerView {
   /** The camera of this frame (a copy: it does not follow later camera moves). */
@@ -149,8 +149,8 @@ export interface LayerView {
  * an `under` layer that halo shows as a faint outline around the text; soft tints, such as the
  * theme's `soft` colors (about 10% alpha), keep it unnoticeable.
  *
- * @experimental New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes
- * stable.
+ * @experimental New in 0.9 (RFC 0003, part 4a); experimental, and stays so
+ * after 1.0.
  */
 export interface RendererLayer {
   /** Read when the layer is added. */
@@ -197,8 +197,8 @@ export interface Renderer {
    * frame. Adding a layer twice draws it twice. Throws `KgdiffError('invalid-input')` for a
    * layer without a `draw` function or with another `order`.
    *
-   * @experimental New in 0.9 (RFC 0003, part 4a); experimental until 1.0, when it becomes
-   * stable.
+   * @experimental New in 0.9 (RFC 0003, part 4a); experimental, and stays so
+   * after 1.0.
    */
   addLayer(layer: RendererLayer): () => void;
   on<K extends keyof RendererEvents>(

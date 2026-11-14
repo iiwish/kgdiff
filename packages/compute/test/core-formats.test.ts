@@ -1,21 +1,20 @@
 /**
- * `@kgdiff/core` has, since 0.11.1, everything `@kgdiff/formats` (deprecated) exports, so moving
- * off formats means changing only the import path:
+ * `@kgdiff/core` exports the parsers' functions and types, and `@kgdiff/compute` runs them:
  *
  * - the same names, the same types and the same `FORMAT_EXTENSIONS` object (defined by core,
- *   re-exported by compute and formats), and no WebAssembly in core: its entry loads
- *   `@kgdiff/compute` with a dynamic `import()` only;
- * - `parseGraph`, `detectFormat` and `compactIri` give, byte for byte, what formats' give, on
- *   every file of the example datasets and every input of the conformance corpus, errors included.
+ *   re-exported by compute), and no WebAssembly in core: its entry loads `@kgdiff/compute` with a
+ *   dynamic `import()` only;
+ * - `parseGraph`, `detectFormat` and `compactIri` of core give, byte for byte, what the `*Sync`
+ *   functions of compute give, on every file of the example datasets and every input of the
+ *   conformance corpus, errors included.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type * as Core from '@kgdiff/core';
 import * as core from '@kgdiff/core';
-import type * as Formats from '@kgdiff/formats';
-import * as formats from '@kgdiff/formats';
 import { describe, expect, expectTypeOf, it } from 'vitest';
+import type * as Compute from '../src/index.js';
 import * as compute from '../src/index.js';
 import { enabled } from './support.js';
 
@@ -34,7 +33,7 @@ function inputs(dir: string): string[] {
 const FILES = [...inputs('examples/datasets'), ...inputs('conformance/cases')];
 
 /** What a call gives, as text: its result, or the error it throws (name, code and message). */
-async function outcome(run: () => Promise<unknown>): Promise<string> {
+async function outcome(run: () => unknown): Promise<string> {
   try {
     return JSON.stringify({ result: await run() });
   } catch (error) {
@@ -43,26 +42,27 @@ async function outcome(run: () => Promise<unknown>): Promise<string> {
   }
 }
 
-describe('@kgdiff/core has what @kgdiff/formats exports', () => {
+describe('@kgdiff/core and @kgdiff/compute export the parsers', () => {
   it('every name, with the same types and the same FORMAT_EXTENSIONS', () => {
     const coreNames = new Set(Object.keys(core));
-    expect(Object.keys(formats).filter((name) => !coreNames.has(name))).toEqual([]);
-    expect(core.FORMAT_EXTENSIONS).toBe(formats.FORMAT_EXTENSIONS);
+    for (const name of ['FORMAT_EXTENSIONS', 'compactIri', 'detectFormat', 'parseGraph']) {
+      expect(coreNames.has(name)).toBe(true);
+    }
     expect(core.FORMAT_EXTENSIONS).toBe(compute.FORMAT_EXTENSIONS);
 
-    expectTypeOf<Core.FormatId>().toEqualTypeOf<Formats.FormatId>();
-    expectTypeOf<Core.JsonDialect>().toEqualTypeOf<Formats.JsonDialect>();
-    expectTypeOf<Core.ParseWarningCode>().toEqualTypeOf<Formats.ParseWarningCode>();
-    expectTypeOf<Core.RdfOptions>().toEqualTypeOf<Formats.RdfOptions>();
-    expectTypeOf<Core.JsonOptions>().toEqualTypeOf<Formats.JsonOptions>();
-    expectTypeOf<Core.JsonLdOptions>().toEqualTypeOf<Formats.JsonLdOptions>();
-    expectTypeOf<Core.ParseOptions>().toEqualTypeOf<Formats.ParseOptions>();
-    expectTypeOf<Core.ParseWarning>().toEqualTypeOf<Formats.ParseWarning>();
-    expectTypeOf<Core.ParseResult>().toEqualTypeOf<Formats.ParseResult>();
-    expectTypeOf(core.FORMAT_EXTENSIONS).toEqualTypeOf(formats.FORMAT_EXTENSIONS);
-    expectTypeOf(core.parseGraph).toEqualTypeOf(formats.parseGraph);
-    expectTypeOf(core.detectFormat).toEqualTypeOf(formats.detectFormat);
-    expectTypeOf(core.compactIri).toEqualTypeOf(formats.compactIri);
+    expectTypeOf<Core.FormatId>().toEqualTypeOf<Compute.FormatId>();
+    expectTypeOf<Core.JsonDialect>().toEqualTypeOf<Compute.JsonDialect>();
+    expectTypeOf<Core.ParseWarningCode>().toEqualTypeOf<Compute.ParseWarningCode>();
+    expectTypeOf<Core.RdfOptions>().toEqualTypeOf<Compute.RdfOptions>();
+    expectTypeOf<Core.JsonOptions>().toEqualTypeOf<Compute.JsonOptions>();
+    expectTypeOf<Core.JsonLdOptions>().toEqualTypeOf<Compute.JsonLdOptions>();
+    expectTypeOf<Core.ParseOptions>().toEqualTypeOf<Compute.ParseOptions>();
+    expectTypeOf<Core.ParseWarning>().toEqualTypeOf<Compute.ParseWarning>();
+    expectTypeOf<Core.ParseResult>().toEqualTypeOf<Compute.ParseResult>();
+    expectTypeOf(core.FORMAT_EXTENSIONS).toEqualTypeOf(compute.FORMAT_EXTENSIONS);
+    expectTypeOf(core.parseGraph).toEqualTypeOf(compute.parseGraph);
+    expectTypeOf(core.detectFormat).toEqualTypeOf(compute.detectFormat);
+    expectTypeOf(core.compactIri).toEqualTypeOf(compute.compactIri);
   });
 
   it('core loads no WebAssembly itself: its entry imports @kgdiff/compute dynamically only', () => {
@@ -85,14 +85,14 @@ describe('@kgdiff/core has what @kgdiff/formats exports', () => {
       for (const options of [{ filename }, {}, { filename, rdf: { compactWith: 'declared' } }]) {
         const opts = options as Core.ParseOptions;
         expect(await outcome(() => core.parseGraph(text, opts))).toBe(
-          await outcome(() => formats.parseGraph(text, opts)),
+          await outcome(() => compute.parseGraphSync(text, opts)),
         );
       }
       expect(await outcome(() => core.detectFormat(text, filename))).toBe(
-        await outcome(() => formats.detectFormat(text, filename)),
+        await outcome(() => compute.detectFormatSync(text, filename)),
       );
       expect(await outcome(() => core.detectFormat(text))).toBe(
-        await outcome(() => formats.detectFormat(text)),
+        await outcome(() => compute.detectFormatSync(text)),
       );
     });
 
@@ -105,8 +105,10 @@ describe('@kgdiff/core has what @kgdiff/formats exports', () => {
         'urn:x',
         '',
       ]) {
-        expect(await core.compactIri(iri)).toBe(await formats.compactIri(iri));
-        expect(await core.compactIri(iri, prefixes)).toBe(await formats.compactIri(iri, prefixes));
+        expect(await core.compactIri(iri)).toBe(await compute.compactIriSync(iri));
+        expect(await core.compactIri(iri, prefixes)).toBe(
+          await compute.compactIriSync(iri, prefixes),
+        );
       }
       for (const [text, filename] of [
         ['<Ontology xmlns="http://www.w3.org/2002/07/owl#"/>', 'a.owl'],
@@ -115,9 +117,9 @@ describe('@kgdiff/core has what @kgdiff/formats exports', () => {
       ] as const) {
         const failure = await outcome(() => core.parseGraph(text, { filename }));
         expect(failure).toContain('"error"');
-        expect(failure).toBe(await outcome(() => formats.parseGraph(text, { filename })));
+        expect(failure).toBe(await outcome(() => compute.parseGraphSync(text, { filename })));
         expect(await outcome(() => core.detectFormat(text, filename))).toBe(
-          await outcome(() => formats.detectFormat(text, filename)),
+          await outcome(() => compute.detectFormatSync(text, filename)),
         );
       }
     });

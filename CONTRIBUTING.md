@@ -83,7 +83,6 @@ demand (Actions → Fuzz → Run workflow) and uploads the inputs that failed.
 ## Where things live
 
 - `packages/core`: the diff engine. Start with `src/types.ts` and `docs/algorithms.md`.
-- `packages/formats`: RDF / OBO / JSON parsers.
 - `packages/layout`, `packages/scene`, `packages/renderer`: layout, visual model, Canvas engine.
 - `packages/viewer`: the `<kgdiff-viewer>` web component.
 - `packages/g6`: the AntV G6 adapter.

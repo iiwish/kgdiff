@@ -10,7 +10,7 @@
  *
  * Every `exports` entry with a `types` condition has a report; the standalone bundles of
  * @kgdiff/viewer (script tags, no `types`) have one for the module each is built from. Not
- * covered: @kgdiff/formats (deprecated, not published from 1.0 on) and @kgdiff/cli (a command).
+ * covered: @kgdiff/cli (a command).
  *
  * Items whose doc comment has `@experimental` (or `@deprecated`) carry that tag in the report,
  * so the reports change when 1.0 drops the tag.

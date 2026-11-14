@@ -205,7 +205,7 @@ the page with `for="<root id>"`.
   CSS pixels (`view.worldToScreen` converts the layout's positions), and is in the PNG export;
   the rules are in the
   [renderer's README](../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph).
-  Experimental until 1.0.
+  Experimental, also after 1.0.
 - `<kgdiff-zoom>` and `<kgdiff-minimap>` act on one stage: the nearest one around them, or the
   one `stage="<id>"` names anywhere on the page (`zoom.stage`, and `zoom.stageElement` for
   the stage it found). Inside a `<kgdiff-viewer>` they act on its canvas. The other elements
@@ -279,7 +279,7 @@ what changed: added, removed and modified nodes look as they always do, in their
 layout does not change. The legend lists the shapes in use with their type names, as given (keep
 them short). A type name that looks like a whole number sorts first in a JavaScript object, so
 such a key does not keep its place. `view.shapes` is only read from a payload; `load()` has no
-option for it. Experimental until 1.0.
+option for it. Experimental, also after 1.0.
 
 ## Theme it with CSS
 

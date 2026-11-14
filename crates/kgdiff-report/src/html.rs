@@ -131,8 +131,8 @@ pub struct ReportInfo {
     /// `view.panels`: region and state, in the order given.
     pub panels: Option<Vec<(String, String)>>,
     /// `view.shapes`: node type and shape (`circle`, `square`, `diamond`, `hexagon`), in the
-    /// order given: a node takes the shape of the first entry among its types. Experimental
-    /// until 1.0.
+    /// order given: a node takes the shape of the first entry among its types. Experimental,
+    /// and stays so after 1.0.
     pub shapes: Option<Vec<(String, String)>>,
 }
 

@@ -1,12 +1,11 @@
 /// <reference types="vite/client" />
 /**
- * DEV ONLY: the real pipeline — example dataset → formats `parseGraph` → core `diff` → layout
+ * DEV ONLY: the real pipeline — example dataset → core `parseGraph` → core `diff` → layout
  * `layoutDiff` → scene `buildScene` → `createDiffGraph` — with layer, replay, theme and hunk
  * controls, for side-by-side review against the native renderer harness (port 5199).
  * `?dataset=<id>` picks a dataset (default enterprise-kg); `window.kgdiff` exposes the controller.
  */
-import { type DiffOptions, type DiffResult, diff } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { type DiffOptions, type DiffResult, diff, parseGraph } from '@kgdiff/core';
 import { createDiffGraph, type DiffGraphController } from '@kgdiff/g6';
 import { type LayoutResult, layoutDiff } from '@kgdiff/layout';
 import { buildScene, getTheme, type PaletteName, type Scene, type ThemeName } from '@kgdiff/scene';
@@ -37,8 +36,8 @@ async function read(id: string, name: string): Promise<string> {
 async function loadDataset(id: string): Promise<{ diff: DiffResult; layout: LayoutResult }> {
   const meta = JSON.parse(await read(id, 'meta.json')) as Meta;
   const [b, a] = await Promise.all([read(id, meta.files.before), read(id, meta.files.after)]);
-  const before = parseGraph(b, { filename: meta.files.before }).graph;
-  const after = parseGraph(a, { filename: meta.files.after }).graph;
+  const before = (await parseGraph(b, { filename: meta.files.before })).graph;
+  const after = (await parseGraph(a, { filename: meta.files.after })).graph;
   const result = diff(before, after, meta.options);
   return { diff: result, layout: layoutDiff(result) };
 }

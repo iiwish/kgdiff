@@ -5,7 +5,6 @@
 | 包                 | 作用                                                                           |
 | ------------------ | ------------------------------------------------------------------------------ |
 | `@kgdiff/core`     | diff 模型和解析：解析、规范化、匹配、分类、分组、可反向的增量。                |
-| `@kgdiff/formats`  | 0.11 起弃用：已移到 `@kgdiff/core`，函数和类型都相同。                         |
 | `@kgdiff/layout`   | 确定性、考虑标签的布局，两个版本共用。                                         |
 | `@kgdiff/scene`    | 把 diff 转成视觉元素：设计令牌、编码、回放时间线。                             |
 | `@kgdiff/renderer` | Canvas 2D 渲染器：相机、细节层级、标签、拾取、小地图。                         |
@@ -14,7 +13,7 @@
 | `@kgdiff/compute`  | 编译成 WebAssembly 的 Rust 引擎：[与命令行逐字节相同](#浏览器里的-rust-引擎)。 |
 | `@kgdiff/cli`      | 命令行工具 `kgdiff`：运行原生程序，不导出 JavaScript 接口。                    |
 
-它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行，不做任何 I/O：传入文本和对象，得到对象。从 0.11 起，计算类函数（`diff`、`matchNodes`、`textSimilarity`、`parseGraph`、`detectFormat`、`layoutDiff`、`extendLayout`）在 `@kgdiff/compute` 上运行，是异步的；读取和应用类函数（`normalize`、`hashGraph`、`diffFromJSON`、`applyDelta`、`formatHunk`、`layoutFromJSON` 等）仍是同步的。从 0.10 升级见[迁移到 0.11](./migrating-to-0.11.md)。`@kgdiff/formats` 已弃用：从 0.11.1 起它的解析函数都在 `@kgdiff/core` 里，迁移只需改导入路径。
+它们都只提供 ESM，可在 Node.js 22 及以上版本和主流现代浏览器中运行，不做任何 I/O：传入文本和对象，得到对象。从 0.11 起，计算类函数（`diff`、`matchNodes`、`textSimilarity`、`parseGraph`、`detectFormat`、`layoutDiff`、`extendLayout`）在 `@kgdiff/compute` 上运行，是异步的；读取和应用类函数（`normalize`、`hashGraph`、`diffFromJSON`、`applyDelta`、`formatHunk`、`layoutFromJSON` 等）仍是同步的。从 0.10 升级见[迁移到 0.11](./migrating-to-0.11.md)。`@kgdiff/formats` 从 0.12.1 起不再发布：从 0.11.1 起它的解析函数都在 `@kgdiff/core` 里，迁移只需改导入路径。
 
 规则是：模型包（`@kgdiff/core`、`@kgdiff/layout`）提供异步入口，第一次调用时加载引擎；需要同步 API、自己指定 `.wasm` 文件位置或底层 JSON 接口时，用 [`@kgdiff/compute`](#浏览器里的-rust-引擎)。
 

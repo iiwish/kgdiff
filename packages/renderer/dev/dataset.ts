@@ -1,11 +1,10 @@
 /// <reference types="vite/client" />
 /**
- * DEV ONLY: the real pipeline for the harness — example dataset files → formats `parseGraph` →
+ * DEV ONLY: the real pipeline for the harness — example dataset files → core `parseGraph` →
  * core `diff` → layout `layoutDiff` → scene `buildScene` → `createVisualResolver`.
  * Diff and layout are computed once per dataset; the scene is rebuilt for theme / locale.
  */
-import { type DiffOptions, type DiffResult, diff, type Locale } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import { type DiffOptions, type DiffResult, diff, type Locale, parseGraph } from '@kgdiff/core';
 import { type LayoutResult, layoutDiff } from '@kgdiff/layout';
 import {
   buildScene,

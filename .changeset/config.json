@@ -8,7 +8,6 @@
     [
       "@kgdiff/cli",
       "@kgdiff/core",
-      "@kgdiff/formats",
       "@kgdiff/layout",
       "@kgdiff/scene",
       "@kgdiff/renderer",

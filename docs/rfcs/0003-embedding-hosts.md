@@ -1,6 +1,8 @@
 # RFC 0003: Embedding hosts and the plain view
 
-- **Status:** Draft, proposed. The parts planned for 0.9 are merged and released as 0.9.0:
+- **Status:** Partially implemented: parts 1, 2, 3, 4a and 4b are released (0.9 to 0.11); parts 4c
+  and 4d are not started and are left for after 1.0 ([Revision 2026-11-13](#revision-2026-11-13)).
+  The parts planned for 0.9 are merged and released as 0.9.0:
   part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d), and
   with it `layout_diff_on` and `layout_after`, which carry a layout to the next version
   through the diff ([#86](https://github.com/iiwish/kgdiff/pull/86), 3ae8f98); part 2, reports with
@@ -415,7 +417,8 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
   draws circles.
 - The new APIs are marked experimental for one minor, as RFC 0001's elements were, and become
   stable in 1.0 (0.10 is that minor; 1.0 itself carries no new code and only removes the `@experimental` marks); the Rust additions follow the crates' semver from their
-  first release.
+  first release. (Changed 2026-11-13: the marks stay after 1.0, until a host has used the APIs;
+  [Revision 2026-11-13](#revision-2026-11-13).)
 
 ## Testing
 
@@ -594,7 +597,22 @@ Where it decides beyond this RFC, or differs from it:
 RFC 0002 moved its phase 5 from kgdiff 1.0 to 0.11 and made 1.0 a stable 0.11 with no new code
 ([RFC 0002, Revision](./0002-rust-compute-core.md#revision-2026-11-11)). This RFC follows: part 3
 (the typed graph input, with the compact graph representation) is now in 0.11; the experimental
-APIs still become stable in 1.0, which only removes their marks; 4c and 4d stay after 1.0.
+APIs were to become stable in 1.0, which only removes their marks (changed on 2026-11-13: they stay experimental after 1.0, see [Revision 2026-11-13](#revision-2026-11-13)); 4c and 4d stay after 1.0.
+
+## Revision 2026-11-13
+
+kgdiff 0.12.0 was published on 2026-11-13. What the RFC delivered, and what it leaves:
+
+- **Released:** part 1 (`layout_graph`, `layout_diff_on`, `layout_after`) and part 2 (reports
+  with the caller's layout, `report.v1.json`) in 0.9; part 4a (renderer layers) in 0.9; part 4b
+  (node shapes) in 0.10; part 3 (the typed graph input) in 0.11.
+- **Not started, after 1.0:** part 4c (the plain view) and part 4d (grouping, with the layout that
+  keeps a group together).
+- **The experimental marks stay after 1.0.** No host has used the APIs this RFC marked
+  experimental yet (`addLayer`, `LayerView`, `RendererLayer`, the node shapes of
+  `@kgdiff/scene`, `shape1`, `shape2`, the report's `shapes`), so 1.0 does not remove them; a
+  minor release does once a real host has, and removing a mark is an addition
+  ([Versioning](../versioning.md#experimental-apis)). This replaces "stable in 1.0" above.
 
 ## References
 

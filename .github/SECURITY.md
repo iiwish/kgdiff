@@ -22,7 +22,7 @@ within a week; once a fix is released, the advisory credits you unless you prefe
 kgdiff reads graph files that may come from anyone and writes reports that others open, so these
 are in scope, among others:
 
-- parsers (`@kgdiff/formats`, the CLI) hanging, crashing the process or exhausting memory on a
+- parsers (`@kgdiff/core` and `@kgdiff/compute`, the CLI) hanging, crashing the process or exhausting memory on a
   crafted input of reasonable size;
 - script injection in HTML reports or in `<kgdiff-viewer>` through labels, ids or attributes;
 - GitHub Markdown output (`--markdown`) that mentions people, links issues or injects HTML;

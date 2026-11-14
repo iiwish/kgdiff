@@ -153,7 +153,7 @@ viewer.addEventListener('kgdiff-layout', (event) => {
 - 用你自己的 CSS 布局这些元素；给画布和列表一个高度。`<kgdiff-root>` 以 `display: contents` 渲染，它的子元素直接参与你的布局。
 - 画布的插槽（`top-start`、`top-end`、`bottom-start`、`bottom-center`、`bottom-end`）把你的内容放在画布上，图会避开它来取景。放进插槽的界面元素（视图坞、控制条、图例、缩放按钮或小地图）替换画布自己的那个，画布的 `panels` 对其余区域照常生效。
 - 放在其他任何地方的元素，无论是否盖在画布上，适应视图和飞行定位都不会避开它，除非你登记它：`stage.registerObstacle(element)`。
-- 要在画布本身上画东西，画在图的下面或上面（一组节点背后的底色、节点上你自己的标记），给画布加一个图层：`stage.addLayer({ order: 'under', draw(ctx, view) { … } })`。它随每一帧绘制，用 CSS 像素（`view.worldToScreen` 换算布局里的位置），也会出现在导出的 PNG 里；规则见[渲染器的 README](../../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph)。在 1.0 之前为实验性。
+- 要在画布本身上画东西，画在图的下面或上面（一组节点背后的底色、节点上你自己的标记），给画布加一个图层：`stage.addLayer({ order: 'under', draw(ctx, view) { … } })`。它随每一帧绘制，用 CSS 像素（`view.worldToScreen` 换算布局里的位置），也会出现在导出的 PNG 里；规则见[渲染器的 README](../../../packages/renderer/README.md#layers-drawing-under-and-over-the-graph)。为实验性，1.0 之后也一样。
 - `<kgdiff-zoom>` 和 `<kgdiff-minimap>` 作用于一块画布：离它最近的外层画布，或者 `stage="<id>"` 指定的页面上任意一块（`zoom.stage`，找到的画布是 `zoom.stageElement`）。放在 `<kgdiff-viewer>` 里时，它们作用于查看器的画布。其他元素和变更列表一样显示根元素的会话。
 - 你自己放置的小地图在整张图都在视野内时仍然显示，你的布局不会跳动；用 `kgdiff-minimap:state(overview) { visibility: hidden }` 让它原地隐藏。放进画布的插槽时，它会像画布自己的小地图一样在这时隐藏。
 - 键盘映射属于根元素：`j` / `k`、`x`、`/` 等在绑定到它的每个元素里都有效，`/` 聚焦搜索，`?` 打开 `<kgdiff-actions>` 的快捷键对话框，对话框列出 `keymap` 生效后实际绑定的按键。`shortcuts` 和 `keymap` 设在根元素上。`+`、`−` 和 `f` 键缩放、适应根元素的每一块画布。
@@ -202,7 +202,7 @@ viewer.payload = {
 };
 ```
 
-形状有 `circle`、`square`、`diamond` 和 `hexagon`。一个节点取映射里按声明顺序第一个它拥有的类型对应的形状（用 after 版本的类型，被删除的节点用 before 版本的），没有命中就是圆。形状表示节点是什么，颜色仍然表示什么变了：新增、删除和修改的节点外观不变，只是换成各自的轮廓。布局不受影响。图例按原样列出在用的形状和类型名（类型名尽量短）。形如整数的类型名在 JavaScript 对象里会排到最前，这样的键不保持原来的位置。`view.shapes` 只从载荷读取，`load()` 没有对应选项。在 1.0 之前是实验性的。
+形状有 `circle`、`square`、`diamond` 和 `hexagon`。一个节点取映射里按声明顺序第一个它拥有的类型对应的形状（用 after 版本的类型，被删除的节点用 before 版本的），没有命中就是圆。形状表示节点是什么，颜色仍然表示什么变了：新增、删除和修改的节点外观不变，只是换成各自的轮廓。布局不受影响。图例按原样列出在用的形状和类型名（类型名尽量短）。形如整数的类型名在 JavaScript 对象里会排到最前，这样的键不保持原来的位置。`view.shapes` 只从载荷读取，`load()` 没有对应选项。是实验性的，1.0 之后也一样。
 
 ## 用 CSS 定制主题
 

@@ -1095,7 +1095,7 @@ fn maps_invalid_diff_options_to_an_input_error() {
 // ─── RDF/XML and JSON-LD inputs ──────────────────────────────────────────────
 
 fn fixture(name: &str) -> String {
-    std::fs::read_to_string(format!("{}/packages/formats/test/fixtures/{name}", repo())).unwrap()
+    std::fs::read_to_string(format!("{}/crates/kgdiff/tests/fixtures/{name}", repo())).unwrap()
 }
 
 /// The hunks and warnings of a one-edit diff; file names are taken out of the warnings.

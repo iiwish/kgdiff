@@ -1,9 +1,6 @@
 /**
  * What stays in TypeScript (RFC 0002, "What stays in TypeScript"): the read path of
- * `@kgdiff/core` and `@kgdiff/layout`, file by file, and the entry of each package, including
- * `@kgdiff/formats`, whose parsers kgdiff's engine (`@kgdiff/compute`) replaced (since 0.11.1 it
- * re-exports the parsers' types and `FORMAT_EXTENSIONS` of `@kgdiff/compute`, which are
- * `@kgdiff/core`'s: core's `formats.ts`, with its asynchronous parsers in the entry). 0.11 deleted the
+ * `@kgdiff/core` and `@kgdiff/layout`, file by file, and the entry of each package. 0.11 deleted the
  * TypeScript compute code; this list is checked against the code (`read-path.test.ts`) so that
  * none comes back unnoticed: every source file of these packages is listed, and adding one means
  * adding it here, where a reviewer sees it.
@@ -52,10 +49,5 @@ export const READ_PATH: readonly ReadPathPackage[] = [
     dir: 'packages/layout/src',
     entry: ['index.ts'],
     keep: ['json.ts', 'round.ts', 'text-metrics.ts'],
-  },
-  {
-    dir: 'packages/formats/src',
-    entry: ['index.ts'],
-    keep: [],
   },
 ];

@@ -4,7 +4,7 @@ kgdiff 的引擎是一组 Rust crate，画面是一组 npm 包。本指南跟着
 
 下面每个 Rust 函数都摘自 `kgdiff-report` 的 [`examples/embedding.rs`](../../../crates/kgdiff-report/examples/embedding.rs)（`cargo run -p kgdiff-report --example embedding`）。有一条测试在[一致性语料](../../../conformance/README.md)每个用例的两张图上运行这些函数，并检查本页对它们的说法（[`tests/mental_map.rs`](../../../crates/kgdiff-report/tests/mental_map.rs)）。
 
-`layout_graph`、`layout_diff_on`、`layout_after`、`report_payload_with` 和渲染器的 `addLayer` 是 0.9 新增的，在 1.0 之前为实验性，1.0 转正（[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) 的第 1、2、4a 部分，英文）。该 RFC 的其余部分见[还没有的东西](#还没有的东西)。
+`layout_graph`、`layout_diff_on`、`layout_after`、`report_payload_with` 和渲染器的 `addLayer` 是 0.9 新增的，其中 `addLayer` 是实验性的，1.0 之后也一样（[版本政策](../versioning.md#实验性-api)；[RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) 的第 1、2、4a 部分，英文）。该 RFC 的其余部分见[还没有的东西](#还没有的东西)。
 
 ## 依赖什么
 
@@ -274,7 +274,7 @@ shapes: Some(vec![
 ]),
 ```
 
-一个节点取第一个它拥有的类型对应的形状，没有命中就是圆。形状有 `circle`、`square`、`diamond` 和 `hexagon`，差异视图和没有变化的图都一样，已存的布局仍然有效：每种形状都落在布局预留的盒子内。这个字段在载荷里是 `view.shapes`，在 1.0 之前是实验性的。
+一个节点取第一个它拥有的类型对应的形状，没有命中就是圆。形状有 `circle`、`square`、`diamond` 和 `hexagon`，差异视图和没有变化的图都一样，已存的布局仍然有效：每种形状都落在布局预留的盒子内。这个字段在载荷里是 `view.shapes`，是实验性的，1.0 之后也一样。
 
 ### 或者自己画
 

@@ -10,7 +10,7 @@
  */
 import type { NodeShape } from './types.js';
 
-/** @experimental Becomes stable in 1.0. */
+/** @experimental Stays experimental after 1.0. */
 export const NODE_SHAPES: readonly NodeShape[] = Object.freeze([
   'circle',
   'square',
@@ -36,7 +36,7 @@ const SQUARE_VERTICES = ring(4, 45);
 const DIAMOND_VERTICES = ring(4, 0);
 const HEXAGON_VERTICES = ring(6, 0);
 
-/** Whether `value` is one of the shapes. @experimental Becomes stable in 1.0. */
+/** Whether `value` is one of the shapes. @experimental Stays experimental after 1.0. */
 export function isNodeShape(value: unknown): value is NodeShape {
   return value === 'circle' || value === 'square' || value === 'diamond' || value === 'hexagon';
 }
@@ -46,7 +46,7 @@ export function isNodeShape(value: unknown): value is NodeShape {
  * screen (y down); scale them by `shapeVertexRadius`. Empty for a circle and for a value that is
  * not a shape, which renderers draw as a circle.
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export function shapeVertices(shape: NodeShape | undefined): readonly number[] {
   switch (shape) {
@@ -64,7 +64,7 @@ export function shapeVertices(shape: NodeShape | undefined): readonly number[] {
 /**
  * Distance from the center to the middle of a side at size `r` (the radius, for a circle).
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export function shapeApothem(shape: NodeShape | undefined, r: number): number {
   switch (shape) {
@@ -83,7 +83,7 @@ export function shapeApothem(shape: NodeShape | undefined, r: number): number {
  * Distance from the center to a vertex of the outline at size `r` grown by `grow` (`r + grow`,
  * for a circle).
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export function shapeVertexRadius(shape: NodeShape | undefined, r: number, grow: number): number {
   switch (shape) {
@@ -103,7 +103,7 @@ export function shapeVertexRadius(shape: NodeShape | undefined, r: number, grow:
  * relative to the center. A point is inside the outline at size `r` grown by `g` exactly when
  * this is at most `shapeApothem(shape, r) + g`.
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export function shapeGauge(shape: NodeShape | undefined, dx: number, dy: number): number {
   const x = Math.abs(dx);
@@ -124,7 +124,7 @@ export function shapeGauge(shape: NodeShape | undefined, dx: number, dy: number)
  * Distance from the center to the outline at size `r` grown by `grow`, along the unit vector
  * (ux, uy).
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export function shapeDistance(
   shape: NodeShape | undefined,
@@ -143,7 +143,7 @@ export function shapeDistance(
  * returns the dash offset that centers a dash on every vertex. So all sides look alike, there is
  * no seam, and a ghost keeps its corners. For the circle, see `evenCircleDash` in the renderers.
  *
- * @experimental Becomes stable in 1.0.
+ * @experimental Stays experimental after 1.0.
  */
 export function evenShapeDash(
   shape: NodeShape | undefined,

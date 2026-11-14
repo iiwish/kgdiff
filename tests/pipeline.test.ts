@@ -4,8 +4,14 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { type DiffOptions, diff, diffFromJSON, diffToJSON, type Locale } from '@kgdiff/core';
-import { parseGraph } from '@kgdiff/formats';
+import {
+  type DiffOptions,
+  diff,
+  diffFromJSON,
+  diffToJSON,
+  type Locale,
+  parseGraph,
+} from '@kgdiff/core';
 import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
 import {
   buildScene,
