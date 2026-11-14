@@ -1,5 +1,14 @@
 # @kgdiff/g6
 
+## 0.12.1
+
+### Patch Changes
+
+- b69a873: Reading an `rgb()` / `rgba()` color takes time linear in its length: a long `rgb(` with no closing parenthesis, from a host's theme, was quadratic before.
+- Updated dependencies [c136256]
+  - @kgdiff/core@0.12.1
+  - @kgdiff/scene@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

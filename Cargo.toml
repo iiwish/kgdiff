@@ -6,7 +6,7 @@ members = ["crates/*", "xtask"]
 resolver = "3"
 
 [workspace.package]
-version = "0.12.0"
+version = "0.12.1"
 edition = "2024"
 # RFC 0002, D-8: no newer than the stable release of six months before, raised only in minor
 # releases. rust-toolchain.toml pins the toolchain CI and contributors build with.
@@ -23,10 +23,10 @@ homepage = "https://github.com/iiwish/kgdiff"
 serde_json = "1.0.149"
 # The workspace's own crates, required at exactly the one version (scripts/sync-versions.ts keeps
 # these equal to it): kgdiff X.Y.Z names one consistent set of crates on crates.io.
-kgdiff-core = { version = "=0.12.0", path = "crates/kgdiff-core" }
-kgdiff-formats = { version = "=0.12.0", path = "crates/kgdiff-formats" }
-kgdiff-report = { version = "=0.12.0", path = "crates/kgdiff-report" }
-kgdiff-layout = { version = "=0.12.0", path = "crates/kgdiff-layout" }
+kgdiff-core = { version = "=0.12.1", path = "crates/kgdiff-core" }
+kgdiff-formats = { version = "=0.12.1", path = "crates/kgdiff-formats" }
+kgdiff-report = { version = "=0.12.1", path = "crates/kgdiff-report" }
+kgdiff-layout = { version = "=0.12.1", path = "crates/kgdiff-layout" }
 
 # The lints every engine crate opts into with `[lints] workspace = true` (RFC 0002, §3,
 # Enforcement). The bindings crates set their own.

@@ -10,7 +10,7 @@
 
 [project]
 name = "pykgdiff"
-version = "0.12.0"
+version = "0.12.1"
 description = "git diff for knowledge graphs: the kgdiff command line, as a native binary. Compare two graph files from the terminal, CI, or as a shareable HTML report."
 readme = "README.md"
 license = "MIT"
