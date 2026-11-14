@@ -119,7 +119,8 @@ describe('any view of the enterprise scene', () => {
       }),
       { numRuns: 60, seed: 7 },
     );
-  });
+    // 60 resolved frames; about 5 s on a loaded macOS runner.
+  }, 30_000);
 });
 
 describe('replay glyphs', () => {
