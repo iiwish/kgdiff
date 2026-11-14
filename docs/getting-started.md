@@ -22,8 +22,17 @@ npm install --save-dev @kgdiff/cli   # a pinned version in one project, run with
 ```
 
 kgdiff is a native program for macOS, Linux (glibc and musl) and Windows: npm installs the
-binary of your platform with `@kgdiff/cli`. Without Node.js, build it from crates.io:
-`cargo install kgdiff`.
+binary of your platform with `@kgdiff/cli`. Without Node.js, install the same binary from PyPI,
+where it is called `pykgdiff` (the command line only, no Python API yet), or build it from
+crates.io:
+
+```sh
+pipx install pykgdiff                # or: uv tool install pykgdiff, pip install pykgdiff
+uvx --from pykgdiff kgdiff before.ttl after.ttl   # run it without installing
+cargo install kgdiff                 # build it with Rust
+```
+
+Every way gives the same `kgdiff` command.
 
 ## Your first diff
 

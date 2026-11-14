@@ -12,6 +12,16 @@ npx @kgdiff/cli a.json b.json --markdown             # PR comment / job summary
 npx @kgdiff/cli apply a.json patch.json -o b.json    # apply a delta
 ```
 
+`npx @kgdiff/cli` needs Node.js ≥ 22. The same `kgdiff` installs without it from PyPI, as
+`pykgdiff` (the command line only), or from crates.io; the examples below call it `kgdiff`:
+
+```sh
+npm install --global @kgdiff/cli     # Node.js
+pipx install pykgdiff                # Python tools: or uv tool install pykgdiff, pip install pykgdiff
+uvx --from pykgdiff kgdiff a.ttl b.ttl   # run it once, without installing
+cargo install kgdiff                 # Rust
+```
+
 ## Usage
 
 ```

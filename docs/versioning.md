@@ -95,6 +95,13 @@ external host uses it. Once the Python bindings have, these modules join the pro
   six months before, and is raised only in minor releases.
 - **Browsers**: those that run WebAssembly and the viewer's custom elements; the viewer bundle
   itself contains no WebAssembly.
+- **Python**: the PyPI package `pykgdiff` is the command line only: wheels that hold the native
+  `kgdiff` binary (the same as `@kgdiff/cli`'s) and install the `kgdiff` command, at the same
+  version as everything else. What it promises is the command line's (above); the wheels need no
+  particular Python and run no Python code. There is no Python API yet, so none is covered:
+  `import pykgdiff` and `python -m pykgdiff` do not work, and the name is kept for a Python API
+  planned after 1.0, which will be an addition. Wheels exist for the targets the native binary is
+  built for (macOS x64 and Arm64, Linux x64 and Arm64 with glibc ≥ 2.34 or musl, Windows x64).
 
 ## Deprecation
 

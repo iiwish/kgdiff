@@ -1,7 +1,8 @@
 /**
  * Release housekeeping: the merged GitHub release notes (scripts/release-notes.ts), the version
  * in CITATION.cff (scripts/sync-citation.ts), the version of the Rust workspace
- * (scripts/sync-versions.ts) and the platform packages of @kgdiff/cli (scripts/npm-platforms.ts).
+ * (scripts/sync-versions.ts), the platform packages of @kgdiff/cli (scripts/npm-platforms.ts) and
+ * the wheels of pykgdiff (scripts/pypi-wheels.py).
  */
 import { existsSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -33,8 +34,12 @@ import {
   CARGO_TOML,
   internalRequirements,
   lockedWorkspaceCrates,
+  PYPROJECT,
+  pep440,
+  pyprojectVersion,
   withInternalRequirements,
   withLockedVersion,
+  withPyprojectVersion,
   withWorkspaceVersion,
   workspaceVersion,
 } from '../scripts/sync-versions.ts';
@@ -329,5 +334,46 @@ describe('the platform packages of @kgdiff/cli', () => {
       ),
     ).toThrow(/the versions 0.8.0, 0.7.0/);
     expect(() => distVersion(new Map())).toThrow(/no kgdiff version/);
+  });
+});
+
+describe('the Python distribution pykgdiff', () => {
+  it('carries the version of the packages and the Rust workspace', () => {
+    const version = pyprojectVersion(readFileSync(PYPROJECT, 'utf8'));
+    expect(version).toBe(pep440(packagesVersion()));
+    expect(version).toBe(pep440(workspaceVersion(readFileSync(CARGO_TOML, 'utf8')) ?? ''));
+  });
+
+  it('spells prereleases as PEP 440 does, and refuses other versions', () => {
+    expect(pep440('0.12.1')).toBe('0.12.1');
+    expect(pep440('1.0.0-rc.1')).toBe('1.0.0rc1');
+    expect(pep440('1.1.0-beta.2')).toBe('1.1.0b2');
+    expect(pep440('2.0.0-alpha.0')).toBe('2.0.0a0');
+    expect(() => pep440('1.0.0-next.1')).toThrow(/PEP 440/);
+  });
+
+  it('sets the version of [project] only', () => {
+    const toml = [
+      '[project]',
+      'name = "pykgdiff"',
+      'version = "0.1.0"',
+      '',
+      '[tool.other]',
+      'version = "9.9.9"',
+      '',
+    ].join('\n');
+    const next = withPyprojectVersion(toml, '1.0.0-rc.1');
+    expect(next).toBe(toml.replace('"0.1.0"', '"1.0.0rc1"'));
+    expect(pyprojectVersion(next)).toBe('1.0.0rc1');
+    expect(() => withPyprojectVersion('[tool.x]\nversion = "1"\n', '1.0.0')).toThrow(/version/);
+  });
+
+  it('has a wheel for every target dist builds, in its order', () => {
+    const toml = readFileSync(join(ROOT, 'dist-workspace.toml'), 'utf8');
+    const targets = /^targets = \[([^\]]*)\]/m.exec(toml)?.[1] ?? '';
+    const script = readFileSync(join(ROOT, 'scripts/pypi-wheels.py'), 'utf8');
+    expect([...script.matchAll(/^ {4}Target\("([^"]+)"/gm)].map((m) => m[1])).toEqual(
+      [...targets.matchAll(/"([^"]+)"/g)].map((m) => m[1]),
+    );
   });
 });
