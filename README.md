@@ -316,16 +316,28 @@ The same documentation, in English and Chinese, is published at
 ## Roadmap
 
 **0.11** (2026-11-12) moved all computing onto the Rust engine: the CLI natively, everything
-else through `@kgdiff/compute`. **0.12** prepares the public API for 1.0: the Rust API makes room
-for the additions after 1.0, so that they need no major release, and the JavaScript API keeps
-only what is documented ([Migrating to 0.12](docs/guide/migrating-to-0.12.md)); it is the last
-release with breaking changes, and was published on 2026-11-13. **1.0** is 0.12 unchanged,
-once two weeks with only patch releases have passed and at least one real host runs on 0.12.
-The experimental APIs, designed for embedding hosts, stay experimental after 1.0 until a host has
-used them ([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10),
+else through `@kgdiff/compute`. **0.12** (2026-11-13) prepared the public API for growth: the Rust
+API makes room for additions that need no breaking release, and the JavaScript API keeps only
+what is documented ([Migrating to 0.12](docs/guide/migrating-to-0.12.md)).
+
+**kgdiff is 0.x, and 1.0 has no date.** Before 1.0 the versions follow Cargo's convention: the
+second number is the major's part and the third the minor's. A patch release (0.12.x) carries
+fixes and additions, breaks no public API and changes no output byte; breaking changes wait for
+the next minor (0.13) and are gathered into one release ([Versioning](docs/versioning.md)).
+**1.0** comes when all of these hold:
+
+1. At least one real host (Semlia) has run on the current version for about a month.
+2. The experimental APIs have been used by a host, and are made stable or fixed.
+3. The Python API is settled, or kgdiff states that only the command line is promised.
+4. The viewer's accessibility review ([#16](https://github.com/iiwish/kgdiff/issues/16)) is done.
+5. About two minor releases, or a month, have passed without a breaking change.
+
+After 1.0 a patch release only fixes, a minor release only adds, and a major one may break.
+The experimental APIs, designed for embedding hosts, stay experimental until a host has used them
+([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10),
 [Versioning](docs/versioning.md#experimental-apis)).
 
-After 1.0, additive: GraphML and GEXF input · KGCL and RDF Patch export · an MCP server, so
+Additive, in no fixed order: GraphML and GEXF input · KGCL and RDF Patch export · an MCP server, so
 agents can review the graph edits they make · Python and Jupyter · a plain view of one graph and
 group backgrounds for embedding hosts ([RFC 0003](docs/rfcs/0003-embedding-hosts.md)) ·
 Cytoscape.js and Sigma.js adapters · three-way merge with conflict visualization · a Web Worker

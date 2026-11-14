@@ -1,6 +1,6 @@
 # 迁移到 0.12
 
-kgdiff 0.12 为 1.0 整理公开 API。Rust API 给 1.0 之后计划中的新增留出位置，让它们都不需要升主版本（[版本约定](../versioning.md)）。JavaScript API 收到只剩有文档的部分：几个只有 kgdiff 自己的包在用的导出去掉了或隐藏了（[见下文](#javascript)）。命令行、文档格式和每一个输出字节都和 0.11 相同；对命令行来说，升级只是换个版本号。0.12 是最后一个有破坏性变更的版本；1.0 是 0.12 经过稳定期之后的版本（[RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#kgdiff-10)）。
+kgdiff 0.12 为 1.0 整理公开 API。Rust API 给 1.0 之后计划中的新增留出位置，让它们都不需要升主版本（[版本约定](../versioning.md)）。JavaScript API 收到只剩有文档的部分：几个只有 kgdiff 自己的包在用的导出去掉了或隐藏了（[见下文](#javascript)）。命令行、文档格式和每一个输出字节都和 0.11 相同；对命令行来说，升级只是换个版本号。从 0.12.1 起，补丁版本只带修复和新增；下一批破坏性变更在 0.13 里，攒起来一起发（[版本约定](../versioning.md)）。1.0 要等条件满足才发，不定日期（[1.0 什么时候发](../versioning.md#1-0-什么时候发)）。
 
 ## JavaScript
 

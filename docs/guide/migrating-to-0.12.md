@@ -4,9 +4,10 @@ kgdiff 0.12 makes the public API ready for 1.0. The Rust API makes room for the 
 planned after 1.0, so that none of them needs a major release ([Versioning](../versioning.md)).
 The JavaScript API shrinks to what is documented: a few exports that only kgdiff's own packages
 used are gone or hidden ([below](#javascript)). The CLI, the document formats and every output
-byte are those of 0.11; for the command line, the upgrade is the version number. 0.12 is the last
-release with breaking changes; 1.0 is 0.12 after a stable period
-([RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#kgdiff-10)).
+byte are those of 0.11; for the command line, the upgrade is the version number. From 0.12.1 on, patch
+releases carry fixes and additions only; the next breaking changes come in 0.13, gathered
+([Versioning](../versioning.md)). 1.0 follows when its conditions are met, with no date
+([When 1.0 comes](../versioning.md#when-1-0-comes)).
 
 ## JavaScript
 

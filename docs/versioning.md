@@ -10,11 +10,25 @@ the crates require each other at exactly that version: kgdiff X.Y.Z names one co
 So a breaking change in any part, even one only Rust code sees, is a breaking release of all of
 them.
 
-| Release                       | Before 1.0 (0.x)                                      | From 1.0 on              |
-| ----------------------------- | ----------------------------------------------------- | ------------------------ |
-| Patch (0.12.**1**, 1.0.**1**) | fixes, no change to the public API or to output bytes | the same                 |
-| Minor (0.**13**, 1.**1**)     | may break the public API                              | additions only           |
-| Major (**2**.0)               | —                                                     | may break the public API |
+| Release                       | Before 1.0 (0.x)                                                           | From 1.0 on                                                |
+| ----------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Patch (0.12.**1**, 1.0.**1**) | fixes and additions; no break of the public API, no change to output bytes | fixes only, no change to the public API or to output bytes |
+| Minor (0.**13**, 1.**1**)     | may break the public API                                                   | additions only                                             |
+| Major (**2**.0)               | —                                                                          | may break the public API                                   |
+
+Before 1.0 kgdiff follows Cargo's convention for `0.x`: the second number plays the major
+version's part and the third the minor's. A breaking change waits for the next `0.x` release,
+and breaking changes are gathered into one release rather than shipped one by one.
+
+### When 1.0 comes
+
+1.0 comes when conditions are met, not on a date: a real embedding host has run on the current
+version for a while, the experimental APIs have been used or settled, the Python API is settled
+(or only the command line is promised), the viewer's accessibility review is done, and no
+breaking change has landed for some time. The list is under Roadmap in the
+[README](https://github.com/iiwish/kgdiff#roadmap) ([RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#kgdiff-10)
+has the reasoning). Until then everything on this page that says "from 1.0 on" is a promise for
+later, and `0.x` releases keep the rules of the left-hand column.
 
 ## What is covered
 
@@ -53,8 +67,8 @@ them.
 
 ## What can be added without a major release
 
-Adding is not breaking, so these come in minor releases. The Rust types are declared so that
-they are additions there too:
+Adding is not breaking, so these come in minor releases from 1.0 on (before 1.0, in patch
+releases too). The Rust types are declared so that they are additions there too:
 
 - new error, issue and warning codes; new formats, locales, change kinds and match strategies:
   the enums that list them are `#[non_exhaustive]`, so a `match` on them has a `_` arm;
@@ -67,17 +81,17 @@ they are additions there too:
   ```
 
 In TypeScript the same lists are string unions (`KgdiffErrorCode`, `FormatId`, `ParseWarningCode`
-and the others): a new member comes in a minor release, so a `switch` over one needs a `default`
+and the others): a new member comes in a minor release (before 1.0, a patch release), so a `switch` over one needs a `default`
 branch. Optional members of option objects and new members of results are additions as well.
 
 Some enums are closed taxonomies of the model, and code is expected to handle every variant:
 `ChangeStatus`, `HunkKind`, `ReplayPhase`, `SuggestionReason`, `End` and `js::Value`. A new
-variant of one of them is a breaking change.
+variant of one of them is a breaking change, so before 1.0 it waits for the next `0.x`.
 
 ## Experimental APIs
 
 An API marked `@experimental` in its documentation may change in a minor release, from 1.0 on
-too. These are the renderer's `addLayer`, `LayerView` and `RendererLayer`, the node shapes of
+too (before 1.0, in the next `0.x`). These are the renderer's `addLayer`, `LayerView` and `RendererLayer`, the node shapes of
 `@kgdiff/scene`, `shape1` and `shape2`, and the report's `shapes`. They are designed for embedding
 hosts, and no host has used them yet. The mark stays until one has: then a minor release removes
 it, and removing the mark is an addition, not a breaking change.
@@ -100,12 +114,13 @@ external host uses it. Once the Python bindings have, these modules join the pro
   version as everything else. What it promises is the command line's (above); the wheels need no
   particular Python and run no Python code. There is no Python API yet, so none is covered:
   `import pykgdiff` and `python -m pykgdiff` do not work, and the name is kept for a Python API
-  planned after 1.0, which will be an addition. Wheels exist for the targets the native binary is
+  planned for later, which will be an addition (settling it, or promising only the command
+  line, is one of the [conditions for 1.0](#when-1-0-comes)). Wheels exist for the targets the native binary is
   built for (macOS x64 and Arm64, Linux x64 and Arm64 with glibc ≥ 2.34 or musl, Windows x64).
 
 ## Deprecation
 
-Something deprecated keeps working until the next major release (before 1.0: the next minor),
+Something deprecated keeps working until the next major release (before 1.0: the next `0.x`),
 and its documentation names the replacement. `@kgdiff/formats` was deprecated in
 0.11.1 in favour of `@kgdiff/core`, which has the same functions; it is no longer published from
 0.12.1 on, and its earlier releases stay on npm.

@@ -5,8 +5,8 @@ WebAssembly, [`@kgdiff/compute`](../../packages/compute/README.md): the same eng
 bytes, as the kgdiff CLI. Compiling WebAssembly is asynchronous, so the functions that compute
 return promises. 0.12 then readies the public API for 1.0, the Rust API above all
 ([Migrating to 0.12](./migrating-to-0.12.md));
-it is the last release with breaking changes, and 1.0 is 0.12 after a stable period
-([RFC 0002](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0002-rust-compute-core.md#6-api-changes-and-versions)).
+1.0 comes later, when its conditions are met, not on a date. Until then breaking changes
+wait for the next `0.x` and are gathered ([Versioning](../versioning.md#when-1-0-comes)).
 
 ## The functions that became asynchronous
 
