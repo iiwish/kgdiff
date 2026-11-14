@@ -139,7 +139,8 @@ describe.runIf(enabled)('normalized graphs given to the engine', () => {
           );
         }
       }
-    });
+      // Eight layouts; synthetic-600's take about 5 s on a loaded macOS runner.
+    }, 30_000);
 
     it('the layouts of a diff of normalized graphs: those of the diff of the graphs as input', () => {
       const [before, after] = graphs(mode);
