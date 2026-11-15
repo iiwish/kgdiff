@@ -45,7 +45,7 @@ js-sys = { version = "0.3", optional = true }
 # oxrdf names anonymous blank nodes with `rand` (RFC 0002, §5): on wasm32-unknown-unknown getrandom
 # needs a backend. Only `build-wasm.ts` selects it, with `--cfg getrandom_backend="wasm_js"`.
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
+getrandom = { version = "0.4", features = ["wasm_js"], optional = true }
 
 # The workspace's lints but `unsafe_code`: wasm-bindgen's generated exports are `unsafe` and
 # `#[unsafe(no_mangle)]`. This crate's own code has none.
