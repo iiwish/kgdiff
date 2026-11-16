@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The same graph after Gephi: GEXF 1.3, drawing data, a default, a hierarchy, time. -->
+<gexf xmlns="http://gexf.net/1.3" xmlns:viz="http://gexf.net/1.3/viz" version="1.3">
+  <meta lastmodifieddate="2026-11-16">
+    <creator>Gephi 0.10.1</creator>
+  </meta>
+  <graph defaultedgetype="undirected" mode="static" name="chibi">
+    <attributes class="node" mode="static">
+      <attribute id="type" title="type" type="string">
+        <default>人物</default>
+      </attribute>
+      <attribute id="born" title="born" type="long"/>
+      <attribute id="famous" title="famous" type="boolean"/>
+      <attribute id="weight" title="weight" type="double"/>
+      <attribute id="year" title="year" type="long"/>
+      <attribute id="description" title="description" type="string"/>
+    </attributes>
+    <attributes class="edge" mode="static">
+      <attribute id="since" title="since" type="long"/>
+    </attributes>
+    <nodes>
+      <node id="曹操" label="曹孟德">
+        <attvalues>
+          <attvalue for="born" value="155"/>
+          <attvalue for="famous" value="true"/>
+          <attvalue for="weight" value="0.75"/>
+        </attvalues>
+        <viz:size value="20.0"/>
+        <viz:position x="15.8" y="40.1" z="0.0"/>
+        <viz:color r="239" g="173" b="66"/>
+      </node>
+      <node id="孙刘联军" label="孙刘联军">
+        <attvalues>
+          <attvalue for="type" value="阵营"/>
+        </attvalues>
+        <nodes>
+          <node id="刘备" label="刘备">
+            <attvalues>
+              <attvalue for="born" value="161"/>
+              <attvalue for="famous" value="true"/>
+            </attvalues>
+          </node>
+          <node id="孙权" label="孙权">
+            <attvalues>
+              <attvalue for="born" value="182"/>
+              <attvalue for="famous" value="false"/>
+            </attvalues>
+          </node>
+          <node id="周瑜" label="周瑜" start="2026-01-01">
+            <attvalues>
+              <attvalue for="born" value="about 175"/>
+            </attvalues>
+          </node>
+        </nodes>
+      </node>
+      <node id="赤壁" label="赤壁之战">
+        <attvalues>
+          <attvalue for="type" value="事件"/>
+          <attvalue for="year" value="208"/>
+          <attvalue for="description" value="孙刘联军 &amp; 曹军 &lt;长江&gt;，火攻"/>
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge id="0" source="曹操" target="赤壁" kind="参战" weight="1.0"/>
+      <edge id="1" source="刘备" target="赤壁" kind="参战" weight="0.5"/>
+      <edge id="2" source="刘备" target="孙权" label="结盟">
+        <attvalues>
+          <attvalue for="since" value="208"/>
+        </attvalues>
+      </edge>
+      <edge id="3" source="周瑜" target="孙权" kind="效力" type="directed"/>
+      <edge id="4" source="周瑜" target="赤壁" kind="指挥">
+        <viz:thickness value="2.0"/>
+      </edge>
+    </edges>
+  </graph>
+</gexf>

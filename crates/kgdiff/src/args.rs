@@ -24,8 +24,9 @@ use crate::style::ColorMode;
 pub const STDIO: &str = "-";
 
 /// `--format` values.
-pub const FORMATS: [&str; 10] = [
+pub const FORMATS: [&str; 11] = [
     "auto", "json", "jsonld", "turtle", "ntriples", "nquads", "trig", "rdfxml", "obo", "graphml",
+    "gexf",
 ];
 const MATCH_STRATEGIES: [&str; 3] = ["id", "auto", "similarity"];
 const EDGE_IDENTITIES: [&str; 2] = ["structure", "id"];

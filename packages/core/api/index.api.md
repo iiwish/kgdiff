@@ -253,7 +253,8 @@ export type FormatId =
 'json'
 | 'jsonld' | 'turtle' | 'ntriples' | 'nquads' | 'trig'
 | 'rdfxml' | 'obo'
-| 'graphml';
+| 'graphml'
+| 'gexf';
 
 export interface GraphInput {
     readonly edges: readonly EdgeInput[];
@@ -587,7 +588,11 @@ export type ParseWarningCode =
 | 'graphml-merged-graphs'
 | 'graphml-unsupported-elements'
 | 'graphml-ignored-data'
-| 'graphml-invalid-value';
+| 'graphml-invalid-value'
+| 'gexf-ignored-viz'
+| 'gexf-dynamic'
+| 'gexf-hierarchy'
+| 'gexf-invalid-value';
 
 export interface Point {
     readonly x: number;

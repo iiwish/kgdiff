@@ -2,7 +2,7 @@
 
 `git diff` for knowledge graphs: the [kgdiff](https://github.com/iiwish/kgdiff) command line in
 Rust. It reads two versions of a graph — kgdiff JSON and five other JSON graph shapes, RDF
-(Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO or GraphML, gzip-compressed or not — and prints a
+(Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO, GraphML or GEXF, gzip-compressed or not — and prints a
 summary, `--stat`, `--name-status`, `--json`, a `--delta` for `kgdiff apply`, GitHub Markdown, or
 writes a self-contained interactive HTML report.
 

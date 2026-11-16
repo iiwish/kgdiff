@@ -168,8 +168,8 @@ set (repeated triples count once). The same graph in any RDF syntax therefore gi
   `rdf:parseType` `Resource`, `Collection` and `Literal` (an exclusive-canonical XML literal),
   and reification by `rdf:ID`. Entities declared in the DTD (as older Protégé versions write
   them) are expanded; external entities and DTDs are never loaded, and expansion is capped.
-  An OWL/XML document read as RDF/XML fails with a conversion hint, and a GraphML one with
-  the format to read it with.
+  An OWL/XML document read as RDF/XML fails with a conversion hint, and a GraphML or GEXF one
+  with the format to read it with.
 - **JSON-LD** 1.1 is expanded and converted to RDF per the W3C algorithms. Contexts are inline
   or come from the caller's synchronous `jsonld.documentLoader`; nothing is fetched, so a
   remote `@context` without a loader is an error. Without a base IRI, relative IRIs stay

@@ -1,0 +1,13 @@
+kgdiff  before.gexf → after.gexf               4 → 6 nodes · 4 → 5 edges
+
+  +2 added   ~2 modified   ⇄1 restructured          7 changes in 5 hunks
+  ++++~~⇄
+
+         added  removed  modified  unchanged
+  nodes      2        0         2          2
+  edges      2        1         0          3
+
+  By type
+  人物  2 +~
+  事件  1 ~
+  阵营  1 +

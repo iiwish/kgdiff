@@ -107,6 +107,8 @@ export function formatLabel(format: string): string {
       return 'JSON-LD';
     case 'graphml':
       return 'GraphML';
+    case 'gexf':
+      return 'GEXF';
     default:
       return format;
   }

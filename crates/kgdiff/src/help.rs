@@ -50,7 +50,7 @@ const MAIN: &[Section] = &[
         ],
         note: Some(
             "Graphs: JSON (.json), JSON-LD (.jsonld), Turtle (.ttl), N-Triples (.nt), N-Quads (.nq), \
-             TriG (.trig), RDF/XML (.rdf, .owl), OBO (.obo), GraphML (.graphml); gzip-compressed files work too. \
+             TriG (.trig), RDF/XML (.rdf, .owl), OBO (.obo), GraphML (.graphml), GEXF (.gexf); gzip-compressed files work too. \
              Use - to read one side from stdin.",
         ),
         entries: &[],
@@ -93,7 +93,7 @@ const MAIN: &[Section] = &[
         entries: &[
             d(
                 "-f, --format <fmt>",
-                "Input format: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml",
+                "Input format: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml, gexf",
                 "auto",
             ),
             e("--before-format <fmt>", "Format of <before> only"),

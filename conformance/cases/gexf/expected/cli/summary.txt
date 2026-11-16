@@ -1,0 +1,13 @@
+kgdiff  before.gexf → after.gexf                                 4 → 6 nodes · 4 → 5 edges
+
+  +2 added   ~2 modified   ⇄1 restructured                            7 changes in 5 hunks
+  ++++~~⇄
+
+  Restructured 1
+  ⇄ Removed “孙权” —参战→ “赤壁之战”   structure · relation removed
+  Modified 2
+  ~ Renamed “曹操” → “曹孟德”          content
+  ~ Updated attributes of “赤壁之战”   content · ~1 attribute
+  Added 2
+  + Added “周瑜” and 2 relations       added · type 人物 · linked to “孙权” and “赤壁之战”
+  + Added “孙刘联军”                   added · type 阵营 · standalone
