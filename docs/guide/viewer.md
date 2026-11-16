@@ -130,7 +130,6 @@ variant="mini">` instead of the legend card, say, or `<kgdiff-title slot="top-st
 those did ([below](#compose-your-own-layout)); `panels` keeps applying to every other region. In the compact layout of a narrow viewer the top-end
 content moves under the zoom buttons and the bottom content above the dock: keep it small there.
 
-
 ## Embed a small looping replay
 
 To show a graph's changes as a small strip on another page, leave the review UI out and let the
