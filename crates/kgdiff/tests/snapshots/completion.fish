@@ -23,12 +23,19 @@ function __kgdiff_first
     test (count (commandline -opc)) -eq 1
 end
 
+# Right after the subcommand: where `help` takes its topic and `completion` its shell.
+function __kgdiff_second
+    test (count (commandline -opc)) -eq 2
+end
+
 complete -c kgdiff -e
 complete -c kgdiff -n __kgdiff_first -a apply -d 'Apply a delta to a graph'
 complete -c kgdiff -n __kgdiff_first -a help -d 'Show help'
 complete -c kgdiff -n __kgdiff_first -a completion -d 'Print a shell completion script'
-complete -c kgdiff -n '__kgdiff_in help' -f -a 'apply completion'
-complete -c kgdiff -n '__kgdiff_in completion' -f -a 'bash zsh fish'
+complete -c kgdiff -n '__kgdiff_in help' -f
+complete -c kgdiff -n '__kgdiff_in help; and __kgdiff_second' -a 'apply completion'
+complete -c kgdiff -n '__kgdiff_in completion' -f
+complete -c kgdiff -n '__kgdiff_in completion; and __kgdiff_second' -a 'bash zsh fish'
 
 complete -c kgdiff -n '__kgdiff_in diff' -l help -s h -d 'Show this help'
 complete -c kgdiff -n '__kgdiff_in diff' -l version -s v -d 'Show the version'

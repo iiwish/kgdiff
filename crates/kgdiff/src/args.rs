@@ -275,6 +275,10 @@ fn apply_spec() -> Vec<OptionSpec> {
     COMMON.iter().chain(APPLY_ONLY.iter()).copied().collect()
 }
 
+/// The options that add up when given again (`--ignore-attr a --ignore-attr b`): the ones read
+/// with [`Values::strings`], which checks that it is asked for no other.
+const REPEATABLE: [&str; 4] = ["hierarchy", "ignore-attr", "panels", "watch-attr"];
+
 /// `kgdiff help [topic]` and `kgdiff completion <shell>`.
 const HELP_SPEC: [OptionSpec; 1] = [string("color")];
 const COMPLETION_SPEC: [OptionSpec; 2] = [short(boolean("help"), 'h'), string("color")];
@@ -344,10 +348,7 @@ pub fn completion_options(topic: HelpTopic) -> Vec<CompletionOption> {
             } else {
                 Completes::Text
             },
-            repeatable: matches!(
-                s.name,
-                "hierarchy" | "ignore-attr" | "panels" | "watch-attr"
-            ),
+            repeatable: REPEATABLE.contains(&s.name),
         })
         .collect()
 }
@@ -717,6 +718,7 @@ impl Values {
         })
     }
     fn strings(&self, name: &str) -> Vec<String> {
+        debug_assert!(REPEATABLE.contains(&name), "--{name} is not in REPEATABLE");
         self.0
             .values
             .get(name)
