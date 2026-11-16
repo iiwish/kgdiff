@@ -109,6 +109,8 @@ describe('createRenderer', () => {
     expect(renderer.canvas.width).toBe(1600);
     expect(renderer.canvas.height).toBe(1200);
     expect(renderer.canvas.style.touchAction).toBe('none');
+    // The focus ring is the host's: an inline `outline: none` would beat its `:focus-visible` rule.
+    expect(renderer.canvas.style.outline).toBe('');
   });
 
   it('caps the pixel ratio at 3', () => {
