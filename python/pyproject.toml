@@ -1,7 +1,7 @@
 # The Python distribution `pykgdiff` (RFC 0002, D-6 / D-7): for now only the kgdiff command line,
 # as one wheel per native target holding the binary dist built for the release (the same binary
 # as @kgdiff/cli's platform packages and the GitHub release's archives). The wheels have no
-# Python module: `import pykgdiff` and `python -m pykgdiff` are kept for the Python API, after 1.0.
+# Python module: `import pykgdiff` and `python -m pykgdiff` are kept for the Python API, in a later release.
 #
 # This file is read by scripts/pypi-wheels.py, which assembles the wheels from dist's archives
 # and adds the repository's LICENSE to each. There is no build backend and no sdist: building
