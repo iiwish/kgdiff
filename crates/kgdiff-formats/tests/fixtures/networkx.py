@@ -1,8 +1,9 @@
-# Writes the networkx-* fixtures: one graph each, as GraphML and as node-link JSON.
+# Writes the networkx-* fixtures: one graph each, as GraphML, as GEXF and as node-link JSON.
 #
 #   uv run --with networkx python crates/kgdiff-formats/tests/fixtures/networkx.py
 #
-# tests/graphml.rs checks that kgdiff reads the two files of a pair as the same graph.
+# tests/graphml.rs and tests/gexf.rs check that kgdiff reads the files of a graph as the same graph.
+# GEXF holds a graph's name and no other graph attribute, and a date in its <meta>.
 import json
 import pathlib
 
@@ -13,6 +14,7 @@ here = pathlib.Path(__file__).parent
 
 def write(name, graph):
     nx.write_graphml(graph, here / f"{name}.graphml")
+    nx.write_gexf(graph, here / f"{name}.gexf")
     data = nx.node_link_data(graph, edges="links")
     with open(here / f"{name}.json", "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=1)

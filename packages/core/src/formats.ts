@@ -20,7 +20,9 @@ export type FormatId =
   | 'rdfxml'
   | 'obo'
   /** GraphML, as NetworkX, igraph, yEd, Gephi and LightRAG write it: read as node-link data. */
-  | 'graphml';
+  | 'graphml'
+  /** GEXF 1.1 to 1.3, as Gephi and NetworkX write it: read as node-link data. */
+  | 'gexf';
 
 /** File extensions understood by `detectFormat` (matched case-insensitively, longest first). */
 export const FORMAT_EXTENSIONS: Readonly<Record<FormatId, readonly string[]>> = {
@@ -33,6 +35,7 @@ export const FORMAT_EXTENSIONS: Readonly<Record<FormatId, readonly string[]>> = 
   rdfxml: ['.rdf', '.owl'],
   obo: ['.obo'],
   graphml: ['.graphml'],
+  gexf: ['.gexf'],
 };
 
 /** JSON graph shapes recognised by the `json` format (reported as `ParseResult.dialect`). */
@@ -77,7 +80,15 @@ export type ParseWarningCode =
   /** GraphML: `<data>` with XML content (drawing data) was dropped. */
   | 'graphml-ignored-data'
   /** GraphML: a value that is not of its key's `attr.type` was kept as text. */
-  | 'graphml-invalid-value';
+  | 'graphml-invalid-value'
+  /** GEXF: `viz:` elements (position, colour, size, shape) were dropped. */
+  | 'gexf-ignored-viz'
+  /** GEXF: a dynamic graph was read as one static graph. */
+  | 'gexf-dynamic'
+  /** GEXF: nodes inside other nodes were read as plain nodes. */
+  | 'gexf-hierarchy'
+  /** GEXF: a value that is not of its attribute's `type` was kept as text. */
+  | 'gexf-invalid-value';
 
 export interface RdfOptions {
   /**

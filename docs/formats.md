@@ -11,6 +11,7 @@
 | OBO 1.4     | `.obo`                             | synonyms, `is_a`, relationships, obsoletion with `replaced_by`, `alt_id`           |
 | JSON graphs | `.json`                            | kgdiff, d3 / NetworkX node-link, Cytoscape.js, AntV G6 v5, graphology, vis-network |
 | GraphML     | `.graphml`                         | as NetworkX, igraph, yEd, Gephi and LightRAG write it; read as node-link data      |
+| GEXF        | `.gexf`                            | 1.1 to 1.3, as Gephi and NetworkX write it; read as node-link data                 |
 
 Any of them may be gzip-compressed (`.gz`) and encoded in UTF-8 or UTF-16.
 
@@ -23,14 +24,13 @@ and Functional Syntax under that extension.
 
 To skip detection, pass `--format <fmt>` for both inputs or `--before-format` /
 `--after-format` for one: `json`, `jsonld`, `turtle`, `ntriples`, `nquads`, `trig`, `rdfxml`,
-`obo` or `graphml`.
+`obo`, `graphml` or `gexf`.
 
 ## Recognised but not read
 
 | Format                                            | What to do                                                                       |
 | ------------------------------------------------- | -------------------------------------------------------------------------------- |
 | OWL/XML, OWL Functional Syntax, Manchester Syntax | Convert to RDF/XML or Turtle: `robot convert --input onto.owx --output onto.owl` |
-| GEXF                                              | Export GraphML or JSON instead, e.g. NetworkX node-link data                     |
 
 kgdiff names the format and the way out in its error message.
 
@@ -169,6 +169,35 @@ an attribute unless you name it, with `json.fields.type` of `parseGraph` (the fi
 the JSON reader apply to GraphML too). A multigraph that NetworkX writes has its edge keys as
 `<edge id>` in GraphML and as a `key` field in node-link JSON, so there the two files differ in
 the edge ids.
+
+## GEXF
+
+GEXF (1.1 to 1.3) is read the same way as GraphML: into node-link data, then as every other JSON
+graph.
+
+| GEXF                                            | Becomes                                                              |
+| ----------------------------------------------- | -------------------------------------------------------------------- |
+| `<node id label>`                               | the node id and its label                                            |
+| `<edge source target>`, `id`, `label`, `weight` | an edge, its id, its label and a numeric `weight` attribute          |
+| `<edge kind>` (GEXF 1.3)                        | the relation; without it, the edge's label is                        |
+| `<attvalue for value>`                          | a field named by the attribute's `title`, typed by its `type`        |
+| `type` `integer`, `long`, `float`, `double`     | a number                                                             |
+| `type` `boolean`                                | a boolean                                                            |
+| `<default>` of an attribute                     | the value of every node or edge of its class without an `<attvalue>` |
+| `<graph name>`                                  | the graph's name                                                     |
+
+An edge's `type` (`directed`, `undirected`, `mutual`) is not read, and edges keep their ends as
+written, as in GraphML. The numbers Gephi and NetworkX give edges as ids are read as edge ids;
+they play no part in a comparison unless you ask for `--edge-identity id`, so a graph saved as
+GEXF and as node-link JSON is still the same graph.
+
+Left out with a warning:
+
+- `viz:` elements, which hold position, colour, size and shape (`gexf-ignored-viz`);
+- time: a dynamic graph is read as one static graph, and of an attribute that changes over time
+  the last value is read (`gexf-dynamic`);
+- the hierarchy: nodes inside other nodes, or with a `pid`, are plain nodes (`gexf-hierarchy`);
+- a value that is not of its attribute's type stays text (`gexf-invalid-value`).
 
 ## RDF and OBO
 

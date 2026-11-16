@@ -33,7 +33,7 @@ kgdiff --help | --version | help [apply|completion]
 
 ### 输入格式
 
-格式由扩展名决定：`.json`、`.jsonld`、`.ttl`、`.nt`、`.nq`、`.trig`、`.rdf`、`.owl`、`.obo`、`.graphml`，也可以再套一层 `.gz`；其他文件名和标准输入则由内容决定。有两个扩展名会再看一眼内容：内容是 JSON-LD（顶层有 `@context`、`@graph`、`@id` 等）的 `.json` 按 JSON-LD 读取；`.owl` 按其实际包含的语法读取，因为 Protégé 也会用这个扩展名写 Turtle、OWL/XML 或函数式语法。kgdiff 能识别但不读取的格式（OWL/XML、OWL 函数式语法和 Manchester 语法、GEXF）会报错并给出转换提示。JSON-LD 的 context 必须内联：kgdiff 从不获取远程 `@context`（这样运行始终离线、可复现），引用了远程 context 的文档会报错，并提示把它内联。
+格式由扩展名决定：`.json`、`.jsonld`、`.ttl`、`.nt`、`.nq`、`.trig`、`.rdf`、`.owl`、`.obo`、`.graphml`、`.gexf`，也可以再套一层 `.gz`；其他文件名和标准输入则由内容决定。有两个扩展名会再看一眼内容：内容是 JSON-LD（顶层有 `@context`、`@graph`、`@id` 等）的 `.json` 按 JSON-LD 读取；`.owl` 按其实际包含的语法读取，因为 Protégé 也会用这个扩展名写 Turtle、OWL/XML 或函数式语法。kgdiff 能识别但不读取的格式（OWL/XML、OWL 函数式语法和 Manchester 语法）会报错并给出转换提示。JSON-LD 的 context 必须内联：kgdiff 从不获取远程 `@context`（这样运行始终离线、可复现），引用了远程 context 的文档会报错，并提示把它内联。
 
 ### 选择输出（默认：摘要写到标准输出）
 

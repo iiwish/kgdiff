@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf xmlns="http://www.gexf.net/1.2draft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.2draft http://www.gexf.net/1.2draft/gexf.xsd" version="1.2">
+  <meta lastmodifieddate="2026-11-16">
+    <creator>NetworkX 3.5</creator>
+  </meta>
+  <graph defaultedgetype="directed" mode="static" name="">
+    <attributes mode="static" class="edge">
+      <attribute id="4" title="description" type="string" />
+      <attribute id="5" title="keywords" type="string" />
+      <attribute id="6" title="source_id" type="string" />
+    </attributes>
+    <attributes mode="static" class="node">
+      <attribute id="0" title="entity_id" type="string" />
+      <attribute id="1" title="entity_type" type="string" />
+      <attribute id="2" title="description" type="string" />
+      <attribute id="3" title="source_id" type="string" />
+    </attributes>
+    <nodes>
+      <node id="1" label="1">
+        <attvalues>
+          <attvalue for="0" value="Ada" />
+          <attvalue for="1" value="person" />
+          <attvalue for="2" value="Wrote the first program" />
+          <attvalue for="3" value="chunk-1" />
+        </attvalues>
+      </node>
+      <node id="2" label="2">
+        <attvalues>
+          <attvalue for="0" value="Engine" />
+          <attvalue for="1" value="machine" />
+          <attvalue for="2" value="Analytical Engine" />
+          <attvalue for="3" value="chunk-1&lt;SEP&gt;chunk-2" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge source="1" target="2" id="0" weight="2.0">
+        <attvalues>
+          <attvalue for="4" value="designed programs for" />
+          <attvalue for="5" value="program,design" />
+          <attvalue for="6" value="chunk-1" />
+        </attvalues>
+      </edge>
+    </edges>
+  </graph>
+</gexf>

@@ -11,6 +11,7 @@
 | OBO 1.4     | `.obo`                              | 同义词、`is_a`、relationship、带 `replaced_by` 的废弃、`alt_id`                    |
 | JSON 图     | `.json`                             | kgdiff、d3 / NetworkX node-link、Cytoscape.js、AntV G6 v5、graphology、vis-network |
 | GraphML     | `.graphml`                          | NetworkX、igraph、yEd、Gephi、LightRAG 写出的文件；按 node-link 数据读取           |
+| GEXF        | `.gexf`                             | 1.1 到 1.3，Gephi 和 NetworkX 写出的文件；按 node-link 数据读取                    |
 
 以上格式都可以用 gzip 压缩（`.gz`），编码可以是 UTF-8 或 UTF-16。
 
@@ -18,14 +19,13 @@
 
 格式由扩展名决定；没有可识别的扩展名或从标准输入（`-`）读取时，由内容决定。有两个扩展名会再看一眼内容：内容是 JSON-LD 的 `.json` 文件按 JSON-LD 读取；`.owl` 文件按其实际使用的语法读取，因为 Protégé 也会用这个扩展名保存 Turtle、OWL/XML 和函数式语法。
 
-要跳过格式判断，用 `--format <fmt>` 指定两个输入的格式，或用 `--before-format` / `--after-format` 只指定一侧：可选 `json`、`jsonld`、`turtle`、`ntriples`、`nquads`、`trig`、`rdfxml`、`obo` 或 `graphml`。
+要跳过格式判断，用 `--format <fmt>` 指定两个输入的格式，或用 `--before-format` / `--after-format` 只指定一侧：可选 `json`、`jsonld`、`turtle`、`ntriples`、`nquads`、`trig`、`rdfxml`、`obo`、`graphml` 或 `gexf`。
 
 ## 能识别但不读取的格式
 
 | 格式                                     | 怎么办                                                                       |
 | ---------------------------------------- | ---------------------------------------------------------------------------- |
 | OWL/XML、OWL 函数式语法、Manchester 语法 | 转换成 RDF/XML 或 Turtle：`robot convert --input onto.owx --output onto.owl` |
-| GEXF                                     | 改为导出 GraphML 或 JSON，例如 NetworkX node-link 数据                       |
 
 kgdiff 会在错误信息里说明是什么格式、该怎么转换。
 
@@ -136,6 +136,30 @@ kgdiff 不读取的内容会略过并给出警告，不会报错：
 - 和 key 声明的类型不符的值（`long` 写成 `about 175`，`double` 写成 `inf`）保留为文本（`graphml-invalid-value`）。
 
 LightRAG 把实体的类型放在 `entity_type` 里，它不在类型字段之列：除非你用 `parseGraph` 的 `json.fields.type` 指明，否则它只是一个属性（JSON 读取器的字段覆盖对 GraphML 同样生效）。NetworkX 写出的多重图，边的 key 在 GraphML 里是 `<edge id>`，在 node-link JSON 里是 `key` 字段，所以这两种文件的边 id 不同。
+
+## GEXF
+
+GEXF（1.1 到 1.3）的读法和 GraphML 一样：先读成 node-link 数据，再和其他 JSON 图一样处理。
+
+| GEXF                                            | 变成                                              |
+| ----------------------------------------------- | ------------------------------------------------- |
+| `<node id label>`                               | 节点 id 和标签                                    |
+| `<edge source target>`、`id`、`label`、`weight` | 一条边，以及它的 id、标签和数字属性 `weight`      |
+| `<edge kind>`（GEXF 1.3）                       | 关系名；没有它时用边的标签                        |
+| `<attvalue for value>`                          | 一个字段，名字是属性的 `title`，类型按它的 `type` |
+| `type` 为 `integer`、`long`、`float`、`double`  | 数字                                              |
+| `type` 为 `boolean`                             | 布尔值                                            |
+| 属性的 `<default>`                              | 同一类里没有写 `<attvalue>` 的节点或边都取这个值  |
+| `<graph name>`                                  | 图的名称                                          |
+
+边的 `type`（`directed`、`undirected`、`mutual`）不读取，边的两端按文件里写的顺序保留，和 GraphML 相同。Gephi 和 NetworkX 给边编的号会读成边的 id；除非指定 `--edge-identity id`，否则它们不参与比较，所以同一张图存成 GEXF 和 node-link JSON 仍然是同一张图。
+
+以下内容会略过并给出警告：
+
+- `viz:` 元素，里面是位置、颜色、大小和形状（`gexf-ignored-viz`）；
+- 时间：动态图按一张静态图读取，随时间变化的属性取最后一个值（`gexf-dynamic`）；
+- 层级：节点里面的节点，或带 `pid` 的节点，都当作普通节点（`gexf-hierarchy`）；
+- 和属性声明的类型不符的值保留为文本（`gexf-invalid-value`）。
 
 ## RDF 与 OBO
 

@@ -22,6 +22,7 @@ pub const FORMAT_EXTENSIONS: &[(FormatId, &[&str])] = &[
     (FormatId::RdfXml, &[".rdf", ".owl"]),
     (FormatId::Obo, &[".obo"]),
     (FormatId::GraphMl, &[".graphml"]),
+    (FormatId::Gexf, &[".gexf"]),
 ];
 
 /// Extensions several syntaxes share (`.owl` holds Turtle, OWL/XML or Functional Syntax too):
@@ -135,6 +136,7 @@ pub fn sniff_format(
             return match kind {
                 XmlKind::RdfXml => Ok(FormatId::RdfXml),
                 XmlKind::GraphMl => Ok(FormatId::GraphMl),
+                XmlKind::Gexf => Ok(FormatId::Gexf),
                 XmlKind::Unsupported(kind) => {
                     Err(unsupported_format(kind, filename, Some(&root.qname)))
                 }
@@ -225,13 +227,10 @@ pub enum Unsupported {
     OwlXml,
     OwlFunctional,
     OwlManchester,
-    Gexf,
     Xml,
 }
 
 const TO_RDF: &str = "Convert it to RDF/XML or Turtle first (e.g. `robot convert --input onto.owx --output onto.owl`).";
-const TO_JSON: &str =
-    "Export it as GraphML or JSON first (e.g. NetworkX node-link data or Cytoscape.js JSON).";
 
 impl Unsupported {
     fn name(self) -> &'static str {
@@ -239,7 +238,6 @@ impl Unsupported {
             Unsupported::OwlXml => "OWL/XML",
             Unsupported::OwlFunctional => "OWL Functional Syntax",
             Unsupported::OwlManchester => "OWL Manchester Syntax",
-            Unsupported::Gexf => "GEXF",
             Unsupported::Xml => "XML",
         }
     }
@@ -247,7 +245,6 @@ impl Unsupported {
     fn hint(self) -> &'static str {
         match self {
             Unsupported::OwlXml | Unsupported::OwlFunctional | Unsupported::OwlManchester => TO_RDF,
-            Unsupported::Gexf => TO_JSON,
             Unsupported::Xml => {
                 "kgdiff reads RDF/XML (an rdf:RDF root element, or a node element with rdf:about); other XML vocabularies are not graph formats it knows."
             }
@@ -292,6 +289,7 @@ pub struct XmlRootInfo<'a> {
 pub enum XmlKind {
     RdfXml,
     GraphMl,
+    Gexf,
     Unsupported(Unsupported),
 }
 
@@ -309,7 +307,7 @@ pub fn classify_xml_root(root: &XmlRootInfo<'_>) -> XmlKind {
         return XmlKind::GraphMl;
     }
     if lower == "gexf" {
-        return XmlKind::Unsupported(Unsupported::Gexf);
+        return XmlKind::Gexf;
     }
     if root.rdf_attributes || root.rdf_namespace {
         XmlKind::RdfXml
@@ -951,7 +949,8 @@ mod tests {
         assert_eq!(detect("hello world", None), "error");
         assert_eq!(detect("Prefix(:=<x>)", None), "error");
         assert_eq!(detect("<graphml xmlns=\"x\"></graphml>", None), "graphml");
-        assert_eq!(detect("<gexf xmlns=\"x\"></gexf>", None), "error");
+        assert_eq!(detect("<gexf xmlns=\"x\"></gexf>", None), "gexf");
+        assert_eq!(detect("<Ontology xmlns=\"x\"/>", None), "error");
     }
 
     #[test]

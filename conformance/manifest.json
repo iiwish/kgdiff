@@ -275,6 +275,18 @@
       ]
     },
     {
+      "id": "gexf",
+      "covers": [
+        "gexf",
+        "typed-attributes",
+        "defaults",
+        "viz",
+        "hierarchy",
+        "dynamic",
+        "edge-kind"
+      ]
+    },
+    {
       "id": "jsonld",
       "covers": [
         "jsonld",

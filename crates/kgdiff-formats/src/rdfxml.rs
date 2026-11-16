@@ -169,10 +169,15 @@ impl RdfXmlReader {
             rdf_attributes: element.attributes.iter().any(|a| a.uri == RDF_NS),
             rdf_namespace: element.namespaces.iter().any(|(_, uri)| uri == RDF_NS),
         });
-        if matches!(kind, XmlKind::GraphMl) {
-            return Err(XmlError::Other(Box::new(invalid_input(
-                "The document is GraphML, not RDF/XML: read it with the format `graphml`.",
-            ))));
+        let other = match kind {
+            XmlKind::GraphMl => Some(("GraphML", "graphml")),
+            XmlKind::Gexf => Some(("GEXF", "gexf")),
+            _ => None,
+        };
+        if let Some((name, id)) = other {
+            return Err(XmlError::Other(Box::new(invalid_input(format!(
+                "The document is {name}, not RDF/XML: read it with the format `{id}`."
+            )))));
         }
         if let XmlKind::Unsupported(kind) = kind
             && kind != crate::detect::Unsupported::Xml

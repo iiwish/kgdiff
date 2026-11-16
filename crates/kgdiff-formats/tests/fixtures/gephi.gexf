@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- What Gephi writes: GEXF 1.3 with drawing data, defaults, a hierarchy and time. -->
+<gexf xmlns="http://gexf.net/1.3" xmlns:viz="http://gexf.net/1.3/viz" version="1.3">
+  <meta lastmodifieddate="2026-11-16">
+    <creator>Gephi 0.10.1</creator>
+    <description>Animals</description>
+  </meta>
+  <graph defaultedgetype="directed" mode="dynamic" timeformat="date">
+    <attributes class="node" mode="static">
+      <attribute id="kind" title="type" type="string">
+        <default>concept</default>
+      </attribute>
+      <attribute id="rank" title="rank" type="integer"/>
+      <attribute id="seen" title="reviewed" type="boolean">
+        <default>false</default>
+      </attribute>
+    </attributes>
+    <attributes class="edge" mode="dynamic">
+      <attribute id="score" title="score" type="float"/>
+    </attributes>
+    <nodes>
+      <node id="animal" label="Animal">
+        <attvalues>
+          <attvalue for="rank" value="1"/>
+        </attvalues>
+        <viz:size value="20.0"/>
+        <viz:position x="15.8" y="40.1" z="0.0"/>
+        <viz:color r="239" g="173" b="66"/>
+      </node>
+      <node id="mammals" label="Mammals">
+        <attvalues>
+          <attvalue for="kind" value="group"/>
+        </attvalues>
+        <nodes>
+          <node id="cat" label="Cat &amp; kitten" start="2026-01-01">
+            <attvalues>
+              <attvalue for="seen" value="TRUE"/>
+              <attvalue for="rank" value="first"/>
+            </attvalues>
+          </node>
+          <node id="dog" label="Dog">
+            <attvalues>
+              <attvalue for="note" value="undeclared attribute"/>
+            </attvalues>
+          </node>
+        </nodes>
+      </node>
+      <node id="bird" label="Bird" pid="animal"/>
+    </nodes>
+    <edges>
+      <edge id="0" source="mammals" target="animal" kind="is_a"/>
+      <edge id="1" source="cat" target="dog" label="chases" weight="0.5" type="directed">
+        <attvalues>
+          <attvalue for="score" value="0.2" start="2026-01-01" end="2026-06-30"/>
+          <attvalue for="score" value="0.9" start="2026-07-01"/>
+        </attvalues>
+        <viz:thickness value="2.0"/>
+      </edge>
+      <edge id="2" source="bird" target="animal" kind="is_a" label="is a" weight="heavy"/>
+    </edges>
+  </graph>
+</gexf>
