@@ -13,7 +13,7 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-base64 = "0.22"
+base64 = "0.23"
 flate2 = "1.1"
 kgdiff-core.workspace = true
 kgdiff-formats.workspace = true
