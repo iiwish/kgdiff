@@ -26,6 +26,7 @@ Windows x64. On another platform, `cargo install kgdiff` builds the same program
 ```
 kgdiff <before> <after> [options]
 kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]]
+kgdiff completion <bash|zsh|fish>
 kgdiff --help | --version
 ```
 

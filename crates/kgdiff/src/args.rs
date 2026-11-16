@@ -33,6 +33,8 @@ const THEMES: [&str; 3] = ["auto", "light", "dark"];
 /// `changes` is the viewer's legacy mode: overlay with `--scope changes`.
 const MODES: [&str; 4] = ["overlay", "swipe", "replay", "changes"];
 const SCOPES: [&str; 2] = ["all", "changes"];
+/// `--locale` values as the shells complete them (`match_locale` accepts other spellings too).
+const LOCALES: [&str; 2] = ["en", "zh-CN"];
 /// `--panels` regions and states (`@kgdiff/viewer/panels`).
 pub const PANEL_REGIONS: [&str; 11] = [
     "list",
@@ -121,17 +123,49 @@ pub struct ApplyCommandOptions {
 /// What the command line asks for.
 #[derive(Clone, Debug)]
 pub enum Command {
-    Help { topic: HelpTopic, color: ColorMode },
+    Help {
+        topic: HelpTopic,
+        color: ColorMode,
+    },
     Version,
     Diff(Box<DiffCommandOptions>),
     Apply(Box<ApplyCommandOptions>),
+    /// `kgdiff completion <shell>`.
+    Completion(Shell),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HelpTopic {
     Main,
     Apply,
+    Completion,
 }
+
+/// A shell `kgdiff completion` writes a script for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Shell {
+    Bash,
+    Zsh,
+    Fish,
+}
+
+impl Shell {
+    pub const ALL: [&'static str; 3] = ["bash", "zsh", "fish"];
+
+    pub fn from_id(id: &str) -> Option<Shell> {
+        match id {
+            "bash" => Some(Shell::Bash),
+            "zsh" => Some(Shell::Zsh),
+            "fish" => Some(Shell::Fish),
+            _ => None,
+        }
+    }
+}
+
+/// The subcommands, as the first argument names them.
+pub const SUBCOMMANDS: [&str; 3] = ["apply", "help", "completion"];
+/// What `kgdiff help <topic>` accepts.
+pub const HELP_TOPICS: [&str; 2] = ["apply", "completion"];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
@@ -239,6 +273,83 @@ fn diff_spec() -> Vec<OptionSpec> {
 
 fn apply_spec() -> Vec<OptionSpec> {
     COMMON.iter().chain(APPLY_ONLY.iter()).copied().collect()
+}
+
+/// `kgdiff help [topic]` and `kgdiff completion <shell>`.
+const HELP_SPEC: [OptionSpec; 1] = [string("color")];
+const COMPLETION_SPEC: [OptionSpec; 2] = [short(boolean("help"), 'h'), string("color")];
+
+// ─── What a shell completes ──────────────────────────────────────────────────
+
+/// What a shell offers after an option (`kgdiff completion`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Completes {
+    /// A flag: nothing follows.
+    Nothing,
+    /// One of a fixed set.
+    Choices(&'static [&'static str]),
+    /// A file path.
+    File,
+    /// A file path that may be left out (`--json [file]`).
+    OptionalFile,
+    /// A value no list can name (a number, a title, an attribute key).
+    Text,
+}
+
+/// An option as the completion scripts need it.
+#[derive(Clone, Copy, Debug)]
+pub struct CompletionOption {
+    pub name: &'static str,
+    pub short: Option<char>,
+    pub value: Completes,
+    /// Whether giving the option again adds to it (`--ignore-attr a --ignore-attr b`).
+    pub repeatable: bool,
+}
+
+/// The fixed set of values of an option, for those that have one. The parsers check the same
+/// constants, and `tests/completion.rs` checks that the two agree.
+fn choices_of(name: &str) -> Option<&'static [&'static str]> {
+    Some(match name {
+        "format" | "before-format" | "after-format" => &FORMATS,
+        "match" => &MATCH_STRATEGIES,
+        "edge-identity" => &EDGE_IDENTITIES,
+        "theme" => &THEMES,
+        "mode" => &MODES,
+        "scope" => &SCOPES,
+        "color" => &ColorMode::ALL,
+        "locale" => &LOCALES,
+        _ => return None,
+    })
+}
+
+/// The options of a command, in the order of its table: `Main` is `kgdiff <before> <after>`.
+pub fn completion_options(topic: HelpTopic) -> Vec<CompletionOption> {
+    let spec = match topic {
+        HelpTopic::Main => diff_spec(),
+        HelpTopic::Apply => apply_spec(),
+        HelpTopic::Completion => COMPLETION_SPEC.to_vec(),
+    };
+    spec.iter()
+        .map(|s| CompletionOption {
+            name: s.name,
+            short: s.short,
+            value: if s.kind == Kind::Boolean {
+                Completes::Nothing
+            } else if s.optional_value {
+                Completes::OptionalFile
+            } else if let Some(choices) = choices_of(s.name) {
+                Completes::Choices(choices)
+            } else if looks_like_path(s.name) {
+                Completes::File
+            } else {
+                Completes::Text
+            },
+            repeatable: matches!(
+                s.name,
+                "hierarchy" | "ignore-attr" | "panels" | "watch-attr"
+            ),
+        })
+        .collect()
 }
 
 // ─── Suggestions ─────────────────────────────────────────────────────────────
@@ -1012,6 +1123,48 @@ fn parse_apply(argv: &[String]) -> CliResult<Command> {
     })))
 }
 
+/// `kgdiff completion <shell> [--color <when>]`
+fn parse_completion(argv: &[String]) -> CliResult<Command> {
+    const USAGE: &str = "Usage: kgdiff completion <bash|zsh|fish>.";
+    let v = Values(raw_parse(argv, &COMPLETION_SPEC, 0)?);
+    let color = parse_common(&v)?.color;
+    if v.flag("help") {
+        return Ok(Command::Help {
+            topic: HelpTopic::Completion,
+            color,
+        });
+    }
+    match v.0.positionals.as_slice() {
+        [] => Err(usage_with("Missing <shell> argument.", USAGE)),
+        [shell] => Shell::from_id(shell)
+            .map(Command::Completion)
+            .ok_or_else(|| {
+                let close = suggest(shell, &Shell::ALL)
+                    .map_or_else(String::new, |c| format!("Did you mean \"{c}\"? "));
+                usage_with(
+                    format!("Unknown shell \"{shell}\"."),
+                    format!("{close}Expected one of: {}.", Shell::ALL.join(", ")),
+                )
+            }),
+        [_, extra @ ..] => Err(usage_with(
+            format!(
+                "Unexpected {} {}.",
+                if extra.len() > 1 {
+                    "arguments"
+                } else {
+                    "argument"
+                },
+                extra
+                    .iter()
+                    .map(|p| format!("\"{p}\""))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            format!("kgdiff completion takes one shell. {USAGE}"),
+        )),
+    }
+}
+
 /// Parses `argv` (without the program name) into a command.
 ///
 /// # Errors
@@ -1021,25 +1174,27 @@ pub fn parse_command_line(argv: &[String]) -> CliResult<Command> {
     match argv.first().map(String::as_str) {
         Some("apply") => parse_apply(&argv[1..]),
         Some("help") => {
-            // `kgdiff help [apply] [--color <when>]`
-            let raw = raw_parse(&argv[1..], &[string("color")], 0)?;
+            // `kgdiff help [apply|completion] [--color <when>]`
+            let raw = raw_parse(&argv[1..], &HELP_SPEC, 0)?;
             let topic = raw.positionals.join(" ");
-            if raw.positionals.len() > 1 || (!topic.is_empty() && topic != "apply") {
-                return Err(usage_with(
-                    format!("Unknown help topic \"{topic}\"."),
-                    "Try `kgdiff help` or `kgdiff help apply`.",
-                ));
-            }
+            let help_topic = match topic.as_str() {
+                "" => HelpTopic::Main,
+                "apply" => HelpTopic::Apply,
+                "completion" => HelpTopic::Completion,
+                _ => {
+                    return Err(usage_with(
+                        format!("Unknown help topic \"{topic}\"."),
+                        "Try `kgdiff help`, `kgdiff help apply` or `kgdiff help completion`.",
+                    ));
+                }
+            };
             let color = parse_common(&Values(raw))?.color;
             Ok(Command::Help {
-                topic: if topic == "apply" {
-                    HelpTopic::Apply
-                } else {
-                    HelpTopic::Main
-                },
+                topic: help_topic,
                 color,
             })
         }
+        Some("completion") => parse_completion(&argv[1..]),
         _ => parse_diff(argv),
     }
 }

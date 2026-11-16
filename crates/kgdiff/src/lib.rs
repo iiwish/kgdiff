@@ -39,6 +39,8 @@ pub mod cli;
 #[doc(hidden)]
 pub mod commands;
 #[doc(hidden)]
+pub mod completion;
+#[doc(hidden)]
 pub mod errors;
 #[doc(hidden)]
 pub mod help;

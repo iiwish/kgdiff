@@ -27,7 +27,8 @@ cargo install kgdiff                 # Rust
 ```
 kgdiff <before> <after> [options]
 kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--allow-empty]
-kgdiff --help | --version | help [apply]
+kgdiff completion <bash|zsh|fish>
+kgdiff --help | --version | help [apply|completion]
 ```
 
 `<before>` / `<after>` are file paths, or `-` for stdin (one side at most). An empty input
@@ -132,6 +133,31 @@ Unexpected errors include a link to the bug-report form, prefilled with the CLI 
 operating-system platform and architecture. The link never includes the error message or input
 paths; review any diagnostic output before sharing it. Expected usage, input and output errors
 keep their existing hints.
+
+### Shell completion
+
+`kgdiff completion <bash|zsh|fish>` prints a completion script for the shell on stdout. Write it
+where the shell looks for completions, once:
+
+```sh
+kgdiff completion bash > ~/.local/share/bash-completion/completions/kgdiff
+kgdiff completion zsh > "${fpath[1]}/_kgdiff"
+kgdiff completion fish > ~/.config/fish/completions/kgdiff.fish
+```
+
+or load it when the shell starts: `source <(kgdiff completion bash)` in `~/.bashrc`,
+`source <(kgdiff completion zsh)` in `~/.zshrc` after `compinit`, `kgdiff completion fish | source`
+in `config.fish`. Write the script again after upgrading kgdiff, since a newer version may have
+new options.
+
+The scripts complete the options (long and short), the values of the options that take one of a
+fixed set (`--format`, `--before-format`, `--after-format`, `--match`, `--edge-identity`,
+`--theme`, `--mode`, `--scope`, `--color`, `--locale`), file names for the two graphs and for the
+options that take a file, and the `apply`, `help` and `completion` commands with their own
+options. They are generated from the same tables the command line is parsed with, so they list
+exactly the options of the version that printed them. `apply`, `help` and `completion` are
+commands only as the first argument: to compare a file with one of these names, write it as a
+path (`./completion`).
 
 ## Terminal summary
 
