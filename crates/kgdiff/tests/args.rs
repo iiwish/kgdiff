@@ -444,6 +444,7 @@ fn recognises_help_and_version_anywhere() {
         Ok(Command::Version) => "version",
         Ok(Command::Diff(_)) => "diff",
         Ok(Command::Apply(_)) => "apply",
+        Ok(Command::Completion(_)) => "completion",
         Err(_) => "error",
     };
     assert_eq!(kind(&["--help"]), "help");

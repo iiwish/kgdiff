@@ -342,8 +342,8 @@ waits for 1.0. Patch releases come as they are ready. A breaking minor release c
 often than about every six to eight weeks, with a migration guide. The plan by release, which
 the needs of the first host may reorder:
 
-- **0.12.x**, fixes and additions: the rule for hunk ids as a documented promise · the viewer's
-  accessibility review ([#16](https://github.com/iiwish/kgdiff/issues/16)) · shell completions ([#20](https://github.com/iiwish/kgdiff/issues/20)) · GraphML and GEXF input
+- **0.12.x**, fixes and additions: shell completions (0.12.2) · the viewer's accessibility review
+  ([#16](https://github.com/iiwish/kgdiff/issues/16)) · GraphML and GEXF input
   ([#8](https://github.com/iiwish/kgdiff/issues/8), [#9](https://github.com/iiwish/kgdiff/issues/9)) · native binaries on GitHub releases and a Homebrew formula.
 - **0.13**, may break: the embedding interface of the `kgdiff` crate (`CliIo`) in Rust's idiom ·
   what the accessibility review and the first host ask to change · the plain view of one graph,

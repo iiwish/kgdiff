@@ -25,7 +25,8 @@ cargo install kgdiff                 # Rust
 ```
 kgdiff <before> <after> [options]
 kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--allow-empty]
-kgdiff --help | --version | help [apply]
+kgdiff completion <bash|zsh|fish>
+kgdiff --help | --version | help [apply|completion]
 ```
 
 `<before>` / `<after>` 是文件路径，或者用 `-` 表示标准输入（最多一侧）。空输入（0 字节或只有空白，无论来自文件还是标准输入）视为输入错误，除非加上 `--allow-empty`，这时按空图读取。否则一侧悄悄变空，结果就会是“全部删除”。
@@ -98,6 +99,20 @@ kgdiff --help | --version | help [apply]
 退出码：`0` 成功（带 `--exit-code` 时表示没有差异），`1` 有差异（仅在带 `--exit-code` 时），`2` 用法或输入错误（信息写在标准错误中，除非设置 `DEBUG=kgdiff`，否则从不打印堆栈）。
 
 遇到意外错误时，CLI 会给出一个错误报告链接，预先填好 CLI 版本、操作系统平台和架构。链接不会包含错误信息或输入路径；分享诊断输出前请先检查一遍。预期内的用法、输入和输出错误仍保留原有提示。
+
+### Shell 补全
+
+`kgdiff completion <bash|zsh|fish>` 把对应 shell 的补全脚本打印到标准输出。把它写到 shell 找补全的目录里，写一次就行：
+
+```sh
+kgdiff completion bash > ~/.local/share/bash-completion/completions/kgdiff
+kgdiff completion zsh > "${fpath[1]}/_kgdiff"
+kgdiff completion fish > ~/.config/fish/completions/kgdiff.fish
+```
+
+也可以在 shell 启动时加载：在 `~/.bashrc` 里写 `source <(kgdiff completion bash)`，在 `~/.zshrc` 里 `compinit` 之后写 `source <(kgdiff completion zsh)`，在 `config.fish` 里写 `kgdiff completion fish | source`。升级 kgdiff 以后重新写一次脚本，新版本可能有新的选项。
+
+脚本能补全选项（长短两种写法）、取值固定的选项的值（`--format`、`--before-format`、`--after-format`、`--match`、`--edge-identity`、`--theme`、`--mode`、`--scope`、`--color`、`--locale`）、两个图文件和接受文件的选项的文件名，以及 `apply`、`help`、`completion` 这三个命令和它们各自的选项。脚本是从解析命令行用的同一批表生成的，所以列出的正好是打印它的那个版本的选项。`apply`、`help` 和 `completion` 只有作为第一个参数时才是命令：要比较叫这些名字的文件，把它写成路径（`./completion`）。
 
 ## 终端摘要
 

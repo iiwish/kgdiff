@@ -13,6 +13,7 @@ use kgdiff_report::Painter;
 use crate::VERSION;
 use crate::args::{Command, parse_command_line, peek_color_mode};
 use crate::commands::{run_apply, run_diff};
+use crate::completion::completion_script;
 use crate::errors::{CliResult, Failure, bug_report_url, debug_enabled, format_error};
 use crate::help::render_help;
 use crate::io::CliIo;
@@ -35,6 +36,10 @@ fn dispatch(argv: &[String], io: &mut dyn CliIo) -> CliResult<u8> {
         }
         Command::Diff(options) => run_diff(&options, io),
         Command::Apply(options) => run_apply(&options, io),
+        Command::Completion(shell) => {
+            io.write_stdout(&completion_script(shell));
+            Ok(0)
+        }
     }
 }
 

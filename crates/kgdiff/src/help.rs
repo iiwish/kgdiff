@@ -46,6 +46,7 @@ const MAIN: &[Section] = &[
                 "kgdiff apply <graph> <delta> [-o <file>] [--no-strict]",
                 None,
             ),
+            ("kgdiff completion <bash|zsh|fish>", None),
         ],
         note: Some(
             "Graphs: JSON (.json), JSON-LD (.jsonld), Turtle (.ttl), N-Triples (.nt), N-Quads (.nq), \
@@ -320,6 +321,67 @@ const APPLY: &[Section] = &[
     },
 ];
 
+const COMPLETION: &[Section] = &[
+    Section {
+        title: "Usage",
+        lines: &[("kgdiff completion <bash|zsh|fish>", None)],
+        note: Some(
+            "Prints a completion script for the shell on stdout: options and their values, \
+             file names, and the apply, help and completion commands.",
+        ),
+        entries: &[],
+    },
+    Section {
+        title: "Options",
+        note: None,
+        entries: &[
+            d("--color <when>", "auto, always, never", "auto"),
+            e("-h, --help", "Show this help"),
+        ],
+        lines: &[],
+    },
+    Section {
+        title: "Install",
+        lines: &[
+            ("source <(kgdiff completion bash)", Some("in ~/.bashrc")),
+            ("source <(kgdiff completion zsh)", Some("in ~/.zshrc")),
+            ("kgdiff completion fish | source", Some("in config.fish")),
+        ],
+        note: Some(
+            "In zsh, after compinit. Or write the script once to the shell's completions \
+             directory, for example kgdiff completion zsh > \"${fpath[1]}/_kgdiff\"",
+        ),
+        entries: &[],
+    },
+];
+
+fn sections(topic: HelpTopic) -> &'static [Section] {
+    match topic {
+        HelpTopic::Main => MAIN,
+        HelpTopic::Apply => APPLY,
+        HelpTopic::Completion => COMPLETION,
+    }
+}
+
+/// What the help says about the option `--name` of a command, for the completion scripts. A
+/// command's page leaves out some options every command has (`--version`, `--locale`): those
+/// are described as on the main page.
+pub fn option_description(topic: HelpTopic, name: &str) -> Option<&'static str> {
+    let long = format!("--{name}");
+    let on = |sections: &'static [Section]| {
+        sections
+            .iter()
+            .flat_map(|s| s.entries.iter())
+            .find(|e| {
+                e.flags
+                    .split([' ', ','])
+                    .any(|token| token == long.as_str())
+            })
+            .map(|e| e.text)
+    };
+    on(sections(topic)).or_else(|| on(MAIN))
+}
+
 const INDENT: &str = "  ";
 const MAX_FLAGS: usize = 26;
 
@@ -358,11 +420,7 @@ fn sub(a: usize, b: usize) -> usize {
 /// The help text. `width` is the terminal's: descriptions wrap to it, and below
 /// 60 columns they go under their flags.
 pub fn render_help(topic: HelpTopic, version: &str, paint: &Painter, width: usize) -> String {
-    let sections = if topic == HelpTopic::Apply {
-        APPLY
-    } else {
-        MAIN
-    };
+    let sections = sections(topic);
     let w = width.clamp(40, 100);
     let widest = sections
         .iter()
@@ -375,10 +433,10 @@ pub fn render_help(topic: HelpTopic, version: &str, paint: &Painter, width: usiz
     let mut out = vec![format!(
         "{} {version}  {}",
         paint.bold(&paint.tone(Tone::Accent, "kgdiff")),
-        paint.dim(if topic == HelpTopic::Apply {
-            "apply a delta to a graph"
-        } else {
-            "git diff for knowledge graphs"
+        paint.dim(match topic {
+            HelpTopic::Main => "git diff for knowledge graphs",
+            HelpTopic::Apply => "apply a delta to a graph",
+            HelpTopic::Completion => "print a shell completion script",
         })
     )];
     for section in sections {
