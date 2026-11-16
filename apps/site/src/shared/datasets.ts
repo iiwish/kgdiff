@@ -105,6 +105,8 @@ export function formatLabel(format: string): string {
       return 'RDF/XML';
     case 'jsonld':
       return 'JSON-LD';
+    case 'graphml':
+      return 'GraphML';
     default:
       return format;
   }

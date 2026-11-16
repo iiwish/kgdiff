@@ -15,6 +15,7 @@
       "!conformance/cases",
       "!conformance/primitives",
       "!conformance/manifest.json",
+      "!crates/*/tests/fixtures",
       "!.changeset/*.md",
       "!packages/viewer/custom-elements.json",
       "!docs/viewer-elements.md",

@@ -252,7 +252,8 @@ export function formatHunk(hunk: Hunk, diff: DiffResult, locale?: Locale): {
 export type FormatId =
 'json'
 | 'jsonld' | 'turtle' | 'ntriples' | 'nquads' | 'trig'
-| 'rdfxml' | 'obo';
+| 'rdfxml' | 'obo'
+| 'graphml';
 
 export interface GraphInput {
     readonly edges: readonly EdgeInput[];
@@ -582,7 +583,11 @@ export type ParseWarningCode =
 | 'obo-invalid-relationship'
 | 'obo-missing-value'
 | 'obo-unquoted-def'
-| 'obo-invalid-idspace';
+| 'obo-invalid-idspace'
+| 'graphml-merged-graphs'
+| 'graphml-unsupported-elements'
+| 'graphml-ignored-data'
+| 'graphml-invalid-value';
 
 export interface Point {
     readonly x: number;

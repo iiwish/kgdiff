@@ -181,7 +181,7 @@ kgdiff 拿不准的节点配对不会被匹配，而是作为「可能的匹配�
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RDF  | Turtle、N-Triples、N-Quads、TriG、RDF/XML（`.rdf`、Protégé / ROBOT 导出的 `.owl`）、JSON-LD 1.1（内联 context，不联网获取）：按语言偏好取标签，OWL 存在约束转为边，空白节点按内容和上下文识别，语句注解折叠 |
 | OBO  | OBO 1.4：同义词、`is_a`、relationship、带 `replaced_by` 的弃用、`alt_id`                                                                                                                                    |
-| JSON | kgdiff 原生格式、d3 / NetworkX 节点-连线格式、Cytoscape.js、AntV G6 v5、graphology、vis-network                                                                                                             |
+| JSON | kgdiff 原生格式、d3 / NetworkX 节点-连线格式、Cytoscape.js、AntV G6 v5、graphology、vis-network；GraphML（NetworkX、igraph、yEd、Gephi、LightRAG），按 node-link 数据读取                                   |
 
 格式根据文件名和内容自动识别。映射规则见[格式](docs/zh/formats.md)。缺你要的格式？[提一个格式需求](https://github.com/iiwish/kgdiff/issues/new?template=format_request.yml)。
 
@@ -278,9 +278,9 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 
 1.0 之后，补丁版本只修复，次版本只新增，主版本才能破坏。实验性接口是为嵌入宿主设计的，继续保持实验性，等宿主用过再说（[RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10)、[版本约定](docs/zh/versioning.md#实验性-api)）。
 
-**接下来做什么。** kgdiff 会在 0.x 上停留相当长一段时间，就在 0.x 里持续改进；下面的事都不用等 1.0。补丁版本做好就发。带破坏性变更的次版本间隔不短于约六到八周，每次附迁移指南。按版本的计划如下，先后可能随第一个宿主的需要调整：
+**接下来做什么。** kgdiff 会在 0.x 上停留相当长一段时间，就在 0.x 里持续改进；下面的事都不用等 1.0。补丁版本约一周一次，把这一周的修复和新增攒在一起发，安全修复随时发。带破坏性变更的次版本间隔不短于约六到八周，每次附迁移指南。按版本的计划如下，先后可能随第一个宿主的需要调整：
 
-- **0.12.x**，修复和新增：shell 补全（0.12.2）· 查看器的可访问性审查（[#16](https://github.com/iiwish/kgdiff/issues/16)）· 读取 GraphML 和 GEXF（[#8](https://github.com/iiwish/kgdiff/issues/8)、[#9](https://github.com/iiwish/kgdiff/issues/9)）· GitHub release 上的原生二进制和 Homebrew 配方。
+- **0.12.x**，修复和新增：shell 补全和读取 GraphML（0.12.2）· 查看器的可访问性审查（[#16](https://github.com/iiwish/kgdiff/issues/16)）· 读取 GEXF（[#9](https://github.com/iiwish/kgdiff/issues/9)）· GitHub release 上的原生二进制和 Homebrew 配方。
 - **0.13**，可以破坏：`kgdiff` crate 的嵌入接口（`CliIo`）改成 Rust 的写法 · 可访问性审查和第一个宿主要求改的地方 · 单图的朴素视图，按宿主的类别着色（[RFC 0003](docs/rfcs/0003-embedding-hosts.md) 第 4c 部分）。
 - **0.14**：分组，带背景和让同组节点靠在一起的布局（RFC 0003 第 4d 部分）· 体积和速度。
 - **再往后，不定先后：** Python API 与 Jupyter（[#14](https://github.com/iiwish/kgdiff/issues/14)）· MCP 服务，让 Agent 审阅自己对图谱的修改（[#13](https://github.com/iiwish/kgdiff/issues/13)）· 导出 KGCL 和 RDF Patch · Cytoscape.js 与 Sigma.js 适配器 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器。

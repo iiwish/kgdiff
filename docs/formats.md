@@ -10,6 +10,7 @@
 | JSON-LD 1.1 | `.jsonld`, `.json` with `@context` | contexts must be inline: nothing is fetched                                        |
 | OBO 1.4     | `.obo`                             | synonyms, `is_a`, relationships, obsoletion with `replaced_by`, `alt_id`           |
 | JSON graphs | `.json`                            | kgdiff, d3 / NetworkX node-link, Cytoscape.js, AntV G6 v5, graphology, vis-network |
+| GraphML     | `.graphml`                         | as NetworkX, igraph, yEd, Gephi and LightRAG write it; read as node-link data      |
 
 Any of them may be gzip-compressed (`.gz`) and encoded in UTF-8 or UTF-16.
 
@@ -21,15 +22,15 @@ an `.owl` file is read in whatever syntax it contains, since Protégé also save
 and Functional Syntax under that extension.
 
 To skip detection, pass `--format <fmt>` for both inputs or `--before-format` /
-`--after-format` for one: `json`, `jsonld`, `turtle`, `ntriples`, `nquads`, `trig`, `rdfxml` or
-`obo`.
+`--after-format` for one: `json`, `jsonld`, `turtle`, `ntriples`, `nquads`, `trig`, `rdfxml`,
+`obo` or `graphml`.
 
 ## Recognised but not read
 
 | Format                                            | What to do                                                                       |
 | ------------------------------------------------- | -------------------------------------------------------------------------------- |
 | OWL/XML, OWL Functional Syntax, Manchester Syntax | Convert to RDF/XML or Turtle: `robot convert --input onto.owx --output onto.owl` |
-| GraphML, GEXF                                     | Export JSON instead, e.g. NetworkX node-link data or Cytoscape.js JSON           |
+| GEXF                                              | Export GraphML or JSON instead, e.g. NetworkX node-link data                     |
 
 kgdiff names the format and the way out in its error message.
 
@@ -131,6 +132,43 @@ shape types) are dropped with a warning.
 In every JSON shape, a number too large for a double (`1e400`) is kept as the string `"Infinity"`
 or `"-Infinity"`, with a warning, rather than lost. A string with half of a surrogate pair escaped
 on its own (`"\ud800"`) is an error: kgdiff only reads well-formed Unicode.
+
+## GraphML
+
+A GraphML document is read as the node-link data NetworkX would give the same graph, and then as
+every other JSON graph: the fields above mean the same, so one graph saved as GraphML and as
+node-link JSON is the same graph to kgdiff, and comparing the two files shows no change.
+
+| GraphML                                      | Becomes                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------- |
+| `<node id>`                                  | the node id                                                                     |
+| `<edge source target>`, `<edge id>`          | an edge, and its id                                                             |
+| `<data key>` of a node or an edge            | a field named by the key's `attr.name`: label, type, predicate, or an attribute |
+| `<data key>` of the graph: `name`, `version` | the graph's name and version                                                    |
+| `attr.type` `int`, `long`, `float`, `double` | a number                                                                        |
+| `attr.type` `boolean`                        | a boolean (`true`, `false`, `1`, `0`, and Python's `True` and `False`)          |
+| `<default>` of a key                         | the value of every node or edge that has no `<data>` for the key                |
+
+An edge keeps its ends as written, in an undirected graph (`edgedefault="undirected"`) too, as it
+does in node-link JSON: NetworkX writes the two ends of an edge in the same order every time.
+The node id and an edge's ends and id are the element's own: a field named `id`, `source` or
+`target` does not replace them.
+
+What kgdiff does not read is left out with a warning, never an error:
+
+- nested graphs (the groups of yEd) and `<graph>` elements after the first are merged into one
+  graph (`graphml-merged-graphs`);
+- `<hyperedge>` and `<port>` are skipped (`graphml-unsupported-elements`);
+- `<data>` with XML content, which is where yEd and other editors keep geometry and styles, is
+  dropped (`graphml-ignored-data`);
+- a value that is not of its key's type (`about 175` for a `long`, `inf` for a `double`) stays
+  text (`graphml-invalid-value`).
+
+LightRAG keeps the type of an entity in `entity_type`, which is not one of the type fields: it is
+an attribute unless you name it, with `json.fields.type` of `parseGraph` (the field overrides of
+the JSON reader apply to GraphML too). A multigraph that NetworkX writes has its edge keys as
+`<edge id>` in GraphML and as a `key` field in node-link JSON, so there the two files differ in
+the edge ids.
 
 ## RDF and OBO
 

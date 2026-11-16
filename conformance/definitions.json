@@ -506,6 +506,21 @@
       "locale": "en"
     },
     {
+      "id": "graphml",
+      "description": "GraphML: before as NetworkX writes it (typed keys, Python's True and False, graph attributes), after as a graph editor does (a default, a nested graph, drawing data, a port and a hyperedge, a value that is not of its type), each with its warning.",
+      "covers": ["graphml", "typed-keys", "defaults", "nested-graph", "ignored-data", "undirected"],
+      "inputs": {
+        "before": "before.graphml",
+        "after": "after.graphml"
+      },
+      "options": {
+        "match": {
+          "strategy": "id"
+        }
+      },
+      "locale": "zh-CN"
+    },
+    {
       "id": "jsonld",
       "description": "JSON-LD 1.1 with an inline context (@vocab, typed terms, @json, @reverse, language maps), native numbers that become xsd:integer / xsd:double literals, and an after file that is JSON-LD under a .json name.",
       "covers": ["jsonld", "json-ld-detection", "json-literal", "reverse", "numbers", "languages"],

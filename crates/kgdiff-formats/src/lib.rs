@@ -3,7 +3,7 @@
 //!
 //! [`parse_graph`] reads kgdiff JSON and five other JSON graph dialects (d3 / NetworkX,
 //! Cytoscape.js, AntV G6, graphology, vis-network), RDF (Turtle, N-Triples, N-Quads, TriG,
-//! RDF/XML, JSON-LD) and OBO, from text, into the same `{ nodes, edges }` conventions, so that
+//! RDF/XML, JSON-LD), OBO and GraphML, from text, into the same `{ nodes, edges }` conventions, so that
 //! diffs across formats behave identically. [`detect_format`] picks the format from the file
 //! name and the content. Besides the graph, the result carries the prefixes, the display names
 //! of relations and the warnings about input that was repaired or skipped; syntax errors are
@@ -38,6 +38,7 @@
 struct ReadmeDoctests;
 
 mod detect;
+mod graphml;
 mod iri;
 mod json;
 mod jsonld;
@@ -81,11 +82,13 @@ pub enum FormatId {
     RdfXml,
     /// OBO 1.4: synonyms, `is_a`, relationships, obsoletion with `replaced_by` and `alt_id`.
     Obo,
+    /// GraphML, as NetworkX, igraph, yEd, Gephi and LightRAG write it: read as node-link data.
+    GraphMl,
 }
 
 impl FormatId {
     /// Every format, in the order of `FORMAT_EXTENSIONS`.
-    pub const ALL: [FormatId; 8] = [
+    pub const ALL: [FormatId; 9] = [
         FormatId::Json,
         FormatId::JsonLd,
         FormatId::Turtle,
@@ -94,9 +97,10 @@ impl FormatId {
         FormatId::TriG,
         FormatId::RdfXml,
         FormatId::Obo,
+        FormatId::GraphMl,
     ];
 
-    /// The format's id, as `--format` takes it (`json`, `jsonld`, `turtle`, `ntriples`, `nquads`, `trig`, `rdfxml` or `obo`).
+    /// The format's id, as `--format` takes it (`json`, `jsonld`, `turtle`, `ntriples`, `nquads`, `trig`, `rdfxml`, `obo` or `graphml`).
     pub fn id(self) -> &'static str {
         match self {
             FormatId::Json => "json",
@@ -107,6 +111,7 @@ impl FormatId {
             FormatId::TriG => "trig",
             FormatId::RdfXml => "rdfxml",
             FormatId::Obo => "obo",
+            FormatId::GraphMl => "graphml",
         }
     }
 
@@ -182,6 +187,14 @@ pub enum ParseWarningCode {
     OboUnquotedDef,
     /// OBO: an `idspace` header without prefix or IRI was skipped.
     OboInvalidIdspace,
+    /// GraphML: nested graphs, or graphs after the first, were merged into one graph.
+    GraphMlMergedGraphs,
+    /// GraphML: `<hyperedge>` and `<port>` elements were skipped.
+    GraphMlUnsupportedElements,
+    /// GraphML: `<data>` with XML content (drawing data) was dropped.
+    GraphMlIgnoredData,
+    /// GraphML: a value that is not of its key's `attr.type` was kept as text.
+    GraphMlInvalidValue,
 }
 
 impl ParseWarningCode {
@@ -203,6 +216,10 @@ impl ParseWarningCode {
             ParseWarningCode::OboMissingValue => "obo-missing-value",
             ParseWarningCode::OboUnquotedDef => "obo-unquoted-def",
             ParseWarningCode::OboInvalidIdspace => "obo-invalid-idspace",
+            ParseWarningCode::GraphMlMergedGraphs => "graphml-merged-graphs",
+            ParseWarningCode::GraphMlUnsupportedElements => "graphml-unsupported-elements",
+            ParseWarningCode::GraphMlIgnoredData => "graphml-ignored-data",
+            ParseWarningCode::GraphMlInvalidValue => "graphml-invalid-value",
         }
     }
 }
@@ -378,7 +395,7 @@ struct Parsed {
 ///
 /// # Errors
 ///
-/// Returns an `invalid-input` error, with the line when known, when the text is not valid in its format, is in a format that is recognised but not read (such as OWL/XML or GraphML), or when a JSON-LD context cannot be loaded.
+/// Returns an `invalid-input` error, with the line when known, when the text is not valid in its format, is in a format that is recognised but not read (such as OWL/XML or GEXF), or when a JSON-LD context cannot be loaded.
 pub fn parse_graph(text: &str, options: &ParseOptions<'_>) -> Result<ParseResult, KgdiffError> {
     let filename = options.filename.as_deref();
     let mut format = match options.format {
@@ -431,6 +448,17 @@ pub fn parse_graph(text: &str, options: &ParseOptions<'_>) -> Result<ParseResult
         FormatId::RdfXml => {
             let document = rdfxml::read_rdf_xml(text, options.base_iri.as_deref())?;
             from_rdf(rdf::map_rdf(document, &options.rdf, &mut warnings))
+        }
+        FormatId::GraphMl => {
+            // Node-link data, mapped as the JSON reader maps NetworkX's.
+            let data = graphml::read_graphml(text, &mut warnings)?;
+            let out = json::parse_json(&data, &options.json, &mut warnings)?;
+            Parsed {
+                graph: out.graph,
+                prefixes: None,
+                predicate_labels: out.predicate_labels,
+                dialect: None,
+            }
         }
     };
     let Parsed {

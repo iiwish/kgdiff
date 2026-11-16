@@ -1,0 +1,65 @@
+{
+ "directed": false,
+ "multigraph": false,
+ "graph": {
+  "name": "chibi",
+  "version": "1"
+ },
+ "nodes": [
+  {
+   "label": "曹操",
+   "type": "人物",
+   "born": 155,
+   "famous": true,
+   "weight": 0.75,
+   "id": "曹操"
+  },
+  {
+   "label": "刘备",
+   "type": "人物",
+   "born": 161,
+   "famous": true,
+   "id": "刘备"
+  },
+  {
+   "label": "孙权",
+   "type": "人物",
+   "born": 182,
+   "famous": false,
+   "id": "孙权"
+  },
+  {
+   "label": "赤壁之战",
+   "type": "事件",
+   "year": 208,
+   "description": "孙刘联军 & 曹军 <长江>",
+   "id": "赤壁"
+  }
+ ],
+ "links": [
+  {
+   "relation": "参战",
+   "weight": 1.0,
+   "source": "曹操",
+   "target": "赤壁"
+  },
+  {
+   "relation": "参战",
+   "weight": 0.5,
+   "source": "刘备",
+   "target": "赤壁"
+  },
+  {
+   "relation": "结盟",
+   "since": 208,
+   "source": "刘备",
+   "target": "孙权"
+  },
+  {
+   "relation": "参战",
+   "weight": 0.5,
+   "source": "孙权",
+   "target": "赤壁"
+  }
+ ]
+}

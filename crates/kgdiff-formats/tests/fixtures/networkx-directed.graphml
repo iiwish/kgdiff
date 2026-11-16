@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key id="d7" for="edge" attr.name="source_id" attr.type="string" />
+  <key id="d6" for="edge" attr.name="keywords" attr.type="string" />
+  <key id="d5" for="edge" attr.name="description" attr.type="string" />
+  <key id="d4" for="edge" attr.name="weight" attr.type="double" />
+  <key id="d3" for="node" attr.name="source_id" attr.type="string" />
+  <key id="d2" for="node" attr.name="description" attr.type="string" />
+  <key id="d1" for="node" attr.name="entity_type" attr.type="string" />
+  <key id="d0" for="node" attr.name="entity_id" attr.type="string" />
+  <graph edgedefault="directed">
+    <node id="1">
+      <data key="d0">Ada</data>
+      <data key="d1">person</data>
+      <data key="d2">Wrote the first program</data>
+      <data key="d3">chunk-1</data>
+    </node>
+    <node id="2">
+      <data key="d0">Engine</data>
+      <data key="d1">machine</data>
+      <data key="d2">Analytical Engine</data>
+      <data key="d3">chunk-1&lt;SEP&gt;chunk-2</data>
+    </node>
+    <edge source="1" target="2">
+      <data key="d4">2.0</data>
+      <data key="d5">designed programs for</data>
+      <data key="d6">program,design</data>
+      <data key="d7">chunk-1</data>
+    </edge>
+  </graph>
+</graphml>

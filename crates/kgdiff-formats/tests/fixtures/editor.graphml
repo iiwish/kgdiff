@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- What a graph editor writes: drawing data, a group with a nested graph, defaults. -->
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="node" attr.name="label" attr.type="string"/>
+  <key id="d1" for="node" attr.name="kind" attr.type="string">
+    <default>concept</default>
+  </key>
+  <key id="d2" for="node" yfiles.type="nodegraphics"/>
+  <key id="d3" for="edge" attr.name="relation" attr.type="string">
+    <default>related to</default>
+  </key>
+  <key id="d4" for="edge" attr.name="weight" attr.type="double"/>
+  <key id="d5" for="all" attr.name="reviewed" attr.type="boolean">
+    <default>false</default>
+  </key>
+  <key id="d6" for="node" attr.name="rank" attr.type="int"/>
+  <key id="d7" for="port" attr.name="side" attr.type="string"/>
+  <graph id="G" edgedefault="directed">
+    <desc>Animals</desc>
+    <node id="animal">
+      <data key="d0">Animal</data>
+      <data key="d2">
+        <y:ShapeNode><y:Geometry height="30.0" width="60.0" x="10.0" y="20.0"/></y:ShapeNode>
+      </data>
+      <data key="d6">1</data>
+      <port name="north"><data key="d7">top</data></port>
+    </node>
+    <node id="mammals">
+      <data key="d0">Mammals</data>
+      <data key="d1">group</data>
+      <graph id="G:mammals" edgedefault="directed">
+        <node id="cat">
+          <data key="d0"><![CDATA[Cat & kitten]]></data>
+          <data key="d5">TRUE</data>
+          <data key="d6">first</data>
+        </node>
+        <node id="dog">
+          <data key="d0">Dog</data>
+          <data key="note">undeclared key</data>
+        </node>
+        <edge id="e2" source="cat" target="dog">
+          <data key="d3">chases</data>
+          <data key="d4">0.5</data>
+        </edge>
+      </graph>
+    </node>
+    <edge id="e0" source="mammals" target="animal">
+      <data key="d3">is_a</data>
+    </edge>
+    <edge id="e1" source="cat" target="mammals"/>
+    <hyperedge>
+      <endpoint node="cat"/>
+      <endpoint node="dog"/>
+      <endpoint node="animal"/>
+    </hyperedge>
+  </graph>
+</graphml>

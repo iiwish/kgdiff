@@ -264,6 +264,17 @@
       ]
     },
     {
+      "id": "graphml",
+      "covers": [
+        "graphml",
+        "typed-keys",
+        "defaults",
+        "nested-graph",
+        "ignored-data",
+        "undirected"
+      ]
+    },
+    {
       "id": "jsonld",
       "covers": [
         "jsonld",

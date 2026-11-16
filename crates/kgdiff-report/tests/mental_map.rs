@@ -428,7 +428,7 @@ fn a_version_its_successor_and_their_diff_share_one_map_on_every_corpus_case() {
     let schemas = Schemas::load();
     let pairs = corpus_pairs();
     // Written out, not read from the manifest: a corpus that loses cases must fail here.
-    assert_eq!(pairs.len(), 30);
+    assert_eq!(pairs.len(), 31);
     let mut total = Seen::default();
     for pair in &pairs {
         let (_, seen) = walk(pair, &schemas);
