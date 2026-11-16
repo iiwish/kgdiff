@@ -1,7 +1,7 @@
 # RFC 0003: Embedding hosts and the plain view
 
 - **Status:** Partially implemented: parts 1, 2, 3, 4a and 4b are released (0.9 to 0.11); parts 4c
-  and 4d are not started and are left for after 1.0 ([Revision 2026-11-13](#revision-2026-11-13)).
+  and 4d are not started and are planned for 0.13 and 0.14 ([Revision 2026-11-16](#revision-2026-11-16)).
   The parts planned for 0.9 are merged and released as 0.9.0:
   part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d), and
   with it `layout_diff_on` and `layout_after`, which carry a layout to the next version
@@ -13,14 +13,15 @@
   4b is implemented for 0.10 (bfe4b0d), with D-3 and D-4 taken: see [4b results](#4b-results).
   All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Part 3, the typed graph
   input, is merged for 0.11 ([#98](https://github.com/iiwish/kgdiff/pull/98), 3024eb1; RFC 0002,
-  phase 5, moved there from 1.0 on 2026-11-11). Parts 4c and 4d are not started and come after 1.0.
+  phase 5, moved there from 1.0 on 2026-11-11). Parts 4c and 4d are not started; since
+  2026-11-16 they are planned for 0.13 and 0.14 and no longer wait for 1.0.
   1.0 itself has no date since 2026-11-14: it waits for its conditions, one of which is that a
   host has used the experimental APIs of this RFC ([Revision 2026-11-14](#revision-2026-11-14)).
 - **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
   `docs/visual-language.md` (two new rules), the report payload (a schema, optional members).
-  No document changes its version. The layout engine changes only in part 4d, after 1.0 (so after phase 5, kgdiff 0.11).
+  No document changes its version. The layout engine changes only in part 4d (0.14, so after phase 5, kgdiff 0.11).
 
 ## Summary
 
@@ -30,15 +31,15 @@ gaps. Each has a workaround, so none blocks it; each will be met again by the ne
 RFC says which to close, how, and when, around the work that is already planned
 ([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 has no date and comes when its conditions are met, [RFC 0002, Revision 2026-11-14](./0002-rust-compute-core.md#revision-2026-11-14)):
 
-| Part | What                                                         | Release   | Size   |
-| ---- | ------------------------------------------------------------ | --------- | ------ |
-| 1    | `layout_graph`: the layout of one graph                      | 0.9       | small  |
-| 2    | Reports that carry the caller's layout; `report.v1.json`     | 0.9       | small  |
-| 4a   | Renderer layers: the host draws under and over the graph     | 0.9       | small  |
-| 4b   | Node shapes by type                                          | 0.10      | medium |
-| 4c   | The plain view: one graph, colored by the host's categories  | after 1.0 | medium |
-| 3    | Typed graph input                                            | 0.11      | medium |
-| 4d   | Groups: backgrounds and a layout that keeps a group together | after 1.0 | large  |
+| Part | What                                                         | Release | Size   |
+| ---- | ------------------------------------------------------------ | ------- | ------ |
+| 1    | `layout_graph`: the layout of one graph                      | 0.9     | small  |
+| 2    | Reports that carry the caller's layout; `report.v1.json`     | 0.9     | small  |
+| 4a   | Renderer layers: the host draws under and over the graph     | 0.9     | small  |
+| 4b   | Node shapes by type                                          | 0.10    | medium |
+| 4c   | The plain view: one graph, colored by the host's categories  | 0.13    | medium |
+| 3    | Typed graph input                                            | 0.11    | medium |
+| 4d   | Groups: backgrounds and a layout that keeps a group together | 0.14    | large  |
 
 Parts 1 to 3 are embedding API and change nothing kgdiff writes. Part 4 is the one that touches
 what kgdiff is, so this RFC first states a rule for it ([Positioning](#positioning)): kgdiff
@@ -350,7 +351,7 @@ interface NodeVisual {
   allocations (one more member, no object), and pan / zoom at 60 fps; the benchmarks run with
   a scene that uses all four shapes.
 
-### 4c. The plain view (after 1.0)
+### 4c. The plain view (0.13)
 
 A plain view is the scene of a diff without changes (`stats.identical`), which a host gets by
 diffing a graph with itself. No new input type: `buildScene`, the report payload and the
@@ -385,7 +386,7 @@ interface SceneOptions {
   layout of `<kgdiff-viewer>` does with a plain view (it has no changes to list) is
   [D-7](#open-decisions).
 
-### 4d. Groups: backgrounds and layout (after 1.0)
+### 4d. Groups: backgrounds and layout (0.14)
 
 A background behind each category only reads well when the category's nodes sit together, and
 the force layout does not put them together. So this part is two things that ship as one:
@@ -400,11 +401,13 @@ the force layout does not put them together. So this part is two things that shi
   edges, with label halos that match. In a view with changes the backgrounds are neutral
   (rule 2); in the plain view they take the category's `soft` tint.
 
-**Why after 1.0.** Until phase 5 (0.11) the layout engine exists twice, and the two give
+**Why not before 0.11.** Until phase 5 (0.11) the layout engine exists twice, and the two give
 bit-identical positions on the corpus (RFC 0002, phase 4 progress); the browser's
 `extendLayout` is the TypeScript one. A new force would be written twice and one copy deleted
 weeks later. After phase 5 it is written once, in Rust, and reaches the browser through
-`@kgdiff/compute`. Until then hosts draw backgrounds on an `under` layer (4a).
+`@kgdiff/compute`. Until then hosts draw backgrounds on an `under` layer (4a). (Changed
+2026-11-16: this part was "after 1.0"; with one engine since 0.11 it no longer waits, see
+[Revision 2026-11-16](#revision-2026-11-16).)
 
 ## Compatibility
 
@@ -436,13 +439,14 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
 
 ## Rollout
 
-| Release   | Parts                          | Where                            | Depends on                       |
-| --------- | ------------------------------ | -------------------------------- | -------------------------------- |
-| 0.9       | 1, 2 (`report.v1.json`), 4a    | Rust crates; `@kgdiff/renderer`  | nothing                          |
-| 0.10      | 4b                             | scene, renderer, g6, viewer      | the Positioning rules accepted   |
-| 0.11      | 3                              | `kgdiff-core`                    | the compact graph representation |
-| 1.0       | none (marks removed once used) | the experimental APIs            | its conditions (no date)         |
-| after 1.0 | 4c, 4d                         | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
+| Release | Parts                          | Where                            | Depends on                       |
+| ------- | ------------------------------ | -------------------------------- | -------------------------------- |
+| 0.9     | 1, 2 (`report.v1.json`), 4a    | Rust crates; `@kgdiff/renderer`  | nothing                          |
+| 0.10    | 4b                             | scene, renderer, g6, viewer      | the Positioning rules accepted   |
+| 0.11    | 3                              | `kgdiff-core`                    | the compact graph representation |
+| 0.13    | 4c                             | scene, renderer, g6, viewer      | nothing                          |
+| 0.14    | 4d                             | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
+| 1.0     | none (marks removed once used) | the experimental APIs            | its conditions (no date)         |
 
 0.9 is the part the first host waits for: with it, its ontology graph and its reports need no
 copy of kgdiff's payload and no second canvas. Each later release adds something its users can
@@ -625,6 +629,22 @@ other conditions there are met. For this RFC: the release table's 1.0 row follow
 conditions, parts 4c and 4d stay unscheduled (4d changes layout bytes, so it cannot be a patch
 release before 1.0), and the experimental marks stay until a host has used the APIs, as
 decided on 2026-11-13.
+
+## Revision 2026-11-16
+
+kgdiff stays on 0.x for a good while and improves there, so "after 1.0" no longer names a time.
+Parts 4c and 4d are planned by release instead:
+
+- **4c, the plain view: 0.13.** It was put after 1.0 so as not to delay 0.11 and 1.0 (D-5); 0.11
+  is released and 1.0 has no date. Hosts color through an `over` layer until then, as before.
+- **4d, groups: 0.14.** Its reason to wait was the second layout engine, which 0.11 deleted. It
+  ships in a minor release, since a layout with groups may change bytes; without the option
+  every layout stays byte-identical, as the design above requires.
+
+Both numbers are a plan, not a promise: the first host's needs may reorder them, and neither
+part has started. The headings, the summary table and the rollout table above now carry these
+releases; D-5 and the earlier revisions keep their wording as the record of what was decided
+then. The experimental marks are unchanged.
 
 ## References
 

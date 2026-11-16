@@ -339,7 +339,7 @@ PyPI, [RFC 0002](rfcs/0002-rust-compute-core.md), D-6) is, for now, the command 
 `pipx install pykgdiff`, `uvx --from pykgdiff kgdiff …`. Each wheel holds one target's `kgdiff`
 binary as `pykgdiff-<version>.data/scripts/kgdiff`, which pip and uv install on the `PATH`, and
 nothing else: no Python module (`import pykgdiff` and `python -m pykgdiff` are kept for the
-Python API after 1.0, D-7). Its metadata is [`python/pyproject.toml`](../python/pyproject.toml),
+Python API of a later release, D-7). Its metadata is [`python/pyproject.toml`](../python/pyproject.toml),
 whose version `scripts/sync-versions.ts` sets to the workspace's (PEP 440 spelling for
 prereleases: `1.0.0-rc.1` → `1.0.0rc1`); `tests/release.test.ts` fails when it differs.
 

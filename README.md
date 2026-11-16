@@ -337,12 +337,25 @@ The experimental APIs, designed for embedding hosts, stay experimental until a h
 ([RFC 0002](docs/rfcs/0002-rust-compute-core.md#kgdiff-10),
 [Versioning](docs/versioning.md#experimental-apis)).
 
-Additive, in no fixed order: GraphML and GEXF input · KGCL and RDF Patch export · an MCP server, so
-agents can review the graph edits they make · Python and Jupyter · a plain view of one graph and
-group backgrounds for embedding hosts ([RFC 0003](docs/rfcs/0003-embedding-hosts.md)) ·
-Cytoscape.js and Sigma.js adapters · three-way merge with conflict visualization · a Web Worker
-pipeline and a WebGL renderer for very large graphs. Follow along, or pick something up, in the
-[roadmap issue](https://github.com/iiwish/kgdiff/issues/21).
+**What comes next.** kgdiff stays on 0.x for a good while and improves there; nothing below
+waits for 1.0. Patch releases come as they are ready. A breaking minor release comes no more
+often than about every six to eight weeks, with a migration guide. The plan by release, which
+the needs of the first host may reorder:
+
+- **0.12.x**, fixes and additions: the rule for hunk ids as a documented promise · the viewer's
+  accessibility review ([#16](https://github.com/iiwish/kgdiff/issues/16)) · shell completions ([#20](https://github.com/iiwish/kgdiff/issues/20)) · GraphML and GEXF input
+  ([#8](https://github.com/iiwish/kgdiff/issues/8), [#9](https://github.com/iiwish/kgdiff/issues/9)) · native binaries on GitHub releases and a Homebrew formula.
+- **0.13**, may break: the embedding interface of the `kgdiff` crate (`CliIo`) in Rust's idiom ·
+  what the accessibility review and the first host ask to change · the plain view of one graph,
+  colored by the host's categories ([RFC 0003](docs/rfcs/0003-embedding-hosts.md), part 4c).
+- **0.14**: groups, with backgrounds and a layout that keeps a group together (RFC 0003,
+  part 4d) · size and speed.
+- **Later, in no fixed order:** a Python API and Jupyter ([#14](https://github.com/iiwish/kgdiff/issues/14)) · an MCP server, so agents
+  can review the graph edits they make ([#13](https://github.com/iiwish/kgdiff/issues/13)) · KGCL and RDF Patch export · Cytoscape.js
+  and Sigma.js adapters · three-way merge with conflict visualization · a Web Worker pipeline
+  and a WebGL renderer for very large graphs.
+
+Follow along, or pick something up, in the [roadmap issue](https://github.com/iiwish/kgdiff/issues/21).
 
 ## Contributing
 

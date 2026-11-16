@@ -15,7 +15,7 @@ This package is the **kgdiff command line**, nothing else: a wheel per platform 
 native `kgdiff` binary (written in Rust, no Python code runs), the same binary as the npm package
 `@kgdiff/cli` and the GitHub release. Installing it puts `kgdiff` on your `PATH`; it needs no
 Node.js and no Rust. There is no Python API yet: `import pykgdiff` and `python -m pykgdiff` are
-reserved for one, planned after kgdiff 1.0. The command line follows kgdiff's
+reserved for one, planned for a later 0.x release. The command line follows kgdiff's
 [versioning promise](https://github.com/iiwish/kgdiff/blob/main/docs/versioning.md).
 
 Wheels exist for macOS (Apple silicon, Intel), Linux x64 and Arm64 (glibc and musl) and
