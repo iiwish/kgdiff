@@ -12,9 +12,9 @@ fuzz_target!(|data: &[u8]| {
     let Ok(text) = std::str::from_utf8(rest) else {
         return;
     };
-    // 0..8 are the formats, 8 is auto-detection.
+    // 0..9 are the formats, 9 is auto-detection.
     let mut options = ParseOptions::default();
-    options.format = FormatId::ALL.get(usize::from(selector) % 9).copied();
+    options.format = FormatId::ALL.get(usize::from(selector) % 10).copied();
     options.base_iri = Some("http://example.org/base/".into());
     if let Ok(result) = parse_graph(text, &options) {
         // Serialising the result is part of reading it.

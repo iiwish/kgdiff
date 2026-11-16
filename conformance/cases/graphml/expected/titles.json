@@ -1,0 +1,56 @@
+{
+  "en": [
+    {
+      "id": "relations:孙权",
+      "title": "Removed “孙权” —参战→ “赤壁之战”",
+      "subtitle": "relation removed"
+    },
+    {
+      "id": "modify:曹操",
+      "title": "Renamed “曹操” → “曹孟德”",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:赤壁",
+      "title": "Updated attributes of “赤壁之战”",
+      "subtitle": "~1 attribute"
+    },
+    {
+      "id": "add:周瑜",
+      "title": "Added “周瑜” and 2 relations",
+      "subtitle": "type 人物 · linked to “孙权” and “赤壁之战”"
+    },
+    {
+      "id": "add:孙刘联军",
+      "title": "Added “孙刘联军”",
+      "subtitle": "type 阵营 · standalone"
+    }
+  ],
+  "zh-CN": [
+    {
+      "id": "relations:孙权",
+      "title": "删除关系「孙权」—参战→「赤壁之战」",
+      "subtitle": "关系已删除"
+    },
+    {
+      "id": "modify:曹操",
+      "title": "「曹操」改名为「曹孟德」",
+      "subtitle": ""
+    },
+    {
+      "id": "modify:赤壁",
+      "title": "修改「赤壁之战」的属性",
+      "subtitle": "属性 ~1"
+    },
+    {
+      "id": "add:周瑜",
+      "title": "新增「周瑜」及 2 条关系",
+      "subtitle": "类型 人物 · 关联「孙权」和「赤壁之战」"
+    },
+    {
+      "id": "add:孙刘联军",
+      "title": "新增「孙刘联军」",
+      "subtitle": "类型 阵营 · 无外部关联"
+    }
+  ]
+}

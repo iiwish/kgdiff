@@ -1166,11 +1166,10 @@ fn help_lists_every_input_format_and_its_extensions() {
         .replace_all(&run(&["--help"], &[]).stdout, " ")
         .into_owned();
     assert!(help.contains("RDF/XML (.rdf, .owl)") && help.contains("JSON-LD (.jsonld)"));
-    assert!(
-        help.contains(
-            "Input format: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo"
-        )
-    );
+    assert!(help.contains("GraphML (.graphml)"));
+    assert!(help.contains(
+        "Input format: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml"
+    ));
 }
 
 #[test]

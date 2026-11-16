@@ -253,7 +253,7 @@
         "text": ""
       },
       "stderr": {
-        "text": "error: \"bad-astral.json\": Invalid JSON on line 2, column 13: expected a value, found \"\\ud83d\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
+        "text": "error: \"bad-astral.json\": Invalid JSON on line 2, column 13: expected a value, found \"\\ud83d\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml).\n"
       },
       "exit": 2
     },
@@ -272,7 +272,7 @@
         "text": ""
       },
       "stderr": {
-        "text": "error: \"lone-surrogate.json\": Invalid JSON on line 6, column 35: the escape \\ud83d is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
+        "text": "error: \"lone-surrogate.json\": Invalid JSON on line 6, column 35: the escape \\ud83d is a lone surrogate (half of a UTF-16 pair), which kgdiff does not accept.\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml).\n"
       },
       "exit": 2
     },
@@ -291,7 +291,7 @@
         "text": ""
       },
       "stderr": {
-        "text": "error: \"bad-line.obo\": Invalid OBO on line 6: expected \"tag: value\", got \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa�…\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo).\n"
+        "text": "error: \"bad-line.obo\": Invalid OBO on line 6: expected \"tag: value\", got \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa�…\".\nhint: If the format was detected wrongly, pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml).\n"
       },
       "exit": 2
     },
@@ -310,7 +310,7 @@
         "text": ""
       },
       "stderr": {
-        "text": "error: Cannot tell the format of \"garbage.txt\".\nhint: Pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo) or use a known file extension.\n"
+        "text": "error: Cannot tell the format of \"garbage.txt\".\nhint: Pass --format <fmt> (json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml) or use a known file extension.\n"
       },
       "exit": 2
     },
@@ -389,7 +389,7 @@
         "text": ""
       },
       "stderr": {
-        "text": "error: Invalid value \"nope\" for --format.\nhint: Expected one of: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo.\n"
+        "text": "error: Invalid value \"nope\" for --format.\nhint: Expected one of: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml.\n"
       },
       "exit": 2
     },

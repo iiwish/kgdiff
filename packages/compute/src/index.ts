@@ -307,12 +307,12 @@ export function parseGraphSync(source: string, options?: ParseOptions): ParseRes
  * are ignored), with two refinements: `.json` holding JSON-LD is `jsonld`, and `.owl` — which
  * Protégé also uses for Turtle, OWL/XML and Functional Syntax — is decided by its content
  * (RDF/XML when that cannot tell). Otherwise the content decides: JSON → json, or jsonld when a
- * top-level key is a JSON-LD keyword; XML with an `rdf:RDF` root → rdfxml; OBO headers or
+ * top-level key is a JSON-LD keyword; XML with an `rdf:RDF` root → rdfxml, with a `graphml` root → graphml; OBO headers or
  * stanzas → obo; Turtle directives → turtle, or trig with a graph block; line-based statements
  * → ntriples or nquads. Empty input is an (empty) Turtle graph.
  *
  * @throws KgdiffError `invalid-input`, with a conversion hint for recognisably unsupported
- *   formats (OWL/XML, OWL Functional / Manchester Syntax, GraphML, GEXF, other XML), when the
+ *   formats (OWL/XML, OWL Functional / Manchester Syntax, GEXF, other XML), when the
  *   format cannot be detected.
  */
 export function detectFormatSync(source: string, filename?: string): FormatId {

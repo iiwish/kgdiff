@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "chibi 1 → 2",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "chibi 1",
+      "format": "graphml"
+    },
+    "after": {
+      "name": "chibi 2",
+      "format": "graphml"
+    }
+  },
+  "view": {
+    "locale": "zh-CN"
+  }
+}

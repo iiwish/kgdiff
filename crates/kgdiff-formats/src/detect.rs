@@ -21,6 +21,7 @@ pub const FORMAT_EXTENSIONS: &[(FormatId, &[&str])] = &[
     (FormatId::TriG, &[".trig"]),
     (FormatId::RdfXml, &[".rdf", ".owl"]),
     (FormatId::Obo, &[".obo"]),
+    (FormatId::GraphMl, &[".graphml"]),
 ];
 
 /// Extensions several syntaxes share (`.owl` holds Turtle, OWL/XML or Functional Syntax too):
@@ -133,6 +134,7 @@ pub fn sniff_format(
             });
             return match kind {
                 XmlKind::RdfXml => Ok(FormatId::RdfXml),
+                XmlKind::GraphMl => Ok(FormatId::GraphMl),
                 XmlKind::Unsupported(kind) => {
                     Err(unsupported_format(kind, filename, Some(&root.qname)))
                 }
@@ -223,14 +225,13 @@ pub enum Unsupported {
     OwlXml,
     OwlFunctional,
     OwlManchester,
-    GraphMl,
     Gexf,
     Xml,
 }
 
 const TO_RDF: &str = "Convert it to RDF/XML or Turtle first (e.g. `robot convert --input onto.owx --output onto.owl`).";
 const TO_JSON: &str =
-    "Export it as JSON first (e.g. NetworkX node-link data or Cytoscape.js JSON).";
+    "Export it as GraphML or JSON first (e.g. NetworkX node-link data or Cytoscape.js JSON).";
 
 impl Unsupported {
     fn name(self) -> &'static str {
@@ -238,7 +239,6 @@ impl Unsupported {
             Unsupported::OwlXml => "OWL/XML",
             Unsupported::OwlFunctional => "OWL Functional Syntax",
             Unsupported::OwlManchester => "OWL Manchester Syntax",
-            Unsupported::GraphMl => "GraphML",
             Unsupported::Gexf => "GEXF",
             Unsupported::Xml => "XML",
         }
@@ -247,7 +247,7 @@ impl Unsupported {
     fn hint(self) -> &'static str {
         match self {
             Unsupported::OwlXml | Unsupported::OwlFunctional | Unsupported::OwlManchester => TO_RDF,
-            Unsupported::GraphMl | Unsupported::Gexf => TO_JSON,
+            Unsupported::Gexf => TO_JSON,
             Unsupported::Xml => {
                 "kgdiff reads RDF/XML (an rdf:RDF root element, or a node element with rdf:about); other XML vocabularies are not graph formats it knows."
             }
@@ -291,6 +291,7 @@ pub struct XmlRootInfo<'a> {
 /// RDF/XML, or the unsupported XML format a root element belongs to.
 pub enum XmlKind {
     RdfXml,
+    GraphMl,
     Unsupported(Unsupported),
 }
 
@@ -305,7 +306,7 @@ pub fn classify_xml_root(root: &XmlRootInfo<'_>) -> XmlKind {
     }
     let lower = to_lowercase(local);
     if lower == "graphml" {
-        return XmlKind::Unsupported(Unsupported::GraphMl);
+        return XmlKind::GraphMl;
     }
     if lower == "gexf" {
         return XmlKind::Unsupported(Unsupported::Gexf);
@@ -949,7 +950,8 @@ mod tests {
         assert_eq!(detect("[ ex:a 1 ] .", None), "turtle");
         assert_eq!(detect("hello world", None), "error");
         assert_eq!(detect("Prefix(:=<x>)", None), "error");
-        assert_eq!(detect("<graphml xmlns=\"x\"></graphml>", None), "error");
+        assert_eq!(detect("<graphml xmlns=\"x\"></graphml>", None), "graphml");
+        assert_eq!(detect("<gexf xmlns=\"x\"></gexf>", None), "error");
     }
 
     #[test]

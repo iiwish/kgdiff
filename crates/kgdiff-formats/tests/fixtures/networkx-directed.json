@@ -1,0 +1,31 @@
+{
+ "directed": true,
+ "multigraph": false,
+ "graph": {},
+ "nodes": [
+  {
+   "entity_id": "Ada",
+   "entity_type": "person",
+   "description": "Wrote the first program",
+   "source_id": "chunk-1",
+   "id": 1
+  },
+  {
+   "entity_id": "Engine",
+   "entity_type": "machine",
+   "description": "Analytical Engine",
+   "source_id": "chunk-1<SEP>chunk-2",
+   "id": 2
+  }
+ ],
+ "links": [
+  {
+   "weight": 2.0,
+   "description": "designed programs for",
+   "keywords": "program,design",
+   "source_id": "chunk-1",
+   "source": 1,
+   "target": 2
+  }
+ ]
+}

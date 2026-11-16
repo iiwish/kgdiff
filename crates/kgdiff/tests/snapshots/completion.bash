@@ -40,7 +40,7 @@ _kgdiff() {
             _kgdiff_files
             return ;;
         diff:--format|diff:-f|diff:--before-format|diff:--after-format)
-            COMPREPLY=($(compgen -W "auto json jsonld turtle ntriples nquads trig rdfxml obo" -- "$cur"))
+            COMPREPLY=($(compgen -W "auto json jsonld turtle ntriples nquads trig rdfxml obo graphml" -- "$cur"))
             return ;;
         diff:--match)
             COMPREPLY=($(compgen -W "id auto similarity" -- "$cur"))
@@ -69,7 +69,7 @@ _kgdiff() {
             _kgdiff_files
             return ;;
         apply:--format|apply:-f)
-            COMPREPLY=($(compgen -W "auto json jsonld turtle ntriples nquads trig rdfxml obo" -- "$cur"))
+            COMPREPLY=($(compgen -W "auto json jsonld turtle ntriples nquads trig rdfxml obo graphml" -- "$cur"))
             return ;;
         help:--color)
             COMPREPLY=($(compgen -W "auto always never" -- "$cur"))

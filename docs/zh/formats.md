@@ -10,6 +10,7 @@
 | JSON-LD 1.1 | `.jsonld`、带 `@context` 的 `.json` | context 必须内联：不会联网获取任何内容                                             |
 | OBO 1.4     | `.obo`                              | 同义词、`is_a`、relationship、带 `replaced_by` 的废弃、`alt_id`                    |
 | JSON 图     | `.json`                             | kgdiff、d3 / NetworkX node-link、Cytoscape.js、AntV G6 v5、graphology、vis-network |
+| GraphML     | `.graphml`                          | NetworkX、igraph、yEd、Gephi、LightRAG 写出的文件；按 node-link 数据读取           |
 
 以上格式都可以用 gzip 压缩（`.gz`），编码可以是 UTF-8 或 UTF-16。
 
@@ -17,14 +18,14 @@
 
 格式由扩展名决定；没有可识别的扩展名或从标准输入（`-`）读取时，由内容决定。有两个扩展名会再看一眼内容：内容是 JSON-LD 的 `.json` 文件按 JSON-LD 读取；`.owl` 文件按其实际使用的语法读取，因为 Protégé 也会用这个扩展名保存 Turtle、OWL/XML 和函数式语法。
 
-要跳过格式判断，用 `--format <fmt>` 指定两个输入的格式，或用 `--before-format` / `--after-format` 只指定一侧：可选 `json`、`jsonld`、`turtle`、`ntriples`、`nquads`、`trig`、`rdfxml` 或 `obo`。
+要跳过格式判断，用 `--format <fmt>` 指定两个输入的格式，或用 `--before-format` / `--after-format` 只指定一侧：可选 `json`、`jsonld`、`turtle`、`ntriples`、`nquads`、`trig`、`rdfxml`、`obo` 或 `graphml`。
 
 ## 能识别但不读取的格式
 
 | 格式                                     | 怎么办                                                                       |
 | ---------------------------------------- | ---------------------------------------------------------------------------- |
 | OWL/XML、OWL 函数式语法、Manchester 语法 | 转换成 RDF/XML 或 Turtle：`robot convert --input onto.owx --output onto.owl` |
-| GraphML、GEXF                            | 改为导出 JSON，例如 NetworkX node-link 数据或 Cytoscape.js JSON              |
+| GEXF                                     | 改为导出 GraphML 或 JSON，例如 NetworkX node-link 数据                       |
 
 kgdiff 会在错误信息里说明是什么格式、该怎么转换。
 
@@ -110,6 +111,31 @@ kgdiff 会识别 JSON 的结构（d3 / NetworkX node-link、Cytoscape.js、AntV 
 节点的其他字段会成为属性。只和绘制有关的字段（渲染状态、样式、形状类型）会被丢弃，并给出警告。
 
 无论哪种 JSON 结构，超出双精度范围的数字（`1e400`）都会保留为字符串 `"Infinity"` 或 `"-Infinity"`，并给出警告，而不是被丢掉。字符串里单独转义的半个代理对（`"\ud800"`）会报错：kgdiff 只读取合法的 Unicode 文本。
+
+## GraphML
+
+GraphML 文档先读成 NetworkX 对同一张图给出的 node-link 数据，再和其他 JSON 图一样处理：上面那些字段的含义不变。所以同一张图存成 GraphML 和存成 node-link JSON，在 kgdiff 看来是同一张图，拿这两个文件比较不会有变化。
+
+| GraphML                                         | 变成                                                                |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| `<node id>`                                     | 节点 id                                                             |
+| `<edge source target>`、`<edge id>`             | 一条边，以及它的 id                                                 |
+| 节点或边的 `<data key>`                         | 一个字段，名字是 key 的 `attr.name`：标签、类型、关系名或属性       |
+| 图的 `<data key>`：`name`、`version`            | 图的名称和版本                                                      |
+| `attr.type` 为 `int`、`long`、`float`、`double` | 数字                                                                |
+| `attr.type` 为 `boolean`                        | 布尔值（`true`、`false`、`1`、`0`，以及 Python 的 `True`、`False`） |
+| key 的 `<default>`                              | 没有为这个 key 写 `<data>` 的节点或边都取这个值                     |
+
+边的两端按文件里写的顺序保留，无向图（`edgedefault="undirected"`）也一样，和 node-link JSON 的处理相同：NetworkX 每次写同一条边，两端的顺序都一样。节点 id、边的两端和边的 id 以元素自己的属性为准：名叫 `id`、`source` 或 `target` 的字段不会替换它们。
+
+kgdiff 不读取的内容会略过并给出警告，不会报错：
+
+- 嵌套的图（yEd 的分组）和第一个之后的 `<graph>` 元素会合并成一张图（`graphml-merged-graphs`）；
+- `<hyperedge>` 和 `<port>` 被跳过（`graphml-unsupported-elements`）；
+- 内容是 XML 的 `<data>` 被丢弃，yEd 等编辑器把几何位置和样式放在这里（`graphml-ignored-data`）；
+- 和 key 声明的类型不符的值（`long` 写成 `about 175`，`double` 写成 `inf`）保留为文本（`graphml-invalid-value`）。
+
+LightRAG 把实体的类型放在 `entity_type` 里，它不在类型字段之列：除非你用 `parseGraph` 的 `json.fields.type` 指明，否则它只是一个属性（JSON 读取器的字段覆盖对 GraphML 同样生效）。NetworkX 写出的多重图，边的 key 在 GraphML 里是 `<edge id>`，在 node-link JSON 里是 `key` 字段，所以这两种文件的边 id 不同。
 
 ## RDF 与 OBO
 

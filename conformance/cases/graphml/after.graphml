@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The same graph after an editor: drawing data, a group with a nested graph, a default. -->
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+  <key id="d0" for="graph" attr.name="name" attr.type="string"/>
+  <key id="d1" for="graph" attr.name="version" attr.type="string"/>
+  <key id="d2" for="node" attr.name="label" attr.type="string"/>
+  <key id="d3" for="node" attr.name="type" attr.type="string">
+    <default>人物</default>
+  </key>
+  <key id="d4" for="node" attr.name="born" attr.type="long"/>
+  <key id="d5" for="node" attr.name="famous" attr.type="boolean"/>
+  <key id="d6" for="node" attr.name="weight" attr.type="double"/>
+  <key id="d7" for="node" attr.name="year" attr.type="long"/>
+  <key id="d8" for="node" attr.name="description" attr.type="string"/>
+  <key id="d9" for="edge" attr.name="relation" attr.type="string"/>
+  <key id="d10" for="edge" attr.name="weight" attr.type="double"/>
+  <key id="d11" for="edge" attr.name="since" attr.type="long"/>
+  <key id="d12" for="node" yfiles.type="nodegraphics"/>
+  <graph id="G" edgedefault="undirected">
+    <data key="d0">chibi</data>
+    <data key="d1">2</data>
+    <node id="曹操">
+      <data key="d2">曹孟德</data>
+      <data key="d4">155</data>
+      <data key="d5">true</data>
+      <data key="d6">0.75</data>
+      <data key="d12">
+        <y:ShapeNode><y:Geometry height="30.0" width="60.0" x="10.0" y="20.0"/></y:ShapeNode>
+      </data>
+    </node>
+    <node id="孙刘联军">
+      <data key="d2">孙刘联军</data>
+      <data key="d3">阵营</data>
+      <graph id="G:联军" edgedefault="undirected">
+        <node id="刘备">
+          <data key="d2">刘备</data>
+          <data key="d4">161</data>
+          <data key="d5">true</data>
+        </node>
+        <node id="孙权">
+          <data key="d2">孙权</data>
+          <data key="d4">182</data>
+          <data key="d5">false</data>
+        </node>
+        <node id="周瑜">
+          <data key="d2">周瑜</data>
+          <data key="d4">about 175</data>
+          <port name="east"/>
+        </node>
+        <edge source="刘备" target="孙权">
+          <data key="d9">结盟</data>
+          <data key="d11">208</data>
+        </edge>
+        <edge source="周瑜" target="孙权">
+          <data key="d9">效力</data>
+        </edge>
+      </graph>
+    </node>
+    <node id="赤壁">
+      <data key="d2">赤壁之战</data>
+      <data key="d3">事件</data>
+      <data key="d7">208</data>
+      <data key="d8"><![CDATA[孙刘联军 & 曹军 <长江>，火攻]]></data>
+    </node>
+    <edge source="曹操" target="赤壁">
+      <data key="d9">参战</data>
+      <data key="d10">1.0</data>
+    </edge>
+    <edge source="刘备" target="赤壁">
+      <data key="d9">参战</data>
+      <data key="d10">0.5</data>
+    </edge>
+    <edge source="周瑜" target="赤壁">
+      <data key="d9">指挥</data>
+    </edge>
+    <hyperedge>
+      <endpoint node="刘备"/>
+      <endpoint node="孙权"/>
+      <endpoint node="周瑜"/>
+    </hyperedge>
+  </graph>
+</graphml>

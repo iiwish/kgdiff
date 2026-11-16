@@ -38,11 +38,11 @@ reads it as an empty graph — a silently empty side would otherwise report "eve
 ### Input formats
 
 The format comes from the extension — `.json`, `.jsonld`, `.ttl`, `.nt`, `.nq`, `.trig`, `.rdf`,
-`.owl`, `.obo`, also behind `.gz` — or, for other names and stdin, from the content. Two
+`.owl`, `.obo`, `.graphml`, also behind `.gz` — or, for other names and stdin, from the content. Two
 extensions get a second look at the content: `.json` holding JSON-LD (a top-level `@context`,
 `@graph`, `@id`, …) is read as JSON-LD, and `.owl`, which Protégé also writes in Turtle, OWL/XML
 or Functional Syntax, is read in whatever syntax it contains. Formats kgdiff recognises but does
-not read — OWL/XML, OWL Functional and Manchester Syntax, GraphML, GEXF — fail with a conversion
+not read — OWL/XML, OWL Functional and Manchester Syntax, GEXF — fail with a conversion
 hint. JSON-LD contexts must be inline: kgdiff never fetches a remote `@context` (that keeps runs
 offline and reproducible), so a document that references one fails with a hint to inline it.
 

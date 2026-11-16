@@ -310,8 +310,8 @@ export async function parseGraph(text: string, options: ParseOptions = {}): Prom
  * `[Instance]` line → obo; Turtle directives → turtle, or trig when a `{ … }` graph block
  * appears; line-based statements → ntriples (3 terms) or nquads (4 terms). Empty input is an
  * (empty) Turtle graph. Throws `KgdiffError('invalid-input')` with a conversion hint for
- * recognisably unsupported formats (OWL/XML, OWL Functional / Manchester Syntax, GraphML,
- * GEXF, other XML) and for unrecognisable text.
+ * recognisably unsupported formats (OWL/XML, OWL Functional / Manchester Syntax, GEXF,
+ * other XML) and for unrecognisable text.
  *
  * Asynchronous, like `parseGraph` (since 0.11.1). `detectFormatSync` of `@kgdiff/compute` after its `init()`.
  */

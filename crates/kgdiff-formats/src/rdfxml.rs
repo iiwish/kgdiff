@@ -10,7 +10,7 @@ use crate::detect::{XmlKind, XmlRootInfo, classify_xml_root, unsupported_format}
 use crate::iri::resolve_iri;
 use crate::prefixes::RDF_NS;
 use crate::rdf::RdfDocument;
-use crate::shared::{compare_strings, invalid_input_with, slice_utf16, strip_bom};
+use crate::shared::{compare_strings, invalid_input, invalid_input_with, slice_utf16, strip_bom};
 use crate::term::{Literal, LiteralKind, Quad, Term};
 use crate::xml::{
     XML_NS, XmlAttribute, XmlElement, XmlError, XmlHandler, is_nc_name, is_xml_space, line_of,
@@ -169,6 +169,11 @@ impl RdfXmlReader {
             rdf_attributes: element.attributes.iter().any(|a| a.uri == RDF_NS),
             rdf_namespace: element.namespaces.iter().any(|(_, uri)| uri == RDF_NS),
         });
+        if matches!(kind, XmlKind::GraphMl) {
+            return Err(XmlError::Other(Box::new(invalid_input(
+                "The document is GraphML, not RDF/XML: read it with the format `graphml`.",
+            ))));
+        }
         if let XmlKind::Unsupported(kind) = kind
             && kind != crate::detect::Unsupported::Xml
         {

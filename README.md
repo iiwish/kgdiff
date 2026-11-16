@@ -216,7 +216,7 @@ and the exact rules in [Algorithms](docs/algorithms.md).
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RDF    | Turtle, N-Triples, N-Quads, TriG, RDF/XML (`.rdf`, `.owl` from Protégé / ROBOT), JSON-LD 1.1 (inline contexts; nothing is fetched) — labels by language preference, OWL existential restrictions as edges, blank nodes identified by content and context, statement annotations folded |
 | OBO    | OBO 1.4 — synonyms, `is_a`, relationships, obsoletion with `replaced_by`, `alt_id`                                                                                                                                                                                                     |
-| JSON   | kgdiff native, d3 / NetworkX node-link, Cytoscape.js, AntV G6 v5, graphology, vis-network                                                                                                                                                                                              |
+| JSON   | kgdiff native, d3 / NetworkX node-link, Cytoscape.js, AntV G6 v5, graphology, vis-network; GraphML (NetworkX, igraph, yEd, Gephi, LightRAG), read as node-link data                                                                                                                    |
 
 The format is detected from the file name and the content. Mapping conventions:
 [Formats](docs/formats.md). Missing yours? [Request a format](https://github.com/iiwish/kgdiff/issues/new?template=format_request.yml).
@@ -338,13 +338,14 @@ The experimental APIs, designed for embedding hosts, stay experimental until a h
 [Versioning](docs/versioning.md#experimental-apis)).
 
 **What comes next.** kgdiff stays on 0.x for a good while and improves there; nothing below
-waits for 1.0. Patch releases come as they are ready. A breaking minor release comes no more
+waits for 1.0. Patch releases gather a week's fixes and additions, and a security fix comes at
+once. A breaking minor release comes no more
 often than about every six to eight weeks, with a migration guide. The plan by release, which
 the needs of the first host may reorder:
 
-- **0.12.x**, fixes and additions: shell completions (0.12.2) · the viewer's accessibility review
-  ([#16](https://github.com/iiwish/kgdiff/issues/16)) · GraphML and GEXF input
-  ([#8](https://github.com/iiwish/kgdiff/issues/8), [#9](https://github.com/iiwish/kgdiff/issues/9)) · native binaries on GitHub releases and a Homebrew formula.
+- **0.12.x**, fixes and additions: shell completions and GraphML input (0.12.2) · the viewer's
+  accessibility review ([#16](https://github.com/iiwish/kgdiff/issues/16)) · GEXF input ([#9](https://github.com/iiwish/kgdiff/issues/9)) · native binaries on GitHub
+  releases and a Homebrew formula.
 - **0.13**, may break: the embedding interface of the `kgdiff` crate (`CliIo`) in Rust's idiom ·
   what the accessibility review and the first host ask to change · the plain view of one graph,
   colored by the host's categories ([RFC 0003](docs/rfcs/0003-embedding-hosts.md), part 4c).

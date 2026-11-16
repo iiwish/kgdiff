@@ -18,7 +18,9 @@ export type FormatId =
   | 'trig'
   /** RDF/XML, including OWL ontologies saved by Protégé, the OWL API or ROBOT (`.owl`). */
   | 'rdfxml'
-  | 'obo';
+  | 'obo'
+  /** GraphML, as NetworkX, igraph, yEd, Gephi and LightRAG write it: read as node-link data. */
+  | 'graphml';
 
 /** File extensions understood by `detectFormat` (matched case-insensitively, longest first). */
 export const FORMAT_EXTENSIONS: Readonly<Record<FormatId, readonly string[]>> = {
@@ -30,6 +32,7 @@ export const FORMAT_EXTENSIONS: Readonly<Record<FormatId, readonly string[]>> = 
   trig: ['.trig'],
   rdfxml: ['.rdf', '.owl'],
   obo: ['.obo'],
+  graphml: ['.graphml'],
 };
 
 /** JSON graph shapes recognised by the `json` format (reported as `ParseResult.dialect`). */
@@ -66,7 +69,15 @@ export type ParseWarningCode =
   /** OBO: a `def` without quotes was kept verbatim. */
   | 'obo-unquoted-def'
   /** OBO: an `idspace` header without prefix or IRI was skipped. */
-  | 'obo-invalid-idspace';
+  | 'obo-invalid-idspace'
+  /** GraphML: nested graphs, or graphs after the first, were merged into one graph. */
+  | 'graphml-merged-graphs'
+  /** GraphML: `<hyperedge>` and `<port>` elements were skipped. */
+  | 'graphml-unsupported-elements'
+  /** GraphML: `<data>` with XML content (drawing data) was dropped. */
+  | 'graphml-ignored-data'
+  /** GraphML: a value that is not of its key's `attr.type` was kept as text. */
+  | 'graphml-invalid-value';
 
 export interface RdfOptions {
   /**

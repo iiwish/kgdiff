@@ -22,16 +22,16 @@ selector() { # the parse_graph / detect_format selector byte for a file name
   case "$1" in
     *.jsonld) echo 001 ;; *.json) echo 000 ;; *.ttl) echo 002 ;; *.nt) echo 003 ;;
     *.nq) echo 004 ;; *.trig) echo 005 ;; *.owl | *.rdf) echo 006 ;; *.obo) echo 007 ;;
-    *) echo 010 ;;
+    *.graphml) echo 010 ;; *) echo 011 ;;
   esac
 }
 
 while IFS= read -r f; do
   base=$(basename "$f")
   case "$base" in
-    *.ttl | *.nt | *.nq | *.trig | *.owl | *.rdf | *.obo | *.jsonld)
+    *.ttl | *.nt | *.nq | *.trig | *.owl | *.rdf | *.obo | *.jsonld | *.graphml)
       put parse_graph "$f" "$(selector "$base")"
-      put parse_graph "$f" 010 # auto-detection
+      put parse_graph "$f" 011 # auto-detection
       put detect_format "$f" 000
       ;;
     delta.json | delta.inverse.json) put delta "$f" "" ;;
