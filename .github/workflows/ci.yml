@@ -108,6 +108,14 @@ jobs:
       - name: Lints (clippy.toml forbids what differs from JavaScript)
         if: matrix.os == 'ubuntu-latest'
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      # crates/kgdiff/tests/completion.rs runs the completion scripts in their shells: all three
+      # here (required), bash 3.2 and zsh on macOS, where a missing shell is skipped.
+      - name: Install fish and zsh for the completion scripts' tests
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends fish zsh
+          echo "KGDIFF_REQUIRE_SHELLS=1" >> "$GITHUB_ENV"
       - run: cargo test --workspace --locked
       # Every CLI run the corpus records, with the Rust kgdiff as a real process: same stdout,
       # stderr and exit code on every OS.

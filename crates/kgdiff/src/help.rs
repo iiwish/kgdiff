@@ -343,13 +343,13 @@ const COMPLETION: &[Section] = &[
     Section {
         title: "Install",
         lines: &[
-            ("source <(kgdiff completion bash)", Some("in ~/.bashrc")),
+            ("eval \"$(kgdiff completion bash)\"", Some("in ~/.bashrc")),
             ("source <(kgdiff completion zsh)", Some("in ~/.zshrc")),
             ("kgdiff completion fish | source", Some("in config.fish")),
         ],
         note: Some(
-            "In zsh, after compinit. Or write the script once to the shell's completions \
-             directory, for example kgdiff completion zsh > \"${fpath[1]}/_kgdiff\"",
+            "In zsh, after compinit. Or write the script once to a directory the shell reads \
+             completions from: docs/cli.md says which, for each shell.",
         ),
         entries: &[],
     },

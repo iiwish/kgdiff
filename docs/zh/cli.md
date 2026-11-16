@@ -102,15 +102,29 @@ kgdiff --help | --version | help [apply|completion]
 
 ### Shell 补全
 
-`kgdiff completion <bash|zsh|fish>` 把对应 shell 的补全脚本打印到标准输出。把它写到 shell 找补全的目录里，写一次就行：
+`kgdiff completion <bash|zsh|fish>` 把对应 shell 的补全脚本打印到标准输出。在 shell 启动时加载它：
 
 ```sh
-kgdiff completion bash > ~/.local/share/bash-completion/completions/kgdiff
-kgdiff completion zsh > "${fpath[1]}/_kgdiff"
-kgdiff completion fish > ~/.config/fish/completions/kgdiff.fish
+eval "$(kgdiff completion bash)"     # 写在 ~/.bashrc 里
+source <(kgdiff completion zsh)      # 写在 ~/.zshrc 里，compinit 之后
+kgdiff completion fish | source      # 写在 ~/.config/fish/config.fish 里
 ```
 
-也可以在 shell 启动时加载：在 `~/.bashrc` 里写 `source <(kgdiff completion bash)`，在 `~/.zshrc` 里 `compinit` 之后写 `source <(kgdiff completion zsh)`，在 `config.fish` 里写 `kgdiff completion fish | source`。升级 kgdiff 以后重新写一次脚本，新版本可能有新的选项。
+bash 里要写 `eval`，不要写 `source <(…)`：macOS 自带的 bash 3.2 从进程替换里什么也读不到，而且不报错。
+
+也可以把脚本写到 shell 读补全的目录里，写一次就行；升级 kgdiff 以后重新写一次，新版本可能有新的选项：
+
+```sh
+# bash：要装了 bash-completion 包（第 2 版）才会读这个目录，单有 bash 不会
+kgdiff completion bash > ~/.local/share/bash-completion/completions/kgdiff
+
+# zsh：放进 fpath 里一个自己的目录，在 ~/.zshrc 里 compinit 之前设置
+mkdir -p ~/.zfunc && kgdiff completion zsh > ~/.zfunc/_kgdiff
+#   fpath=(~/.zfunc $fpath)
+
+# fish
+kgdiff completion fish > ~/.config/fish/completions/kgdiff.fish
+```
 
 脚本能补全选项（长短两种写法）、取值固定的选项的值（`--format`、`--before-format`、`--after-format`、`--match`、`--edge-identity`、`--theme`、`--mode`、`--scope`、`--color`、`--locale`）、两个图文件和接受文件的选项的文件名，以及 `apply`、`help`、`completion` 这三个命令和它们各自的选项。脚本是从解析命令行用的同一批表生成的，所以列出的正好是打印它的那个版本的选项。`apply`、`help` 和 `completion` 只有作为第一个参数时才是命令：要比较叫这些名字的文件，把它写成路径（`./completion`）。
 

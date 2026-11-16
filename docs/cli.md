@@ -136,19 +136,32 @@ keep their existing hints.
 
 ### Shell completion
 
-`kgdiff completion <bash|zsh|fish>` prints a completion script for the shell on stdout. Write it
-where the shell looks for completions, once:
+`kgdiff completion <bash|zsh|fish>` prints a completion script for the shell on stdout. Load it
+when the shell starts:
 
 ```sh
-kgdiff completion bash > ~/.local/share/bash-completion/completions/kgdiff
-kgdiff completion zsh > "${fpath[1]}/_kgdiff"
-kgdiff completion fish > ~/.config/fish/completions/kgdiff.fish
+eval "$(kgdiff completion bash)"     # in ~/.bashrc
+source <(kgdiff completion zsh)      # in ~/.zshrc, after compinit
+kgdiff completion fish | source      # in ~/.config/fish/config.fish
 ```
 
-or load it when the shell starts: `source <(kgdiff completion bash)` in `~/.bashrc`,
-`source <(kgdiff completion zsh)` in `~/.zshrc` after `compinit`, `kgdiff completion fish | source`
-in `config.fish`. Write the script again after upgrading kgdiff, since a newer version may have
-new options.
+In bash, write `eval`, not `source <(…)`: the bash 3.2 that macOS ships reads nothing from a
+process substitution, and says nothing about it.
+
+Or write the script once to a directory the shell reads completions from, and write it again
+after upgrading kgdiff, since a newer version may have new options:
+
+```sh
+# bash, with the bash-completion package (version 2) installed; bash alone does not read it
+kgdiff completion bash > ~/.local/share/bash-completion/completions/kgdiff
+
+# zsh: a directory of your own on fpath, set in ~/.zshrc before compinit
+mkdir -p ~/.zfunc && kgdiff completion zsh > ~/.zfunc/_kgdiff
+#   fpath=(~/.zfunc $fpath)
+
+# fish
+kgdiff completion fish > ~/.config/fish/completions/kgdiff.fish
+```
 
 The scripts complete the options (long and short), the values of the options that take one of a
 fixed set (`--format`, `--before-format`, `--after-format`, `--match`, `--edge-identity`,
