@@ -514,7 +514,10 @@ mod in_the_shells {
         assert_eq!(complete(&["completion", "z"]), expect(&["zsh"]));
     }
 
-    /// What fish offers for a command line (`complete -C`), with the script loaded.
+    /// What fish offers for a command line (`complete -C`), with the script loaded. fish also
+    /// offers what matches the word being typed loosely (`--ma` finds `--format`), after the
+    /// candidates that start with it: only those are compared. Every line is tried before the
+    /// test fails, so that one run shows all that differs.
     #[test]
     fn fish_completes() {
         if !installed("fish") {
@@ -536,31 +539,36 @@ mod in_the_shells {
                 "{line}: {}",
                 String::from_utf8_lossy(&out.stderr)
             );
-            sorted(&String::from_utf8_lossy(&out.stdout))
+            let typed = line.rsplit(' ').next().unwrap_or_default();
+            let mut words = sorted(&String::from_utf8_lossy(&out.stdout));
+            words.retain(|w| w.starts_with(typed));
+            words
         };
-        assert_eq!(complete("kgdiff --ma"), expect(&["--markdown", "--match"]));
-        assert_eq!(
-            complete("kgdiff --match "),
-            expect(&["auto", "id", "similarity"])
-        );
-        assert_eq!(
-            complete("kgdiff --theme "),
-            expect(&["auto", "dark", "light"])
-        );
-        assert_eq!(complete("kgdiff --title "), expect(&[]));
-        assert_eq!(complete("kgdiff -o gr"), expect(&["graph.json"]));
-        assert_eq!(complete("kgdiff --json gr"), expect(&["graph.json"]));
-        assert_eq!(complete("kgdiff ap"), expect(&["apply"]));
-        assert_eq!(complete("kgdiff gr"), expect(&["graph.json"]));
-        assert_eq!(complete("kgdiff graph.json ap"), expect(&[]));
-        assert_eq!(complete("kgdiff apply --no"), expect(&["--no-strict"]));
-        assert_eq!(complete("kgdiff apply gr"), expect(&["graph.json"]));
-        assert_eq!(complete("kgdiff help "), expect(&["apply", "completion"]));
-        assert_eq!(complete("kgdiff help apply "), expect(&[]));
-        assert_eq!(
-            complete("kgdiff completion "),
-            expect(&["bash", "fish", "zsh"])
-        );
-        assert_eq!(complete("kgdiff completion fish "), expect(&[]));
+        let cases: [(&str, &[&str]); 15] = [
+            ("kgdiff --ma", &["--markdown", "--match"]),
+            ("kgdiff --match ", &["auto", "id", "similarity"]),
+            ("kgdiff --theme ", &["auto", "dark", "light"]),
+            ("kgdiff --title ", &[]),
+            ("kgdiff -o gr", &["graph.json"]),
+            ("kgdiff --json gr", &["graph.json"]),
+            ("kgdiff ap", &["apply"]),
+            ("kgdiff gr", &["graph.json"]),
+            ("kgdiff graph.json ap", &[]),
+            ("kgdiff apply --no", &["--no-strict"]),
+            ("kgdiff apply gr", &["graph.json"]),
+            ("kgdiff help ", &["apply", "completion"]),
+            ("kgdiff help apply ", &[]),
+            ("kgdiff completion ", &["bash", "fish", "zsh"]),
+            ("kgdiff completion fish ", &[]),
+        ];
+        let differ: Vec<String> = cases
+            .iter()
+            .filter_map(|(line, words)| {
+                let offered = complete(line);
+                (offered != expect(words))
+                    .then(|| format!("`{line}` offers {offered:?}, expected {words:?}"))
+            })
+            .collect();
+        assert!(differ.is_empty(), "{}", differ.join("\n"));
     }
 }
