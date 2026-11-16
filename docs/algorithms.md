@@ -150,6 +150,7 @@ one after node `T`.
 **Split** (1 → N): mirror image — one before node `x` whose content goes to ≥ 2 after nodes:
 `x`'s own match (if any) plus unmatched after nodes `t` with `replaces ∋ x` / `x.replacedBy ∋ t`
 (hint), or (heuristic) label evidence **and** edge carry-over:
+
 - label evidence: `textSimilarity(t.label, l) ≥ 0.9` for some `l ∈ {x.label} ∪ x.aliases`, or
   `t.label ∈ x.aliases`, or `x.label ∈ t.aliases` — symmetric with the merge rule;
 - carry-over: the fraction of **`t`'s** edges `(t, p, n)` (both directions) for which `x` had
@@ -476,6 +477,7 @@ thousands of instances does not pull its whole neighbourhood into the layout. Ou
 neighbours are counted in `hidden`, which only lists nodes with a non-zero count.
 
 **Strategy.**
+
 - `anchored` when positions are known (pins, or `position` on before / after nodes): known nodes
   are fixed; each new node starts at the barycenter of its placed neighbours plus a deterministic
   jitter (or near its merge / split partner), then a force simulation runs with known nodes fixed.
@@ -485,6 +487,7 @@ neighbours are counted in `hidden`, which only lists nodes with a non-zero count
   any other node — the union layout already reserves their space.
 
 **Simulation** (d3-force with `randomSource` from a seeded mulberry32; never `Math.random`):
+
 - initial positions: phyllotaxis spiral in BFS order from the highest-degree node per component
   (deterministic, avoids the hairball start);
 - `forceLink` distance `linkDistance · (1 + 0.15·log₂(1 + min(deg_s, deg_t)))`, strength
@@ -499,6 +502,7 @@ with a skyline / shelf packer sorted by height into a roughly 16:10 overall aspe
 `componentGap` between them. Isolated nodes are packed as a compact grid at the end.
 
 **Refinements** (implemented in `packages/layout/src/forces/params.ts`):
+
 - many-body strength scales with `(linkDistance / 56)²`, so `linkDistance` changes the drawing's
   scale (identical to the formula above at the default);
 - crowded labels: repulsion × `clamp(labelArea / 1.5L², 1, 3)` for very large label boxes, and
