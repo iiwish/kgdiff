@@ -32,6 +32,12 @@ updates:
     groups:
       cargo:
         update-types: [minor, patch]
+    ignore:
+      # kgdiff-wasm names getrandom 0.3 only to turn on `wasm_js` for the copy oxrdf pulls in through
+      # rand 0.9. A 0.4 there leaves that copy without a wasm32 backend (#132). Lift this once oxrdf
+      # is on rand 0.10.
+      - dependency-name: getrandom
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions # keeps the SHA pins and their version comments current
     directory: /
