@@ -1,5 +1,28 @@
 # @kgdiff/compute
 
+## 0.12.2
+
+### Patch Changes
+
+- 081c437: kgdiff reads GEXF (1.1 to 1.3), the format of Gephi, which NetworkX writes too (`write_gexf`): `kgdiff a.gexf b.gexf`, `parseGraph(text, { format: 'gexf' })` and `FormatId::Gexf` in Rust, detected from the `.gexf` extension and from the content.
+
+  Like GraphML, a GEXF document is read as node-link data and then as every JSON graph. A node's `label` is its label, unless it only repeats the id, as NetworkX writes it for a node without one. An edge has its `id`, `label` and numeric `weight`; its `kind` (GEXF 1.3) is the relation, and so is a `type` that does not name a direction, which is where NetworkX writes an edge attribute of that name. `<attvalue>` values are fields named by their attribute's `title` and typed by its `type`, with the attribute's `<default>` where a node or an edge has none, within the same limit as GraphML. An undirected edge has its ends in one order. The numbers Gephi and NetworkX give edges are read as edge ids, which play no part in a comparison unless `--edge-identity id` asks for it.
+
+  With a warning each: `viz:` elements are dropped (`gexf-ignored-viz`), a dynamic graph is read as one static graph (`gexf-dynamic`), nodes inside other nodes are plain nodes (`gexf-hierarchy`), and a value that is not of its type stays text (`gexf-invalid-value`). [Formats](https://github.com/iiwish/kgdiff/blob/main/docs/formats.md#gexf) has the mapping.
+
+  New in the types: the format `gexf` and four warning codes; with GraphML, `FormatId::ALL` has ten entries. GEXF read as RDF/XML says which format to read it with. With GraphML and GEXF read, the only formats kgdiff recognises and does not read are the OWL syntaxes other than RDF/XML.
+- 102ce48: kgdiff reads GraphML: `kgdiff a.graphml b.graphml`, `parseGraph(text, { format: 'graphml' })` and `FormatId::GraphMl` in Rust, detected from the `.graphml` extension and from the content. It is what NetworkX (`write_graphml`), igraph and yEd write, and what LightRAG keeps its graph in, so comparing two runs no longer needs an export to JSON first.
+
+  A GraphML document is read as the node-link data NetworkX gives the same graph, and then as every JSON graph: `label`, `name` or `title` is the label, `type` the type, `relation` the predicate, the rest attributes. Values are typed by their key's `attr.type` (numbers, booleans, also Python's `True` and `False`), and a key's `<default>` fills the elements that have no `<data>` for it. An undirected edge has its ends in one order, so that `a – b` in one run and `b – a` in the next are the same edge. yEd's node and edge labels, which it keeps in its drawing data, are the labels.
+
+  With a warning each: nested graphs are merged into one (`graphml-merged-graphs`), `<hyperedge>` and `<port>` are skipped (`graphml-unsupported-elements`), drawing data is dropped (`graphml-ignored-data`), a value that is not of its type stays text (`graphml-invalid-value`), and edge ids that edges share, as in a multigraph NetworkX writes, are not read (`graphml-shared-edge-ids`). A document whose `<default>` values would add more fields than it has bytes (a million for a small one) is refused. [Formats](https://github.com/iiwish/kgdiff/blob/main/docs/formats.md#graphml) has the mapping and says where a graph saved as GraphML and as node-link JSON still differ.
+
+  New in the types: the format `graphml` (`FormatId`, `FORMAT_EXTENSIONS`, `--format graphml`) and five warning codes (`ParseWarningCode`). A `switch` over either needs its `default` branch, as [Versioning](https://github.com/iiwish/kgdiff/blob/main/docs/versioning.md) says; in Rust the enums are `#[non_exhaustive]`. GraphML read as RDF/XML (`--format rdfxml`) now says which format to read it with.
+- Updated dependencies [081c437]
+- Updated dependencies [102ce48]
+  - @kgdiff/core@0.12.2
+  - @kgdiff/layout@0.12.2
+
 ## 0.12.1
 
 ### Patch Changes
