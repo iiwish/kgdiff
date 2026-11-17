@@ -70,6 +70,40 @@ function warnPanels(invalid: readonly string[]): void {
 }
 
 /**
+ * The slot of its parent's shadow tree that `el` is assigned to. `assignedSlot` where the
+ * engine has it; otherwise the slot of that name in the parent's open shadow root.
+ */
+function slotOf(el: Element): Element | null {
+  if (el.assignedSlot) return el.assignedSlot;
+  const tree = el.parentElement?.shadowRoot;
+  if (!tree) return null;
+  const name = el.getAttribute('slot') ?? '';
+  return (
+    [...tree.querySelectorAll('slot')].find((s) => (s.getAttribute('name') ?? '') === name) ?? null
+  );
+}
+
+/**
+ * Whether `el` is inside a main landmark of the page: a `<main>` or `role="main"` among its
+ * ancestors, through slots and shadow roots.
+ */
+function insideMain(el: Element): boolean {
+  let node: Node = el;
+  for (;;) {
+    const up: Node | null =
+      (node instanceof Element ? slotOf(node) : null) ??
+      node.parentNode ??
+      (node instanceof ShadowRoot ? node.host : null);
+    if (!up) return false;
+    if (up instanceof Element) {
+      const role = up.getAttribute('role');
+      if (role === 'main' || (up.localName === 'main' && role === null)) return true;
+    }
+    node = up;
+  }
+}
+
+/**
  * @tagname kgdiff-viewer
  * @attr {'open' | 'closed'} sidebar - A preset: `closed` starts with the sidebar folded (`\` and the
  *   sidebar button open it), `open` with its four regions open. Reflects the sidebar's state
@@ -139,6 +173,8 @@ export class KgdiffViewer extends RootElement<ViewerController> implements Kgdif
       this.#loadRemembered();
       this.#layoutReady = true;
     }
+    // The page's main landmark, unless the page has one around the viewer.
+    ui.stage.setRegion(insideMain(this));
     // The stage adds its own minimap to the view (unless a slotted one replaces it).
     this.controller.attach(ui.stage.canvasHost, null);
     // The graph takes keyboard focus (shortcuts apply where focus is), also on click.

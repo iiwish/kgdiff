@@ -204,6 +204,45 @@ describe('<kgdiff-viewer>', () => {
     expect(withCard.indexOf(card)).toBe(1);
   });
 
+  it('is a named region, not a second main landmark, inside the page’s main', async () => {
+    const mains = (): Element[] =>
+      [...flat(document.body)].filter(
+        (el) =>
+          el.getAttribute('role') === 'main' ||
+          (el.localName === 'main' && !el.hasAttribute('role')),
+      );
+    const regions = (): string[] =>
+      [...flat(document.body)].filter((el) => el.getAttribute('role') === 'region').map(nameOf);
+    // In a <main>, in an element with role="main", and slotted into a component that has one.
+    for (const html of [
+      '<main id="page"><kgdiff-viewer></kgdiff-viewer></main>',
+      '<div id="page" role="main"><section><kgdiff-viewer></kgdiff-viewer></section></div>',
+    ]) {
+      const viewer = place<Viewer>(html, 'kgdiff-viewer');
+      await loaded(viewer);
+      expect(mains().map((el) => el.id)).toEqual(['page']);
+      expect(regions()).toEqual(['Graph diff']);
+      expect(unnamed(viewer)).toEqual([]);
+      document.getElementById('page')?.remove();
+    }
+    // The viewer looks when it is connected: the component is there first.
+    const host = place<HTMLElement>('<div id="host"></div>', '#host');
+    host.attachShadow({ mode: 'open' }).innerHTML = '<main id="inner"><slot></slot></main>';
+    const slotted = document.createElement('kgdiff-viewer') as Viewer;
+    host.append(slotted);
+    await loaded(slotted);
+    expect(mains().map((el) => el.id)).toEqual(['inner']);
+    expect(regions()).toEqual(['Graph diff']);
+    // Moved out of the page's main, it is the main landmark again.
+    document.body.append(slotted);
+    host.remove();
+    await tick();
+    expect(mains().map((el) => el.localName)).toEqual(['main']);
+    expect(mains()[0]?.getRootNode()).toBe(slotted.shadowRoot);
+    expect(regions()).toEqual([]);
+    expect(mains()[0]?.hasAttribute('aria-label')).toBe(false);
+  });
+
   it('leaves no tab stop in a region that is collapsed or hidden', async () => {
     const viewer = place<Viewer>(
       '<kgdiff-viewer panels="dock:hidden zoom:hidden list:collapsed"></kgdiff-viewer>',

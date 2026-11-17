@@ -391,9 +391,24 @@ export class Stage {
    * `<kgdiff-stage>`, one of several on a page that has its own.
    */
   asRegion(): void {
-    this.#region = true;
-    this.el.setAttribute('role', 'region');
-    this.#renderVersion(this.#ctx.tr());
+    this.setRegion(true);
+  }
+
+  /**
+   * Whether the stage is a named region or the main landmark (the element is a `<main>`). A
+   * `<kgdiff-viewer>` is the main landmark of a page that has none, and a region inside a
+   * page's own `<main>`: a page has one main landmark, and they do not nest.
+   */
+  setRegion(region: boolean): void {
+    if (region === this.#region) return;
+    this.#region = region;
+    if (region) {
+      this.el.setAttribute('role', 'region');
+      this.#renderVersion(this.#ctx.tr());
+    } else {
+      this.el.removeAttribute('role');
+      this.el.removeAttribute('aria-label');
+    }
   }
 
   /** Legend style, and whether clicks select (the tooltip only hints at clicking then). */

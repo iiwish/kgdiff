@@ -381,13 +381,17 @@ in a way it cannot observe (a class on an ancestor, a stylesheet added later), c
 - Canvas has `role="img"` and an `aria-label` summary (stats); a polite live region announces
   "Change 3 of 23: Renamed “x” to “y”" on navigation.
 - Contrast tokens are tested; color is never the only cue; reduced motion respected.
+- `<kgdiff-viewer>` is the page's main landmark when the page has none around it. Inside the
+  page's own `<main>` (or `role="main"`) it is a region named after the graph instead: a page
+  has one main landmark, and they do not nest. It looks when it is connected.
 - All features reachable by keyboard; pointer targets ≥ 28 px.
 - Announcements go through the root's one live region, once: the replay's end too, however many
   transports show it.
 
 **Checks** (`packages/viewer/test/a11y.test.ts`), for the default layout and a composed root:
 every control shown has a name in every state (modes, scope, replay, the menu, the search's
-results, the dialog); one main landmark in the viewer and none from a stage; one live region per
+results, the dialog); one main landmark in the viewer and none from a stage, and a named region instead when
+the page has a main landmark around the viewer; one live region per
 root; no positive `tabindex`; a region that is not open leaves no tab stop; the shortcuts dialog
 takes focus, keeps it and gives it back. The tab order they pin: in the viewer the canvas, the
 page's content in the top corners, the chrome from the bottom left (legend, zoom, dock), the
