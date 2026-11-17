@@ -26,6 +26,8 @@ kgdiff apply before.obo patch.json -o patched.json
 kgdiff after.obo patched.json --exit-code -q && echo 完全一致
 ```
 
+`apply` 自己也会核对：结果不是增量的目标时，它会给出警告。加上 `--verify-target` 则会直接失败（退出码 2），什么也不写，适合在脚本里用。
+
 ## 基准必须一致
 
 增量只能应用到它的基准图上。kgdiff 会先比较内容哈希，遇到其他图一律拒绝，退出码为 2：

@@ -489,6 +489,7 @@ fn parses_apply() {
         ("g.ttl", "d.json", "out.json")
     );
     assert!(!o.strict && !o.pretty && !o.allow_empty && !o.verbose && !o.common.quiet);
+    assert!(!o.verify_target);
     assert_eq!(o.common.color, ColorMode::Auto);
     assert_eq!(o.format, None);
     assert!(o.languages.is_none());
@@ -496,6 +497,16 @@ fn parses_apply() {
         panic!("expected apply")
     };
     assert_eq!(o.output, "-");
+    assert!(o.strict && !o.verify_target);
+    let Ok(Command::Apply(o)) = parse_command_line(&argv(&["apply", "g", "d", "--verify-target"]))
+    else {
+        panic!("expected apply")
+    };
+    assert!(o.strict && o.verify_target);
+    assert_eq!(
+        usage_error(&["apply", "g", "d", "--verify-target=yes"]).0,
+        "Option --verify-target does not take a value."
+    );
     assert_eq!(usage_error(&["apply", "g"]).0, "Missing <delta> argument.");
     assert_eq!(
         usage_error(&["apply", "g", "d", "--stat"]).0,

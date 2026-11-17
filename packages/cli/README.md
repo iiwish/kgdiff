@@ -34,7 +34,7 @@ binary. Without Node.js, build the same kgdiff from crates.io: `cargo install kg
 
 ```
 kgdiff <before> <after> [options]
-kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]]
+kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--verify-target]
 kgdiff completion <bash|zsh|fish>
 kgdiff --help | --version
 ```

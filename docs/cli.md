@@ -26,7 +26,7 @@ cargo install kgdiff                 # Rust
 
 ```
 kgdiff <before> <after> [options]
-kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--allow-empty]
+kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--verify-target] [--allow-empty]
 kgdiff completion <bash|zsh|fish>
 kgdiff --help | --version | help [apply|completion]
 ```
@@ -255,6 +255,14 @@ A graph that is not the delta's base is refused (exit 2); the hint explains that
 be parsed as when the delta was made (same `--format` / `--lang`). `--no-strict` applies every
 operation whose precondition holds and reports how many were skipped on stderr; `--verbose`
 lists them (`#index op: reason`).
+
+When the result's hash is not the delta's `target.hash` and no operation was skipped, `apply`
+warns on stderr and still writes the result (exit 0): the delta was cut short or edited, or it
+comes from a version of kgdiff that left changes out. With `--verify-target` such a result is an
+input error instead (exit 2) and nothing is written; the message gives both hashes. With
+`--no-strict` as well, the same holds whether or not operations were skipped: a result that
+skipped operations passes only if it is the target all the same (a graph that already had those
+changes). A delta without `target.hash` cannot be checked, so `--verify-target` refuses it.
 
 With `--ignore-attr`, the delta still carries the changes of the ignored attributes, though the
 diff does not show them, so applying it reaches the delta's target

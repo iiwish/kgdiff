@@ -788,6 +788,20 @@
           "file": "apply.lenient.json"
         },
         {
+          "name": "apply-verify-target-skipped",
+          "args": [
+            "apply",
+            "empty.json",
+            "expected/delta.json",
+            "--allow-empty",
+            "--no-strict",
+            "--verify-target",
+            "--color",
+            "never"
+          ],
+          "exit": 2
+        },
+        {
           "name": "apply-lone-surrogate",
           "args": ["apply", "before.json", "lone-surrogate-delta.json", "--color", "never"],
           "exit": 2

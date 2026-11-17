@@ -287,6 +287,10 @@ const APPLY: &[Section] = &[
                 "--no-strict",
                 "Apply the operations that fit even if the graph is not the delta's base; reports how many were skipped",
             ),
+            e(
+                "--verify-target",
+                "Fail, writing nothing, when the result is not the delta's target",
+            ),
             e("--verbose", "With --no-strict, list the skipped operations"),
             e("--allow-empty", "Treat an empty <graph> as an empty graph"),
             d("-f, --format <fmt>", "Format of <graph>", "auto"),

@@ -24,7 +24,7 @@ cargo install kgdiff                 # Rust
 
 ```
 kgdiff <before> <after> [options]
-kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--allow-empty]
+kgdiff apply <graph> <delta> [-o <file>] [--no-strict [--verbose]] [--verify-target] [--allow-empty]
 kgdiff completion <bash|zsh|fish>
 kgdiff --help | --version | help [apply|completion]
 ```
@@ -176,6 +176,8 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
 输入可以是 gzip 压缩的，也可以是 UTF-16（自动识别）；无效的 UTF-8 会报错。`kgdiff apply` 接受 `Delta` 或完整的 `DiffJSON`（来自 `--json`）作为补丁，可以来自文件或标准输入，并写出 kgdiff JSON（`graphToJSON`，带有 `kgdiff.graph` 格式标记），所以连续 apply 可以无损往返。在需要图的地方传入 diff 或增量文件，会被拒绝，并且报错信息会说明这是什么文件。`kgdiff help` 和 `-v` 分别是 `--help` 和 `--version` 的别名。
 
 如果图不是增量的基准，会被拒绝（退出码 2）；提示会说明，图必须按生成增量时的方式解析（相同的 `--format` / `--lang`）。`--no-strict` 会应用所有前置条件成立的操作，并在标准错误中报告跳过了多少个；`--verbose` 逐个列出（`#序号 操作: 原因`）。
+
+如果结果的哈希不是增量的 `target.hash`，而且没有跳过任何操作，`apply` 会在标准错误中给出警告，仍然写出结果（退出码 0）：增量被截断或改动过，或者来自一个漏掉了部分改动的 kgdiff 版本。加上 `--verify-target` 时，这样的结果算输入错误（退出码 2），什么也不写；报错信息给出两个哈希。同时使用 `--no-strict` 时也一样，不论有没有跳过操作：跳过了操作的结果，只有恰好仍是目标（图里已经有了那些改动）才能通过。没有 `target.hash` 的增量无法校验，所以 `--verify-target` 会拒绝它。
 
 使用 `--ignore-attr` 时，差异不展示被忽略属性的改动，但增量仍然带上它们，所以应用增量能得到增量的目标（见[增量格式](delta-format.md#被忽略的属性)）。
 
