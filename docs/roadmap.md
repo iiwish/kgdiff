@@ -8,7 +8,8 @@ with the code, and a pull request that settles an item removes it here.
 Rules that decide where an item goes ([Versioning](versioning.md)): a patch release (0.12.x)
 carries fixes and additions, breaks no public API and changes no output byte; a change that
 breaks the API, or that changes what kgdiff writes for an input it already reads, waits for the
-next minor (0.13). Patch releases come about once a week.
+next minor (0.13). Patch releases come on Tuesdays, and on Thursdays when a fix that users run into or an
+addition a host is waiting for is ready ([Releasing](releasing.md#day-to-day)).
 
 Last reviewed 2026-11-17, after 0.12.2.
 

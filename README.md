@@ -338,9 +338,9 @@ The experimental APIs, designed for embedding hosts, stay experimental until a h
 [Versioning](docs/versioning.md#experimental-apis)).
 
 **What comes next.** kgdiff stays on 0.x for a good while and improves there; nothing below
-waits for 1.0. Patch releases gather a week's fixes and additions, and a security fix comes at
-once. A breaking minor release comes no more
-often than about every six to eight weeks, with a migration guide. The plan by release, which
+waits for 1.0. Patch releases come on Tuesdays, and on Thursdays when a fix that users run into or
+an addition a host is waiting for is ready; a security fix comes at once. A breaking minor
+release comes no more often than about every six to eight weeks, with a migration guide. The plan by release, which
 the needs of the first host may reorder:
 
 - **0.12.x**, fixes and additions: shell completions, GraphML and GEXF input (0.12.2) · what
