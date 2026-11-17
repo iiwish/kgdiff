@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["vite", "--config", "packages/viewer/dev/vite.config.ts"],
       "port": 5198
+    },
+    {
+      "name": "site",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["vite", "--config", "apps/site/vite.config.ts", "--port", "5196"],
+      "port": 5196
     }
   ]
 }

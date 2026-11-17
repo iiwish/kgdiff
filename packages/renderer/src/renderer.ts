@@ -159,7 +159,8 @@ class CanvasRenderer implements Renderer {
     st.userSelect = 'none';
     st.setProperty('-webkit-user-select', 'none');
     st.setProperty('-webkit-tap-highlight-color', 'transparent');
-    st.outline = 'none';
+    // No inline `outline`: the canvas is a tab stop where the host makes it one, and an inline
+    // `outline: none` would hide the focus ring of the host's `canvas:focus-visible` rule.
     container.appendChild(canvas);
     this.canvas = canvas;
     this.ctx =
