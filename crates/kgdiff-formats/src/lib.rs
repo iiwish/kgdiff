@@ -200,6 +200,8 @@ pub enum ParseWarningCode {
     GraphMlIgnoredData,
     /// GraphML: a value that is not of its key's `attr.type` was kept as text.
     GraphMlInvalidValue,
+    /// GraphML: edges share an id, so the edge ids were not read.
+    GraphMlSharedEdgeIds,
     /// GEXF: `viz:` elements (position, colour, size, shape) were dropped.
     GexfIgnoredViz,
     /// GEXF: a dynamic graph was read as one static graph.
@@ -233,6 +235,7 @@ impl ParseWarningCode {
             ParseWarningCode::GraphMlUnsupportedElements => "graphml-unsupported-elements",
             ParseWarningCode::GraphMlIgnoredData => "graphml-ignored-data",
             ParseWarningCode::GraphMlInvalidValue => "graphml-invalid-value",
+            ParseWarningCode::GraphMlSharedEdgeIds => "graphml-shared-edge-ids",
             ParseWarningCode::GexfIgnoredViz => "gexf-ignored-viz",
             ParseWarningCode::GexfDynamic => "gexf-dynamic",
             ParseWarningCode::GexfHierarchy => "gexf-hierarchy",
@@ -473,7 +476,12 @@ pub fn parse_graph(text: &str, options: &ParseOptions<'_>) -> Result<ParseResult
             } else {
                 graphml::read_graphml(text, &mut warnings)?
             };
-            let out = json::parse_json(&data, &options.json, &mut warnings)?;
+            let source = if format == FormatId::Gexf {
+                "GEXF"
+            } else {
+                "GraphML"
+            };
+            let out = json::parse_json_from(&data, &options.json, &mut warnings, Some(source))?;
             Parsed {
                 graph: out.graph,
                 prefixes: None,

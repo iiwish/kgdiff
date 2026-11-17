@@ -82,7 +82,9 @@ kgdiff run-a.json run-b.json --match similarity --ignore-attr confidence --ignor
 
 kgdiff reads the JSON most graph libraries export: kgdiff's own format, d3 and NetworkX
 node-link data, Cytoscape.js, AntV G6 v5, graphology and vis-network. [Formats](../formats.md)
-lists the fields it maps. From Python with NetworkX:
+lists the fields it maps. It also reads GraphML and GEXF, so the file a tool already keeps
+(LightRAG's `graph_chunk_entity_relation.graphml`, a Gephi export) needs no conversion. From
+Python with NetworkX, JSON keeps the most:
 
 ```python
 import json

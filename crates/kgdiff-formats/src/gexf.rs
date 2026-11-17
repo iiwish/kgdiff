@@ -3,23 +3,30 @@
 //! Like GraphML (`graphml.rs`), the document is read into node-link data and mapped by the
 //! JSON reader, so a field means the same as in every JSON graph (`docs/formats.md`).
 //!
-//! - `<node id label>` is the node id and its `label` field; `<edge source target>` an edge,
-//!   with `id`, `label` and `weight` (a number) as its fields. An edge's `kind`, GEXF 1.3's
-//!   name for the type of a relationship, is its `relation` field. Its `type` says whether it
-//!   is directed, which kgdiff does not read, here as in node-link JSON.
+//! - `<node id label>` is the node id and its `label` field. A label that only repeats the id
+//!   is none: NetworkX writes the id there when a node has no label, and the node's `name` or
+//!   `title` is then its label, as in node-link JSON.
+//! - `<edge source target>` is an edge, with `id`, `label` and `weight` (a number) as its
+//!   fields. Its `kind`, GEXF 1.3's name for the type of a relationship, is its `relation`
+//!   field. Its `type` says whether it is directed (`directed`, `undirected`, `mutual`); any
+//!   other value is a `type` field, which is where NetworkX writes an edge attribute of that
+//!   name.
+//! - A directed edge keeps its ends as written; an undirected one (the graph's
+//!   `defaultedgetype`, or the edge's `type`) has them in code unit order, as in GraphML.
 //! - `<attvalue for value>` is a field, named by its attribute's `title` and typed by its
 //!   `type`: `integer`, `long`, `float` and `double` are numbers, `boolean` a boolean,
 //!   everything else text. An attribute's `<default>` is the value of every node or edge of its
-//!   class that has no `<attvalue>` for it.
+//!   class that has no `<attvalue>` for it, within GraphML's limit on what defaults may add.
 //! - With a warning each: `viz:` elements (position, colour, size, shape) are dropped; a
-//!   dynamic graph is read as one static graph, with the last value of an attribute that
-//!   changes over time; nodes inside other nodes are plain nodes.
+//!   dynamic graph is read as one static graph, with the value an attribute has last in the
+//!   file when it changes over time; nodes inside other nodes, or with a `pid` or `<parents>`,
+//!   are plain nodes.
 
 use kgdiff_core::KgdiffError;
-use kgdiff_core::js::{IndexMap, Object, Value};
+use kgdiff_core::js::{IndexMap, IndexSet, Object, Value};
 
 use crate::ParseWarningCode;
-use crate::graphml::{Type, typed};
+use crate::graphml::{DefaultBudget, Type, typed, undirected_ends};
 use crate::shared::{Warnings, invalid_input_with, plural, strip_bom};
 use crate::xml::{XmlElement, XmlError, XmlHandler, is_xml_space, line_of, parse_xml, syntax};
 
@@ -64,6 +71,9 @@ struct Edge {
     target: String,
     label: Option<String>,
     kind: Option<String>,
+    /// `type` when it is not about direction: an edge attribute of that name.
+    r#type: Option<String>,
+    undirected: bool,
     weight: Option<String>,
     data: Vec<Data>,
 }
@@ -91,7 +101,10 @@ enum Frame {
     Nodes {
         nested: bool,
     },
-    Edges,
+    /// `undirected`: the default of the graph the edges are in.
+    Edges {
+        undirected: bool,
+    },
     Element(Owner),
     AttValues(Owner),
     Skipped,
@@ -103,6 +116,8 @@ struct Reader {
     node_attributes: IndexMap<String, Attribute>,
     edge_attributes: IndexMap<String, Attribute>,
     name: Option<String>,
+    /// The `defaultedgetype` of the graph being read.
+    undirected: bool,
     nodes: Vec<Node>,
     edges: Vec<Edge>,
     /// `viz:` elements of nodes and edges.
@@ -180,6 +195,7 @@ impl Reader {
                         .filter(|n| !n.is_empty())
                         .map(str::to_owned);
                 }
+                self.undirected = attribute(element, "defaultedgetype") == Some("undirected");
                 Ok(Frame::Graph)
             }
             (Frame::Graph, "attributes") => {
@@ -208,7 +224,9 @@ impl Reader {
             }),
             (Frame::Graph, "nodes") => Ok(Frame::Nodes { nested: false }),
             (Frame::Element(Owner::Node(_)), "nodes") => Ok(Frame::Nodes { nested: true }),
-            (Frame::Graph | Frame::Element(Owner::Node(_)), "edges") => Ok(Frame::Edges),
+            (Frame::Graph | Frame::Element(Owner::Node(_)), "edges") => Ok(Frame::Edges {
+                undirected: self.undirected,
+            }),
             (Frame::Nodes { nested }, "node") => {
                 if *nested || attribute(element, "pid").is_some() {
                     self.nested += 1;
@@ -220,14 +238,24 @@ impl Reader {
                 });
                 Ok(Frame::Element(Owner::Node(self.nodes.len() - 1)))
             }
-            (Frame::Edges, "edge") => {
+            (Frame::Edges { undirected }, "edge") => {
                 let own = |name: &str| attribute(element, name).map(str::to_owned);
+                // `type` is the edge's direction, and wins over the graph's default. NetworkX
+                // also writes an edge attribute named `type` there: any other value is that.
+                let (undirected, r#type) = match attribute(element, "type") {
+                    Some("undirected") => (true, None),
+                    Some("directed" | "mutual") => (false, None),
+                    Some(other) => (*undirected, Some(other.to_owned())),
+                    None => (*undirected, None),
+                };
                 self.edges.push(Edge {
                     id: own("id"),
                     source: required(element, "source")?.to_owned(),
                     target: required(element, "target")?.to_owned(),
                     label: own("label"),
                     kind: own("kind"),
+                    r#type,
+                    undirected,
                     weight: own("weight"),
                     data: Vec::new(),
                 });
@@ -254,7 +282,11 @@ impl Reader {
                 self.dynamic += 1;
                 Ok(Frame::Skipped)
             }
-            // <meta>, <parents>, <options>, elements of other vocabularies.
+            (Frame::Element(Owner::Node(_)), "parents") => {
+                self.nested += 1;
+                Ok(Frame::Skipped)
+            }
+            // <meta>, <options>, elements of other vocabularies.
             _ => Ok(Frame::Skipped),
         }
     }
@@ -300,7 +332,8 @@ fn fields(
     declared: &IndexMap<String, Attribute>,
     own: Object,
     mistyped: &mut usize,
-) -> Object {
+    budget: &mut DefaultBudget,
+) -> Result<Object, KgdiffError> {
     let mut out = Object::new();
     let mut add = |out: &mut Object, name: &str, text: &str, r#type: Type| {
         let (value, fits) = typed(text, r#type);
@@ -309,7 +342,9 @@ fn fields(
         }
         out.insert(name, value);
     };
+    let mut given: IndexSet<&str> = IndexSet::default();
     for item in data {
+        given.insert(&item.attribute);
         match declared.get(&item.attribute) {
             Some(a) => add(&mut out, &a.name, &item.value, a.r#type),
             None => add(&mut out, &item.attribute, &item.value, Type::Text),
@@ -317,15 +352,16 @@ fn fields(
     }
     for (id, a) in declared {
         if let Some(default) = &a.default
-            && !data.iter().any(|item| &item.attribute == id)
+            && !given.contains(id.as_str())
         {
+            budget.take()?;
             add(&mut out, &a.name, default, a.r#type);
         }
     }
     for (name, value) in own.iter() {
         out.insert(name.clone(), value.clone());
     }
-    out
+    Ok(out)
 }
 
 /// Reads a GEXF document into node-link data: `{ graph, nodes, links }`.
@@ -349,54 +385,60 @@ pub fn read_gexf(text: &str, warnings: &mut Warnings) -> Result<Value, KgdiffErr
         }
     }
     let mut mistyped = 0;
-    let nodes: Vec<Value> = reader
-        .nodes
-        .iter()
-        .map(|node| {
-            let mut own = Object::new();
-            if let Some(label) = &node.label {
-                own.insert("label", label.as_str());
+    let mut budget = DefaultBudget::new(source, "gexf");
+    let mut nodes: Vec<Value> = Vec::with_capacity(reader.nodes.len());
+    for node in &reader.nodes {
+        let mut own = Object::new();
+        // A label that repeats the id says nothing: the node's `name` or `title` may be its label.
+        if let Some(label) = node.label.as_deref().filter(|label| *label != node.id) {
+            own.insert("label", label);
+        }
+        own.insert("id", node.id.as_str());
+        nodes.push(Value::Object(fields(
+            &node.data,
+            &reader.node_attributes,
+            own,
+            &mut mistyped,
+            &mut budget,
+        )?));
+    }
+    let mut links: Vec<Value> = Vec::with_capacity(reader.edges.len());
+    for edge in &reader.edges {
+        let mut own = Object::new();
+        if let Some(label) = &edge.label {
+            own.insert("label", label.as_str());
+        }
+        if let Some(r#type) = &edge.r#type {
+            own.insert("type", r#type.as_str());
+        }
+        if let Some(kind) = &edge.kind {
+            own.insert("relation", kind.as_str());
+        }
+        if let Some(weight) = &edge.weight {
+            let (value, fits) = typed(weight, Type::Decimal);
+            if !fits {
+                mistyped += 1;
             }
-            own.insert("id", node.id.as_str());
-            Value::Object(fields(
-                &node.data,
-                &reader.node_attributes,
-                own,
-                &mut mistyped,
-            ))
-        })
-        .collect();
-    let links: Vec<Value> = reader
-        .edges
-        .iter()
-        .map(|edge| {
-            let mut own = Object::new();
-            if let Some(label) = &edge.label {
-                own.insert("label", label.as_str());
-            }
-            if let Some(kind) = &edge.kind {
-                own.insert("relation", kind.as_str());
-            }
-            if let Some(weight) = &edge.weight {
-                let (value, fits) = typed(weight, Type::Decimal);
-                if !fits {
-                    mistyped += 1;
-                }
-                own.insert("weight", value);
-            }
-            if let Some(id) = &edge.id {
-                own.insert("id", id.as_str());
-            }
-            own.insert("source", edge.source.as_str());
-            own.insert("target", edge.target.as_str());
-            Value::Object(fields(
-                &edge.data,
-                &reader.edge_attributes,
-                own,
-                &mut mistyped,
-            ))
-        })
-        .collect();
+            own.insert("weight", value);
+        }
+        if let Some(id) = &edge.id {
+            own.insert("id", id.as_str());
+        }
+        let (source, target) = if edge.undirected {
+            undirected_ends(&edge.source, &edge.target)
+        } else {
+            (edge.source.as_str(), edge.target.as_str())
+        };
+        own.insert("source", source);
+        own.insert("target", target);
+        links.push(Value::Object(fields(
+            &edge.data,
+            &reader.edge_attributes,
+            own,
+            &mut mistyped,
+            &mut budget,
+        )?));
+    }
 
     if reader.viz > 0 {
         warnings.count(

@@ -40,8 +40,8 @@ kgdiff --help | --version
 ```
 
 Inputs are JSON (kgdiff, d3 / NetworkX, Cytoscape.js, G6, graphology, vis-network), JSON-LD,
-Turtle, N-Triples, N-Quads, TriG, RDF/XML (`.rdf`, `.owl` from Protégé or ROBOT) and OBO,
-detected from the extension and the content. Gzip-compressed files (`.ttl.gz`) work too. `-`
+Turtle, N-Triples, N-Quads, TriG, RDF/XML (`.rdf`, `.owl` from Protégé or ROBOT), OBO, GraphML
+and GEXF, detected from the extension and the content. Gzip-compressed files (`.ttl.gz`) work too. `-`
 reads one side from stdin. JSON-LD contexts must be inline: remote ones are never fetched.
 
 ```sh

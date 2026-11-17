@@ -589,6 +589,7 @@ export type ParseWarningCode =
 | 'graphml-unsupported-elements'
 | 'graphml-ignored-data'
 | 'graphml-invalid-value'
+| 'graphml-shared-edge-ids'
 | 'gexf-ignored-viz'
 | 'gexf-dynamic'
 | 'gexf-hierarchy'

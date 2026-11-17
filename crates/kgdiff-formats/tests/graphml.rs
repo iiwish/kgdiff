@@ -111,7 +111,7 @@ fn what_an_editor_adds_is_merged_skipped_or_dropped_with_a_warning() {
     assert_eq!(
         messages,
         [
-            "1 <data> element with XML content dropped (the drawing data of yEd and other editors).",
+            "1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).",
             "1 value not of the type its <key> declares: kept as text.",
             "1 <graph> element (nested, or after the first) merged into one graph.",
             "2 <hyperedge> or <port> elements skipped.",
@@ -299,5 +299,164 @@ fn graphml_read_as_rdf_xml_says_what_it_is() {
     assert_eq!(
         message,
         "The document is GraphML, not RDF/XML: read it with the format `graphml`."
+    );
+}
+
+/// yEd keeps a node's label in its drawing data, and an edge's too: the first one with text is
+/// the element's label, unless a field already is.
+#[test]
+fn yed_labels_are_the_labels() {
+    let yed = |node: &str, edge: &str| {
+        format!(
+            r#"<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:y="http://www.yworks.com/xml/graphml">
+                 <key for="node" id="d5" yfiles.type="nodegraphics"/>
+                 <key for="edge" id="d9" yfiles.type="edgegraphics"/>
+                 <key for="node" id="d6" attr.name="label" attr.type="string"/>
+                 <graph edgedefault="directed" id="G">
+                   <node id="n0"><data key="d5"><y:ShapeNode>
+                     <y:Geometry height="30.0" width="30.0" x="0.0" y="0.0"/>
+                     <y:NodeLabel alignment="center" visible="true">{node}<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel></y:NodeLabel>
+                     <y:NodeLabel>second label</y:NodeLabel>
+                     <y:Shape type="rectangle"/>
+                   </y:ShapeNode></data></node>
+                   <node id="n1"><data key="d5"><y:ShapeNode><y:NodeLabel hasText="false"/></y:ShapeNode></data></node>
+                   <node id="n2"><data key="d6">Own label</data><data key="d5"><y:ShapeNode><y:NodeLabel>Drawn label</y:NodeLabel></y:ShapeNode></data></node>
+                   <edge id="e0" source="n0" target="n1"><data key="d9"><y:PolyLineEdge><y:EdgeLabel>{edge}</y:EdgeLabel></y:PolyLineEdge></data></edge>
+                 </graph>
+               </graphml>"#
+        )
+    };
+    let result = graphml(&yed("Ada", "knows"));
+    assert_eq!(
+        element(&result, "nodes", |n| has(n, "id", "n0")),
+        r#"{"id":"n0","label":"Ada"}"#
+    );
+    assert_eq!(
+        element(&result, "nodes", |n| has(n, "id", "n1")),
+        r#"{"id":"n1"}"#
+    );
+    assert_eq!(
+        element(&result, "nodes", |n| has(n, "id", "n2")),
+        r#"{"id":"n2","label":"Own label"}"#
+    );
+    assert_eq!(
+        element(&result, "edges", |_| true),
+        r#"{"id":"e0","source":"n0","target":"n1","predicate":"knows","label":"knows"}"#
+    );
+    assert_eq!(codes(&result), ["graphml-ignored-data"]);
+    // A label that changes is a change.
+    assert_ne!(hash(&result), hash(&graphml(&yed("Ada Lovelace", "knows"))));
+    assert_ne!(hash(&result), hash(&graphml(&yed("Ada", "worked with"))));
+}
+
+/// A library writes the ends of an undirected edge in the order it met the nodes.
+#[test]
+fn the_ends_of_an_undirected_edge_are_in_one_order() {
+    let graph = |default: &str, edge: &str| {
+        graphml(&format!(
+            r#"<graphml><graph edgedefault="{default}"><node id="a"/><node id="b"/>{edge}</graph></graphml>"#
+        ))
+    };
+    let ends = |result: &ParseResult| element(result, "edges", |_| true);
+    let ab = r#"{"source":"a","target":"b"}"#;
+    let ba = r#"{"source":"b","target":"a"}"#;
+    assert_eq!(
+        ends(&graph("undirected", r#"<edge source="a" target="b"/>"#)),
+        ab
+    );
+    assert_eq!(
+        ends(&graph("undirected", r#"<edge source="b" target="a"/>"#)),
+        ab
+    );
+    assert_eq!(
+        ends(&graph("directed", r#"<edge source="b" target="a"/>"#)),
+        ba
+    );
+    // The edge's own `directed` wins over the graph's default.
+    assert_eq!(
+        ends(&graph(
+            "directed",
+            r#"<edge source="b" target="a" directed="false"/>"#
+        )),
+        ab
+    );
+    assert_eq!(
+        ends(&graph(
+            "undirected",
+            r#"<edge source="b" target="a" directed="true"/>"#
+        )),
+        ba
+    );
+    assert_eq!(
+        hash(&graph("undirected", r#"<edge source="a" target="b"/>"#)),
+        hash(&graph("undirected", r#"<edge source="b" target="a"/>"#))
+    );
+}
+
+/// NetworkX writes the keys of a multigraph's parallel edges as edge ids, from 0 for every pair
+/// of nodes: ids that are not unique are no ids.
+#[test]
+fn edge_ids_that_edges_share_are_not_read() {
+    let result = graphml(
+        r#"<graphml><graph edgedefault="directed">
+             <node id="a"/><node id="b"/><node id="c"/>
+             <edge id="0" source="a" target="b"/>
+             <edge id="1" source="a" target="b"/>
+             <edge id="0" source="b" target="c"/>
+           </graph></graphml>"#,
+    );
+    let edges = result.graph.get("edges").and_then(Value::as_array).unwrap();
+    assert_eq!(edges.len(), 3);
+    assert!(
+        edges
+            .iter()
+            .all(|e| e.as_object().is_some_and(|o| !o.contains_key("id")))
+    );
+    assert_eq!(codes(&result), ["graphml-shared-edge-ids"]);
+    assert_eq!(
+        result.warnings[0].message,
+        "2 edges with an id another edge has too: the edge ids are not read."
+    );
+}
+
+/// A default costs the file one declaration and the graph a field on every element.
+#[test]
+fn defaults_cannot_add_more_fields_than_the_input_allows() {
+    let document = |keys: usize, nodes: usize| {
+        let mut text = String::from("<graphml>");
+        for k in 0..keys {
+            text.push_str(&format!(
+                r#"<key id="k{k}" for="node" attr.name="a{k}"><default>v</default></key>"#
+            ));
+        }
+        text.push_str("<graph>");
+        for n in 0..nodes {
+            text.push_str(&format!(r#"<node id="n{n}"/>"#));
+        }
+        text.push_str("</graph></graphml>");
+        text
+    };
+    // 2000 keys on 600 nodes: 1.2 million fields from about 150 kB.
+    assert_eq!(
+        error(&document(2000, 600)),
+        "Invalid GraphML: the <default> values add more than 1000000 fields to the nodes and edges, the limit for an input of this size."
+    );
+    // 20 defaults on 20,000 nodes are 400,000 fields: an ordinary file.
+    let result = graphml(&document(20, 20_000));
+    let nodes = result.graph.get("nodes").and_then(Value::as_array).unwrap();
+    assert_eq!(nodes.len(), 20_000);
+    assert!(result.warnings.is_empty());
+}
+
+/// Fields the JSON reader drops as drawing state are reported under the format's name.
+#[test]
+fn ignored_fields_are_reported_as_graphml() {
+    let result = graphml(
+        r#"<graphml><key id="x" for="node" attr.name="x" attr.type="double"/>
+             <graph><node id="a"><data key="x">1.5</data></node></graph></graphml>"#,
+    );
+    assert_eq!(
+        result.warnings[0].message,
+        "Ignored GraphML fields that are not part of the graph: x (1)."
     );
 }

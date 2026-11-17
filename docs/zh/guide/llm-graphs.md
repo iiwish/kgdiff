@@ -65,7 +65,7 @@ kgdiff run-a.json run-b.json --match similarity --ignore-attr confidence --ignor
 
 ## 属性图格式
 
-kgdiff 能读取大多数图库导出的 JSON：kgdiff 自己的格式、d3 和 NetworkX 的 node-link 数据、Cytoscape.js、AntV G6 v5、graphology 和 vis-network。[格式](../formats.md)列出了它读取的字段。用 Python 和 NetworkX 导出：
+kgdiff 能读取大多数图库导出的 JSON：kgdiff 自己的格式、d3 和 NetworkX 的 node-link 数据、Cytoscape.js、AntV G6 v5、graphology 和 vis-network。[格式](../formats.md)列出了它读取的字段。它也能读 GraphML 和 GEXF，所以工具本来就存着的文件（LightRAG 的 `graph_chunk_entity_relation.graphml`、Gephi 的导出）不用再转换。用 Python 和 NetworkX 导出时，JSON 保留的信息最全：
 
 ```python
 import json

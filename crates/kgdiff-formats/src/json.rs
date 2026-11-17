@@ -963,6 +963,8 @@ struct JsonMapper<'a, 'w> {
     id_set: IndexSet<String>,
     /// Dropped field name → number of elements that had it.
     dropped: IndexMap<String, usize>,
+    /// The format the data was read from, when it is not JSON.
+    source: Option<&'static str>,
 }
 
 /// `parseJson`: maps a parsed JSON graph in any supported dialect.
@@ -971,12 +973,24 @@ pub fn parse_json(
     fields: &JsonFields,
     warnings: &mut Warnings,
 ) -> Result<JsonParseOutput, KgdiffError> {
+    parse_json_from(data, fields, warnings, None)
+}
+
+/// `parse_json` for node-link data another reader made of its format (`source`: `GraphML`,
+/// `GEXF`): warnings name that format, not the JSON dialect the data has the shape of.
+pub fn parse_json_from(
+    data: &Value,
+    fields: &JsonFields,
+    warnings: &mut Warnings,
+    source: Option<&'static str>,
+) -> Result<JsonParseOutput, KgdiffError> {
     let shape = detect_shape(data)?;
     let mut mapper = JsonMapper {
         shape: &shape,
         fields,
         warnings,
         ignored: ignored_keys(shape.dialect),
+        source,
         extra_edges: Vec::new(),
         ids_by_index: Vec::new(),
         id_set: IndexSet::default(),
@@ -1265,7 +1279,7 @@ impl<'a> JsonMapper<'a, '_> {
             ParseWarningCode::JsonIgnoredFields,
             format!(
                 "Ignored {} fields that are not part of the graph: {}.",
-                self.shape.dialect.id(),
+                self.source.unwrap_or_else(|| self.shape.dialect.id()),
                 fields.join(", ")
             ),
             None,
