@@ -12,6 +12,7 @@ import {
   type GlyphVisual,
   getTheme,
   type NodeVisual,
+  parseColor,
   type Scene,
   type ViewState,
 } from '../src/index.js';
@@ -681,4 +682,148 @@ describe('frame reuse', () => {
     small.resolve(createViewState(), out);
     expect(out.nodes).toHaveLength(2);
   });
+});
+
+describe('glyph nodes', () => {
+  type Glyph = FrameVisuals['glyphs'][number];
+  const at = (i: number | undefined) => scene.nodes[i as number] as Scene['nodes'][number];
+
+  /** The glyph's coordinates come from the nodes it names. */
+  const expectOnItsNodes = (g: Glyph): void => {
+    const a = at(g.node1);
+    expect(a, g.kind).toBeDefined();
+    if (g.kind === 'pivot') {
+      expect(g.node2).toBeUndefined();
+      // The dot sits on the outline of its node.
+      expect(Math.hypot(g.x1 - a.x, g.y1 - a.y)).toBeCloseTo(a.r, 9);
+      return;
+    }
+    const b = at(g.node2);
+    expect(b, g.kind).toBeDefined();
+    expect([g.x1, g.y1, g.x2, g.y2]).toEqual([a.x, a.y, b.x, b.y]);
+  };
+
+  it('names the nodes of every glyph kind', () => {
+    const f = frame();
+    expect(new Set(f.glyphs.map((g) => g.kind))).toEqual(
+      new Set([
+        'merge-arrow',
+        'split-arrow',
+        'replacement-arrow',
+        'edge-ghost',
+        'pivot',
+        'suggestion',
+      ]),
+    );
+    for (const g of f.glyphs) expectOnItsNodes(g);
+    const ends = (kind: GlyphVisual['kind']) =>
+      glyphs(f, kind)
+        .map((g) => [at(g.node1).id, g.node2 === undefined ? null : at(g.node2).id])
+        .sort();
+    expect(ends('merge-arrow')).toEqual([
+      ['S1', 'T'],
+      ['S2', 'T'],
+    ]);
+    expect(ends('split-arrow').map(([a]) => a)).toEqual(['X', 'X']);
+    expect(ends('replacement-arrow')).toEqual([['DP', 'C']]);
+    const [suggestion] = scene.suggestions;
+    expect(ends('suggestion')).toEqual([[at(suggestion?.before).id, at(suggestion?.after).id]]);
+    // A ghost runs between the before ends of its edge; a pivot sits on the end the edge kept.
+    for (const g of glyphs(f, 'edge-ghost'))
+      expect(
+        scene.edges.some(
+          (e) =>
+            (e.role === 'retarget' || e.role === 'carried') && e.sb === g.node1 && e.tb === g.node2,
+        ),
+      ).toBe(true);
+    for (const g of glyphs(f, 'pivot'))
+      expect(
+        scene.edges.some((e) => e.role === 'retarget' && (e.s === e.sb ? e.s : e.t) === g.node1),
+      ).toBe(true);
+  });
+
+  it('does not keep the far node of an earlier frame in a reused glyph', () => {
+    const out = resolver.resolve(createViewState());
+    const views = [
+      createViewState({ showSuggestions: false }),
+      ...scene.timeline.windows.flatMap((w) =>
+        [0.3, 0.5, 0.7].map((u) =>
+          createViewState({ layer: 'replay', t: w.start + u * (w.end - w.start) }),
+        ),
+      ),
+      createViewState(),
+    ];
+    let reused = 0;
+    for (const view of views) {
+      const before = new Map(out.glyphs.map((g) => [g, g.kind]));
+      resolver.resolve(view, out);
+      for (const g of out.glyphs) {
+        expectOnItsNodes(g);
+        const was = before.get(g);
+        if (was !== undefined && was !== 'pivot' && g.kind === 'pivot') reused++;
+      }
+    }
+    // The sequence does turn a line glyph of the pool into a pivot.
+    expect(reused).toBeGreaterThan(0);
+  });
+});
+
+describe('colors a scene carries', () => {
+  const COLOR_KEYS = new Set(['color', 'fill', 'stroke', 'background']);
+  /** Every color string of a visual and of what it nests (rings, halos, labels, badges). */
+  const visualColors = (v: unknown, out: Set<string>): void => {
+    if (typeof v !== 'object' || v === null) return;
+    for (const [k, x] of Object.entries(v)) {
+      if (typeof x === 'string' && COLOR_KEYS.has(k)) out.add(x);
+      else if (typeof x === 'object') visualColors(x, out);
+    }
+  };
+  /** Every string of the theme, but its names, fonts and the box-shadow (CSS, not a color). */
+  const themeColors = (v: unknown, out: Set<string>): void => {
+    if (typeof v !== 'object' || v === null) return;
+    for (const [k, x] of Object.entries(v)) {
+      if (k === 'name' || k === 'palette' || k === 'font' || k === 'shadow') continue;
+      if (typeof x === 'string') out.add(x);
+      else themeColors(x, out);
+    }
+  };
+
+  it.each([
+    ['dark', 'default'],
+    ['dark', 'colorblind'],
+    ['light', 'default'],
+    ['light', 'colorblind'],
+  ] as const)(
+    'parses every color of the %s theme (%s palette) and its frames',
+    (theme, palette) => {
+      const s = buildScene(diff, makeLayout(diff, POSITIONS), { theme, palette });
+      const r = createVisualResolver(s);
+      const views: Partial<ViewState>[] = [
+        {},
+        { layer: 'before' },
+        { layer: 'after' },
+        { selectedHunk: 0, hoveredNode: 0, selectedNode: 1 },
+        { families: new Set(['identity'] as const) },
+        ...s.timeline.windows.flatMap((w) =>
+          [0.2, 0.5, 0.8].map((u) => ({
+            layer: 'replay' as const,
+            t: w.start + u * (w.end - w.start),
+          })),
+        ),
+      ];
+      const colors = new Set<string>();
+      themeColors(s.theme, colors);
+      const themed = colors.size;
+      for (const view of views) {
+        const f = r.resolve(createViewState(view));
+        // What a frame draws: its visible nodes and edges (a hidden one need not have a color),
+        // and every glyph it lists.
+        for (const v of [...f.nodes, ...f.edges]) if (v.visible) visualColors(v, colors);
+        for (const g of f.glyphs) visualColors(g, colors);
+      }
+      expect(themed).toBeGreaterThan(20);
+      expect(colors.size).toBeGreaterThan(themed);
+      for (const c of colors) expect(() => parseColor(c), c).not.toThrow();
+    },
+  );
 });

@@ -299,6 +299,35 @@ renderer.setFrame(resolver.resolve(createViewState()));
 
 同样的代码也能用 `graph_payload` 的载荷单独画一个版本：没有变化的 diff 用中性色绘制，位置就是这个版本的 diff 将要使用的位置。（`<kgdiff-viewer>` 会把这样的载荷显示成“没有差异”的卡片，见[下文](#还没有的东西)。）选择、回放、滑动对比和小地图见 [scene](../../../packages/scene/README.md) 和 [renderer](../../../packages/renderer/README.md) 的 README（英文）。
 
+### 用自己的布局或渲染器
+
+自己摆放节点的宿主，或者用自己的渲染器（WebGL、3D 场景）来画的宿主，可以用自己的位置构建场景，再从帧里取它需要的东西：
+
+```ts
+import { buildScene, createViewState, createVisualResolver, parseColor } from '@kgdiff/scene';
+
+const positions = new Map<string, { x: number; y: number }>();
+const radii = new Map<string, number>();
+for (const node of result.nodes) {
+  const p = myPlacement.get(node.id); // 你自己的位置，按合集 id，世界坐标（y 向下）
+  if (p === undefined) continue; // 没有位置的节点不进场景
+  positions.set(node.id, { x: p.x, y: p.y });
+  radii.set(node.id, p.r);
+}
+const scene = buildScene(result, { positions, radii }, { theme: 'dark' });
+const frame = createVisualResolver(scene).resolve(createViewState());
+
+for (const glyph of frame.glyphs) {
+  const from = glyph.node1 === undefined ? undefined : scene.nodes[glyph.node1];
+  const { r, g, b, a } = parseColor(glyph.color); // 通道 0–255，alpha 0–1
+  // …
+}
+```
+
+- `buildScene` 只读布局里的位置、半径和（如果有的话）`hidden`（类型 `SceneLayout`）：`@kgdiff/layout` 的 `LayoutResult` 是一个，你自己的 `{ positions, radii }` 也是。缺了半径的节点用布局会给它的半径。
+- 标记（合并、拆分、替代箭头，边的旧形态的幽灵，建议，支点）指明它的节点：`node1` 和 `node2` 是 `scene.nodes` 的下标，即它两端所在的节点，渲染器可以让标记跟着节点走；支点只在一个节点上，只有 `node1`。
+- `parseColor` 把颜色字符串转成 `{ r, g, b, a }`。场景带的每个颜色，无论在主题里还是在一帧画出的东西里，都是它能解析的形式；别的输入抛出 `KgdiffError('invalid-input')`。颜色仍然是 CSS 字符串，供 canvas 和 G6 使用。
+
 ### 画自己的标记：图层
 
 只有你的应用才知道的东西（业务域背后的底色、认证标记、节点上的计数），由你画在渲染器的画布上，在图的下面或上面，用你已经有的位置：

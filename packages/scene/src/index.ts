@@ -5,7 +5,7 @@
  * (tokens, encodings, motion); ordering, timeline and focus in docs/algorithms.md §10–11.
  */
 export { buildScene } from './build.js';
-export { contrastRatio } from './color.js';
+export { contrastRatio, parseColor, type Rgba } from './color.js';
 export { computeFocus } from './focus.js';
 export { frameBounds } from './frame.js';
 export { createVisualResolver } from './resolver.js';

@@ -66,7 +66,29 @@ function parseFunctional(css: string, body: string): Rgba {
   };
 }
 
-/** Parse `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, `rgb()`, `rgba()` and `transparent`. */
+/**
+ * Parse a CSS color string into channels, for hosts that need numbers rather than CSS (a WebGL
+ * or 3D renderer, say). Every color string a scene carries is in a form this function parses:
+ * the colors of its theme (all its strings but the names, the fonts and `surface.shadow`,
+ * which is a CSS box-shadow) and those of what a `FrameVisuals` of its resolver draws (the
+ * fills, strokes, rings, halos, labels and badges of the visible nodes, the colors and labels
+ * of the visible edges, and every glyph listed).
+ *
+ * Accepted, ignoring case and surrounding whitespace:
+ * - `#rgb`, `#rgba`, `#rrggbb` and `#rrggbbaa`;
+ * - `rgb(…)` and `rgba(…)` (the two are the same) with three channels and an optional alpha,
+ *   separated by commas or by spaces, the alpha also after a `/`: `rgb(1, 2, 3)`,
+ *   `rgba(1, 2, 3, 0.5)`, `rgb(1 2 3 / 50%)`. A channel is a number (0–255) or a percentage
+ *   of 255, the alpha a number (0–1) or a percentage; values outside the range are clamped to
+ *   it, and channels are not rounded (`rgb(100%, 0%, 50%)` has a blue of 127.5);
+ * - `transparent`, which is `{ r: 0, g: 0, b: 0, a: 0 }`.
+ *
+ * Anything else (named colors other than `transparent`, `hsl()`, `color()`, a hex color of
+ * another length, a component that is not a number) throws a `KgdiffError` with the code
+ * `invalid-input` and the string in `details.color`; the function never guesses.
+ *
+ * @throws KgdiffError(`invalid-input`) for a string it does not parse.
+ */
 export function parseColor(css: string): Rgba {
   const s = css.trim().toLowerCase();
   if (s.startsWith('#')) return parseHex(css, s.slice(1));

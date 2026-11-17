@@ -142,7 +142,9 @@ The viewer does all of this for you. To build your own interface:
 
 - `layoutDiff(result)` from `@kgdiff/layout` places the union of both graphs, deterministically.
 - `buildScene(result, layout)` from `@kgdiff/scene` turns the diff into visual primitives in the
-  [kgdiff visual language](../visual-language.md).
+  [kgdiff visual language](../visual-language.md). It also takes positions of your own,
+  `{ positions, radii }`, when your application places the nodes itself
+  ([Embedding](embedding.md#with-your-own-layout-or-renderer)).
 - `@kgdiff/renderer` draws a scene on a canvas; `@kgdiff/g6` draws it in an AntV G6 graph.
 
 The package READMEs show each step: [layout](../../packages/layout/README.md),

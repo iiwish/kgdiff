@@ -214,6 +214,8 @@ const newGlyph = (): GlyphVisual => ({
   y2: 0,
   r1: 0,
   r2: 0,
+  node1: undefined,
+  node2: undefined,
   color: '',
   alpha: 0,
   width: 0,
@@ -1615,6 +1617,8 @@ class SceneResolver implements VisualResolver {
     g.y2 = ny[spec.b] as number;
     g.r1 = (nr[spec.a] as number) + spec.clearA;
     g.r2 = (nr[spec.b] as number) + spec.clearB;
+    g.node1 = spec.a;
+    g.node2 = spec.b;
     const shapes = this.nShape;
     if (shapes !== null) {
       g.shape1 = shapes[spec.a];
@@ -1714,6 +1718,9 @@ class SceneResolver implements VisualResolver {
       g.y2 = g.y1;
       g.r1 = 0;
       g.r2 = 0;
+      // A glyph object of the pool may have been a line in an earlier frame: clear its far end.
+      g.node1 = spec.a;
+      g.node2 = undefined;
       g.curvature = 0;
     } else {
       this.glyphLine(g, spec);

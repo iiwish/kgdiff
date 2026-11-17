@@ -646,6 +646,21 @@ part has started. The headings, the summary table and the rollout table above no
 releases; D-5 and the earlier revisions keep their wording as the record of what was decided
 then. The experimental marks are unchanged.
 
+## Revision 2026-11-17
+
+A second host, kgstrata (a layered 3D view of a knowledge graph), asked for a partition of the
+nodes: which layer or subgraph a node belongs to, so that a node that changes partition could be
+reported as a move. Today a host carries the partition in `type` or in an attribute, and the
+change shows as a type or attribute change. This is the model-side counterpart of part 4d
+(groups in the layout), which lost its first requester when Semlia moved its ontology map to its
+own G6 drawing. If either is taken up, the two should be designed together: a group the layout
+keeps together and a partition the diff compares may well be one mapping of nodes. This revision
+schedules neither: the partition is in no release, and the 0.14 that the revision of 2026-11-16
+gives 4d remains a plan for a part that has not started and now has no host asking for it. A
+partition would be a breaking change of the diff model, a new kind of change in a closed enum
+([Versioning](../versioning.md#what-can-be-added-without-a-major-release)), so it needs an RFC of
+its own.
+
 ## References
 
 - [RFC 0002: A Rust compute core](./0002-rust-compute-core.md): the crates, the phases, the
