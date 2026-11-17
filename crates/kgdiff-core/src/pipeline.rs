@@ -46,6 +46,14 @@ impl Ctx<'_> {
 
 /// The result of `diff`: both normalized graphs, the union of their nodes and edges with their
 /// changes, the hunks, the matches, the delta and the statistics (`DiffResult`).
+///
+/// The lookups ([`DiffResult::node`], [`DiffResult::node_by_before`],
+/// [`DiffResult::node_by_after`], [`DiffResult::edge`], [`DiffResult::hunk`] and
+/// [`DiffResult::edges_of`]) index `nodes`, `edges` and `hunks` as they are at the first lookup
+/// of each. Changing those vectors afterwards makes lookups miss: an element that moved, was
+/// removed or was added is not found. A lookup never panics and never returns an element other
+/// than the one asked for (for `edges_of`, an edge that touches the node). A later release reads
+/// these fields through accessors instead.
 #[derive(Clone, Debug)]
 #[non_exhaustive]
 pub struct DiffResult {
@@ -73,37 +81,70 @@ pub struct DiffResult {
     pub(crate) index: DiffIndex,
 }
 
+// The lookups find a position in a table built on first use, then check that the element at
+// that position is still there and still the one asked for: the vectors are public, and a
+// caller may have changed them since.
 impl DiffResult {
     /// The union node with this union id.
+    ///
+    /// Indexes `nodes` as they are at the first node lookup; see [`DiffResult`].
     pub fn node(&self, id: &str) -> Option<&UnionNode> {
-        self.index.node(&self.nodes, id).map(|i| &self.nodes[i])
+        self.index
+            .node(&self.nodes, id)
+            .and_then(|i| self.nodes.get(i))
+            .filter(|n| n.id == id)
     }
     /// The union node of this before-version id.
+    ///
+    /// Indexes `nodes` as they are at the first node lookup; see [`DiffResult`].
     pub fn node_by_before(&self, id: &str) -> Option<&UnionNode> {
         self.index
             .node_by_before(&self.nodes, id)
-            .map(|i| &self.nodes[i])
+            .and_then(|i| self.nodes.get(i))
+            .filter(|n| n.before_id.as_deref() == Some(id))
     }
     /// The union node of this after-version id.
+    ///
+    /// Indexes `nodes` as they are at the first node lookup; see [`DiffResult`].
     pub fn node_by_after(&self, id: &str) -> Option<&UnionNode> {
         self.index
             .node_by_after(&self.nodes, id)
-            .map(|i| &self.nodes[i])
+            .and_then(|i| self.nodes.get(i))
+            .filter(|n| n.after_id.as_deref() == Some(id))
     }
     /// The union edge with this union id.
+    ///
+    /// Indexes `edges` as they are at the first edge lookup; see [`DiffResult`].
     pub fn edge(&self, id: &str) -> Option<&UnionEdge> {
-        self.index.edge(&self.edges, id).map(|i| &self.edges[i])
+        self.index
+            .edge(&self.edges, id)
+            .and_then(|i| self.edges.get(i))
+            .filter(|e| e.id == id)
     }
     /// The hunk with this id.
+    ///
+    /// Indexes `hunks` as they are at the first hunk lookup; see [`DiffResult`].
     pub fn hunk(&self, id: &str) -> Option<&Hunk> {
-        self.index.hunk(&self.hunks, id).map(|i| &self.hunks[i])
+        self.index
+            .hunk(&self.hunks, id)
+            .and_then(|i| self.hunks.get(i))
+            .filter(|h| h.id == id)
     }
     /// Incident union edges (both directions), sorted by id.
+    ///
+    /// Indexes `edges` as they are at the first edge lookup, and leaves out what no longer
+    /// touches the node at an indexed position; see [`DiffResult`].
     pub fn edges_of(&self, id: &str) -> impl Iterator<Item = &UnionEdge> {
         self.index
             .edges_of(&self.edges, id)
             .iter()
-            .map(|&i| &self.edges[i])
+            .filter_map(|&i| self.edges.get(i))
+            .filter(move |e| {
+                e.source == id
+                    || e.target == id
+                    || e.source_before.as_deref() == Some(id)
+                    || e.target_before.as_deref() == Some(id)
+            })
     }
 }
 
