@@ -81,6 +81,8 @@ export type ParseWarningCode =
   | 'graphml-ignored-data'
   /** GraphML: a value that is not of its key's `attr.type` was kept as text. */
   | 'graphml-invalid-value'
+  /** GraphML: edges share an id, so the edge ids were not read. */
+  | 'graphml-shared-edge-ids'
   /** GEXF: `viz:` elements (position, colour, size, shape) were dropped. */
   | 'gexf-ignored-viz'
   /** GEXF: a dynamic graph was read as one static graph. */

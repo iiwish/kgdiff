@@ -10,18 +10,28 @@
 //!   `long`, `float` and `double` are numbers, `boolean` a boolean, everything else text. A
 //!   value that is not of its type stays text, with a warning. A key's `<default>` is the value
 //!   of every element of its domain that has no `<data>` for it.
-//! - Edges keep their ends as written, in undirected graphs too, as node-link JSON does.
+//! - A directed edge keeps its ends as written. An undirected one (`edgedefault="undirected"`,
+//!   or `directed="false"` on the edge) has them in code unit order, so that `a - b` and
+//!   `b - a` are one edge: a library writes them in the order it met the nodes.
+//! - Edge ids that two edges share are not ids (NetworkX writes the keys of a multigraph's
+//!   parallel edges there, which start at 0 for every pair of nodes): they are dropped.
 //! - Nested graphs and further `<graph>` elements are merged into one graph; `<hyperedge>` and
-//!   `<port>` are skipped; `<data>` with XML content (the drawing data of yEd) is dropped. Each
-//!   with a warning.
+//!   `<port>` are skipped; `<data>` with XML content (the drawing data of yEd) is dropped,
+//!   except the text of yEd's first node or edge label, which is the element's label. Each with
+//!   a warning.
+//! - The defaults of the keys may add as many fields as the input has bytes (a million for a
+//!   small one); a document whose defaults add more is refused, like an entity that expands
+//!   without end.
 //!
 //! Nothing is fetched: the XML parser never loads external entities.
 
 use kgdiff_core::KgdiffError;
-use kgdiff_core::js::{self, IndexMap, Object, Value};
+use kgdiff_core::js::{self, IndexMap, IndexSet, Object, Value};
 
 use crate::ParseWarningCode;
-use crate::shared::{Warnings, invalid_input_with, plural, strip_bom, typed_value};
+use crate::shared::{
+    Warnings, compare_strings, invalid_input_with, plural, strip_bom, typed_value,
+};
 use crate::xml::{XmlElement, XmlError, XmlHandler, is_xml_space, line_of, parse_xml, syntax};
 
 const GRAPHML_NS: &str = "http://graphml.graphdrawing.org/xmlns";
@@ -75,6 +85,8 @@ struct Data {
 struct Node {
     id: String,
     data: Vec<Data>,
+    /// The text of yEd's first `<y:NodeLabel>`.
+    label: Option<String>,
 }
 
 #[derive(Default)]
@@ -82,7 +94,10 @@ struct Edge {
     id: Option<String>,
     source: String,
     target: String,
+    undirected: bool,
     data: Vec<Data>,
+    /// The text of yEd's first `<y:EdgeLabel>`.
+    label: Option<String>,
 }
 
 /// Where a `<data>` belongs.
@@ -102,9 +117,10 @@ enum Frame {
         key: String,
         text: String,
     },
-    /// `first`: the graph whose data is the graph's.
+    /// `first`: the graph whose data is the graph's. `undirected`: its `edgedefault`.
     Graph {
         first: bool,
+        undirected: bool,
     },
     Node(usize),
     Edge(usize),
@@ -114,6 +130,13 @@ enum Frame {
         text: String,
         /// Whether it has child elements.
         structured: bool,
+    },
+    /// An element inside a `<data>` with XML content: drawing data, where yEd keeps its labels.
+    Foreign(Owner),
+    /// yEd's `<y:NodeLabel>` or `<y:EdgeLabel>`: its text is the element's label.
+    YLabel {
+        owner: Owner,
+        text: String,
     },
     /// An element kgdiff does not read, and everything inside it.
     Skipped,
@@ -158,10 +181,24 @@ impl Reader {
         }
     }
 
-    fn graph(&mut self) -> Frame {
+    fn graph(&mut self, element: &XmlElement) -> Frame {
         self.graphs += 1;
         Frame::Graph {
             first: self.graphs == 1,
+            undirected: attribute(element, "edgedefault") == Some("undirected"),
+        }
+    }
+
+    /// An element inside drawing data: yEd's label, or something to pass over.
+    fn foreign(element: &XmlElement, owner: Owner) -> Frame {
+        let yed = element.prefix == "y" || element.uri.contains("yworks");
+        if yed && matches!(element.local.as_str(), "NodeLabel" | "EdgeLabel") {
+            Frame::YLabel {
+                owner,
+                text: String::new(),
+            }
+        } else {
+            Frame::Foreign(owner)
         }
     }
 
@@ -214,10 +251,23 @@ impl Reader {
                 )
             };
         };
-        if let Frame::Data { structured, .. } = parent {
+        if let Frame::Data {
+            structured, owner, ..
+        } = parent
+        {
             *structured = true;
-            return Ok(Frame::Skipped);
+            return Ok(Reader::foreign(element, *owner));
         }
+        if let Frame::Foreign(owner) = parent {
+            return Ok(Reader::foreign(element, *owner));
+        }
+        let undirected = matches!(
+            parent,
+            Frame::Graph {
+                undirected: true,
+                ..
+            }
+        );
         let (in_graph, in_node, in_edge) = match parent {
             Frame::Graph { .. } => (true, false, false),
             Frame::Node(_) => (false, true, false),
@@ -225,7 +275,7 @@ impl Reader {
             _ => (false, false, false),
         };
         let owner = match parent {
-            Frame::Graph { first: true } => Owner::Graph,
+            Frame::Graph { first: true, .. } => Owner::Graph,
             Frame::Node(index) => Owner::Node(*index),
             Frame::Edge(index) => Owner::Edge(*index),
             _ => Owner::Nobody,
@@ -237,7 +287,7 @@ impl Reader {
         let root = matches!(parent, Frame::Root);
         match name {
             Some("key") if root => self.key(element),
-            Some("graph") if root || in_node || in_edge => Ok(self.graph()),
+            Some("graph") if root || in_node || in_edge => Ok(self.graph(element)),
             Some("default") if key.is_some() => Ok(Frame::Default {
                 key: key.unwrap_or_default(),
                 text: String::new(),
@@ -246,6 +296,7 @@ impl Reader {
                 self.nodes.push(Node {
                     id: Reader::required(element, "id", "node")?.to_owned(),
                     data: Vec::new(),
+                    label: None,
                 });
                 Ok(Frame::Node(self.nodes.len() - 1))
             }
@@ -254,7 +305,14 @@ impl Reader {
                     id: attribute(element, "id").map(str::to_owned),
                     source: Reader::required(element, "source", "edge")?.to_owned(),
                     target: Reader::required(element, "target", "edge")?.to_owned(),
+                    // The edge's own `directed` wins over the graph's `edgedefault`.
+                    undirected: match attribute(element, "directed") {
+                        Some("false") => true,
+                        Some("true") => false,
+                        _ => undirected,
+                    },
                     data: Vec::new(),
+                    label: None,
                 });
                 Ok(Frame::Edge(self.edges.len() - 1))
             }
@@ -290,6 +348,21 @@ impl XmlHandler for Reader {
             Some(Frame::Data {
                 structured: true, ..
             }) => self.structured += 1,
+            Some(Frame::YLabel { owner, text }) => {
+                let text = js::trim(&text);
+                let label = match owner {
+                    Owner::Node(index) => Some(&mut self.nodes[index].label),
+                    Owner::Edge(index) => Some(&mut self.edges[index].label),
+                    Owner::Graph | Owner::Nobody => None,
+                };
+                // The first label with text: yEd lists a node's main label first.
+                if let Some(label) = label
+                    && label.is_none()
+                    && !text.is_empty()
+                {
+                    *label = Some(text.to_owned());
+                }
+            }
             Some(Frame::Data {
                 owner, key, text, ..
             }) => {
@@ -307,7 +380,9 @@ impl XmlHandler for Reader {
     }
 
     fn text(&mut self, value: &str, _offset: usize) -> Result<(), XmlError> {
-        if let Some(Frame::Default { text, .. } | Frame::Data { text, .. }) = self.stack.last_mut()
+        if let Some(
+            Frame::Default { text, .. } | Frame::Data { text, .. } | Frame::YLabel { text, .. },
+        ) = self.stack.last_mut()
         {
             text.push_str(value);
         }
@@ -340,21 +415,81 @@ pub(crate) fn typed(text: &str, r#type: Type) -> (Value, bool) {
     (value, fits)
 }
 
+/// How many fields the defaults of a document may add: as many as the input has bytes, and a
+/// million for a small one. A default costs the file one declaration and the graph a field on
+/// every element, so that without a limit a few hundred kilobytes ask for gigabytes.
+pub(crate) struct DefaultBudget {
+    limit: usize,
+    used: usize,
+    format: &'static str,
+}
+
+const MIN_DEFAULT_BUDGET: usize = 1_000_000;
+
+impl DefaultBudget {
+    pub(crate) fn new(input: &str, format: &'static str) -> DefaultBudget {
+        DefaultBudget {
+            limit: MIN_DEFAULT_BUDGET.max(input.len()),
+            used: 0,
+            format,
+        }
+    }
+
+    /// Accounts for one field a default adds.
+    pub(crate) fn take(&mut self) -> Result<(), KgdiffError> {
+        self.used += 1;
+        if self.used <= self.limit {
+            return Ok(());
+        }
+        let name = if self.format == "gexf" {
+            "GEXF"
+        } else {
+            "GraphML"
+        };
+        let mut details = Object::new();
+        details.insert("format", self.format);
+        Err(invalid_input_with(
+            format!(
+                "Invalid {name}: the <default> values add more than {} fields to the nodes and edges, the limit for an input of this size.",
+                self.limit
+            ),
+            details,
+        ))
+    }
+}
+
+/// The ends of an undirected edge in code unit order, so that `a - b` and `b - a` are one edge.
+pub(crate) fn undirected_ends<'a>(source: &'a str, target: &'a str) -> (&'a str, &'a str) {
+    if compare_strings(source, target) == std::cmp::Ordering::Greater {
+        (target, source)
+    } else {
+        (source, target)
+    }
+}
+
 /// Turns what was read into node-link data.
 struct Builder<'a> {
     keys: &'a IndexMap<String, Key>,
     /// Values that are not of their key's type.
     mistyped: usize,
+    budget: DefaultBudget,
 }
 
 impl Builder<'_> {
-    /// The fields of an element: its data, then the defaults of the keys it has no data for.
-    /// `reserved` fields come from the element's own attributes and are not overwritten.
-    fn fields(&mut self, data: &[Data], domain: Domain, reserved: Object) -> Object {
+    /// The fields of an element: its data, then the defaults of the keys it has no data for,
+    /// then `label`, yEd's, when no field is the label. `reserved` fields come from the
+    /// element's own attributes and are not overwritten.
+    fn fields(
+        &mut self,
+        data: &[Data],
+        domain: Domain,
+        label: Option<&str>,
+        reserved: Object,
+    ) -> Result<Object, KgdiffError> {
         let mut fields = Object::new();
-        let mut given: Vec<&str> = Vec::new();
+        let mut given: IndexSet<&str> = IndexSet::default();
         for item in data {
-            given.push(&item.key);
+            given.insert(&item.key);
             let (name, r#type) = match self.keys.get(&item.key) {
                 Some(key) => (key.name.as_str(), key.r#type),
                 None => (item.key.as_str(), Type::Text),
@@ -369,8 +504,8 @@ impl Builder<'_> {
             let Some(default) = &key.default else {
                 continue;
             };
-            if (key.domain == domain || key.domain == Domain::All) && !given.contains(&id.as_str())
-            {
+            if (key.domain == domain || key.domain == Domain::All) && !given.contains(id.as_str()) {
+                self.budget.take()?;
                 let (value, fits) = typed(default, key.r#type);
                 if !fits {
                     self.mistyped += 1;
@@ -378,11 +513,25 @@ impl Builder<'_> {
                 fields.insert(key.name.as_str(), value);
             }
         }
+        if let Some(label) = label
+            && !fields.contains_key("label")
+        {
+            fields.insert("label", label);
+        }
         for (name, value) in reserved.iter() {
             fields.insert(name.clone(), value.clone());
         }
-        fields
+        Ok(fields)
     }
+}
+
+/// The edges whose id another edge has too.
+fn shared_ids(edges: &[Edge]) -> usize {
+    let mut counts: IndexMap<&str, usize> = IndexMap::default();
+    for id in edges.iter().filter_map(|e| e.id.as_deref()) {
+        *counts.entry(id).or_insert(0) += 1;
+    }
+    counts.values().filter(|&&n| n > 1).sum()
 }
 
 /// Reads a GraphML document into node-link data: `{ graph, nodes, links }`.
@@ -408,30 +557,42 @@ pub fn read_graphml(text: &str, warnings: &mut Warnings) -> Result<Value, Kgdiff
     let mut builder = Builder {
         keys: &reader.keys,
         mistyped: 0,
+        budget: DefaultBudget::new(source, "graphml"),
     };
-    let nodes: Vec<Value> = reader
-        .nodes
-        .iter()
-        .map(|node| {
-            let mut own = Object::new();
-            own.insert("id", node.id.as_str());
-            Value::Object(builder.fields(&node.data, Domain::Node, own))
-        })
-        .collect();
-    let links: Vec<Value> = reader
-        .edges
-        .iter()
-        .map(|edge| {
-            let mut own = Object::new();
-            own.insert("source", edge.source.as_str());
-            own.insert("target", edge.target.as_str());
-            if let Some(id) = &edge.id {
-                own.insert("id", id.as_str());
-            }
-            Value::Object(builder.fields(&edge.data, Domain::Edge, own))
-        })
-        .collect();
-    let graph = builder.fields(&reader.graph_data, Domain::Graph, Object::new());
+    let mut nodes: Vec<Value> = Vec::with_capacity(reader.nodes.len());
+    for node in &reader.nodes {
+        let mut own = Object::new();
+        own.insert("id", node.id.as_str());
+        nodes.push(Value::Object(builder.fields(
+            &node.data,
+            Domain::Node,
+            node.label.as_deref(),
+            own,
+        )?));
+    }
+    // Ids that edges share are not ids: NetworkX writes a multigraph's keys there.
+    let shared = shared_ids(&reader.edges);
+    let mut links: Vec<Value> = Vec::with_capacity(reader.edges.len());
+    for edge in &reader.edges {
+        let (source, target) = if edge.undirected {
+            undirected_ends(&edge.source, &edge.target)
+        } else {
+            (edge.source.as_str(), edge.target.as_str())
+        };
+        let mut own = Object::new();
+        own.insert("source", source);
+        own.insert("target", target);
+        if let Some(id) = edge.id.as_deref().filter(|_| shared == 0) {
+            own.insert("id", id);
+        }
+        links.push(Value::Object(builder.fields(
+            &edge.data,
+            Domain::Edge,
+            edge.label.as_deref(),
+            own,
+        )?));
+    }
+    let graph = builder.fields(&reader.graph_data, Domain::Graph, None, Object::new())?;
 
     if reader.graphs > 1 {
         warnings.count(
@@ -457,7 +618,7 @@ pub fn read_graphml(text: &str, warnings: &mut Warnings) -> Result<Value, Kgdiff
             ParseWarningCode::GraphMlIgnoredData,
             |n| {
                 format!(
-                    "{} with XML content dropped (the drawing data of yEd and other editors).",
+                    "{} with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).",
                     plural(n, "<data> element")
                 )
             },
@@ -474,6 +635,18 @@ pub fn read_graphml(text: &str, warnings: &mut Warnings) -> Result<Value, Kgdiff
                 )
             },
             builder.mistyped,
+        );
+    }
+    if shared > 0 {
+        warnings.count(
+            ParseWarningCode::GraphMlSharedEdgeIds,
+            |n| {
+                format!(
+                    "{} with an id another edge has too: the edge ids are not read.",
+                    plural(n, "edge")
+                )
+            },
+            shared,
         );
     }
 

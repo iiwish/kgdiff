@@ -1,7 +1,7 @@
 # Releasing
 
 kgdiff publishes eight packages from this repository: the CLI `@kgdiff/cli` (command `kgdiff`)
-and `@kgdiff/core`, `formats`, `layout`, `scene`, `renderer`, `viewer` and `g6`. They share one
+and `@kgdiff/core`, `compute`, `layout`, `scene`, `renderer`, `viewer` and `g6`. They share one
 version number (a Changesets "fixed" group, `.changeset/config.json`): the CLI embeds the viewer
 bundle and the report payload ties core, layout and scene together, so "kgdiff 0.3.1" names one
 consistent set. The CLI is the native `kgdiff` (`crates/kgdiff`): `@kgdiff/cli` is its launcher,

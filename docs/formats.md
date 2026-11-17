@@ -136,8 +136,7 @@ on its own (`"\ud800"`) is an error: kgdiff only reads well-formed Unicode.
 ## GraphML
 
 A GraphML document is read as the node-link data NetworkX would give the same graph, and then as
-every other JSON graph: the fields above mean the same, so one graph saved as GraphML and as
-node-link JSON is the same graph to kgdiff, and comparing the two files shows no change.
+every other JSON graph: the fields above mean the same.
 
 | GraphML                                      | Becomes                                                                         |
 | -------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -148,9 +147,23 @@ node-link JSON is the same graph to kgdiff, and comparing the two files shows no
 | `attr.type` `int`, `long`, `float`, `double` | a number                                                                        |
 | `attr.type` `boolean`                        | a boolean (`true`, `false`, `1`, `0`, and Python's `True` and `False`)          |
 | `<default>` of a key                         | the value of every node or edge that has no `<data>` for the key                |
+| yEd's `<y:NodeLabel>`, `<y:EdgeLabel>`       | the label of the node or the edge, when no field is                             |
 
-An edge keeps its ends as written, in an undirected graph (`edgedefault="undirected"`) too, as it
-does in node-link JSON: NetworkX writes the two ends of an edge in the same order every time.
+**Direction.** A directed edge keeps its ends as written. An undirected one
+(`edgedefault="undirected"`, or `directed="false"` on the edge) has them in one order, so that
+`a – b` and `b – a` are the same edge: a library writes the ends in the order it met the nodes,
+which differs between two runs of an extraction.
+
+**The same graph as node-link JSON.** A directed graph that NetworkX saves as GraphML and as
+node-link JSON is the same graph to kgdiff, and comparing the two files shows no change. Two
+cases differ, until kgdiff 0.13 reads node-link JSON the same way: an undirected graph whose
+JSON writes an edge as `b – a` (JSON keeps the ends as written), and a multigraph, whose
+parallel edges carry a `key` field in JSON and none in GraphML.
+
+**Edge ids.** NetworkX writes the keys of a multigraph's parallel edges as `<edge id>`, counted
+from 0 for every pair of nodes. Ids that two edges share are not ids: kgdiff then reads no edge
+id from the file, with a warning (`graphml-shared-edge-ids`).
+
 The node id and an edge's ends and id are the element's own: a field named `id`, `source` or
 `target` does not replace them.
 
@@ -160,15 +173,17 @@ What kgdiff does not read is left out with a warning, never an error:
   graph (`graphml-merged-graphs`);
 - `<hyperedge>` and `<port>` are skipped (`graphml-unsupported-elements`);
 - `<data>` with XML content, which is where yEd and other editors keep geometry and styles, is
-  dropped (`graphml-ignored-data`);
-- a value that is not of its key's type (`about 175` for a `long`, `inf` for a `double`) stays
-  text (`graphml-invalid-value`).
+  dropped, except yEd's labels (`graphml-ignored-data`);
+- a value that is not of its key's type (`about 175` for a `long`, `inf` for a `double`, a
+  `long` beyond what a double holds exactly) stays text (`graphml-invalid-value`).
+
+One limit: the `<default>` values of a document may add as many fields as the file has bytes
+(a million for a small file). A file whose defaults add more is refused, because a default costs
+the file one line and the graph a field on every node.
 
 LightRAG keeps the type of an entity in `entity_type`, which is not one of the type fields: it is
 an attribute unless you name it, with `json.fields.type` of `parseGraph` (the field overrides of
-the JSON reader apply to GraphML too). A multigraph that NetworkX writes has its edge keys as
-`<edge id>` in GraphML and as a `key` field in node-link JSON, so there the two files differ in
-the edge ids.
+the JSON reader apply to GraphML too).
 
 ## GEXF
 
@@ -180,23 +195,33 @@ graph.
 | `<node id label>`                               | the node id and its label                                            |
 | `<edge source target>`, `id`, `label`, `weight` | an edge, its id, its label and a numeric `weight` attribute          |
 | `<edge kind>` (GEXF 1.3)                        | the relation; without it, the edge's label is                        |
+| `<edge type>`                                   | the direction; any other value is the relation (see below)           |
 | `<attvalue for value>`                          | a field named by the attribute's `title`, typed by its `type`        |
 | `type` `integer`, `long`, `float`, `double`     | a number                                                             |
 | `type` `boolean`                                | a boolean                                                            |
 | `<default>` of an attribute                     | the value of every node or edge of its class without an `<attvalue>` |
 | `<graph name>`                                  | the graph's name                                                     |
 
-An edge's `type` (`directed`, `undirected`, `mutual`) is not read, and edges keep their ends as
-written, as in GraphML. The numbers Gephi and NetworkX give edges as ids are read as edge ids;
-they play no part in a comparison unless you ask for `--edge-identity id`, so a graph saved as
-GEXF and as node-link JSON is still the same graph.
+Two things follow what NetworkX writes. It puts `label` on every node, the id when the node has
+none: a label that only repeats the id is no label, and the node's `name` or `title` is then
+its label, as in node-link JSON. And it writes an edge attribute named `type` as the edge's
+`type`: a `type` that is not `directed`, `undirected` or `mutual` is read as that attribute,
+which is the relation.
+
+Direction is as in GraphML: an undirected edge (the graph's `defaultedgetype`, or the edge's
+`type`) has its ends in one order. The numbers Gephi and NetworkX give edges as ids are read as
+edge ids; they play no part in a comparison unless you ask for `--edge-identity id`. So a
+directed graph saved as GEXF and as node-link JSON is the same graph; an undirected graph and a
+multigraph differ as described for GraphML. The limit on what `<default>` values may add is
+GraphML's.
 
 Left out with a warning:
 
 - `viz:` elements, which hold position, colour, size and shape (`gexf-ignored-viz`);
 - time: a dynamic graph is read as one static graph, and of an attribute that changes over time
-  the last value is read (`gexf-dynamic`);
-- the hierarchy: nodes inside other nodes, or with a `pid`, are plain nodes (`gexf-hierarchy`);
+  the value that comes last in the file is read (`gexf-dynamic`);
+- the hierarchy: nodes inside other nodes, or with a `pid` or `<parents>`, are plain nodes
+  (`gexf-hierarchy`);
 - a value that is not of its attribute's type stays text (`gexf-invalid-value`).
 
 ## RDF and OBO

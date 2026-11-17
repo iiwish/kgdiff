@@ -114,7 +114,7 @@ kgdiff 会识别 JSON 的结构（d3 / NetworkX node-link、Cytoscape.js、AntV 
 
 ## GraphML
 
-GraphML 文档先读成 NetworkX 对同一张图给出的 node-link 数据，再和其他 JSON 图一样处理：上面那些字段的含义不变。所以同一张图存成 GraphML 和存成 node-link JSON，在 kgdiff 看来是同一张图，拿这两个文件比较不会有变化。
+GraphML 文档先读成 NetworkX 对同一张图给出的 node-link 数据，再和其他 JSON 图一样处理：上面那些字段的含义不变。
 
 | GraphML                                         | 变成                                                                |
 | ----------------------------------------------- | ------------------------------------------------------------------- |
@@ -125,17 +125,26 @@ GraphML 文档先读成 NetworkX 对同一张图给出的 node-link 数据，再
 | `attr.type` 为 `int`、`long`、`float`、`double` | 数字                                                                |
 | `attr.type` 为 `boolean`                        | 布尔值（`true`、`false`、`1`、`0`，以及 Python 的 `True`、`False`） |
 | key 的 `<default>`                              | 没有为这个 key 写 `<data>` 的节点或边都取这个值                     |
+| yEd 的 `<y:NodeLabel>`、`<y:EdgeLabel>`         | 节点或边的标签（没有别的字段充当标签时）                            |
 
-边的两端按文件里写的顺序保留，无向图（`edgedefault="undirected"`）也一样，和 node-link JSON 的处理相同：NetworkX 每次写同一条边，两端的顺序都一样。节点 id、边的两端和边的 id 以元素自己的属性为准：名叫 `id`、`source` 或 `target` 的字段不会替换它们。
+**方向。** 有向边的两端按文件里写的顺序保留。无向边（`edgedefault="undirected"`，或边上写了 `directed="false"`）的两端按固定顺序排列，所以 `a – b` 和 `b – a` 是同一条边：图库按遇到节点的先后写两端，同一次抽取跑两遍，顺序就可能不同。
+
+**和 node-link JSON 是同一张图。** NetworkX 把一张有向图分别存成 GraphML 和 node-link JSON，在 kgdiff 看来是同一张图，拿这两个文件比较不会有变化。有两种情况例外，要等 kgdiff 0.13 用同样的方式读 node-link JSON：无向图在 JSON 里把一条边写成 `b – a` 时（JSON 保留文件里的顺序）；以及多重图，它的平行边在 JSON 里带 `key` 字段，在 GraphML 里没有。
+
+**边的 id。** NetworkX 把多重图平行边的 key 写成 `<edge id>`，每一对节点都从 0 数起。两条边共用的 id 不算 id：这时 kgdiff 不从文件里读任何边 id，并给出警告（`graphml-shared-edge-ids`）。
+
+节点 id、边的两端和边的 id 以元素自己的属性为准：名叫 `id`、`source` 或 `target` 的字段不会替换它们。
 
 kgdiff 不读取的内容会略过并给出警告，不会报错：
 
 - 嵌套的图（yEd 的分组）和第一个之后的 `<graph>` 元素会合并成一张图（`graphml-merged-graphs`）；
 - `<hyperedge>` 和 `<port>` 被跳过（`graphml-unsupported-elements`）；
-- 内容是 XML 的 `<data>` 被丢弃，yEd 等编辑器把几何位置和样式放在这里（`graphml-ignored-data`）；
-- 和 key 声明的类型不符的值（`long` 写成 `about 175`，`double` 写成 `inf`）保留为文本（`graphml-invalid-value`）。
+- 内容是 XML 的 `<data>` 被丢弃，yEd 等编辑器把几何位置和样式放在这里；yEd 的标签除外（`graphml-ignored-data`）；
+- 和 key 声明的类型不符的值（`long` 写成 `about 175`，`double` 写成 `inf`，超出双精度能精确表示的 `long`）保留为文本（`graphml-invalid-value`）。
 
-LightRAG 把实体的类型放在 `entity_type` 里，它不在类型字段之列：除非你用 `parseGraph` 的 `json.fields.type` 指明，否则它只是一个属性（JSON 读取器的字段覆盖对 GraphML 同样生效）。NetworkX 写出的多重图，边的 key 在 GraphML 里是 `<edge id>`，在 node-link JSON 里是 `key` 字段，所以这两种文件的边 id 不同。
+有一个限制：一份文档的 `<default>` 最多可以补出和文件字节数一样多的字段（小文件按一百万算）。超过的文件会被拒绝，因为一个默认值在文件里只占一行，却要给图里每个节点加一个字段。
+
+LightRAG 把实体的类型放在 `entity_type` 里，它不在类型字段之列：除非你用 `parseGraph` 的 `json.fields.type` 指明，否则它只是一个属性（JSON 读取器的字段覆盖对 GraphML 同样生效）。
 
 ## GEXF
 
@@ -146,19 +155,22 @@ GEXF（1.1 到 1.3）的读法和 GraphML 一样：先读成 node-link 数据，
 | `<node id label>`                               | 节点 id 和标签                                    |
 | `<edge source target>`、`id`、`label`、`weight` | 一条边，以及它的 id、标签和数字属性 `weight`      |
 | `<edge kind>`（GEXF 1.3）                       | 关系名；没有它时用边的标签                        |
+| `<edge type>`                                   | 方向；其他取值是关系名（见下）                    |
 | `<attvalue for value>`                          | 一个字段，名字是属性的 `title`，类型按它的 `type` |
 | `type` 为 `integer`、`long`、`float`、`double`  | 数字                                              |
 | `type` 为 `boolean`                             | 布尔值                                            |
 | 属性的 `<default>`                              | 同一类里没有写 `<attvalue>` 的节点或边都取这个值  |
 | `<graph name>`                                  | 图的名称                                          |
 
-边的 `type`（`directed`、`undirected`、`mutual`）不读取，边的两端按文件里写的顺序保留，和 GraphML 相同。Gephi 和 NetworkX 给边编的号会读成边的 id；除非指定 `--edge-identity id`，否则它们不参与比较，所以同一张图存成 GEXF 和 node-link JSON 仍然是同一张图。
+有两处是照着 NetworkX 的写法来的。它给每个节点都写 `label`，节点没有标签时写的就是 id：只是重复 id 的标签不算标签，这时节点的 `name` 或 `title` 充当标签，和 node-link JSON 一样。它还把名叫 `type` 的边属性写成边的 `type`：不是 `directed`、`undirected`、`mutual` 的 `type` 就按这个属性读，也就是关系名。
+
+方向和 GraphML 相同：无向边（图的 `defaultedgetype`，或边自己的 `type`）的两端按固定顺序排列。Gephi 和 NetworkX 给边编的号会读成边的 id；除非指定 `--edge-identity id`，否则它们不参与比较。所以一张有向图存成 GEXF 和 node-link JSON 是同一张图；无向图和多重图的差别同 GraphML 一节所述。`<default>` 能补出多少字段的限制也和 GraphML 相同。
 
 以下内容会略过并给出警告：
 
 - `viz:` 元素，里面是位置、颜色、大小和形状（`gexf-ignored-viz`）；
-- 时间：动态图按一张静态图读取，随时间变化的属性取最后一个值（`gexf-dynamic`）；
-- 层级：节点里面的节点，或带 `pid` 的节点，都当作普通节点（`gexf-hierarchy`）；
+- 时间：动态图按一张静态图读取，随时间变化的属性取文件里排在最后的那个值（`gexf-dynamic`）；
+- 层级：节点里面的节点，或带 `pid`、`<parents>` 的节点，都当作普通节点（`gexf-hierarchy`）；
 - 和属性声明的类型不符的值保留为文本（`gexf-invalid-value`）。
 
 ## RDF 与 OBO

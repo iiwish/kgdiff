@@ -109,7 +109,7 @@
   "warnings": [
     {
       "code": "graphml-ignored-data",
-      "message": "1 <data> element with XML content dropped (the drawing data of yEd and other editors)."
+      "message": "1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept)."
     },
     {
       "code": "graphml-invalid-value",

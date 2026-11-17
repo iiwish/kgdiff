@@ -76,7 +76,7 @@
         "file": "expected/cli/summary.txt"
       },
       "stderr": {
-        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
+        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
       },
       "exit": 0
     },
@@ -100,7 +100,7 @@
         "file": "expected/cli/stat.txt"
       },
       "stderr": {
-        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
+        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
       },
       "exit": 0
     },
@@ -124,7 +124,7 @@
         "file": "expected/cli/name-status.tsv"
       },
       "stderr": {
-        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
+        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
       },
       "exit": 0
     },
@@ -149,7 +149,7 @@
       },
       "versionPlaceholder": true,
       "stderr": {
-        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
+        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
       },
       "exit": 0
     },
@@ -173,7 +173,7 @@
         "file": "expected/diff.json"
       },
       "stderr": {
-        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
+        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
       },
       "exit": 0
     },
@@ -197,7 +197,7 @@
         "file": "expected/delta.json"
       },
       "stderr": {
-        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
+        "text": "warning: after.graphml: 1 <data> element with XML content dropped (the drawing data of yEd and other editors; yEd's labels are kept).\nwarning: after.graphml: 1 value not of the type its <key> declares: kept as text.\nwarning: after.graphml: 1 <graph> element (nested, or after the first) merged into one graph.\nwarning: after.graphml: 2 <hyperedge> or <port> elements skipped.\n"
       },
       "exit": 0
     },

@@ -39,7 +39,8 @@ kgdiff a.ttl b.ttl --exit-code --quiet            # exit 1 when the graphs diffe
 ```
 
 Inputs are JSON (kgdiff, d3 / NetworkX, Cytoscape.js, G6, graphology, vis-network), JSON-LD,
-Turtle, N-Triples, N-Quads, TriG, RDF/XML and OBO, detected from the extension and the content.
+Turtle, N-Triples, N-Quads, TriG, RDF/XML, OBO, GraphML and GEXF, detected from the extension and
+the content.
 
 The full guide to the command line: https://github.com/iiwish/kgdiff/blob/main/docs/cli.md
 
