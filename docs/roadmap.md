@@ -42,6 +42,13 @@ In progress, from an audit of the diff and apply paths on 2026-11-17:
 - **A hidden edge's colour is the empty string**, which `parseColor` refuses. A host that
   parses every edge's colour has to look at `visible` first. Giving hidden elements a colour
   that parses is an addition.
+- **`kgdiff apply … -o /dev/null` fails** with "operation not permitted": the output is written
+  to a temporary file and renamed, which a device does not allow. Found while testing
+  `--verify-target`, whose use in automation is exactly "check, and keep nothing".
+- **Parallel edges under `--ignore-attr`**: copies of an edge that differ only in an ignored
+  attribute are not paired first as identical, because the comparison includes the ignored
+  attributes. The delta is right; the diff may report a change of pairing that a reader does
+  not expect.
 - **GEXF as NetworkX writes it**: node and edge attributes named `start`, `end` and `pid` are
   written as XML attributes, where kgdiff reads them as time and hierarchy and drops the
   values, with a warning. Undecided whether to keep them as fields.
