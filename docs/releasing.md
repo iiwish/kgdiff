@@ -20,7 +20,10 @@ version, as do the crates.
    updates each `CHANGELOG.md` (`pnpm version-packages`: `changeset version`, then Biome formats
    the changelogs, since a changeset with several paragraphs indents its blank lines, and
    `scripts/sync-citation.ts` sets the version in `CITATION.cff`; a test fails if they differ).
-3. Merging that pull request publishes. The workflow first builds the native `kgdiff` for every
+3. Merging that pull request publishes. It stays open between release days: it is merged on
+   Tuesdays, and on Thursdays only when it holds a fix that users run into or an addition a host
+   is waiting for (documentation and small changes wait for the next Tuesday). A security fix is
+   released at once. The workflow first builds the native `kgdiff` for every
    target, packages the crates and assembles and tests the platform packages of `@kgdiff/cli`;
    then it runs `pnpm release` (`pnpm check`, `pnpm build`, `pnpm check:packages`, the platform
    packages, `changeset publish`), publishes every package whose version is not on npm yet and
