@@ -40,6 +40,7 @@
           </node>
           <node id="dog" label="Dog">
             <attvalues>
+              <attvalue for="rank" value="9007199254740993"/>
               <attvalue for="note" value="undeclared attribute"/>
             </attvalues>
           </node>

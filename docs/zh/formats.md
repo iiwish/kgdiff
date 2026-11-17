@@ -140,7 +140,7 @@ kgdiff 不读取的内容会略过并给出警告，不会报错：
 - 嵌套的图（yEd 的分组）和第一个之后的 `<graph>` 元素会合并成一张图（`graphml-merged-graphs`）；
 - `<hyperedge>` 和 `<port>` 被跳过（`graphml-unsupported-elements`）；
 - 内容是 XML 的 `<data>` 被丢弃，yEd 等编辑器把几何位置和样式放在这里；yEd 的标签除外（`graphml-ignored-data`）；
-- 和 key 声明的类型不符的值（`long` 写成 `about 175`，`double` 写成 `inf`，超出双精度能精确表示的 `long`）保留为文本（`graphml-invalid-value`）。
+- 和 key 声明的类型不符的值（`long` 写成 `about 175`，`double` 写成 `inf`）保留为文本（`graphml-invalid-value`）。超出双精度能精确表示的 `long`（`9007199254740993`）也保留为文本，以免丢掉数字，和 RDF 一样；它符合自己的类型，所以没有警告。
 
 有一个限制：一份文档的 `<default>` 最多可以补出和文件字节数一样多的字段（小文件按一百万算）。超过的文件会被拒绝，因为一个默认值在文件里只占一行，却要给图里每个节点加一个字段。
 
@@ -171,7 +171,7 @@ GEXF（1.1 到 1.3）的读法和 GraphML 一样：先读成 node-link 数据，
 - `viz:` 元素，里面是位置、颜色、大小和形状（`gexf-ignored-viz`）；
 - 时间：动态图按一张静态图读取，随时间变化的属性取文件里排在最后的那个值（`gexf-dynamic`）；
 - 层级：节点里面的节点，或带 `pid`、`<parents>` 的节点，都当作普通节点（`gexf-hierarchy`）；
-- 和属性声明的类型不符的值保留为文本（`gexf-invalid-value`）。
+- 和属性声明的类型不符的值保留为文本（`gexf-invalid-value`）；超出双精度能精确表示的整数保留为文本但没有警告，和 GraphML 一样。
 
 ## RDF 与 OBO
 

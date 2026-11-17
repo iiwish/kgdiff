@@ -36,6 +36,7 @@
         </node>
         <node id="dog">
           <data key="d0">Dog</data>
+          <data key="d6">9007199254740993</data>
           <data key="note">undeclared key</data>
         </node>
         <edge id="e2" source="cat" target="dog">

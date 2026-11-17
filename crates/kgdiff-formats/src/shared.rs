@@ -584,7 +584,7 @@ const XSD_INTEGERS: &[&str] = &[
 const XSD_DECIMALS: &[&str] = &["decimal", "double", "float"];
 
 /// `/^[+-]?\d+$/`.
-fn is_integer_lexical(text: &str) -> bool {
+pub(crate) fn is_integer_lexical(text: &str) -> bool {
     let digits = text.strip_prefix(['+', '-']).unwrap_or(text);
     !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit())
 }

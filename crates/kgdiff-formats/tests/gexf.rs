@@ -150,10 +150,12 @@ fn what_gephi_adds_is_dropped_or_flattened_with_a_warning() {
         element(&result, "nodes", |n| has(n, "id", "cat")),
         r#"{"id":"cat","label":"Cat & kitten","type":"concept","attrs":{"rank":"first","reviewed":true}}"#
     );
-    // An <attvalue> whose attribute is not declared is a text field named by its `for`.
+    // An <attvalue> whose attribute is not declared is a text field named by its `for`. A whole
+    // number beyond what a double holds exactly is an integer all the same: it stays text, so
+    // that no digit is lost, and is not counted among the values of the wrong type.
     assert_eq!(
         element(&result, "nodes", |n| has(n, "id", "dog")),
-        r#"{"id":"dog","label":"Dog","type":"concept","attrs":{"note":"undeclared attribute","reviewed":false}}"#
+        r#"{"id":"dog","label":"Dog","type":"concept","attrs":{"note":"undeclared attribute","rank":"9007199254740993","reviewed":false}}"#
     );
     // `kind` is the relation; without one, the label is.
     assert_eq!(
