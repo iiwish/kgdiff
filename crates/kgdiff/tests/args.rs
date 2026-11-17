@@ -326,7 +326,7 @@ fn rejects_invalid_enumerated_values_with_a_suggestion() {
     assert!(hint.contains("Did you mean \"similarity\"?"));
     assert_eq!(
         usage_error(&["a", "b", "-f", "ttl"]).1,
-        "Expected one of: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml."
+        "Expected one of: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml, gexf."
     );
     assert_eq!(
         usage_error(&["a", "b", "-f", "owl"]).0,

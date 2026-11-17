@@ -4,8 +4,8 @@ The graph file parsers of [kgdiff](https://github.com/iiwish/kgdiff) in Rust: re
 read into the graphs [`kgdiff-core`](https://crates.io/crates/kgdiff-core) diffs.
 
 `parse_graph` reads kgdiff JSON and the common JSON graph shapes (d3 / NetworkX, Cytoscape.js,
-AntV G6, graphology, vis-network), RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO
-and GraphML, from text, into one set of conventions, so that diffs across formats behave identically.
+AntV G6, graphology, vis-network), RDF (Turtle, N-Triples, N-Quads, TriG, RDF/XML, JSON-LD), OBO,
+GraphML and GEXF, from text, into one set of conventions, so that diffs across formats behave identically.
 `detect_format` picks the format from the file name and the content. Besides the graph, the result
 carries the prefixes, the display names of relations and the warnings about input that was
 repaired or skipped; syntax errors are `invalid-input` errors with the line. Output is

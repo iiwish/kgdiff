@@ -28,7 +28,7 @@ const GRAPHML_NS: &str = "http://graphml.graphdrawing.org/xmlns";
 
 /// `attr.type` of a key.
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Type {
+pub(crate) enum Type {
     Text,
     Integer,
     Decimal,
@@ -324,7 +324,7 @@ impl XmlHandler for Reader {
 }
 
 /// The value of `text` as a key's type says, and whether it is of that type.
-fn typed(text: &str, r#type: Type) -> (Value, bool) {
+pub(crate) fn typed(text: &str, r#type: Type) -> (Value, bool) {
     let value = match r#type {
         Type::Text => return (Value::from(text), true),
         Type::Integer => typed_value(text, Some("integer")),

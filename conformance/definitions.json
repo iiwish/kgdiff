@@ -521,6 +521,29 @@
       "locale": "zh-CN"
     },
     {
+      "id": "gexf",
+      "description": "GEXF: before as NetworkX writes it (1.2, typed attributes, numbered edges), after as Gephi does (1.3, a default, viz elements, nodes inside a node, a time, an edge kind, a value that is not of its type), each with its warning.",
+      "covers": [
+        "gexf",
+        "typed-attributes",
+        "defaults",
+        "viz",
+        "hierarchy",
+        "dynamic",
+        "edge-kind"
+      ],
+      "inputs": {
+        "before": "before.gexf",
+        "after": "after.gexf"
+      },
+      "options": {
+        "match": {
+          "strategy": "id"
+        }
+      },
+      "locale": "en"
+    },
+    {
       "id": "jsonld",
       "description": "JSON-LD 1.1 with an inline context (@vocab, typed terms, @json, @reverse, language maps), native numbers that become xsd:integer / xsd:double literals, and an after file that is JSON-LD under a .json name.",
       "covers": ["jsonld", "json-ld-detection", "json-literal", "reverse", "numbers", "languages"],

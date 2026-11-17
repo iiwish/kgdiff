@@ -1,0 +1,19 @@
+{
+  "format": "kgdiff.report",
+  "version": 1,
+  "meta": {
+    "title": "before.gexf → after.gexf",
+    "generator": "kgdiff <version>",
+    "before": {
+      "name": "chibi",
+      "format": "gexf"
+    },
+    "after": {
+      "name": "chibi",
+      "format": "gexf"
+    }
+  },
+  "view": {
+    "locale": "en"
+  }
+}

@@ -15,7 +15,7 @@ use crate::io::{CliIo, StdinError};
 use crate::paths;
 
 /// Display names of the formats, for messages.
-pub const FORMAT_NAMES: [&str; 9] = [
+pub const FORMAT_NAMES: [&str; 10] = [
     "JSON",
     "JSON-LD",
     "Turtle",
@@ -25,6 +25,7 @@ pub const FORMAT_NAMES: [&str; 9] = [
     "RDF/XML",
     "OBO",
     "GraphML",
+    "GEXF",
 ];
 
 /// An input read as text.
