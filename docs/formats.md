@@ -154,6 +154,11 @@ every other JSON graph: the fields above mean the same.
 `a – b` and `b – a` are the same edge: a library writes the ends in the order it met the nodes,
 which differs between two runs of an extraction.
 
+Direction itself is not part of the graph kgdiff compares: it decides the order of an edge's
+ends and nothing else. A graph that is saved directed in one version and undirected in the next,
+with the same ends, compares as unchanged. Keeping direction is planned for kgdiff 0.13, since
+it changes what is read from files that are read today.
+
 **The same graph as node-link JSON.** A directed graph that NetworkX saves as GraphML and as
 node-link JSON is the same graph to kgdiff, and comparing the two files shows no change. Two
 cases differ, until kgdiff 0.13 reads node-link JSON the same way: an undirected graph whose
@@ -211,7 +216,8 @@ its label, as in node-link JSON. And it writes an edge attribute named `type` as
 which is the relation.
 
 Direction is as in GraphML: an undirected edge (the graph's `defaultedgetype`, or the edge's
-`type`) has its ends in one order. The numbers Gephi and NetworkX give edges as ids are read as
+`type`) has its ends in one order, and direction is not otherwise kept: `mutual` is read as
+`directed`, and an edge whose `type` changes compares as unchanged. The numbers Gephi and NetworkX give edges as ids are read as
 edge ids; they play no part in a comparison unless you ask for `--edge-identity id`. So a
 directed graph saved as GEXF and as node-link JSON is the same graph; an undirected graph and a
 multigraph differ as described for GraphML. The limit on what `<default>` values may add is

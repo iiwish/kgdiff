@@ -129,6 +129,8 @@ GraphML 文档先读成 NetworkX 对同一张图给出的 node-link 数据，再
 
 **方向。** 有向边的两端按文件里写的顺序保留。无向边（`edgedefault="undirected"`，或边上写了 `directed="false"`）的两端按固定顺序排列，所以 `a – b` 和 `b – a` 是同一条边：图库按遇到节点的先后写两端，同一次抽取跑两遍，顺序就可能不同。
 
+方向本身不是 kgdiff 比较的图的一部分：它只决定边的两端按什么顺序排，别无他用。一张图在前一版里存成有向、后一版里存成无向，两端相同，比较结果是没有变化。保留方向计划在 kgdiff 0.13 做，因为它会改变现在已经能读的文件读出来的内容。
+
 **和 node-link JSON 是同一张图。** NetworkX 把一张有向图分别存成 GraphML 和 node-link JSON，在 kgdiff 看来是同一张图，拿这两个文件比较不会有变化。有两种情况例外，要等 kgdiff 0.13 用同样的方式读 node-link JSON：无向图在 JSON 里把一条边写成 `b – a` 时（JSON 保留文件里的顺序）；以及多重图，它的平行边在 JSON 里带 `key` 字段，在 GraphML 里没有。
 
 **边的 id。** NetworkX 把多重图平行边的 key 写成 `<edge id>`，每一对节点都从 0 数起。两条边共用的 id 不算 id：这时 kgdiff 不从文件里读任何边 id，并给出警告（`graphml-shared-edge-ids`）。
@@ -164,7 +166,7 @@ GEXF（1.1 到 1.3）的读法和 GraphML 一样：先读成 node-link 数据，
 
 有两处是照着 NetworkX 的写法来的。它给每个节点都写 `label`，节点没有标签时写的就是 id：只是重复 id 的标签不算标签，这时节点的 `name` 或 `title` 充当标签，和 node-link JSON 一样。它还把名叫 `type` 的边属性写成边的 `type`：不是 `directed`、`undirected`、`mutual` 的 `type` 就按这个属性读，也就是关系名。
 
-方向和 GraphML 相同：无向边（图的 `defaultedgetype`，或边自己的 `type`）的两端按固定顺序排列。Gephi 和 NetworkX 给边编的号会读成边的 id；除非指定 `--edge-identity id`，否则它们不参与比较。所以一张有向图存成 GEXF 和 node-link JSON 是同一张图；无向图和多重图的差别同 GraphML 一节所述。`<default>` 能补出多少字段的限制也和 GraphML 相同。
+方向和 GraphML 相同：无向边（图的 `defaultedgetype`，或边自己的 `type`）的两端按固定顺序排列。除此之外不保留方向：`mutual` 按 `directed` 读，边的 `type` 变了，比较结果是没有变化。Gephi 和 NetworkX 给边编的号会读成边的 id；除非指定 `--edge-identity id`，否则它们不参与比较。所以一张有向图存成 GEXF 和 node-link JSON 是同一张图；无向图和多重图的差别同 GraphML 一节所述。`<default>` 能补出多少字段的限制也和 GraphML 相同。
 
 以下内容会略过并给出警告：
 
