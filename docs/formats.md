@@ -174,8 +174,10 @@ What kgdiff does not read is left out with a warning, never an error:
 - `<hyperedge>` and `<port>` are skipped (`graphml-unsupported-elements`);
 - `<data>` with XML content, which is where yEd and other editors keep geometry and styles, is
   dropped, except yEd's labels (`graphml-ignored-data`);
-- a value that is not of its key's type (`about 175` for a `long`, `inf` for a `double`, a
-  `long` beyond what a double holds exactly) stays text (`graphml-invalid-value`).
+- a value that is not of its key's type (`about 175` for a `long`, `inf` for a `double`) stays
+  text (`graphml-invalid-value`). A `long` beyond what a double holds exactly
+  (`9007199254740993`) stays text too, so that no digit is lost, as in RDF; it is of its type,
+  so it has no warning.
 
 One limit: the `<default>` values of a document may add as many fields as the file has bytes
 (a million for a small file). A file whose defaults add more is refused, because a default costs
@@ -222,7 +224,8 @@ Left out with a warning:
   the value that comes last in the file is read (`gexf-dynamic`);
 - the hierarchy: nodes inside other nodes, or with a `pid` or `<parents>`, are plain nodes
   (`gexf-hierarchy`);
-- a value that is not of its attribute's type stays text (`gexf-invalid-value`).
+- a value that is not of its attribute's type stays text (`gexf-invalid-value`); a whole number
+  beyond what a double holds exactly stays text without a warning, as in GraphML.
 
 ## RDF and OBO
 

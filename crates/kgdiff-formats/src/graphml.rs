@@ -30,7 +30,8 @@ use kgdiff_core::js::{self, IndexMap, IndexSet, Object, Value};
 
 use crate::ParseWarningCode;
 use crate::shared::{
-    Warnings, compare_strings, invalid_input_with, plural, strip_bom, typed_value,
+    Warnings, compare_strings, invalid_input_with, is_integer_lexical, plural, strip_bom,
+    typed_value,
 };
 use crate::xml::{XmlElement, XmlError, XmlHandler, is_xml_space, line_of, parse_xml, syntax};
 
@@ -402,7 +403,13 @@ impl XmlHandler for Reader {
 pub(crate) fn typed(text: &str, r#type: Type) -> (Value, bool) {
     let value = match r#type {
         Type::Text => return (Value::from(text), true),
-        Type::Integer => typed_value(text, Some("integer")),
+        // A whole number beyond what a double holds exactly stays text, as in RDF, so that no
+        // digit is lost; it is of its type all the same, so it is not reported as mistyped.
+        Type::Integer => {
+            let value = typed_value(text, Some("integer"));
+            let fits = !matches!(value, Value::String(_)) || is_integer_lexical(js::trim(text));
+            return (value, fits);
+        }
         Type::Decimal => typed_value(text, Some("double")),
         // NetworkX writes Python's `True` and `False`.
         Type::Boolean => match js::trim(text).to_ascii_lowercase().as_str() {

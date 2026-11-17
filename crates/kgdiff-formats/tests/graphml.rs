@@ -128,10 +128,12 @@ fn what_an_editor_adds_is_merged_skipped_or_dropped_with_a_warning() {
         element(&result, "nodes", |n| has(n, "id", "cat")),
         r#"{"id":"cat","label":"Cat & kitten","attrs":{"kind":"concept","rank":"first","reviewed":true}}"#
     );
-    // A <data> whose key is not declared is a text field named by the key.
+    // A <data> whose key is not declared is a text field named by the key. A whole number
+    // beyond what a double holds exactly is an int all the same: it stays text, so that no digit
+    // is lost, and is not counted among the values of the wrong type.
     assert_eq!(
         element(&result, "nodes", |n| has(n, "id", "dog")),
-        r#"{"id":"dog","label":"Dog","attrs":{"kind":"concept","note":"undeclared key","reviewed":false}}"#
+        r#"{"id":"dog","label":"Dog","attrs":{"kind":"concept","note":"undeclared key","rank":"9007199254740993","reviewed":false}}"#
     );
     assert_eq!(
         element(&result, "edges", |e| has(e, "id", "e1")),
