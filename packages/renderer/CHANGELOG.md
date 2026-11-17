@@ -1,5 +1,15 @@
 # @kgdiff/renderer
 
+## 0.12.2
+
+### Patch Changes
+
+- d512b4f: The graph canvas shows its focus ring. The canvas is the viewer's first tab stop, and the viewer's stylesheet draws a ring on it when the keyboard moves focus there, but the renderer set `outline: none` on the canvas inline, which beat that rule: focus on the canvas was invisible. `@kgdiff/renderer` no longer sets an inline outline. A page that uses the renderer on its own and makes the canvas focusable now gets the browser's default ring unless its styles say otherwise.
+- Updated dependencies [081c437]
+- Updated dependencies [102ce48]
+  - @kgdiff/core@0.12.2
+  - @kgdiff/scene@0.12.2
+
 ## 0.12.1
 
 ### Patch Changes

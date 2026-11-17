@@ -1,5 +1,20 @@
 # @kgdiff/viewer
 
+## 0.12.2
+
+### Patch Changes
+
+- d512b4f: The graph canvas shows its focus ring. The canvas is the viewer's first tab stop, and the viewer's stylesheet draws a ring on it when the keyboard moves focus there, but the renderer set `outline: none` on the canvas inline, which beat that rule: focus on the canvas was invisible. `@kgdiff/renderer` no longer sets an inline outline. A page that uses the renderer on its own and makes the canvas focusable now gets the browser's default ring unless its styles say otherwise.
+- eeb078b: `<kgdiff-viewer>` inside a page's own `<main>` (or `role="main"`) is a region named after the graph, not a second main landmark. A page has one main landmark and they do not nest, so an embedded viewer made a screen reader's list of landmarks say "main" twice, one inside the other. On a page without a main landmark around it, such as an HTML report, the viewer is the main landmark as before. It looks at its ancestors, through slots and shadow roots, when it is connected.
+- Updated dependencies [d512b4f]
+- Updated dependencies [081c437]
+- Updated dependencies [102ce48]
+  - @kgdiff/renderer@0.12.2
+  - @kgdiff/core@0.12.2
+  - @kgdiff/compute@0.12.2
+  - @kgdiff/layout@0.12.2
+  - @kgdiff/scene@0.12.2
+
 ## 0.12.1
 
 ### Patch Changes

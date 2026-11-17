@@ -1,5 +1,14 @@
 # @kgdiff/scene
 
+## 0.12.2
+
+### Patch Changes
+
+- Updated dependencies [081c437]
+- Updated dependencies [102ce48]
+  - @kgdiff/core@0.12.2
+  - @kgdiff/layout@0.12.2
+
 ## 0.12.1
 
 ### Patch Changes
