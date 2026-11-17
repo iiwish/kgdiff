@@ -380,7 +380,10 @@ ${familyRules}
 .sb-head { flex: none; padding: 12px 12px 8px; display: grid; gap: 10px; border-bottom: 1px solid var(--kgdiff-border); }
 .sb-row { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .sb-row > .sb-title { flex: 1; min-width: 0; }
-.sb-row > .icon-btn { width: 24px; height: 24px; border-radius: 6px; }
+/* 28 px targets (docs/interaction.md) in the 24 px row: the -2px margin keeps the row's layout as
+   it was, and a button after a visible one moves 4 px over so that the two do not overlap. */
+.sb-row > .icon-btn { width: 28px; height: 28px; margin: -2px; border-radius: 7px; }
+.sb-row > .icon-btn:not([hidden]) ~ .icon-btn { margin-left: 2px; }
 .list-toggle .icon { transition: transform var(--kgdiff-base) var(--kgdiff-ease); }
 .list-toggle[aria-expanded="false"] .icon { transform: rotate(180deg); }
 .filters-btn[data-active="true"] { color: var(--kgdiff-accent-text); }
