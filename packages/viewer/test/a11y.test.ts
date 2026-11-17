@@ -9,6 +9,7 @@ import '../src/index.js';
 import type { KgdiffRootElement, KgdiffViewerElement } from '../src/index.js';
 import { setRenderBackend } from '../src/renderer-port.js';
 import type { DiffSession } from '../src/session.js';
+import { STYLES } from '../src/styles.js';
 import { mockBackend, tick, zoo } from './support.js';
 
 beforeEach(() => {
@@ -352,5 +353,21 @@ describe('a composed root', () => {
     expect(actions.shadowRoot?.activeElement).toBe(close);
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(actions.shadowRoot?.activeElement).toBe(help);
+  });
+});
+
+describe('pointer targets in the stylesheet', () => {
+  // happy-dom has no layout, so this reads the rules: no icon button is sized below the 28 px
+  // that docs/interaction.md promises (the sizes it gets in a browser are not measured here).
+  it('sets no icon button below 28 px', () => {
+    const rules = [...STYLES.matchAll(/([^{}]*\.icon-btn[^{}]*)\{([^}]*)\}/g)];
+    expect(rules.length).toBeGreaterThan(3);
+    for (const [, selector, body] of rules) {
+      for (const [, prop, px] of (body ?? '').matchAll(
+        /(?<![-\w])(width|height):\s*(\d+(?:\.\d+)?)px/g,
+      ))
+        expect(Number(px), `${selector?.trim()} { ${prop} }`).toBeGreaterThanOrEqual(28);
+    }
+    expect(STYLES).toContain('.sb-row > .icon-btn { width: 28px; height: 28px; margin: -2px;');
   });
 });
