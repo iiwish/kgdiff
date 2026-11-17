@@ -115,3 +115,35 @@ fn a_delta_read_back_writes_the_same_bytes() {
     assert_eq!(json::to_string(&read.to_value()), text);
     assert_eq!(read, d.delta);
 }
+
+/// Parallel copies of the triple `a —p→ b` beside an edge whose id is the triple's structural
+/// key: normalization keys the copies `#2` and `#2#2`, and pairing must still see them as one
+/// group, or the delta does not apply to its own base.
+#[test]
+fn a_delta_applies_when_an_edge_id_is_the_key_of_parallel_copies() {
+    let before = graph(
+        r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[
+          {"id":"[\"a\",\"p\",\"b\"]","source":"a","target":"b","predicate":"p","attrs":{"w":1}},
+          {"source":"a","target":"b","predicate":"p","attrs":{"w":2}},
+          {"source":"a","target":"b","predicate":"p","attrs":{"w":3}}]}"#,
+    );
+    let after = graph(
+        r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[
+          {"id":"[\"a\",\"p\",\"b\"]","source":"a","target":"b","predicate":"p","attrs":{"w":1}},
+          {"source":"a","target":"b","predicate":"p","attrs":{"w":3}}]}"#,
+    );
+    for ignored in [vec![], vec!["w".into()]] {
+        let mut options = DiffOptions::default();
+        options.edge_identity = kgdiff_core::EdgeIdentity::Id;
+        options.ignore_attrs = ignored;
+        let d = diff(&before, &after, &options).unwrap();
+        let ops: Vec<&str> = d.delta.ops.iter().map(|op| op.name()).collect();
+        assert_eq!(ops, ["edge.remove"]);
+        let (there, skipped) = apply_delta(&d.before, &d.delta, ApplyOptions::default()).unwrap();
+        assert!(skipped.is_empty());
+        assert_eq!(hash_graph(&there), hash_graph(&d.after));
+        let (back, _) =
+            apply_delta(&there, &invert_delta(&d.delta), ApplyOptions::default()).unwrap();
+        assert_eq!(hash_graph(&back), hash_graph(&d.before));
+    }
+}

@@ -3,7 +3,7 @@
 
 mod support;
 
-use kgdiff_core::js::{JsStr, Lookup, json};
+use kgdiff_core::js::{JsStr, Lookup, Object, Value, json};
 use kgdiff_core::model::ChangeStatus;
 use kgdiff_core::{
     ApplyOptions, DeltaOp, DiffOptions, DiffResult, EdgeIdentity, MatchStrategy, apply_delta, diff,
@@ -275,5 +275,141 @@ proptest! {
         }
         let packed = pack_diff_json(&diff_to_json(&d));
         prop_assert_eq!(json::to_string(&unpack_diff_json(&packed).unwrap()), text);
+    }
+}
+
+// ─── Parallel copies beside edge ids that look like their keys ──────────────
+
+/// Edge ids that collide with the keys normalization gives parallel copies: the structural keys
+/// of the triples `edge_spec` uses, with and without a parallel suffix, and plain ids.
+const KEY_LIKE_IDS: [&str; 9] = [
+    "[\"a\",\"p\",\"b\"]",
+    "[\"a\",\"p\",\"b\"]#2",
+    "[\"a\",\"p\",\"b\"]#3",
+    "[\"a\",\"p\",\"b\"]#2#2",
+    "[\"b\",\"p\",\"a\"]",
+    "[\"b\",\"p\",\"a\"]#2",
+    "[\"a\",\"q\",\"b\"]",
+    "e1",
+    "e2",
+];
+
+/// An edge on one of three triples, with a key-like id half of the time and a weight that tells
+/// parallel copies apart.
+fn edge_spec() -> impl Strategy<Value = support::EdgeIn> {
+    (
+        0usize..3,
+        prop::option::of(0..KEY_LIKE_IDS.len()),
+        0i32..4,
+        any::<bool>(),
+    )
+        .prop_map(|(triple, id, w, tagged)| {
+            let (source, predicate, target) =
+                [("a", "p", "b"), ("b", "p", "a"), ("a", "q", "b")][triple];
+            let mut attrs = Object::new();
+            attrs.insert("w", w);
+            if tagged {
+                attrs.insert("k2", "t");
+            }
+            support::EdgeIn {
+                id: id.map(|at| KEY_LIKE_IDS[at].to_owned()),
+                source: source.to_owned(),
+                target: target.to_owned(),
+                predicate: Some(predicate.to_owned()),
+                label: None,
+                attrs: Some(attrs),
+            }
+        })
+}
+
+/// Keeps the first use of every edge id: repeated ids are merged declarations, another matter.
+fn unique_ids(edges: Vec<support::EdgeIn>) -> Vec<support::EdgeIn> {
+    let mut seen: Vec<String> = Vec::new();
+    edges
+        .into_iter()
+        .map(|mut e| {
+            if let Some(id) = &e.id {
+                if seen.contains(id) {
+                    e.id = None;
+                } else {
+                    seen.push(id.clone());
+                }
+            }
+            e
+        })
+        .collect()
+}
+
+/// A version pair of two nodes and parallel edges: `after` drops some edges of `before`,
+/// changes the weight of others and adds new ones, in another order.
+fn parallel_pair() -> impl Strategy<Value = (support::GraphIn, support::GraphIn)> {
+    (
+        prop::collection::vec(edge_spec(), 0..=7),
+        prop::collection::vec((0u8..4, 0i32..4), 7),
+        prop::collection::vec(edge_spec(), 0..=3),
+        any::<u32>(),
+    )
+        .prop_map(|(edges, edits, added, seed)| {
+            let nodes = ["a", "b"]
+                .map(|id| support::NodeIn {
+                    id: id.to_owned(),
+                    ..support::NodeIn::default()
+                })
+                .to_vec();
+            let edges = unique_ids(edges);
+            let mut next = Vec::new();
+            for (e, (edit, w)) in edges.iter().zip(edits) {
+                match edit {
+                    0 => {}
+                    1 => {
+                        let mut e = e.clone();
+                        e.attrs.get_or_insert_with(Object::new).insert("w", w);
+                        next.push(e);
+                    }
+                    _ => next.push(e.clone()),
+                }
+            }
+            next.extend(added);
+            let before = support::GraphIn {
+                nodes: nodes.clone(),
+                edges,
+            };
+            let after = support::GraphIn {
+                nodes,
+                edges: support::shuffle(&unique_ids(next), seed),
+            };
+            (before, after)
+        })
+}
+
+/// Both edge identities, with and without ignoring the weight that tells the copies apart.
+fn parallel_variant() -> impl Strategy<Value = DiffOptions> {
+    (any::<bool>(), any::<bool>()).prop_map(|(by_id, ignoring)| {
+        let mut options = DiffOptions::default();
+        if by_id {
+            options.edge_identity = EdgeIdentity::Id;
+        }
+        if ignoring {
+            options.ignore_attrs = vec![JsStr::from("w")];
+        }
+        options
+    })
+}
+
+proptest! {
+    #![proptest_config(config())]
+
+    #[test]
+    fn a_delta_between_parallel_copies_applies_to_its_base_and_back((a, b) in parallel_pair(), options in parallel_variant()) {
+        let d = diff(&a.to_value(), &b.to_value(), &options).unwrap();
+        let (there, skipped) = apply_delta(&d.before, &d.delta, ApplyOptions::default()).unwrap();
+        prop_assert!(skipped.is_empty());
+        prop_assert_eq!(hash_graph(&there), hash_graph(&d.after));
+        let target = d.delta.target.as_ref().and_then(|t| t.get("hash")).and_then(Value::as_str);
+        let reached = hash_graph(&there);
+        prop_assert_eq!(target, Some(reached));
+        let (back, _) = apply_delta(&there, &invert_delta(&d.delta), ApplyOptions::default()).unwrap();
+        prop_assert_eq!(hash_graph(&back), hash_graph(&d.before));
+        check_partition(&d)?;
     }
 }
