@@ -9,8 +9,8 @@ import { DiffResult } from '@kgdiff/core';
 import type { DiffStats } from '@kgdiff/core';
 import type { GraphMeta } from '@kgdiff/core';
 import type { HunkKind } from '@kgdiff/core';
-import { LayoutResult } from '@kgdiff/layout';
 import type { Locale } from '@kgdiff/core';
+import type { Point } from '@kgdiff/core';
 import type { Rect } from '@kgdiff/core';
 import type { ReplayPhase } from '@kgdiff/core';
 import type { UnionId } from '@kgdiff/core';
@@ -22,7 +22,7 @@ export interface BadgeVisual {
     text: string;
 }
 
-export function buildScene(diff: DiffResult, layout: LayoutResult, options?: SceneOptions): Scene;
+export function buildScene(diff: DiffResult, layout: SceneLayout, options?: SceneOptions): Scene;
 
 export type ChangeFamily = Exclude<Family, 'neutral'>;
 
@@ -119,6 +119,8 @@ export interface GlyphVisual {
     dash: readonly number[] | null;
     kind: GlyphKind;
     label: LabelVisual | null;
+    node1?: number;
+    node2?: number;
     progress: number;
     r1: number;
     r2: number;
@@ -193,6 +195,15 @@ export interface NodeVisual {
 
 export type PaletteName = 'default' | 'colorblind';
 
+export function parseColor(css: string): Rgba;
+
+export interface Rgba {
+    readonly a: number;
+    readonly b: number;
+    readonly g: number;
+    readonly r: number;
+}
+
 export interface Scene {
     readonly bounds: Rect;
     readonly edgeIndex: ReadonlyMap<UnionId, number>;
@@ -246,6 +257,12 @@ export interface SceneHunk {
     readonly phase: ReplayPhase;
     readonly subtitle: string;
     readonly title: string;
+}
+
+export interface SceneLayout {
+    readonly hidden?: ReadonlyMap<UnionId, number>;
+    readonly positions: ReadonlyMap<UnionId, Point>;
+    readonly radii: ReadonlyMap<UnionId, number>;
 }
 
 export interface SceneNode {

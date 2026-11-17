@@ -112,7 +112,7 @@ const updated = applyDelta(graph, delta);
 这些查看器都会替你做好。如果要构建自己的界面：
 
 - `@kgdiff/layout` 的 `layoutDiff(result)` 为两张图的并集确定位置，结果是确定性的。
-- `@kgdiff/scene` 的 `buildScene(result, layout)` 按 [kgdiff 视觉语言](../../visual-language.md)（英文）把 diff 转成视觉元素。
+- `@kgdiff/scene` 的 `buildScene(result, layout)` 按 [kgdiff 视觉语言](../../visual-language.md)（英文）把 diff 转成视觉元素。应用自己摆放节点时，它也接受你自己的位置 `{ positions, radii }`（[嵌入](embedding.md#用自己的布局或渲染器)）。
 - `@kgdiff/renderer` 把场景画在 canvas 上；`@kgdiff/g6` 把它画进 AntV G6 图里。
 
 各包的 README 展示了每一步：[layout](../../../packages/layout/README.md)、[scene](../../../packages/scene/README.md)、[renderer](../../../packages/renderer/README.md) 和 [g6](../../../packages/g6/README.md)。

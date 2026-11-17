@@ -334,6 +334,22 @@ describe('buildScene: hunks', () => {
 });
 
 describe('buildScene: scope, options and robustness', () => {
+  it("builds the same scene from a host's own positions and radii as from a layout result", () => {
+    const positions = new Map<string, { x: number; y: number }>();
+    const radii = new Map<string, number>();
+    for (const n of diff.nodes) {
+      const p = POSITIONS[n.id];
+      if (p === undefined) continue;
+      positions.set(n.id, { x: p[0], y: p[1] });
+      radii.set(n.id, nodeRadius(Math.max(n.degree.before, n.degree.after)));
+    }
+    expect(buildScene(diff, { positions, radii })).toEqual(scene);
+    const hidden = { D: 1, Q1: 2 };
+    expect(buildScene(diff, { positions, radii, hidden: new Map(Object.entries(hidden)) })).toEqual(
+      buildScene(diff, makeLayout(diff, POSITIONS, hidden)),
+    );
+  });
+
   it('leaves out nodes absent from the layout and edges missing an endpoint', () => {
     const positions = { ...POSITIONS };
     delete (positions as Record<string, unknown>).E;

@@ -39,6 +39,19 @@ frame = resolver.resolve(createViewState({ layer: 'replay', t: 1200 }), frame);
 `getTheme(name, palette)` returns the design tokens; `frameBounds(scene, hunks)` gives camera
 targets; `computeFocus` builds the changes-only view.
 
+## Your own layout or renderer
+
+`buildScene` reads only the positions, radii and `hidden` counts of a layout (`SceneLayout`), so
+a host that places the nodes itself passes its own:
+
+```ts
+const scene = buildScene(result, { positions, radii }); // Maps by union id, world units
+```
+
+For renderers that are not a canvas (WebGL, 3D), a glyph names the nodes it runs between,
+`node1` and `node2` (indices into `scene.nodes`; a pivot has only `node1`), and
+`parseColor(css)` turns any color string of a scene into `{ r, g, b, a }`.
+
 ## Learn more
 
 - [Visual language](../../docs/visual-language.md): tokens, encodings, level of detail, replay

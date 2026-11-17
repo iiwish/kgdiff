@@ -13,7 +13,7 @@ import {
   type UnionId,
   type UnionNode,
 } from '@kgdiff/core';
-import { type LayoutResult, nodeRadius } from '@kgdiff/layout';
+import { nodeRadius } from '@kgdiff/layout';
 import { TIMELINE } from './constants.js';
 import { addNodeBox, BoundsBuilder, edgeCurvatures, rectCenter } from './geometry.js';
 import {
@@ -36,6 +36,7 @@ import type {
   Scene,
   SceneEdge,
   SceneHunk,
+  SceneLayout,
   SceneNode,
   SceneOptions,
   SceneShape,
@@ -175,6 +176,8 @@ function sceneHunkFamily(hunk: Hunk, byId: ReadonlyMap<UnionId, UnionNode>): Cha
 /**
  * Build the visual model. Pure and deterministic.
  *
+ * - `layout` is a `LayoutResult` of `@kgdiff/layout`, or any `SceneLayout`: a host that places
+ *   the nodes itself passes `{ positions, radii }`.
  * - Nodes absent from `layout.positions` (scope `changes`) are left out; edges need both
  *   endpoints. Before-version endpoints outside the layout fall back to the after ones.
  * - Node / edge order follows the diff (sorted by union id); indices are dense.
@@ -188,7 +191,7 @@ function sceneHunkFamily(hunk: Hunk, byId: ReadonlyMap<UnionId, UnionNode>): Cha
  */
 export function buildScene(
   diff: DiffResult,
-  layout: LayoutResult,
+  layout: SceneLayout,
   options: SceneOptions = {},
 ): Scene {
   const theme = resolveTheme(options);
@@ -353,7 +356,7 @@ export function buildScene(
       presentAfter: n.after !== undefined || n.afterId !== undefined,
       implicit: (n.after ?? n.before)?.implicit ?? false,
       degree: Math.max(n.degree.before, n.degree.after),
-      hidden: layout.hidden.get(n.id) ?? 0,
+      hidden: layout.hidden?.get(n.id) ?? 0,
       importance: importance[i] as number,
     };
     return node;

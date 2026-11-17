@@ -390,6 +390,43 @@ changes is drawn in the neutral color, at the positions the diff of that version
 [below](#what-is-not-there-yet).) The READMEs of [scene](../../packages/scene/README.md) and
 [renderer](../../packages/renderer/README.md) cover selection, replay, swipe and the minimap.
 
+### With your own layout or renderer
+
+A host that places the nodes itself, or draws them with a renderer of its own (WebGL, a 3D
+scene), builds the scene from its own positions and takes what it needs from the frames:
+
+```ts
+import { buildScene, createViewState, createVisualResolver, parseColor } from '@kgdiff/scene';
+
+const positions = new Map<string, { x: number; y: number }>();
+const radii = new Map<string, number>();
+for (const node of result.nodes) {
+  const p = myPlacement.get(node.id); // yours, by union id, in world units (y down)
+  if (p === undefined) continue; // a node without a position is left out
+  positions.set(node.id, { x: p.x, y: p.y });
+  radii.set(node.id, p.r);
+}
+const scene = buildScene(result, { positions, radii }, { theme: 'dark' });
+const frame = createVisualResolver(scene).resolve(createViewState());
+
+for (const glyph of frame.glyphs) {
+  const from = glyph.node1 === undefined ? undefined : scene.nodes[glyph.node1];
+  const { r, g, b, a } = parseColor(glyph.color); // channels 0–255, alpha 0–1
+  // …
+}
+```
+
+- `buildScene` reads only the positions, the radii and, if present, `hidden` of a layout (the
+  type `SceneLayout`): a `LayoutResult` of `@kgdiff/layout` is one, and so is your own
+  `{ positions, radii }`. A radius that is missing falls back to the one the layout would give.
+- A glyph (a merge, split or replacement arrow, the ghost of an edge's old form, a suggestion,
+  a pivot dot) names its nodes: `node1` and `node2` are indices into `scene.nodes`, the nodes its
+  two ends are on, so a renderer can move the glyph with them; a pivot sits on one node and has
+  only `node1`.
+- `parseColor` turns a color string into `{ r, g, b, a }`. Every color a scene carries, in its
+  theme and in what a frame draws, is in a form it parses; anything else throws
+  `KgdiffError('invalid-input')`. The colors stay CSS strings, for the canvas and for G6.
+
 ### Draw your own marks: layers
 
 What only your application knows about (a background behind a business domain, a certification

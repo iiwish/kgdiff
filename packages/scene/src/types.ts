@@ -21,6 +21,7 @@ import type {
   GraphMeta,
   HunkKind,
   Locale,
+  Point,
   Rect,
   ReplayPhase,
   UnionId,
@@ -312,6 +313,29 @@ export interface Scene {
   readonly shapes?: readonly SceneShape[];
 }
 
+/**
+ * What `buildScene` reads of a layout. A `LayoutResult` of `@kgdiff/layout` is one; so is
+ * `{ positions, radii }` from a host that places the nodes itself (its own layout, or a
+ * renderer with its own coordinates), without computing a kgdiff layout first.
+ */
+export interface SceneLayout {
+  /**
+   * Position of each node (world units, y down). Nodes without one, or with a non-finite one,
+   * are left out of the scene, and so are the edges that touch them.
+   */
+  readonly positions: ReadonlyMap<UnionId, Point>;
+  /**
+   * Radius of each node (world units). A node without one, or with one that is not a positive
+   * finite number, gets `nodeRadius` of its larger degree, as `@kgdiff/layout` would give it.
+   */
+  readonly radii: ReadonlyMap<UnionId, number>;
+  /**
+   * Per node, the number of its neighbours left out of the layout (`SceneNode.hidden`), as a
+   * layout of scope `changes` has it. Missing, or missing for a node: 0.
+   */
+  readonly hidden?: ReadonlyMap<UnionId, number>;
+}
+
 export interface SceneOptions {
   /** Default `dark`. */
   readonly theme?: Theme | ThemeName;
@@ -571,6 +595,22 @@ export interface GlyphVisual {
    * @experimental Stays experimental after 1.0.
    */
   shape2?: NodeShape;
+  /**
+   * Index into `scene.nodes` of the node at the start of the glyph: the node (x1, y1) is the
+   * center of. The merge source of a `merge-arrow`, the split source of a `split-arrow`, the
+   * deprecated node of a `replacement-arrow`, the before source of an `edge-ghost`, the removed
+   * node of a `suggestion`; for a `pivot`, the node whose outline the dot sits on. Undefined
+   * for a glyph that is on no node (no kind the scene emits today). For hosts that need the
+   * node rather than its flat position, e.g. to lift the glyph's ends with it in 3D.
+   */
+  node1?: number;
+  /**
+   * Index into `scene.nodes` of the node at the end of the glyph, the one (x2, y2) is the
+   * center of: the merge target, the split target, the replacement, the before target of an
+   * `edge-ghost`, the added node of a `suggestion`. Undefined for a `pivot`, which sits on one
+   * node only (`node1`), and for a glyph that is on no node.
+   */
+  node2?: number;
   color: string;
   /** Absolute; the label's alpha is relative to it. */
   alpha: number;
