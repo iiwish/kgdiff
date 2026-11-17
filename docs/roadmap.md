@@ -21,16 +21,17 @@ Merged, waiting for the release:
 - The viewer's sidebar buttons are 28 px targets (#149).
 - GraphML and GEXF: a whole number too large for a double is not reported as mistyped (#150).
 
-In progress, from an audit of the diff and apply paths on 2026-11-17:
+From an audit of the diff and apply paths on 2026-11-17:
 
-- **A delta kgdiff made does not apply to its own base** when an edge's explicit id equals a
-  structural key and the same triple has parallel edges (`--edge-identity id`): `apply` stops
-  with "edge already exists". A fix in how edges are paired; no output changes for other inputs.
-- **`kgdiff apply --verify-target`**: fail when the result is not the delta's target. Today a
-  result that differs from `target.hash` is a warning and exit 0, which is the contract and
-  stays the default.
-- **`DiffResult` lookups do not panic** after its public vectors were changed. The lookups can
-  still answer wrongly then; the cure is in 0.13 (below).
+- **A delta kgdiff made applies to its own base** when an edge's explicit id equals a
+  structural key and the same triple has parallel edges (`--edge-identity id`); before, `apply`
+  stopped with "edge already exists". A fix in how edges are paired; output changes only for
+  inputs where an id took a key parallel copies would have used (#153).
+- **`kgdiff apply --verify-target`**: fail when the result is not the delta's target. Without
+  it, a result that differs from `target.hash` stays a warning and exit 0, the contract (#154).
+- **`DiffResult` lookups do not panic** after its public vectors were changed (#155). The
+  lookups miss then rather than answer wrongly; reading the fields through accessors is in 0.13
+  (below).
 
 ## 0.12.x, not started
 
@@ -79,7 +80,7 @@ any of them is written.
 | **Direction is part of an edge.** GraphML and GEXF use an edge's direction only to order its ends and then drop it, so an edge that becomes undirected, or `mutual`, compares as unchanged. Node-link JSON's `directed: false` is not read at all, and its undirected edges keep their ends as written, unlike GraphML's. graphology's undirected edges already carry an `undirected` attribute; the same for every format is the likely answer. | Changes the graph, and so the hash, of every undirected input                   |
 | **Whole numbers as ids beyond 2^53.** JSON ids `9007199254740992` and `…993` are one double and become one node (reported as a duplicate declaration). Refuse them, or keep their digits.                                                                                                                                                                                                                                                        | Refusing breaks inputs that are read today; keeping digits changes their output |
 | **A graph file says how its edges are identified.** A graph written with edges identified by id and read back with the default loses its parallel edges: `kgdiff.graph` does not record the identity.                                                                                                                                                                                                                                            | A member of the graph document; may turn out to be an addition                  |
-| **`DiffResult` behind accessors** (Rust). Its vectors are public and its lookups index them lazily: changing a vector after a lookup makes the next one answer wrongly. Read-only accessors, as `KGraph` has.                                                                                                                                                                                                                                    | Removes public fields                                                           |
+| **`DiffResult` behind accessors** (Rust). Its vectors are public and its lookups index them lazily: changing a vector after a lookup makes the next one miss (#155). Read-only accessors, as `KGraph` has.                                                                                                                                                                                                                                       | Removes public fields                                                           |
 | **`CliIo` in Rust's idiom** (`columns() -> Option<f64>`, `now() -> String`, paths as `&str`).                                                                                                                                                                                                                                                                                                                                                    | Changes a public trait (marked experimental)                                    |
 | **`entity_type` as a type field** (what LightRAG calls an entity's type).                                                                                                                                                                                                                                                                                                                                                                        | Changes the output for JSON inputs that have such a field                       |
 | What the accessibility review asks to change in an interface                                                                                                                                                                                                                                                                                                                                                                                     | Nothing so far                                                                  |
