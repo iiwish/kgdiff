@@ -6,9 +6,9 @@ mod common;
 
 use std::io::Write;
 
-use common::{CWD, dataset, io, re, repo, run, run_with};
+use common::{CWD, Dataset, dataset, io, re, repo, run, run_with};
 use kgdiff::testing::MemoryIo;
-use kgdiff_core::js::{Value, json};
+use kgdiff_core::js::{Object, Value, json};
 use kgdiff_core::{NormalizeOptions, hash_graph, normalize};
 use kgdiff_formats::{ParseOptions, parse_graph};
 use kgdiff_report::strip_ansi;
@@ -1300,6 +1300,128 @@ fn chains_two_applies() {
         graph_hash(&out2.file("out2.json"), "out2.json"),
         graph_hash(&v3, "v3.json")
     );
+}
+
+/// The delta of an example dataset, as it was made and with `edit` applied to its JSON.
+fn dataset_delta(edit: impl FnOnce(&mut Object)) -> (Dataset, String, String) {
+    let d = dataset("enterprise-kg");
+    let made = run_with(&d.argv(&["--delta", "d.json", "-q"]), io());
+    assert_eq!(made.code, 0, "{}", made.stderr);
+    let whole = made.file("d.json");
+    let mut value = parse_json(&whole);
+    if let Value::Object(o) = &mut value {
+        edit(o);
+    }
+    (d, whole, json::to_string(&value))
+}
+
+#[test]
+fn verify_target_refuses_a_cut_short_delta_and_writes_nothing() {
+    let (d, _, cut) = dataset_delta(|o| {
+        if let Some(Value::Array(ops)) = o.get_mut("ops") {
+            ops.pop();
+        }
+    });
+    let argv = ["apply", d.before.as_str(), "cut.json", "-o", "out.json"];
+    let plain = run_with(&argv, io().file("cut.json", cut.clone()));
+    assert_eq!(plain.code, 0, "{}", plain.stderr);
+    assert!(re(r"(?m)^warning: The result \(c\d+:[0-9a-f]+\) differs from the delta's target \(c\d+:[0-9a-f]+\)\.$").is_match(&plain.stderr), "{}", plain.stderr);
+    assert!(!plain.file("out.json").is_empty());
+    let mut verified = argv.to_vec();
+    verified.push("--verify-target");
+    let r = run_with(&verified, io().file("cut.json", cut));
+    assert_eq!(r.code, 2, "{}", r.stderr);
+    assert!(re(r"^error: The result \(c\d+:[0-9a-f]+\) differs from the delta's target \(c\d+:[0-9a-f]+\); nothing was written\.\nhint: The operations do not lead to the delta's target").is_match(&r.stderr), "{}", r.stderr);
+    assert!(!r.stderr.contains("warning:"));
+    assert!(r.io.written.is_empty());
+    assert!(r.stdout.is_empty());
+}
+
+#[test]
+fn verify_target_passes_a_whole_delta() {
+    let (d, whole, _) = dataset_delta(|_| {});
+    let r = run_with(
+        &[
+            "apply",
+            &d.before,
+            "d.json",
+            "--verify-target",
+            "-o",
+            "out.json",
+        ],
+        io().file("d.json", whole),
+    );
+    assert_eq!(r.code, 0, "{}", r.stderr);
+    assert_eq!(
+        graph_hash(&r.file("out.json"), "out.json"),
+        graph_hash(&std::fs::read_to_string(&d.after).unwrap(), &d.after)
+    );
+}
+
+#[test]
+fn verify_target_needs_a_delta_that_names_its_target() {
+    let (d, _, untargeted) = dataset_delta(|o| {
+        o.remove("target");
+    });
+    let plain = run_with(
+        &["apply", &d.before, "d.json", "-o", "out.json"],
+        io().file("d.json", untargeted.clone()),
+    );
+    assert_eq!(plain.code, 0, "{}", plain.stderr);
+    assert!(!plain.stderr.contains("warning"));
+    let r = run_with(
+        &[
+            "apply",
+            &d.before,
+            "d.json",
+            "-o",
+            "out.json",
+            "--verify-target",
+        ],
+        io().file("d.json", untargeted),
+    );
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.starts_with(
+        "error: The delta names no target (no target.hash), so --verify-target has nothing to compare the result with.\nhint: "
+    ), "{}", r.stderr);
+    assert!(r.io.written.is_empty());
+}
+
+#[test]
+fn verify_target_with_no_strict_fails_when_operations_were_skipped() {
+    let (d, whole, _) = dataset_delta(|_| {});
+    let argv = [
+        "apply",
+        "empty.json",
+        "d.json",
+        "--allow-empty",
+        "--no-strict",
+        "--verify-target",
+        "-o",
+        "out.json",
+    ];
+    let r = run_with(
+        &argv,
+        io().file("empty.json", "").file("d.json", whole.clone()),
+    );
+    assert_eq!(r.code, 2, "{}", r.stderr);
+    assert!(re(r"^warning: Skipped (\d+) of \d+ operations that do not fit this graph \(--verbose lists them\)\.\nerror: The result \(c\d+:[0-9a-f]+\) differs from the delta's target \(c\d+:[0-9a-f]+\); nothing was written\.\nhint: \d+ operations were skipped \(--no-strict\), so the result falls short of the target\.\n$").is_match(&r.stderr), "{}", r.stderr);
+    assert!(r.io.written.is_empty());
+    // Skipping what the graph has already done reaches the target, which passes.
+    let at_target = run_with(
+        &[
+            "apply",
+            &d.after,
+            "d.json",
+            "--no-strict",
+            "--verify-target",
+            "-o",
+            "out.json",
+        ],
+        io().file("d.json", whole),
+    );
+    assert_eq!(at_target.code, 0, "{}", at_target.stderr);
+    assert!(at_target.stderr.contains("warning: Skipped"));
 }
 
 #[test]

@@ -517,6 +517,29 @@
       "exit": 0
     },
     {
+      "name": "apply-verify-target-skipped",
+      "args": [
+        "apply",
+        "empty.json",
+        "expected/delta.json",
+        "--allow-empty",
+        "--no-strict",
+        "--verify-target",
+        "--color",
+        "never"
+      ],
+      "env": {
+        "COLUMNS": "100"
+      },
+      "stdout": {
+        "text": ""
+      },
+      "stderr": {
+        "text": "warning: Skipped 2 of 3 operations that do not fit this graph (--verbose lists them).\nerror: The result (c53:0578333fa4ed54) differs from the delta's target (c53:072641cfad7e57); nothing was written.\nhint: 2 operations were skipped (--no-strict), so the result falls short of the target.\n"
+      },
+      "exit": 2
+    },
+    {
       "name": "apply-lone-surrogate",
       "args": [
         "apply",

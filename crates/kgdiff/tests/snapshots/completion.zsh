@@ -38,6 +38,7 @@ _kgdiff() {
                     '(-f --format)--format=[Format of <graph>]:format:(auto json jsonld turtle ntriples nquads trig rdfxml obo graphml gexf)'
                     '(-f --format)-f+[Format of <graph>]:format:(auto json jsonld turtle ntriples nquads trig rdfxml obo graphml gexf)'
                     '--no-strict[Apply the operations that fit even if the graph is not the delta'\''s base; reports how many were skipped]'
+                    '--verify-target[Fail, writing nothing, when the result is not the delta'\''s target]'
                     '--allow-empty[Treat an empty <graph> as an empty graph]'
                     '--verbose[With --no-strict, list the skipped operations]'
                 )

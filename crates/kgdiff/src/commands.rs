@@ -572,6 +572,19 @@ pub fn run_apply(o: &ApplyCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
     normalize_options.edge_identity = edge_identity;
     let graph = normalize(&Value::Object(parsed.graph), normalize_options)?;
     let delta = Delta::from_value(&delta_value)?;
+    let target = delta
+        .target
+        .as_ref()
+        .and_then(|t| t.get("hash"))
+        .and_then(Value::as_str);
+    if o.verify_target && target.is_none() {
+        return Err(CliError::new(
+            CliErrorCode::Input,
+            "The delta names no target (no target.hash), so --verify-target has nothing to compare the result with.",
+            Some("`kgdiff <before> <after> --delta <file>` records the target. Without --verify-target the delta applies as it is.".to_owned()),
+        )
+        .into());
+    }
     let mut apply_options = ApplyOptions::default();
     apply_options.strict = o.strict;
 
@@ -651,20 +664,39 @@ pub fn run_apply(o: &ApplyCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
     };
 
     let hash = hash_graph(&result).to_owned();
-    let target = delta
-        .target
-        .as_ref()
-        .and_then(|t| t.get("hash"))
-        .and_then(Value::as_str);
     if let Some(target) = target
         && hash != target
-        && skipped.is_empty()
     {
-        let text = format_warning(
-            &format!("The result ({hash}) differs from the delta's target ({target})."),
-            &ctx.err_paint,
-        );
-        ctx.notice(io, &text);
+        if o.verify_target {
+            let hint = if skipped.is_empty() {
+                "The operations do not lead to the delta's target: the delta may have been cut short or edited. Without --verify-target the result is written with a warning.".to_owned()
+            } else {
+                format!(
+                    "{} {} skipped (--no-strict), so the result falls short of the target.",
+                    format_int(skipped.len()),
+                    if skipped.len() == 1 {
+                        "operation was"
+                    } else {
+                        "operations were"
+                    }
+                )
+            };
+            return Err(CliError::new(
+                CliErrorCode::Input,
+                format!(
+                    "The result ({hash}) differs from the delta's target ({target}); nothing was written."
+                ),
+                Some(hint),
+            )
+            .into());
+        }
+        if skipped.is_empty() {
+            let text = format_warning(
+                &format!("The result ({hash}) differs from the delta's target ({target})."),
+                &ctx.err_paint,
+            );
+            ctx.notice(io, &text);
+        }
     }
     let source = (o.output != STDIO).then(|| paths::basename(&o.output));
     let text = json_text(&graph_output_json(&result, source), o.pretty);

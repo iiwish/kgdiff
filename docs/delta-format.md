@@ -77,7 +77,8 @@ These ops belong to no hunk and head the delta, ahead of `node.rekey`, each addr
 graph: `node.attr`, then `edge.remove` and `edge.add` for a parallel copy (which has no locator
 of its own), then `edge.attr`. Added, removed and replaced elements need none of them: their
 snapshots hold every attribute. Deltas from earlier versions, which left these changes out, still
-apply; their result differs from their `target.hash` as it always did.
+apply; their result differs from their `target.hash` as it always did, and
+`kgdiff apply --verify-target` refuses it.
 
 ## Relation to other formats
 

@@ -83,6 +83,7 @@ complete -c kgdiff -n '__kgdiff_in apply' -l pretty -d 'Indent the JSON output'
 complete -c kgdiff -n '__kgdiff_in apply' -l output -s o -r -F -d 'Write the patched graph to a file'
 complete -c kgdiff -n '__kgdiff_in apply' -l format -s f -x -a 'auto json jsonld turtle ntriples nquads trig rdfxml obo graphml gexf' -d 'Format of <graph>'
 complete -c kgdiff -n '__kgdiff_in apply' -l no-strict -d 'Apply the operations that fit even if the graph is not the delta\'s base; reports how many were skipped'
+complete -c kgdiff -n '__kgdiff_in apply' -l verify-target -d 'Fail, writing nothing, when the result is not the delta\'s target'
 complete -c kgdiff -n '__kgdiff_in apply' -l allow-empty -d 'Treat an empty <graph> as an empty graph'
 complete -c kgdiff -n '__kgdiff_in apply' -l verbose -d 'With --no-strict, list the skipped operations'
 

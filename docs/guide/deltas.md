@@ -32,6 +32,9 @@ kgdiff reads back losslessly. Check it against the target:
 kgdiff after.obo patched.json --exit-code -q && echo identical
 ```
 
+`apply` checks this too: when the result is not the delta's target, it warns. With
+`--verify-target` it fails instead (exit 2) and writes nothing, which suits scripts.
+
 ## The base must match
 
 A delta applies only to its base. kgdiff compares content hashes first and refuses any other

@@ -113,6 +113,8 @@ pub struct ApplyCommandOptions {
     /// Output path, or `-` for stdout.
     pub output: String,
     pub strict: bool,
+    /// `--verify-target`: a result that is not the delta's target is an error, not a warning.
+    pub verify_target: bool,
     pub format: Format,
     pub languages: Option<Vec<String>>,
     pub pretty: bool,
@@ -255,10 +257,11 @@ const DIFF_ONLY: [OptionSpec; 28] = [
     string("watch-attr"),
 ];
 
-const APPLY_ONLY: [OptionSpec; 5] = [
+const APPLY_ONLY: [OptionSpec; 6] = [
     short(string("output"), 'o'),
     short(string("format"), 'f'),
     boolean("no-strict"),
+    boolean("verify-target"),
     boolean("allow-empty"),
     boolean("verbose"),
 ];
@@ -1118,6 +1121,7 @@ fn parse_apply(argv: &[String]) -> CliResult<Command> {
         delta,
         output: v.string("output").unwrap_or_else(|| STDIO.to_owned()),
         strict: !v.flag("no-strict"),
+        verify_target: v.flag("verify-target"),
         format: parse_format("format", v.string("format"))?.unwrap_or(None),
         languages,
         pretty: v.flag("pretty"),
