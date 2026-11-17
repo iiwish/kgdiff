@@ -1303,6 +1303,53 @@ fn chains_two_applies() {
 }
 
 #[test]
+fn applies_a_delta_between_parallel_copies_beside_an_edge_id_that_is_their_key() {
+    let before = r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[
+      {"id":"[\"a\",\"p\",\"b\"]","source":"a","target":"b","predicate":"p","attrs":{"w":1}},
+      {"source":"a","target":"b","predicate":"p","attrs":{"w":2}},
+      {"source":"a","target":"b","predicate":"p","attrs":{"w":3}}]}"#;
+    let after = r#"{"nodes":[{"id":"a"},{"id":"b"}],"edges":[
+      {"id":"[\"a\",\"p\",\"b\"]","source":"a","target":"b","predicate":"p","attrs":{"w":1}},
+      {"source":"a","target":"b","predicate":"p","attrs":{"w":3}}]}"#;
+    let files = || io().file("before.json", before).file("after.json", after);
+    let made = run_with(
+        &[
+            "before.json",
+            "after.json",
+            "--edge-identity",
+            "id",
+            "--ignore-attr",
+            "w",
+            "--delta",
+            "d.json",
+            "-q",
+        ],
+        files(),
+    );
+    assert_eq!(made.code, 0, "{}", made.stderr);
+    let d = made.file("d.json");
+    let delta = parse_json(&d);
+    let ops: Vec<&str> = delta
+        .get("ops")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .filter_map(|op| op.get("op").and_then(Value::as_str))
+        .collect();
+    assert_eq!(ops, ["edge.remove"]);
+    let out = run_with(
+        &["apply", "before.json", "d.json", "-o", "out.json"],
+        files().file("d.json", d),
+    );
+    assert_eq!(out.code, 0, "{}", out.stderr);
+    assert!(!out.stderr.contains("warning"), "{}", out.stderr);
+    assert_eq!(
+        graph_hash(&out.file("out.json"), "out.json"),
+        graph_hash(after, "after.json")
+    );
+}
+
+#[test]
 fn lists_every_skipped_operation_in_one_pass_with_verbose() {
     let d = delta_of(zoo(), "before.json", "after.json", "d.json");
     let total = parse_json(&d)

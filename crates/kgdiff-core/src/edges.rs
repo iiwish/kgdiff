@@ -6,7 +6,9 @@ use std::sync::Arc;
 
 use crate::js::IndexMap;
 
-use crate::canonical::{canonical_json, has_parallel_suffix, split_structural_key, triple_key};
+use crate::canonical::{
+    canonical_json, has_parallel_suffix, split_structural_key, triple_key, write_triple_key,
+};
 use crate::classify::{RestructureIndex, attr_changes, moved_key};
 use crate::js::{self, JsStr, KeySorted, Lookup, Value};
 use crate::model::{
@@ -172,6 +174,24 @@ impl Pairing<'_, '_> {
     }
 }
 
+/// The structural key of a triple, as the text that groups parallel copies.
+fn triple_text(source: &str, predicate: &str, target: &str) -> String {
+    let mut out = String::new();
+    write_triple_key(&mut out, source, predicate, target);
+    out
+}
+
+/// What follows the triple in a structural key: empty, `#2`, `#3`…, or `#2#2` and the like when
+/// an edge id held the plain suffix. Keys that do not start with their own triple fall back to
+/// the text from the last `#`.
+fn parallel_suffix(edge: &KGEdge) -> &str {
+    let triple = triple_text(&edge.source, &edge.predicate, &edge.target);
+    match edge.key.strip_prefix(triple.as_str()) {
+        Some(suffix) => suffix,
+        None => split_structural_key(&edge.key).1,
+    }
+}
+
 /// `${s.length}:${s}${t}` (UTF-16 length).
 fn pair_key(s: &str, t: &str) -> String {
     format!("{}:{s}{t}", js::utf16_len(s))
@@ -200,7 +220,10 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     };
 
     // Parallel copies of a triple exist only when a graph reported them (structure identity), or
-    // when an edge id pushed a structural key aside (id identity).
+    // when an edge id pushed a structural key aside (id identity). Copies are grouped by the
+    // triple the edge holds, in union space, never by the triple read back from the key: when an
+    // edge id takes a key that `#2`, `#3`… would have used, normalization moves the copy on to
+    // `#2#2` and the like, whose text before the last `#` is not the triple.
     let may_have_parallel = |g: &KGraph| {
         mode == EdgeIdentity::Id
             || g.issues()
@@ -211,24 +234,16 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
     if may_have_parallel(before) || may_have_parallel(after) {
         for edge in &before_edges {
             if structural(edge) && has_parallel_suffix(&edge.key) {
-                let base = split_structural_key(&edge.key).0;
                 let (source, target) = (
                     ctx.union_of_before(&edge.source),
                     ctx.union_of_before(&edge.target),
                 );
-                let key = if source == edge.source && target == edge.target {
-                    base.to_owned()
-                } else {
-                    triple_key(&source, &edge.predicate, &target)
-                        .as_str()
-                        .to_owned()
-                };
-                parallel.insert(key, ());
+                parallel.insert(triple_text(&source, &edge.predicate, &target), ());
             }
         }
         for e in &after_edges {
             if structural(e) && has_parallel_suffix(&e.key) {
-                parallel.insert(split_structural_key(&e.key).0.to_owned(), ());
+                parallel.insert(triple_text(&e.source, &e.predicate, &e.target), ());
             }
         }
     }
@@ -245,7 +260,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             key = JsStr::from(format!(
                 "{}{}",
                 triple_key(&source, &edge.predicate, &target),
-                split_structural_key(&edge.key).1
+                parallel_suffix(edge)
             ));
         }
         let m = Mapped {
@@ -265,7 +280,7 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             continue;
         }
         if !parallel.is_empty() {
-            let base = split_structural_key(&m.key).0.to_owned();
+            let base = triple_text(&m.source, &edge.predicate, &m.target);
             if parallel.contains_key(&base) {
                 groups.entry(base).or_default().0.push(m);
                 continue;
@@ -289,9 +304,9 @@ pub(crate) fn classify_edges(ctx: &Ctx<'_>, index: &RestructureIndex) -> Vec<Uni
             if !structural(e) {
                 continue;
             }
-            let base = split_structural_key(&e.key).0;
-            if parallel.contains_key(base)
-                && let Some(group) = groups.get_mut(base)
+            let base = triple_text(&e.source, &e.predicate, &e.target);
+            if parallel.contains_key(&base)
+                && let Some(group) = groups.get_mut(&base)
             {
                 group.1.push(e.clone());
             }
