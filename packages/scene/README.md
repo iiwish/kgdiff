@@ -52,6 +52,32 @@ For renderers that are not a canvas (WebGL, 3D), a glyph names the nodes it runs
 `node1` and `node2` (indices into `scene.nodes`; a pivot has only `node1`), and
 `parseColor(css)` turns any color string of a scene into `{ r, g, b, a }`.
 
+## A report payload
+
+The `kgdiff.report` document the CLI embeds in HTML reports (and a server can send a page) holds
+a diff, its layout or none, and how a viewer starts
+([schema](../core/schema/report.v1.json)). `sceneFromReport` reads one into a scene;
+`reportFromJSON` reads it into its parts:
+
+```ts
+import { reportFromJSON, type ReportPayload, sceneFromReport } from '@kgdiff/scene';
+
+const scene = sceneFromReport(payload, { theme: 'light', locale: 'en' }); // its view.shapes too
+const { diff, layout, meta, view } = reportFromJSON(payload); // layout: undefined when it has none
+```
+
+Both check `format` and `version` as the other readers do (`KgdiffError` `invalid-input` for
+another format, `unsupported-version` for a version other than 1), then read the diff (packed or
+not) with `diffFromJSON` and the layout with `layoutFromJSON`. `sceneFromReport` needs a payload
+with a layout; for one without, lay `diff` out with `layoutDiff` and call `buildScene`.
+
+## The hunk of a node
+
+`hunkOfNode(scene, id)` is the index into `scene.hunks` of the hunk that changes a node, or `-1`.
+`id` is a node id of either version: the later version's node when it has one, else the earlier
+version's, which is `id@before` in the scene when the later version gave its id to another node
+([Hunk ids](../../docs/algorithms.md#hunk-ids)).
+
 ## Learn more
 
 - [Visual language](../../docs/visual-language.md): tokens, encodings, level of detail, replay
