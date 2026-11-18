@@ -50,6 +50,10 @@ From an audit of the diff and apply paths on 2026-11-17:
   attribute are not paired first as identical, because the comparison includes the ignored
   attributes. The delta is right; the diff may report a change of pairing that a reader does
   not expect.
+- **The G6 adapter's dev page is broken** (`packages/g6/dev/main.ts`): it calls `diff` and
+  `layoutDiff` without awaiting them, which they have needed since 0.11, and stops with
+  "diff.nodes is not iterable". It is the only page that draws the adapter with a real G6 in
+  a browser, and it has no entry in `.claude/launch.json`.
 - **GEXF as NetworkX writes it**: node and edge attributes named `start`, `end` and `pid` are
   written as XML attributes, where kgdiff reads them as time and hierarchy and drops the
   values, with a warning. Undecided whether to keep them as fields.
