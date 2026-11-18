@@ -1,5 +1,21 @@
 # @kgdiff/viewer
 
+## 0.12.3
+
+### Patch Changes
+
+- 019148c: The buttons in the sidebar's header (collapse the change list, and the search and filters buttons when those are folded) are 28 px targets, as [Interaction](https://github.com/iiwish/kgdiff/blob/main/docs/interaction.md#accessibility) promises for every pointer target; they were 24 px. The header looks as before.
+- Updated dependencies [0e71a6c]
+- Updated dependencies [725e734]
+- Updated dependencies [2f65e0e]
+- Updated dependencies [8348e34]
+- Updated dependencies [ff50c16]
+  - @kgdiff/core@0.12.3
+  - @kgdiff/compute@0.12.3
+  - @kgdiff/scene@0.12.3
+  - @kgdiff/layout@0.12.3
+  - @kgdiff/renderer@0.12.3
+
 ## 0.12.2
 
 ### Patch Changes
