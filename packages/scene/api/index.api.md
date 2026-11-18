@@ -5,11 +5,15 @@
 ```ts
 
 import type { ChangeStatus } from '@kgdiff/core';
+import type { DiffJSON } from '@kgdiff/core';
 import { DiffResult } from '@kgdiff/core';
 import type { DiffStats } from '@kgdiff/core';
 import type { GraphMeta } from '@kgdiff/core';
 import type { HunkKind } from '@kgdiff/core';
+import type { LayoutJSON } from '@kgdiff/layout';
+import type { LayoutResult } from '@kgdiff/layout';
 import type { Locale } from '@kgdiff/core';
+import type { PackedDiffJSON } from '@kgdiff/core';
 import type { Point } from '@kgdiff/core';
 import type { Rect } from '@kgdiff/core';
 import type { ReplayPhase } from '@kgdiff/core';
@@ -137,6 +141,8 @@ export interface GlyphVisual {
 
 export function hunkFamily(kind: HunkKind): ChangeFamily;
 
+export function hunkOfNode(scene: Pick<Scene, 'nodes' | 'nodeIndex'>, id: string): number;
+
 // @experimental
 export function isNodeShape(value: unknown): value is NodeShape;
 
@@ -197,6 +203,47 @@ export type PaletteName = 'default' | 'colorblind';
 
 export function parseColor(css: string): Rgba;
 
+export interface ReportContent {
+    readonly diff: DiffResult;
+    readonly layout: LayoutResult | undefined;
+    readonly meta: ReportPayload['meta'];
+    readonly view: ReportView | undefined;
+}
+
+export function reportFromJSON(json: unknown): ReportContent;
+
+export interface ReportPayload {
+    readonly diff: DiffJSON | PackedDiffJSON;
+    readonly format: 'kgdiff.report';
+    readonly layout?: LayoutJSON;
+    readonly meta: {
+        readonly title?: string;
+        readonly generator: string;
+        readonly generatedAt?: string;
+        readonly before: {
+            readonly name: string;
+            readonly format?: string;
+        };
+        readonly after: {
+            readonly name: string;
+            readonly format?: string;
+        };
+    };
+    readonly version: 1;
+    readonly view?: ReportView;
+}
+
+export interface ReportView {
+    readonly locale?: Locale;
+    readonly mode?: 'overlay' | 'swipe' | 'replay' | 'changes';
+    readonly palette?: PaletteName;
+    readonly panels?: Readonly<Record<string, 'open' | 'collapsed' | 'hidden'>>;
+    readonly scope?: 'all' | 'changes';
+    // @experimental
+    readonly shapes?: Readonly<Record<string, NodeShape>>;
+    readonly theme?: 'auto' | 'light' | 'dark';
+}
+
 export interface Rgba {
     readonly a: number;
     readonly b: number;
@@ -243,6 +290,8 @@ export interface SceneEdge {
     readonly t: number;
     readonly tb: number;
 }
+
+export function sceneFromReport(json: unknown, options?: SceneOptions): Scene;
 
 export interface SceneHunk {
     readonly anchor: number;

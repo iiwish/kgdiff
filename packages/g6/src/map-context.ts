@@ -15,11 +15,18 @@ export type ElementKind = 'node' | 'edge' | 'glyph' | 'anchor' | 'collapsed';
 
 /**
  * `datum.data` of every generated element. Flat primitives only (G6 compares `data` shallowly).
+ * Part of the adapter's contract: a host may read it from `graph.getElementData(id).data` (or
+ * through `DiffGraphController.hunkOf`), and these members keep their meaning.
+ *  - `kgdiff`: what the element is (`ElementKind`).
  *  - `index`: scene node / edge index; for glyphs the index in `frame.glyphs`; for collapsed
  *    pills the index in `frame.collapsed`; for anchors (invisible points glyph arcs attach to
  *    where no node is drawn) the scene node at that point, or -1.
- *  - `hunk`: index into `scene.hunks` (glyphs: the hunk of their source node, else target), or -1.
+ *  - `hunk`: index into `scene.hunks` (glyphs: the hunk of their source node, else target;
+ *    anchors: the hunk of their scene node), or -1 when no hunk changes the element.
+ *  - `family`: the element's change family in this frame (`neutral` when unchanged).
+ *  - `changed`: whether a change is drawn on the element.
  *  - `label`: the element's plain label (revealed on hover even when the frame hides it).
+ *  - `glyph`: for glyphs their `GlyphKind` (`merge-arrow`…); '' for every other element.
  */
 export type KgdiffDatumData = {
   readonly kgdiff: ElementKind;

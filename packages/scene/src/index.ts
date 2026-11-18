@@ -8,6 +8,14 @@ export { buildScene } from './build.js';
 export { contrastRatio, parseColor, type Rgba } from './color.js';
 export { computeFocus } from './focus.js';
 export { frameBounds } from './frame.js';
+export { hunkOfNode } from './hunks.js';
+export {
+  type ReportContent,
+  type ReportPayload,
+  type ReportView,
+  reportFromJSON,
+  sceneFromReport,
+} from './report.js';
 export { createVisualResolver } from './resolver.js';
 export { hunkFamily } from './roles.js';
 export {

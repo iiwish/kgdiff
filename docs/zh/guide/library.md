@@ -113,6 +113,7 @@ const updated = applyDelta(graph, delta);
 
 - `@kgdiff/layout` 的 `layoutDiff(result)` 为两张图的并集确定位置，结果是确定性的。
 - `@kgdiff/scene` 的 `buildScene(result, layout)` 按 [kgdiff 视觉语言](../../visual-language.md)（英文）把 diff 转成视觉元素。应用自己摆放节点时，它也接受你自己的位置 `{ positions, radii }`（[嵌入](embedding.md#用自己的布局或渲染器)）。
+- `@kgdiff/scene` 的 `sceneFromReport(payload)` 用 `kgdiff.report` 载荷（命令行嵌进 HTML 报告的内容）构建场景，`reportFromJSON(payload)` 把载荷读成 `{ diff, layout, meta, view }`（[嵌入](embedding.md#或者自己画)）。
 - `@kgdiff/renderer` 把场景画在 canvas 上；`@kgdiff/g6` 把它画进 AntV G6 图里。
 
 各包的 README 展示了每一步：[layout](../../../packages/layout/README.md)、[scene](../../../packages/scene/README.md)、[renderer](../../../packages/renderer/README.md) 和 [g6](../../../packages/g6/README.md)。

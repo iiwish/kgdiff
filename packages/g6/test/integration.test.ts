@@ -253,6 +253,35 @@ describe('createDiffGraph with G6', () => {
     );
   }, 20_000);
 
+  it('steps a replay back to its start in G6, and names the hunk of what is drawn', async () => {
+    const scene = datasetScene();
+    const { c, graph } = await create(scene, {});
+    const sceneIds = (): string[] =>
+      graph
+        .getNodeData()
+        .map((n) => String(n.id))
+        .filter((id) => !id.startsWith('kgdiff-'))
+        .sort();
+    const before = scene.nodes
+      .filter((n) => n.presentBefore)
+      .map((n) => n.id)
+      .sort();
+    const after = scene.nodes
+      .filter((n) => n.presentAfter)
+      .map((n) => n.id)
+      .sort();
+    await c.seekReplay(-1);
+    expect(sceneIds()).toEqual(before);
+    await c.seekReplay(scene.hunks.length - 1);
+    expect(sceneIds()).toEqual(after);
+    await c.seekReplay(-1);
+    expect(sceneIds()).toEqual(before);
+    for (const n of graph.getNodeData()) {
+      const data = graph.getElementData(String(n.id)).data as { hunk?: number } | undefined;
+      expect(c.hunkOf(String(n.id))).toBe(data?.hunk);
+    }
+  }, 20_000);
+
   it('leaves no canvas behind when destroyed', async () => {
     const { c, graph, container } = await create();
     c.destroy();

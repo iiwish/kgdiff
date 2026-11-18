@@ -23,9 +23,11 @@ export interface CreateDiffGraphOptions {
 export interface DiffGraphController {
     destroy(): void;
     readonly graph: Graph;
+    hunkOf(elementId: string): number;
     playReplay(options?: {
         readonly speed?: number;
     }): Promise<void>;
+    seekReplay(index: number): Promise<void>;
     selectHunk(index: number): Promise<void>;
     setLayer(layer: Exclude<Layer, 'replay'>): Promise<void>;
     setTheme(theme: Theme): Promise<void>;

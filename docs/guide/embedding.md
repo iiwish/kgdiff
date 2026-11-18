@@ -364,31 +364,35 @@ stored layouts stay valid: every shape fits the box the layout reserves. The fie
 
 ### Or draw it yourself
 
-For an interface of your own, read the diff and the layout out of the payload, build a scene and
-give its frames to the renderer (`buildScene` takes the same map as its `shapes` option):
+For an interface of your own, build a scene from the payload and give its frames to the
+renderer. `sceneFromReport` reads the payload (its `format` and `version`, the packed diff, the
+layout and `view.shapes`) and builds the scene:
 
 ```ts
-import { diffFromJSON, unpackDiffJSON } from '@kgdiff/core';
-import { layoutFromJSON } from '@kgdiff/layout';
 import { createRenderer } from '@kgdiff/renderer';
-import { buildScene, createViewState, createVisualResolver, getTheme } from '@kgdiff/scene';
+import { createViewState, createVisualResolver, getTheme, sceneFromReport } from '@kgdiff/scene';
 
 const payload = await (await fetch('/changes/42/report.json')).json();
-const result = diffFromJSON(unpackDiffJSON(payload.diff)); // kgdiff-report packs the diff
-const layout = layoutFromJSON(payload.layout);
-
-const scene = buildScene(result, layout, { theme: 'light' });
+const scene = sceneFromReport(payload, { theme: 'light' });
 const resolver = createVisualResolver(scene);
 const container = document.getElementById('graph') as HTMLElement; // give it a size
 const renderer = createRenderer(container, { theme: getTheme('light') });
 renderer.setFrame(resolver.resolve(createViewState()));
 ```
 
+`ReportPayload` (from `@kgdiff/scene`) is the payload's type. `reportFromJSON(payload)` reads it
+into its parts instead, `{ diff, layout, meta, view }`, for a payload without a layout (lay
+`diff` out with `layoutDiff`, then call `buildScene`) or to read `meta` and `view`. Both throw a
+`KgdiffError`: `invalid-input` for something that is not a report, `unsupported-version` for a
+report version other than 1. To go from an item of your application to its change, pass its node
+id to `hunkOfNode(scene, id)`: the index of the hunk that changes it, or -1.
+
 The same code draws one version on its own from the payload of `graph_payload`: a diff without
 changes is drawn in the neutral color, at the positions the diff of that version will use.
 (`<kgdiff-viewer>` shows such a payload as a "No differences" card; see
 [below](#what-is-not-there-yet).) The READMEs of [scene](../../packages/scene/README.md) and
-[renderer](../../packages/renderer/README.md) cover selection, replay, swipe and the minimap.
+[renderer](../../packages/renderer/README.md) cover selection, replay, swipe and the minimap. To
+draw the scene in an AntV G6 graph instead, see [`@kgdiff/g6`](./g6.md#draw-a-diff-in-a-g6-graph).
 
 ### With your own layout or renderer
 

@@ -1,5 +1,6 @@
 import { diff, diffToJSON } from '@kgdiff/core';
 import { layoutDiff, layoutToJSON } from '@kgdiff/layout';
+import { reportFromJSON, type ReportPayload as SceneReportPayload } from '@kgdiff/scene';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { KgdiffViewer } from '../src/element.js';
 import { hydrateEmbeddedPayloads, PAYLOAD_SCRIPT_TYPE, type ReportPayload } from '../src/index.js';
@@ -72,6 +73,15 @@ afterEach(() => {
 });
 
 describe('payload decoding', () => {
+  it('is a report payload of @kgdiff/scene, which reads it as the viewer does', async () => {
+    const p = await payload();
+    const read: SceneReportPayload = p;
+    const report = reportFromJSON(read);
+    expect(report.view).toEqual(p.view);
+    expect(report.meta).toEqual(p.meta);
+    expect(report.layout).toBeDefined();
+  });
+
   it('decodes plain JSON and gzip-base64', async () => {
     const p = await payload();
     const json = JSON.stringify(p);
