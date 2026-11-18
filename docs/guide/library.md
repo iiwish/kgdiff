@@ -145,6 +145,9 @@ The viewer does all of this for you. To build your own interface:
   [kgdiff visual language](../visual-language.md). It also takes positions of your own,
   `{ positions, radii }`, when your application places the nodes itself
   ([Embedding](embedding.md#with-your-own-layout-or-renderer)).
+- `sceneFromReport(payload)` from `@kgdiff/scene` builds the scene of a `kgdiff.report` payload
+  (what the CLI embeds in HTML reports), and `reportFromJSON(payload)` reads one into
+  `{ diff, layout, meta, view }` ([Embedding](embedding.md#or-draw-it-yourself)).
 - `@kgdiff/renderer` draws a scene on a canvas; `@kgdiff/g6` draws it in an AntV G6 graph.
 
 The package READMEs show each step: [layout](../../packages/layout/README.md),
