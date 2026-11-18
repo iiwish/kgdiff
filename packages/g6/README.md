@@ -86,6 +86,10 @@ await go(-1); // to the start
 `seekReplay(i)` shows what `selectHunk(i)` shows in the replay layer: the end of hunk `i`'s
 window, with the hunk spotlighted and in view. `seekReplay(-1)` goes back to the start (time 0,
 nothing selected) and leaves the camera where it is; `selectHunk(-1)` only clears the selection.
+A host that rebuilt the graph to go back to the start got a fitted view with it: call
+`diffGraph.graph.fitView()` after `seekReplay(-1)` for the same. `playReplay()` after a seek plays
+from the start, not from where the replay stands.
+
 Called in another layer, `seekReplay` switches to the replay layer (`setLayer` leaves it). It
 stops a running `playReplay`, rejects an index outside `[-1, hunks)`, and lands on the same
 graph as a new controller would at that step. The positions are the hunk windows also in chapter

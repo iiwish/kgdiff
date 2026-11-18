@@ -162,6 +162,53 @@ describe('sceneFromReport', () => {
     );
   });
 
+  it("takes the payload's locale and palette unless the options give them", () => {
+    const payload = withLayout(sample());
+    const report = reportFromJSON(payload);
+    const written = {
+      ...payload,
+      view: { ...payload.view, locale: 'zh-CN', palette: 'colorblind' },
+    };
+    const own = sceneFromReport(written);
+    const expected = buildScene(report.diff, report.layout!, {
+      locale: 'zh-CN',
+      palette: 'colorblind',
+    });
+    expect(own.locale).toBe('zh-CN');
+    expect(own.theme).toEqual(expected.theme);
+    expect(own.hunks).toEqual(expected.hunks);
+    // The host's options win, one by one.
+    const given = sceneFromReport(written, { locale: 'en' });
+    expect(given.locale).toBe('en');
+    expect(given.theme).toEqual(expected.theme);
+    // The theme is the host's: `view.theme` is not read.
+    const themed = sceneFromReport({ ...written, view: { ...written.view, theme: 'light' } });
+    expect(themed.theme).toEqual(expected.theme);
+    // A locale or a palette of a later version is passed over, not an error.
+    const later = sceneFromReport({
+      ...payload,
+      view: { ...payload.view, locale: 'tlh', palette: 'neon' },
+    });
+    expect(later.locale).toBe(sceneFromReport(payload).locale);
+    expect(later.theme).toEqual(sceneFromReport(payload).theme);
+  });
+
+  it('reports what is wrong inside the diff and the layout with their readers\u2019 codes', () => {
+    const payload = withLayout(sample());
+    const code = (json: unknown): string => {
+      try {
+        reportFromJSON(json);
+      } catch (error) {
+        return (error as { code?: string }).code ?? String(error);
+      }
+      return 'no error';
+    };
+    expect(code({ ...payload, format: 'kgdiff.diff' })).toBe('invalid-input');
+    expect(code({ ...payload, diff: {} })).toBe('unsupported-version');
+    expect(code({ ...payload, diff: { format: 'nope' } })).toBe('unsupported-version');
+    expect(code({ ...payload, layout: { format: 'nope' } })).toBe('invalid-input');
+  });
+
   it('rejects a payload without a layout', () => {
     expect(() => sceneFromReport(sample())).toThrow(KgdiffError);
   });
