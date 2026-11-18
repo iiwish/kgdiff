@@ -466,6 +466,144 @@ describe('replay', () => {
   });
 });
 
+/** Everything the fake holds, by id: what G6 would draw. */
+function snapshot(g: FakeGraph): unknown[] {
+  const all: [string, unknown][] = [
+    ...[...g.nodes.values()].map((n): [string, unknown] => [
+      `n ${String(n.id)}`,
+      { style: n.style, data: n.data },
+    ]),
+    ...[...g.edges.values()].map((e): [string, unknown] => [
+      `e ${String(e.id)}`,
+      { source: e.source, target: e.target, type: e.type, style: e.style, data: e.data },
+    ]),
+  ];
+  return all.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+}
+
+describe('seekReplay', () => {
+  /** A fresh replay controller at `step`: its start, or `selectHunk(step)`. */
+  async function freshAt(step: number): Promise<unknown[]> {
+    const { c, g } = await setup({ view: { layer: 'replay' } });
+    if (step >= 0) await c.selectHunk(step);
+    return snapshot(g);
+  }
+
+  it('steps forwards and backwards to the state a fresh controller has there', async () => {
+    const { c, g, scene } = await setup({ view: { layer: 'replay' } });
+    const H = scene.hunks.length;
+    expect(H).toBeGreaterThan(2);
+    const start = snapshot(g);
+    for (let k = 0; k < H; k++) await c.seekReplay(k);
+    expect(snapshot(g)).toEqual(await freshAt(H - 1));
+    for (const k of [Math.floor(H / 2), 1, 0]) {
+      await c.seekReplay(k);
+      expect(snapshot(g)).toEqual(await freshAt(k));
+    }
+    await c.seekReplay(-1);
+    expect(snapshot(g)).toEqual(start);
+    expect(snapshot(g)).toEqual(await freshAt(-1));
+    await c.seekReplay(H - 1);
+    await c.seekReplay(-1);
+    expect(snapshot(g)).toEqual(start);
+  });
+
+  it('returns to the start after a replay has played', async () => {
+    const { c, g } = await setup({ view: { layer: 'replay' } });
+    const start = snapshot(g);
+    await c.playReplay({ speed: 1000 });
+    expect(snapshot(g)).not.toEqual(start);
+    await c.seekReplay(-1);
+    expect(snapshot(g)).toEqual(start);
+  });
+
+  it('enters the replay layer from another one, and setLayer leaves it', async () => {
+    const { c, g, scene } = await setup();
+    const union = snapshot(g);
+    await c.seekReplay(-1);
+    const before = scene.nodes.filter((n) => n.presentBefore).map((n) => n.id);
+    expect(sceneNodeIds(g.data).sort()).toEqual([...before].sort());
+    expect(snapshot(g)).toEqual(await freshAt(-1));
+    await c.setLayer('union');
+    expect(snapshot(g)).toEqual(union);
+  });
+
+  it('pans to the hunk it seeks to, and leaves the camera alone at the start', async () => {
+    const { c, g, scene } = await setup({ view: { layer: 'replay' } });
+    const h = scene.hunks.findIndex((x) => x.nodes.length > 0);
+    await c.seekReplay(h);
+    expect(g.focused).toHaveLength(1);
+    await c.seekReplay(-1);
+    expect(g.focused).toHaveLength(1);
+  });
+
+  it('stops a running replay', async () => {
+    const { c, g } = await setup({ view: { layer: 'replay' } });
+    g.hold = true;
+    const playing = c.playReplay();
+    await settle();
+    const seek = c.seekReplay(-1);
+    await expect(playing).resolves.toBeUndefined();
+    g.hold = false;
+    g.release();
+    await seek;
+  });
+
+  it('rejects positions outside [-1, hunks), and after destroy', async () => {
+    const { c, scene } = await setup();
+    for (const bad of [-2, 0.5, scene.hunks.length, Number.NaN]) {
+      await expect(c.seekReplay(bad)).rejects.toBeInstanceOf(KgdiffError);
+    }
+    c.destroy();
+    await expect(c.seekReplay(-1)).rejects.toBeInstanceOf(KgdiffError);
+  });
+
+  it('leaves selectHunk as it was: -1 clears the selection and keeps the time', async () => {
+    const { c, g, scene } = await setup({ view: { layer: 'replay' } });
+    const k = scene.hunks.length - 1;
+    await c.seekReplay(k);
+    const sought = snapshot(g);
+    await c.selectHunk(-1);
+    await c.selectHunk(k);
+    expect(snapshot(g)).toEqual(sought);
+    await c.selectHunk(-1);
+    expect(snapshot(g)).not.toEqual(await freshAt(-1));
+  });
+});
+
+describe('hunkOf', () => {
+  it('names the hunk of every drawn element, as its data says', async () => {
+    const { c, g, scene } = await setup();
+    const drawn = [...g.nodes.values(), ...g.edges.values()];
+    expect(drawn.length).toBeGreaterThan(0);
+    for (const datum of drawn) {
+      expect(c.hunkOf(String(datum.id))).toBe(kgdiffData(datum.data)?.hunk);
+    }
+    const changed = scene.nodes.find((n) => n.hunk >= 0);
+    const plain = scene.nodes.find((n) => n.hunk < 0);
+    const edge = scene.edges.find((e) => e.hunk >= 0 && g.has(e.id));
+    if (changed === undefined || plain === undefined || edge === undefined) {
+      throw new Error('fixture');
+    }
+    expect(c.hunkOf(changed.id)).toBe(changed.hunk);
+    expect(c.hunkOf(edge.id)).toBe(edge.hunk);
+    expect(c.hunkOf(plain.id)).toBe(-1);
+    expect(c.hunkOf('not drawn')).toBe(-1);
+  });
+
+  it('follows what is drawn, and is -1 after destroy', async () => {
+    const { c, g, scene } = await setup({ view: { layer: 'replay' } });
+    const added = scene.nodes.find((n) => !n.presentBefore && n.hunk >= 0);
+    if (added === undefined) throw new Error('fixture');
+    expect(g.has(added.id)).toBe(false);
+    expect(c.hunkOf(added.id)).toBe(-1);
+    await c.seekReplay(scene.hunks.length - 1);
+    expect(c.hunkOf(added.id)).toBe(added.hunk);
+    c.destroy();
+    expect(c.hunkOf(added.id)).toBe(-1);
+  });
+});
+
 describe('theme and lifecycle', () => {
   it('switches the background plugin and every color', async () => {
     const { c, g } = await setup();

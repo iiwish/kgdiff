@@ -209,6 +209,37 @@ export class DiffGraphControllerImpl<G extends GraphLike> {
     return this.select(index, -1);
   }
 
+  seekReplay(index: number): Promise<void> {
+    const H = this.scene.hunks.length;
+    if (!Number.isInteger(index) || index < -1 || index >= H) {
+      return Promise.reject(
+        invalid(`Replay position must be an integer in [-1, ${H - 1}], got ${String(index)}.`),
+      );
+    }
+    if (this.destroyed) return Promise.reject(destroyedError());
+    this.stop();
+    // -1 is the start (the earlier version, nothing selected); a hunk is the end of its window
+    // with the hunk selected, as `selectHunk` leaves the replay layer. Time moves either way.
+    let t = 0;
+    if (index >= 0) {
+      const w = this.scene.timeline.windows.find((x) => x.hunk === index);
+      t = w !== undefined ? w.end : this.view.t;
+    }
+    this.view = createViewState({
+      ...this.view,
+      layer: 'replay',
+      t,
+      selectedHunk: index,
+      selectedNode: -1,
+    });
+    return this.request(this.scene.theme.motion.base, index >= 0 ? [index] : null);
+  }
+
+  hunkOf(elementId: string): number {
+    if (this.destroyed) return -1;
+    return this.meta.get(elementId)?.hunk ?? -1;
+  }
+
   async playReplay(options: { readonly speed?: number } = {}): Promise<void> {
     const speed = options.speed ?? 1;
     if (!(typeof speed === 'number' && Number.isFinite(speed) && speed > 0)) {

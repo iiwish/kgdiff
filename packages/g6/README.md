@@ -49,6 +49,8 @@ wrapper) with CSS rather than relying on `position: fixed` on the container itse
 | `graph`                 | The G6 `Graph`, for your own plugins, events and camera calls.                                                     |
 | `setLayer(layer)`       | Show `'union'`, `'before'` or `'after'`; animates over `theme.motion.base`.                                        |
 | `selectHunk(index)`     | Spotlight a hunk (`-1` clears) and pan to its nodes. In the replay layer it seeks to the end of the hunk's window. |
+| `seekReplay(index)`     | Put the replay at a hunk, forwards or backwards: `-1` is its start, a hunk the end of its window (see below).      |
+| `hunkOf(elementId)`     | The hunk of a drawn element (index into `scene.hunks`), or `-1`.                                                   |
 | `playReplay({ speed })` | Play the replay (default 1×). Resolves when finished or stopped.                                                   |
 | `stop()`                | Stop a running replay; its promise resolves at once.                                                               |
 | `setTheme(theme)`       | Switch colours, e.g. `getTheme('light', 'colorblind')` from `@kgdiff/scene`.                                       |
@@ -62,6 +64,53 @@ Options:
 - `g6` — extra G6 options merged over the generated ones: `behaviors`, `plugins` and
   `transforms` are appended, plain objects merge recursively, other values replace.
   `animation: false` turns animations off (the replay keeps its pace).
+
+### Stepping through the replay
+
+A host with its own replay controls (previous, next, to the start, a list of changes) steps the
+replay with `seekReplay`, in either direction, without rebuilding the graph:
+
+```ts
+const diffGraph = await createDiffGraph(container, scene, { view: { layer: 'replay' } });
+
+let step = -1; // the start: the earlier version, before hunk 0
+const go = (next: number) => {
+  step = Math.max(-1, Math.min(scene.hunks.length - 1, next));
+  return diffGraph.seekReplay(step);
+};
+await go(step + 1); // next
+await go(step - 1); // previous
+await go(-1); // to the start
+```
+
+`seekReplay(i)` shows what `selectHunk(i)` shows in the replay layer: the end of hunk `i`'s
+window, with the hunk spotlighted and in view. `seekReplay(-1)` goes back to the start (time 0,
+nothing selected) and leaves the camera where it is; `selectHunk(-1)` only clears the selection.
+Called in another layer, `seekReplay` switches to the replay layer (`setLayer` leaves it). It
+stops a running `playReplay`, rejects an index outside `[-1, hunks)`, and lands on the same
+graph as a new controller would at that step. The positions are the hunk windows also in chapter
+mode, where the viewer's own transport steps by chapter.
+
+### Which hunk an element belongs to
+
+With `interactive`, a click on a change already selects its hunk. A host that keeps its own
+selection (a list, the address bar) reads the hunk of the clicked element with `hunkOf`:
+
+```ts
+import type { IElementEvent } from '@antv/g6';
+
+const onClick = (event: IElementEvent) => {
+  const hunk = diffGraph.hunkOf(event.target.id);
+  if (hunk >= 0) showHunk(hunk);
+};
+diffGraph.graph.on('node:click', onClick);
+diffGraph.graph.on('edge:click', onClick);
+```
+
+`hunkOf(id)` is the `hunk` of the element's `KgdiffDatumData` (below), as drawn now, and `-1`
+for an unchanged element, an id the graph does not show, an element you added and after
+`destroy()`. To find the hunk of a node by its graph id rather than a G6 element, use
+`hunkOfNode(scene, id)` from `@kgdiff/scene`.
 
 Calls made while a draw is still running are merged (latest wins): five quick clicks cost one
 G6 update. Every update sends G6 only the elements that changed, with only the changed style
@@ -90,6 +139,14 @@ and shows a simpler G6 halo instead. Level of detail
 is evaluated at zoom 1. Every element's `data` is a `KgdiffDatumData`:
 `{ kgdiff: 'node' | 'edge' | 'glyph' | 'anchor' | 'collapsed', index, hunk, family, changed,
 label, glyph }`. `index` is the scene index, so your handlers can map a G6 id back to the diff.
+This type is part of the package's contract, for `toG6Data` and `createDiffGraph` alike: read
+it with `graph.getElementData(id).data as KgdiffDatumData`. `kgdiff` is the kind of element;
+`index` the scene node or edge index (for glyphs the index in `frame.glyphs`, for collapsed pills
+in `frame.collapsed`, for anchors the scene node at that point or `-1`); `hunk` the index into
+`scene.hunks` of the hunk that changes the element (glyphs: their source node's, else their
+target's), or `-1`; `family` the change family drawn (`neutral` when unchanged); `changed`
+whether a change is drawn; `label` the plain label; `glyph` the glyph kind, `''` for other
+elements.
 
 Every style key is always present, switched off with `false` / `0` / `''` when unused, because
 G6 merges updates into the previous style.

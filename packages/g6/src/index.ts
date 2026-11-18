@@ -80,6 +80,21 @@ export interface DiffGraphController {
   setLayer(layer: Exclude<Layer, 'replay'>): Promise<void>;
   /** Select a hunk by index (-1 clears) and focus it. */
   selectHunk(index: number): Promise<void>;
+  /**
+   * Put the replay at a hunk, forwards or backwards, without playing it: `index` -1 is its start
+   * (the earlier version, before hunk 0, nothing selected), any other index the end of that
+   * hunk's window with the hunk selected and in view — what `selectHunk(index)` shows in the
+   * replay layer. Switches to the replay layer if the graph is in another one (`setLayer` leaves
+   * it), stops a running replay and animates over `theme.motion.base`. Rejects an index outside
+   * [-1, hunks).
+   */
+  seekReplay(index: number): Promise<void>;
+  /**
+   * The hunk (index into `scene.hunks`) of the element with this G6 id, as drawn now: the
+   * `hunk` of its `KgdiffDatumData`. -1 for an element no hunk changes, an id the graph does not
+   * show, an element the caller added, and after `destroy()`.
+   */
+  hunkOf(elementId: string): number;
   /** Play the replay hunk by hunk with G6 animations; resolves when finished or stopped. */
   playReplay(options?: { readonly speed?: number }): Promise<void>;
   stop(): void;
@@ -114,7 +129,10 @@ const wait = (ms: number): Promise<void> =>
  *   end of the hunk's window. `playReplay({ speed })` (default 1×) resolves every window (every
  *   chapter in chapter mode) at the end of its spotlight, mid-transform, settle start and end,
  *   and lets G6 animate between them; the camera pans to units less than 70% in view. It
- *   resolves when finished or `stop()`ped; `setLayer` / `selectHunk` stop it.
+ *   resolves when finished or `stop()`ped; `setLayer` / `selectHunk` / `seekReplay` stop it.
+ * - `seekReplay(i)` steps the replay by hand, in either direction: -1 is its start, a hunk the
+ *   end of its window. `hunkOf(id)` names the hunk of a drawn element (a host's own click
+ *   handler, for instance).
  *
  * @throws KgdiffError(`invalid-input`) for invalid arguments (also from the controller's methods,
  *   which reject at once after `destroy()`; calls still pending at `destroy()` resolve).
