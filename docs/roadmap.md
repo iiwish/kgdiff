@@ -21,6 +21,10 @@ Merged, waiting for the release:
   nodes they run between, `parseColor` (#148).
 - The viewer's sidebar buttons are 28 px targets (#149).
 - GraphML and GEXF: a whole number too large for a double is not reported as mistyped (#150).
+- `@kgdiff/g6` and `@kgdiff/scene`, for the change view of a host (Semlia's): the replay steps
+  both ways (`seekReplay`), the hunk of a drawn element (`hunkOf`, and `KgdiffDatumData` as
+  contract), the hunk of a node id (`hunkOfNode`) and a typed reader of the report payload
+  (`reportFromJSON`, `sceneFromReport`) (#158).
 
 From an audit of the diff and apply paths on 2026-11-17:
 
@@ -36,10 +40,6 @@ From an audit of the diff and apply paths on 2026-11-17:
 
 ## 0.12.x, not started
 
-- **`@kgdiff/g6`, for the change view of a host** (Semlia's, confirmed; in progress): a replay that can seek backwards (today the controller only plays forward, and
-  the host rebuilds the graph to go back); the hunk an element belongs to, as documented data or
-  an event (the host reads an undocumented `data.hunk`); the hunk of a node id; a typed reader
-  of the report payload.
 - **A hidden edge's colour is the empty string**, which `parseColor` refuses. A host that
   parses every edge's colour has to look at `visible` first. Giving hidden elements a colour
   that parses is an addition.
@@ -103,7 +103,7 @@ What the two embedding hosts use, since it decides the above.
 
 - **Semlia** (pinned to 0.12.1; 0.12.2 needs no change): `layout_graph`, `layout_diff_on`,
   `report_payload_with`, the report's `shapes`, and `@kgdiff/g6` with `@kgdiff/scene` for its
-  change view. It does not use the renderer, `addLayer` or the composed elements. Of the
+  change view, which can drop four workarounds with 0.12.3 (#158). It does not use the renderer, `addLayer` or the composed elements. Of the
   experimental APIs, node shapes are the one a host has used, and they were enough.
 - **kgstrata** (pinned to 0.12.1; a concept page, not published): `diff`, `buildScene` and the
   frame resolver, drawn in 3D by its own renderer. With 0.12.3 it can drop three workarounds:
