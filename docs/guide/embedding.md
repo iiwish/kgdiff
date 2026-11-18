@@ -490,10 +490,10 @@ The rules in full are in the
 [RFC 0003](https://github.com/iiwish/kgdiff/blob/main/docs/rfcs/0003-embedding-hosts.md) plans
 two more parts. Neither exists yet, and the RFC is a draft: releases and details may change.
 
-| Part | What                                                                     | Planned for | Until then                                                                                                                   |
-| ---- | ------------------------------------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 4c   | The plain view: one graph in the viewer, colored by your categories      | 0.13        | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
-| 4d   | Groups: a background per group, and a layout that keeps a group together | 0.14        | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
+| Part | What                                                                     | Planned for   | Until then                                                                                                                   |
+| ---- | ------------------------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 4c   | The plain view: one graph in the viewer, colored by your categories      | not scheduled | scene and renderer draw an unchanged diff in neutral; `<kgdiff-viewer>` shows a "No differences" card; color through a layer |
+| 4d   | Groups: a background per group, and a layout that keeps a group together | not scheduled | draw backgrounds on an `under` layer from the positions; the layout does not know groups                                     |
 
 Since 0.11 the three layout functions exist in TypeScript too: `layoutGraph`, `layoutDiffOn` and
 `layoutAfter` of `@kgdiff/layout` (asynchronous) or of `@kgdiff/compute` (`*Sync` after `init()`),

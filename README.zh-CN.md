@@ -280,10 +280,9 @@ kgdiff 不对 OWL 公理做推理：需要公理级审阅时，可以和 `robot 
 
 **接下来做什么。** kgdiff 会在 0.x 上停留相当长一段时间，就在 0.x 里持续改进；下面的事都不用等 1.0。补丁版本每周二发；周四只在攒了影响使用的修复、或有宿主在等的新增时才发；安全修复随时发。带破坏性变更的次版本间隔不短于约六到八周，每次附迁移指南。按版本的计划如下，先后可能随第一个宿主的需要调整：
 
-- **0.12.x**，修复和新增：shell 补全、读取 GraphML 和 GEXF（0.12.2）· 嵌入宿主对场景提出的几项新增，以及对差异和应用做审查后的修复（0.12.3）· 查看器的可访问性审查（[#16](https://github.com/iiwish/kgdiff/issues/16)）· GitHub release 上的原生二进制和 Homebrew 配方。
-- **0.13**，可以破坏：图里关于方向、超大数字 id 和边的身份该存什么 · `kgdiff` crate 的嵌入接口（`CliIo`）改成 Rust 的写法，`DiffResult` 改为只读访问 · 单图的朴素视图，按宿主的类别着色（[RFC 0003](docs/rfcs/0003-embedding-hosts.md) 第 4c 部分）。
-- **0.14**：分组，带背景和让同组节点靠在一起的布局（RFC 0003 第 4d 部分）· 体积和速度。
-- **再往后，不定先后：** Python API 与 Jupyter（[#14](https://github.com/iiwish/kgdiff/issues/14)）· MCP 服务，让 Agent 审阅自己对图谱的修改（[#13](https://github.com/iiwish/kgdiff/issues/13)）· 导出 KGCL 和 RDF Patch · Cytoscape.js 与 Sigma.js 适配器 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器。
+- **0.12.x**，修复和新增：shell 补全、读取 GraphML 和 GEXF（0.12.2）· 嵌入宿主对场景和 G6 适配器提出的几项新增，以及对差异和应用做审查后的修复（0.12.3 起）· GitHub release 上的原生二进制和 Homebrew 配方。
+- **0.13**，可以破坏：图里关于方向、超大数字 id 和边的身份该存什么 · `kgdiff` crate 的嵌入接口（`CliIo`）改成 Rust 的写法，`DiffResult` 改为只读访问。
+- **再往后，不定先后：** 体积和速度 · Python API 与 Jupyter（[#14](https://github.com/iiwish/kgdiff/issues/14)）· MCP 服务，让 Agent 审阅自己对图谱的修改（[#13](https://github.com/iiwish/kgdiff/issues/13)）· 导出 KGCL 和 RDF Patch · Cytoscape.js 与 Sigma.js 适配器 · 三方合并与冲突可视化 · 面向超大图的 Web Worker 流水线和 WebGL 渲染器 · 单图的朴素视图和布局里的分组（[RFC 0003](docs/rfcs/0003-embedding-hosts.md) 第 4c、4d 部分），等有宿主需要时再做。
 
 详细的清单，包括每一项为什么要等到哪个版本，在 [docs/roadmap.md](docs/roadmap.md)（英文）。进展和可以认领的事项见[路线图 issue](https://github.com/iiwish/kgdiff/issues/21)。
 
