@@ -14,14 +14,14 @@
   All open decisions are taken (D-1, D-5, D-6 and D-7 as proposed). Part 3, the typed graph
   input, is merged for 0.11 ([#98](https://github.com/iiwish/kgdiff/pull/98), 3024eb1; RFC 0002,
   phase 5, moved there from 1.0 on 2026-11-11). Parts 4c and 4d are not started; since
-  2026-11-16 they are planned for 0.13 and 0.14 and no longer wait for 1.0.
+  2026-11-18 they are not scheduled (for two days before that they were planned for 0.13 and 0.14).
   1.0 itself has no date since 2026-11-14: it waits for its conditions, one of which is that a
   host has used the experimental APIs of this RFC ([Revision 2026-11-14](#revision-2026-11-14)).
 - **Date:** 2026-11-10; 0.9 results the same day; 4b results 2026-11-11.
 - **Affects:** `kgdiff-layout`, `kgdiff-report` and `kgdiff-core` (API additions),
   `@kgdiff/renderer`, `@kgdiff/scene`, `@kgdiff/g6` and `@kgdiff/viewer` (additions),
   `docs/visual-language.md` (two new rules), the report payload (a schema, optional members).
-  No document changes its version. The layout engine changes only in part 4d (0.14, so after phase 5, kgdiff 0.11).
+  No document changes its version. The layout engine changes only in part 4d (unscheduled; in any case after phase 5, kgdiff 0.11).
 
 ## Summary
 

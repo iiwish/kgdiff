@@ -46,10 +46,10 @@ From an audit of the diff and apply paths on 2026-11-17:
 - **`kgdiff apply … -o /dev/null` fails** with "operation not permitted": the output is written
   to a temporary file and renamed, which a device does not allow. Found while testing
   `--verify-target`, whose use in automation is exactly "check, and keep nothing".
-- **Parallel edges under `--ignore-attr`**: copies of an edge that differ only in an ignored
-  attribute are not paired first as identical, because the comparison includes the ignored
-  attributes. The delta is right; the diff may report a change of pairing that a reader does
-  not expect.
+- **Two property tests are slow.** `packages/core/test/properties.test.ts` takes over a minute
+  on its own, and two of its tests passed their 5 s limit when the machine was busy (a
+  pre-release run on 2026-11-18); they have not failed in CI. Give them the limit the two heavy
+  tests already have, or fewer cases.
 - **The G6 adapter's dev page is broken** (`packages/g6/dev/main.ts`): it calls `diff` and
   `layoutDiff` without awaiting them, which they have needed since 0.11, and stops with
   "diff.nodes is not iterable". It is the only page that draws the adapter with a real G6 in
@@ -82,6 +82,7 @@ any of them is written.
 | **`DiffResult` behind accessors** (Rust). Its vectors are public and its lookups index them lazily: changing a vector after a lookup makes the next one miss (#155). Read-only accessors, as `KGraph` has.                                                                                                                                                                                                                                       | Removes public fields                                                           |
 | **`CliIo` in Rust's idiom** (`columns() -> Option<f64>`, `now() -> String`, paths as `&str`).                                                                                                                                                                                                                                                                                                                                                    | Changes a public trait (marked experimental)                                    |
 | **`entity_type` as a type field** (what LightRAG calls an entity's type).                                                                                                                                                                                                                                                                                                                                                                        | Changes the output for JSON inputs that have such a field                       |
+| **Parallel edges under `--ignore-attr`.** Copies of an edge that differ only in an ignored attribute are not paired first as identical, because the comparison includes the ignored attributes: two copies whose ignored attribute is swapped are reported as two modified edges. The delta is right and applies.                                                                                                                                | Changes the diff reported for such inputs                                       |
 
 ## Not scheduled
 

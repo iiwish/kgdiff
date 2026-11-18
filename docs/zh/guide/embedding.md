@@ -278,7 +278,7 @@ shapes: Some(vec![
 
 ### 或者自己画
 
-要做自己的界面，就用载荷构建场景，把它的帧交给渲染器。`sceneFromReport` 读取载荷（检查 `format` 和 `version`，读出压缩的 diff、布局和 `view.shapes`），再构建场景：
+要做自己的界面，就用载荷构建场景，把它的帧交给渲染器。`sceneFromReport` 读取载荷（检查 `format` 和 `version`，读出压缩的 diff 和布局），再构建场景；语言、调色板和节点形状取报告里写的（`view.locale`、`view.palette`、`view.shapes`），除非你自己传；主题由你决定：
 
 ```ts
 import { createRenderer } from '@kgdiff/renderer';
@@ -292,7 +292,7 @@ const renderer = createRenderer(container, { theme: getTheme('light') });
 renderer.setFrame(resolver.resolve(createViewState()));
 ```
 
-载荷的类型是 `@kgdiff/scene` 的 `ReportPayload`。`reportFromJSON(payload)` 则把载荷读成几个部分 `{ diff, layout, meta, view }`：用于没有布局的载荷（先用 `layoutDiff` 给 `diff` 布局，再调用 `buildScene`），或者要读 `meta` 和 `view` 的时候。两者都抛出 `KgdiffError`：不是报告时是 `invalid-input`，报告版本不是 1 时是 `unsupported-version`。要从应用里的某个条目找到它的变化，把它的节点 id 交给 `hunkOfNode(scene, id)`：得到改变它的 hunk 的下标，没有则是 -1。
+载荷的类型是 `@kgdiff/scene` 的 `ReportPayload`。`reportFromJSON(payload)` 则把载荷读成几个部分 `{ diff, layout, meta, view }`：用于没有布局的载荷（先用 `layoutDiff` 给 `diff` 布局，再调用 `buildScene`），或者要读 `meta` 和 `view` 的时候。`sceneFromReport` 需要带布局的载荷，没有布局的会被拒绝。两者都抛出 `KgdiffError`：不是报告时是 `invalid-input`，报告版本不是 1 时是 `unsupported-version`；里面的 diff 或布局不对时，用的是它们各自读取函数的错误码（diff 是 `unsupported-version`，布局是 `invalid-input`）。要从应用里的某个条目找到它的变化，把它的节点 id 交给 `hunkOfNode(scene, id)`：得到改变它的 hunk 的下标，没有则是 -1。
 
 同样的代码也能用 `graph_payload` 的载荷单独画一个版本：没有变化的 diff 用中性色绘制，位置就是这个版本的 diff 将要使用的位置。（`<kgdiff-viewer>` 会把这样的载荷显示成“没有差异”的卡片，见[下文](#还没有的东西)。）选择、回放、滑动对比和小地图见 [scene](../../../packages/scene/README.md) 和 [renderer](../../../packages/renderer/README.md) 的 README（英文）。要把场景画进 AntV G6 图，见 [`@kgdiff/g6`](./g6.md#在-g6-图里画出差异)。
 

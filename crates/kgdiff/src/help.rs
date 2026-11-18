@@ -43,7 +43,7 @@ const MAIN: &[Section] = &[
         lines: &[
             ("kgdiff <before> <after> [options]", None),
             (
-                "kgdiff apply <graph> <delta> [-o <file>] [--no-strict]",
+                "kgdiff apply <graph> <delta> [-o <file>] [--no-strict] [--verify-target]",
                 None,
             ),
             ("kgdiff completion <bash|zsh|fish>", None),
@@ -265,7 +265,7 @@ const APPLY: &[Section] = &[
     Section {
         title: "Usage",
         lines: &[(
-            "kgdiff apply <graph> <delta> [-o <file>] [--no-strict]",
+            "kgdiff apply <graph> <delta> [-o <file>] [--no-strict] [--verify-target]",
             None,
         )],
         note: Some(

@@ -64,6 +64,10 @@ export interface ReportContent {
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
+/** The locales and palettes a scene is built in: a later version's report may name another. */
+const isLocale = (v: unknown): v is Locale => v === 'en' || v === 'zh-CN';
+const isPalette = (v: unknown): v is PaletteName => v === 'default' || v === 'colorblind';
+
 function invalid(message: string): never {
   throw new KgdiffError('invalid-input', `reportFromJSON: ${message}`);
 }
@@ -75,9 +79,13 @@ function invalid(message: string): never {
  * required, a payload without a layout is valid, and members of `view` this version does not
  * know are kept, not rejected. Linear in the size of the diff.
  *
- * @throws KgdiffError `invalid-input` for a value that is not a report (another `format`, no
- *   `diff` or `meta`) or a malformed diff or layout; `unsupported-version` for a report version
- *   other than 1 (and for a diff or layout of a version their readers do not know).
+ * @throws KgdiffError `invalid-input` for a value that is not a report (not an object, another
+ *   `format`, no `diff` or `meta`, a `layout` or `view` that is not an object) and
+ *   `unsupported-version` for a report version other than 1. What is wrong inside the diff or the
+ *   layout is reported by their readers, with their codes: `diffFromJSON` and `unpackDiffJSON`
+ *   throw `unsupported-version` for a `diff` that is not a kgdiff diff or is of another version,
+ *   and `layoutFromJSON` throws `invalid-input` for a `layout` that is not a kgdiff layout and
+ *   `unsupported-version` for another version of one.
  */
 export function reportFromJSON(json: unknown): ReportContent {
   if (!isObject(json)) invalid('a kgdiff report payload must be an object');
@@ -118,8 +126,11 @@ export function reportFromJSON(json: unknown): ReportContent {
 
 /**
  * The scene of a report payload: `reportFromJSON`, then `buildScene` on its diff and layout.
- * The payload's `view.shapes` are the scene's shapes unless `options.shapes` is given; its other
- * view preferences are a viewer's (read them from `reportFromJSON(json).view`).
+ * What the payload's `view` says about the scene is the default: its `locale`, `palette` and
+ * `shapes` are the scene's unless `options` gives them, as `<kgdiff-viewer>` takes them. A
+ * `locale` or `palette` this version does not know is passed over. The theme is the host's
+ * (`view.theme` may be `auto`, which only a page can resolve), and so are the view's other
+ * members, a viewer's: read them from `reportFromJSON(json).view`.
  *
  * @throws KgdiffError what `reportFromJSON` and `buildScene` throw, and `invalid-input` for a
  *   payload without a layout (lay its diff out with `layoutDiff`, then call `buildScene`).
@@ -129,9 +140,14 @@ export function sceneFromReport(json: unknown, options: SceneOptions = {}): Scen
   if (report.layout === undefined) {
     invalid('this report has no layout; lay its diff out with layoutDiff and call buildScene');
   }
-  const shapes = options.shapes ?? report.view?.shapes;
+  const view = report.view;
+  const locale = options.locale ?? (isLocale(view?.locale) ? view.locale : undefined);
+  const palette = options.palette ?? (isPalette(view?.palette) ? view.palette : undefined);
+  const shapes = options.shapes ?? view?.shapes;
   return buildScene(report.diff, report.layout, {
     ...options,
+    ...(locale !== undefined ? { locale } : {}),
+    ...(palette !== undefined ? { palette } : {}),
     ...(shapes !== undefined ? { shapes } : {}),
   });
 }

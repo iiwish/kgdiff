@@ -62,14 +62,19 @@ a diff, its layout or none, and how a viewer starts
 ```ts
 import { reportFromJSON, type ReportPayload, sceneFromReport } from '@kgdiff/scene';
 
-const scene = sceneFromReport(payload, { theme: 'light', locale: 'en' }); // its view.shapes too
+const scene = sceneFromReport(payload, { theme: 'light' }); // its view.locale, palette and shapes
 const { diff, layout, meta, view } = reportFromJSON(payload); // layout: undefined when it has none
 ```
 
-Both check `format` and `version` as the other readers do (`KgdiffError` `invalid-input` for
-another format, `unsupported-version` for a version other than 1), then read the diff (packed or
-not) with `diffFromJSON` and the layout with `layoutFromJSON`. `sceneFromReport` needs a payload
-with a layout; for one without, lay `diff` out with `layoutDiff` and call `buildScene`.
+Both throw a `KgdiffError`: `invalid-input` for a value that is not a report (another `format`,
+no `diff` or `meta`), `unsupported-version` for a report version other than 1. The diff (packed
+or not) is read with `diffFromJSON` and the layout with `layoutFromJSON`, and what is wrong
+inside them is reported with their codes: a `diff` that is not a kgdiff diff is
+`unsupported-version`, a `layout` that is not a kgdiff layout `invalid-input`.
+
+`sceneFromReport` takes the payload's `view.locale`, `view.palette` and `view.shapes` as the
+scene's unless the options give them, as `<kgdiff-viewer>` does; the theme is yours. It needs a
+payload with a layout: for one without, lay `diff` out with `layoutDiff` and call `buildScene`.
 
 ## The hunk of a node
 

@@ -365,8 +365,9 @@ stored layouts stay valid: every shape fits the box the layout reserves. The fie
 ### Or draw it yourself
 
 For an interface of your own, build a scene from the payload and give its frames to the
-renderer. `sceneFromReport` reads the payload (its `format` and `version`, the packed diff, the
-layout and `view.shapes`) and builds the scene:
+renderer. `sceneFromReport` reads the payload (its `format` and `version`, the packed diff and the
+layout) and builds the scene, in the report's language, palette and node shapes (`view.locale`,
+`view.palette`, `view.shapes`) unless you pass your own; the theme is yours to choose:
 
 ```ts
 import { createRenderer } from '@kgdiff/renderer';
@@ -382,9 +383,11 @@ renderer.setFrame(resolver.resolve(createViewState()));
 
 `ReportPayload` (from `@kgdiff/scene`) is the payload's type. `reportFromJSON(payload)` reads it
 into its parts instead, `{ diff, layout, meta, view }`, for a payload without a layout (lay
-`diff` out with `layoutDiff`, then call `buildScene`) or to read `meta` and `view`. Both throw a
-`KgdiffError`: `invalid-input` for something that is not a report, `unsupported-version` for a
-report version other than 1. To go from an item of your application to its change, pass its node
+`diff` out with `layoutDiff`, then call `buildScene`) or to read `meta` and `view`. `sceneFromReport`
+needs a payload with a layout and refuses one without. Both throw a `KgdiffError`:
+`invalid-input` for something that is not a report, `unsupported-version` for a report version
+other than 1; a diff or a layout inside that is not one is reported with its own reader's code
+(`unsupported-version` for the diff, `invalid-input` for the layout). To go from an item of your application to its change, pass its node
 id to `hunkOfNode(scene, id)`: the index of the hunk that changes it, or -1.
 
 The same code draws one version on its own from the payload of `graph_payload`: a diff without
