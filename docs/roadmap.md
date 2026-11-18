@@ -11,7 +11,7 @@ breaks the API, or that changes what kgdiff writes for an input it already reads
 next minor (0.13). Patch releases come on Tuesdays, and on Thursdays when a fix that users run into or an
 addition a host is waiting for is ready ([Releasing](releasing.md#day-to-day)).
 
-Last reviewed 2026-11-17, after 0.12.2.
+Last reviewed 2026-11-18, after 0.12.2.
 
 ## 0.12.3
 
@@ -36,8 +36,7 @@ From an audit of the diff and apply paths on 2026-11-17:
 
 ## 0.12.x, not started
 
-- **`@kgdiff/g6`, for the change view of a host** (read from Semlia's code, not yet confirmed
-  as wanted): a replay that can seek backwards (today the controller only plays forward, and
+- **`@kgdiff/g6`, for the change view of a host** (Semlia's, confirmed; in progress): a replay that can seek backwards (today the controller only plays forward, and
   the host rebuilds the graph to go back); the hunk an element belongs to, as documented data or
   an event (the host reads an undocumented `data.hunk`); the hunk of a node id; a typed reader
   of the report payload.
@@ -60,12 +59,7 @@ From an audit of the diff and apply paths on 2026-11-17:
 - **Native binaries on GitHub releases and a Homebrew formula.** The workflow is ready
   ([Releasing](releasing.md#native-binaries-and-crates)); it needs the `native` environment,
   its token and `NATIVE_RELEASE_ENABLED`.
-- **The accessibility review ([#16](https://github.com/iiwish/kgdiff/issues/16)).** Checks in
-  Chrome on 2026-11-17 (names, contrast in both themes, tab order, targets, landmarks) found
-  the canvas's missing focus ring and the nested main landmark, both fixed in 0.12.2. A pass
-  with VoiceOver by the maintainer found nothing to fix. One thing was not confirmed either
-  way: whether marking a change reviewed (`x`) is announced, since the state only changes the
-  label of the option that already has focus.
+
 - Additions with an issue: KGCL export (#10), an MCP server (#13), playground links that diff
   two URLs (#11), the GraphRAG (#18) and ODK (#17) guides.
 
@@ -84,14 +78,14 @@ any of them is written.
 | **`DiffResult` behind accessors** (Rust). Its vectors are public and its lookups index them lazily: changing a vector after a lookup makes the next one miss (#155). Read-only accessors, as `KGraph` has.                                                                                                                                                                                                                                       | Removes public fields                                                           |
 | **`CliIo` in Rust's idiom** (`columns() -> Option<f64>`, `now() -> String`, paths as `&str`).                                                                                                                                                                                                                                                                                                                                                    | Changes a public trait (marked experimental)                                    |
 | **`entity_type` as a type field** (what LightRAG calls an entity's type).                                                                                                                                                                                                                                                                                                                                                                        | Changes the output for JSON inputs that have such a field                       |
-| What the accessibility review asks to change in an interface                                                                                                                                                                                                                                                                                                                                                                                     | Nothing so far                                                                  |
 
 ## Not scheduled
 
-- **The plain view of one graph (RFC 0003, part 4c) and groups in the layout (part 4d).** The
-  README lists them under 0.13 and 0.14. Both were asked for by Semlia when kgdiff was to draw
-  its ontology map; it now draws that map itself, and no host asks for either. Open decision:
-  take them out of the plan until a host does.
+- **The plain view of one graph (RFC 0003, part 4c) and groups in the layout (part 4d).** Both
+  were asked for by Semlia when kgdiff was to draw its ontology map; it now draws that map
+  itself, and no host asks for either. They were planned for 0.13 and 0.14 and left the plan on
+  2026-11-18 ([RFC 0003, Revision 2026-11-18](rfcs/0003-embedding-hosts.md#revision-2026-11-18));
+  they come back when a host needs them.
 - **Partitions**: which layer or subgraph a node belongs to, so that changing it is a move
   (asked by kgstrata; [RFC 0003, Revision 2026-11-17](rfcs/0003-embedding-hosts.md#revision-2026-11-17)).
   A new kind of change in the diff model; to be designed with part 4d if either is taken up.
@@ -121,5 +115,7 @@ The five conditions are in the [README](../README.md#roadmap). Where they stand:
    of the `kgdiff` crate not used by anyone.
 3. The Python API settled, or only the command line promised: only the command line is shipped
    (`pykgdiff`); not stated as the promise yet.
-4. The accessibility review: see above; #16 is still open.
+4. The accessibility review: done. Checks in Chrome and a pass with VoiceOver by the maintainer;
+   three things were fixed in 0.12.2 and 0.12.3 ([#16](https://github.com/iiwish/kgdiff/issues/16), closed 2026-11-18).
+   Not done: a review by someone who uses a screen reader every day.
 5. No breaking change for about a month or two minor releases: 0.13 will restart this.

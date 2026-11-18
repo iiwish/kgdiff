@@ -344,19 +344,17 @@ release comes no more often than about every six to eight weeks, with a migratio
 the needs of the first host may reorder:
 
 - **0.12.x**, fixes and additions: shell completions, GraphML and GEXF input (0.12.2) · what
-  embedding hosts asked of the scene, and fixes from an audit of diff and apply (0.12.3) · the
-  viewer's accessibility review ([#16](https://github.com/iiwish/kgdiff/issues/16)) · native binaries on GitHub releases and a
-  Homebrew formula.
+  embedding hosts asked of the scene and of the G6 adapter, and fixes from an audit of diff and
+  apply (0.12.3 and after) · native binaries on GitHub releases and a Homebrew formula.
 - **0.13**, may break: what a graph holds about direction, large numeric ids and edge identity ·
   the embedding interface of the `kgdiff` crate (`CliIo`) in Rust's idiom and `DiffResult` behind
-  accessors · the plain view of one graph, colored by the host's categories
-  ([RFC 0003](docs/rfcs/0003-embedding-hosts.md), part 4c).
-- **0.14**: groups, with backgrounds and a layout that keeps a group together (RFC 0003,
-  part 4d) · size and speed.
-- **Later, in no fixed order:** a Python API and Jupyter ([#14](https://github.com/iiwish/kgdiff/issues/14)) · an MCP server, so agents
+  accessors.
+- **Later, in no fixed order:** size and speed · a Python API and Jupyter ([#14](https://github.com/iiwish/kgdiff/issues/14)) · an MCP server, so agents
   can review the graph edits they make ([#13](https://github.com/iiwish/kgdiff/issues/13)) · KGCL and RDF Patch export · Cytoscape.js
   and Sigma.js adapters · three-way merge with conflict visualization · a Web Worker pipeline
-  and a WebGL renderer for very large graphs.
+  and a WebGL renderer for very large graphs · the plain view of one graph and groups in the
+  layout ([RFC 0003](docs/rfcs/0003-embedding-hosts.md), parts 4c and 4d), when a host asks for
+  them.
 
 The working list, with what waits for what and why, is [docs/roadmap.md](docs/roadmap.md). Follow
 along, or pick something up, in the [roadmap issue](https://github.com/iiwish/kgdiff/issues/21).

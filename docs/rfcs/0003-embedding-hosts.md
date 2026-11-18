@@ -1,7 +1,7 @@
 # RFC 0003: Embedding hosts and the plain view
 
 - **Status:** Partially implemented: parts 1, 2, 3, 4a and 4b are released (0.9 to 0.11); parts 4c
-  and 4d are not started and are planned for 0.13 and 0.14 ([Revision 2026-11-16](#revision-2026-11-16)).
+  and 4d are not started and are not scheduled ([Revision 2026-11-18](#revision-2026-11-18)).
   The parts planned for 0.9 are merged and released as 0.9.0:
   part 1, `layout_graph` ([#78](https://github.com/iiwish/kgdiff/pull/78), 0a52a4d), and
   with it `layout_diff_on` and `layout_after`, which carry a layout to the next version
@@ -31,15 +31,15 @@ gaps. Each has a workaround, so none blocks it; each will be met again by the ne
 RFC says which to close, how, and when, around the work that is already planned
 ([RFC 0002](./0002-rust-compute-core.md), phase 5, kgdiff 0.11; 1.0 has no date and comes when its conditions are met, [RFC 0002, Revision 2026-11-14](./0002-rust-compute-core.md#revision-2026-11-14)):
 
-| Part | What                                                         | Release | Size   |
-| ---- | ------------------------------------------------------------ | ------- | ------ |
-| 1    | `layout_graph`: the layout of one graph                      | 0.9     | small  |
-| 2    | Reports that carry the caller's layout; `report.v1.json`     | 0.9     | small  |
-| 4a   | Renderer layers: the host draws under and over the graph     | 0.9     | small  |
-| 4b   | Node shapes by type                                          | 0.10    | medium |
-| 4c   | The plain view: one graph, colored by the host's categories  | 0.13    | medium |
-| 3    | Typed graph input                                            | 0.11    | medium |
-| 4d   | Groups: backgrounds and a layout that keeps a group together | 0.14    | large  |
+| Part | What                                                         | Release     | Size   |
+| ---- | ------------------------------------------------------------ | ----------- | ------ |
+| 1    | `layout_graph`: the layout of one graph                      | 0.9         | small  |
+| 2    | Reports that carry the caller's layout; `report.v1.json`     | 0.9         | small  |
+| 4a   | Renderer layers: the host draws under and over the graph     | 0.9         | small  |
+| 4b   | Node shapes by type                                          | 0.10        | medium |
+| 4c   | The plain view: one graph, colored by the host's categories  | unscheduled | medium |
+| 3    | Typed graph input                                            | 0.11        | medium |
+| 4d   | Groups: backgrounds and a layout that keeps a group together | unscheduled | large  |
 
 Parts 1 to 3 are embedding API and change nothing kgdiff writes. Part 4 is the one that touches
 what kgdiff is, so this RFC first states a rule for it ([Positioning](#positioning)): kgdiff
@@ -351,7 +351,7 @@ interface NodeVisual {
   allocations (one more member, no object), and pan / zoom at 60 fps; the benchmarks run with
   a scene that uses all four shapes.
 
-### 4c. The plain view (0.13)
+### 4c. The plain view (unscheduled)
 
 A plain view is the scene of a diff without changes (`stats.identical`), which a host gets by
 diffing a graph with itself. No new input type: `buildScene`, the report payload and the
@@ -386,7 +386,7 @@ interface SceneOptions {
   layout of `<kgdiff-viewer>` does with a plain view (it has no changes to list) is
   [D-7](#open-decisions).
 
-### 4d. Groups: backgrounds and layout (0.14)
+### 4d. Groups: backgrounds and layout (unscheduled)
 
 A background behind each category only reads well when the category's nodes sit together, and
 the force layout does not put them together. So this part is two things that ship as one:
@@ -444,8 +444,8 @@ weeks later. After phase 5 it is written once, in Rust, and reaches the browser 
 | 0.9     | 1, 2 (`report.v1.json`), 4a    | Rust crates; `@kgdiff/renderer`  | nothing                          |
 | 0.10    | 4b                             | scene, renderer, g6, viewer      | the Positioning rules accepted   |
 | 0.11    | 3                              | `kgdiff-core`                    | the compact graph representation |
-| 0.13    | 4c                             | scene, renderer, g6, viewer      | nothing                          |
-| 0.14    | 4d                             | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
+| later   | 4c                             | scene, renderer, g6, viewer      | nothing                          |
+| later   | 4d                             | `kgdiff-layout`, scene, renderer | phase 5 (one layout engine)      |
 | 1.0     | none (marks removed once used) | the experimental APIs            | its conditions (no date)         |
 
 0.9 is the part the first host waits for: with it, its ontology graph and its reports need no
@@ -660,6 +660,21 @@ gives 4d remains a plan for a part that has not started and now has no host aski
 partition would be a breaking change of the diff model, a new kind of change in a closed enum
 ([Versioning](../versioning.md#what-can-be-added-without-a-major-release)), so it needs an RFC of
 its own.
+
+## Revision 2026-11-18
+
+Parts 4c and 4d leave the plan. [Revision 2026-11-16](#revision-2026-11-16) gave them releases
+(0.13 and 0.14) because "after 1.0" no longer named a time. What changed since is who needs
+them: both were written for Semlia's ontology map, which Semlia has drawn itself since its
+ADR 0012 (G6, with its own colours by business domain and its own grouping); only its change
+view is kgdiff's. The second host, kgstrata, draws in 3D with its own renderer and asked for
+something else ([Revision 2026-11-17](#revision-2026-11-17)). So no host asks for the plain view
+or for groups in the layout, and designing either without one would be guessing.
+
+Their designs above stand as written, as what would be built. They are taken up again when a
+host needs them, 4d together with partitions in the model. The parts that are released (1, 2,
+3, 4a, 4b) are unaffected; of the experimental APIs, node shapes are in use by a host and
+`addLayer` is not.
 
 ## References
 
