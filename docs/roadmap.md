@@ -103,8 +103,9 @@ What the two embedding hosts use, since it decides the above.
 
 - **Semlia** (pinned to 0.12.1; 0.12.2 needs no change): `layout_graph`, `layout_diff_on`,
   `report_payload_with`, the report's `shapes`, and `@kgdiff/g6` with `@kgdiff/scene` for its
-  change view, which can drop four workarounds with 0.12.3 (#158). It does not use the renderer, `addLayer` or the composed elements. Of the
-  experimental APIs, node shapes are the one a host has used, and they were enough.
+  change view, which can drop four workarounds with 0.12.3 (#158). It does not use the
+  renderer, `addLayer` or the composed elements. Of the experimental APIs, node shapes are the
+  one a host has used, and they were enough.
 - **kgstrata** (pinned to 0.12.1; a concept page, not published): `diff`, `buildScene` and the
   frame resolver, drawn in 3D by its own renderer. With 0.12.3 it can drop three workarounds:
   the layout object it fakes, the search for the node nearest to a glyph, and its own colour
