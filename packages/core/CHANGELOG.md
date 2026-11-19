@@ -1,5 +1,17 @@
 # @kgdiff/core
 
+## 0.12.3
+
+### Patch Changes
+
+- 0e71a6c: For Rust callers of `kgdiff-core`: the lookups of a `DiffResult` (`node`, `node_by_before`, `node_by_after`, `edge`, `hunk` and `edges_of`) no longer panic, and no longer return the wrong element, when the caller has changed the public `nodes`, `edges` or `hunks` vectors after a first lookup. The lookups index the vectors as they were at that first lookup, so an element that was moved, removed or added since is not found; the documentation of `DiffResult` says so. A later release reads these fields through accessors. Code that does not change a `DiffResult` gets the same results as before; what the CLI and the JavaScript packages compute and print does not change.
+- 2f65e0e: A GraphML or GEXF value of an integer type that is too large for a double to hold exactly, such as `9007199254740993`, is no longer reported as a value of the wrong type (`graphml-invalid-value`, `gexf-invalid-value`). It is still kept as text, so that no digit is lost, and the graph read is the same as before; only the false warning is gone. A value that is not a whole number at all, such as `about 175` for a `long`, still warns.
+- 8348e34: With edges identified by id (`--edge-identity id`), a delta now applies to the graph it was made from when an edge's id is the structural key of a triple, such as `["a","p","b"]`, and that triple also has parallel copies without ids. Such an id pushes the copies' keys aside to `#2#2` and the like, and the diff paired copies of one triple as if they belonged to different triples: it reported unchanged copies as modified, and with `--ignore-attr` it could write a delta that `kgdiff apply` refused with "edge already exists". The copies are now paired by the triple they connect. Graphs without such ids give the same diff and delta as before.
+- Updated dependencies [0e71a6c]
+- Updated dependencies [2f65e0e]
+- Updated dependencies [8348e34]
+  - @kgdiff/compute@0.12.3
+
 ## 0.12.2
 
 ### Patch Changes

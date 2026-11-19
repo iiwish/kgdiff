@@ -1,5 +1,15 @@
 # @kgdiff/layout
 
+## 0.12.3
+
+### Patch Changes
+
+- Updated dependencies [0e71a6c]
+- Updated dependencies [2f65e0e]
+- Updated dependencies [8348e34]
+  - @kgdiff/core@0.12.3
+  - @kgdiff/compute@0.12.3
+
 ## 0.12.2
 
 ### Patch Changes

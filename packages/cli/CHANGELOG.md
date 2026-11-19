@@ -1,5 +1,14 @@
 # @kgdiff/cli
 
+## 0.12.3
+
+### Patch Changes
+
+- 818551e: `kgdiff apply --verify-target` makes a result that is not the delta's target an error. Without it, `apply` warns when the patched graph's hash differs from the delta's `target.hash` (and no operation was skipped), writes the graph anyway and exits 0, as before. With it, nothing is written, the message gives both hashes and the exit code is 2, as for a graph that is not the delta's base. Together with `--no-strict` the same check applies whether or not operations were skipped, and a delta that names no target is refused, since there is nothing to compare the result with.
+- 0e71a6c: For Rust callers of `kgdiff-core`: the lookups of a `DiffResult` (`node`, `node_by_before`, `node_by_after`, `edge`, `hunk` and `edges_of`) no longer panic, and no longer return the wrong element, when the caller has changed the public `nodes`, `edges` or `hunks` vectors after a first lookup. The lookups index the vectors as they were at that first lookup, so an element that was moved, removed or added since is not found; the documentation of `DiffResult` says so. A later release reads these fields through accessors. Code that does not change a `DiffResult` gets the same results as before; what the CLI and the JavaScript packages compute and print does not change.
+- 2f65e0e: A GraphML or GEXF value of an integer type that is too large for a double to hold exactly, such as `9007199254740993`, is no longer reported as a value of the wrong type (`graphml-invalid-value`, `gexf-invalid-value`). It is still kept as text, so that no digit is lost, and the graph read is the same as before; only the false warning is gone. A value that is not a whole number at all, such as `about 175` for a `long`, still warns.
+- 8348e34: With edges identified by id (`--edge-identity id`), a delta now applies to the graph it was made from when an edge's id is the structural key of a triple, such as `["a","p","b"]`, and that triple also has parallel copies without ids. Such an id pushes the copies' keys aside to `#2#2` and the like, and the diff paired copies of one triple as if they belonged to different triples: it reported unchanged copies as modified, and with `--ignore-attr` it could write a delta that `kgdiff apply` refused with "edge already exists". The copies are now paired by the triple they connect. Graphs without such ids give the same diff and delta as before.
+
 ## 0.12.2
 
 ### Patch Changes
