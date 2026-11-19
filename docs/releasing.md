@@ -199,6 +199,13 @@ A new crate is the same on crates.io ([Native binaries and crates](#native-binar
 
 ## When a release stops half-way
 
+**npm shows a version a few minutes late.** After the workflow has published, single packages can
+still answer with the previous version, and `npm view <package>@<version>` with a 404, for
+several minutes: `@kgdiff/scene` after 0.12.2 and `@kgdiff/viewer` after 0.12.3 appeared about
+eight minutes after the publish step logged them, with a `time` in the registry later than the
+end of the workflow. That is the registry, not a release that stopped: look again before doing
+anything below.
+
 A release run builds and checks everything before it publishes anything, so most failures leave
 nothing behind: fix the cause in a pull request, and the push to `main` releases again (the
 version is not on npm, so `plan` says "Releasing").

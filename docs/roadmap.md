@@ -11,32 +11,30 @@ breaks the API, or that changes what kgdiff writes for an input it already reads
 next minor (0.13). Patch releases come on Tuesdays, and on Thursdays when a fix that users run into or an
 addition a host is waiting for is ready ([Releasing](releasing.md#day-to-day)).
 
-Last reviewed 2026-11-18, after 0.12.2.
+Last reviewed 2026-11-19, after 0.12.3.
 
-## 0.12.3
+## Released
 
-Merged, waiting for the release:
+- **0.12.3** (2026-11-19): a delta that did not apply to its own base, `apply --verify-target`,
+  `DiffResult` lookups, large integers in GraphML and GEXF, the sidebar's 28 px buttons, and
+  what the two hosts asked of `@kgdiff/scene` and `@kgdiff/g6`
+  ([release notes](https://github.com/iiwish/kgdiff/releases/tag/v0.12.3)).
+- **0.12.2** (2026-11-17): shell completions, GraphML and GEXF, the canvas's focus ring and the
+  region instead of a nested main landmark.
 
-- `@kgdiff/scene`: a scene from the host's own positions (`SceneLayout`), glyphs that name the
-  nodes they run between, `parseColor` (#148).
-- The viewer's sidebar buttons are 28 px targets (#149).
-- GraphML and GEXF: a whole number too large for a double is not reported as mistyped (#150).
-- `@kgdiff/g6` and `@kgdiff/scene`, for the change view of a host (Semlia's): the replay steps
-  both ways (`seekReplay`), the hunk of a drawn element (`hunkOf`, and `KgdiffDatumData` as
-  contract), the hunk of a node id (`hunkOfNode`) and a typed reader of the report payload
-  (`reportFromJSON`, `sceneFromReport`) (#158).
+## 0.12.4
 
-From an audit of the diff and apply paths on 2026-11-17:
+From the reviews before 0.12.3; small, and none of them a defect in what was released:
 
-- **A delta kgdiff made applies to its own base** when an edge's explicit id equals a
-  structural key and the same triple has parallel edges (`--edge-identity id`); before, `apply`
-  stopped with "edge already exists". A fix in how edges are paired; output changes only for
-  inputs where an id took a key parallel copies would have used (#153).
-- **`kgdiff apply --verify-target`**: fail when the result is not the delta's target. Without
-  it, a result that differs from `target.hash` stays a warning and exit 0, the contract (#154).
-- **`DiffResult` lookups do not panic** after its public vectors were changed (#155). The
-  lookups miss then rather than answer wrongly; reading the fields through accessors is in 0.13
-  (below).
+- **`sceneFromReport` and a node shape it does not know.** A `view.locale` or `view.palette` of
+  a later version is passed over, but an unknown shape in `view.shapes` is an `invalid-input`
+  error from `buildScene`, where `<kgdiff-viewer>` drops the entry with a warning. Filter the
+  entries as the viewer does (`shapes` is experimental, so this may change).
+- **Three assertions missing** in `packages/scene/test/report.test.ts`: `options.palette` over
+  the payload's, `{ locale: undefined }`, and `unsupported-version` for a diff or a layout of
+  another version. All three behave as documented; nothing pins them.
+- **A hidden edge's colour**, `kgdiff apply -o /dev/null`, the G6 adapter's dev page and the
+  slow property tests, below.
 
 ## 0.12.x, not started
 
