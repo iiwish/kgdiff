@@ -11,10 +11,14 @@ breaks the API, or that changes what kgdiff writes for an input it already reads
 next minor (0.13). Patch releases come on Tuesdays, and on Thursdays when a fix that users run into or an
 addition a host is waiting for is ready ([Releasing](releasing.md#day-to-day)).
 
-Last reviewed 2026-11-19, after 0.12.3.
+Last reviewed 2026-11-24, after 0.12.4.
 
 ## Released
 
+- **0.12.4** (2026-11-24): `--kgcl`, the changes as KGCL commands (experimental); outputs to
+  `/dev/null` and other files that are not regular files; in `@kgdiff/scene`, a later report's
+  unknown node shape passed over and a hidden edge's color that parses
+  ([release notes](https://github.com/iiwish/kgdiff/releases/tag/v0.12.4)).
 - **0.12.3** (2026-11-19): a delta that did not apply to its own base, `apply --verify-target`,
   `DiffResult` lookups, large integers in GraphML and GEXF, the sidebar's 28 px buttons, and
   what the two hosts asked of `@kgdiff/scene` and `@kgdiff/g6`
@@ -37,6 +41,8 @@ Last reviewed 2026-11-19, after 0.12.3.
   `kgcl-schema` and by the grammar, but not applied with OAK (`runoak apply`); attribute changes
   that `change annotation` could carry are comments; there is no `toKgcl` in JavaScript.
 - **`NUL` as an output on Windows** is untested: `-o /dev/null` works on Unix since 0.12.4.
+- **Two outputs to `/dev/null` in one run** (`--json /dev/null --delta /dev/null`) are refused as
+  two outputs to one file; one output there works.
 - **Native binaries on GitHub releases and a Homebrew formula.** The workflow is ready
   ([Releasing](releasing.md#native-binaries-and-crates)); it needs the `native` environment,
   its token and `NATIVE_RELEASE_ENABLED`.
