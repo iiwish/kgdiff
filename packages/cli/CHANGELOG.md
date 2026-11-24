@@ -1,5 +1,12 @@
 # @kgdiff/cli
 
+## 0.12.4
+
+### Patch Changes
+
+- c5a87b1: `kgdiff` can write its outputs to `/dev/null`, a named pipe or another file that is not a regular file. `kgdiff apply … -o /dev/null` failed with "operation not permitted", because every output was written to a temporary file that was then renamed over the target, and a device cannot be replaced that way; this kept `apply --verify-target -o /dev/null` from checking a delta without keeping the result. Such a target is now opened and written in place; regular files and new files are still written atomically. The same holds for `-o`, `--json`, `--delta` and `--markdown` of a diff.
+- afe5483: `kgdiff a.obo b.obo --kgcl [file]` (experimental) writes the changes as KGCL, the change language OBO tools such as OAK read: a change list for the before file, one command per line, hunk by hunk in the summary's order — `create node`, `delete`, `create edge`, `delete edge` (a move is its `delete edge` and `create edge`, since OAK does not apply KGCL's `move`), `rename`, `create` / `remove synonym` (with the synonym's scope for OBO), `obsolete … with replacement`, `unobsolete`, and `add` / `change` / `remove definition`; with RDF inputs, node types as `rdf:type` edges. KGCL cannot change an id, so the commands name every node by its id in the before file. IRIs are compacted with the files' own prefixes, or written in angle brackets. A change KGCL has no command for (other attribute edits, id changes, edge labels, OBO clauses other than `is_a` and `relationship`, a parallel edge whose triple stays, a text with a `'` or a line break) is written as a `#` comment holding the operation as JSON, and one warning on stderr says how many there are. The commands follow the grammar of INCATools/kgcl at 1849f9c and parse with the released `kgcl-schema` 0.7.0; apply them with `runoak apply --no-expand`. Like `--json`, `--delta` and `--markdown`, the file is optional (stdout), and at most one output goes to stdout. The Rust library has the same export as `kgdiff_report::render_kgcl` (experimental). Without `--kgcl` every output is unchanged.
+
 ## 0.12.3
 
 ### Patch Changes
