@@ -1,5 +1,17 @@
 # @kgdiff/viewer
 
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies [c5a87b1]
+- Updated dependencies [c5a87b1]
+  - @kgdiff/scene@0.12.4
+  - @kgdiff/renderer@0.12.4
+  - @kgdiff/compute@0.12.4
+  - @kgdiff/core@0.12.4
+  - @kgdiff/layout@0.12.4
+
 ## 0.12.3
 
 ### Patch Changes

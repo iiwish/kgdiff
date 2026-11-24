@@ -1,5 +1,12 @@
 # @kgdiff/compute
 
+## 0.12.4
+
+### Patch Changes
+
+- @kgdiff/core@0.12.4
+  - @kgdiff/layout@0.12.4
+
 ## 0.12.3
 
 ### Patch Changes

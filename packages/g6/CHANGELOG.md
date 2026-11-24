@@ -1,5 +1,14 @@
 # @kgdiff/g6
 
+## 0.12.4
+
+### Patch Changes
+
+- Updated dependencies [c5a87b1]
+- Updated dependencies [c5a87b1]
+  - @kgdiff/scene@0.12.4
+  - @kgdiff/core@0.12.4
+
 ## 0.12.3
 
 ### Patch Changes

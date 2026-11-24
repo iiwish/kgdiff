@@ -1,5 +1,14 @@
 # @kgdiff/scene
 
+## 0.12.4
+
+### Patch Changes
+
+- c5a87b1: A hidden edge in a frame has a color `parseColor` reads: the color it was last drawn in, or its union-layer color if it has not been drawn yet. Before, an edge that had never been drawn carried an empty string, so a host that parsed every edge's color had to check `visible` first. Nothing is drawn differently.
+- c5a87b1: `sceneFromReport` passes over an entry of the payload's `view.shapes` whose shape this version does not know, as `<kgdiff-viewer>` does, instead of throwing `invalid-input`: a report from a later version may name a shape that is not one of `NODE_SHAPES`. The other entries are kept. An unknown shape in `options.shapes` is still an error.
+- @kgdiff/core@0.12.4
+  - @kgdiff/layout@0.12.4
+
 ## 0.12.3
 
 ### Patch Changes
