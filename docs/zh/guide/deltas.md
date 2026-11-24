@@ -26,7 +26,7 @@ kgdiff apply before.obo patch.json -o patched.json
 kgdiff after.obo patched.json --exit-code -q && echo 完全一致
 ```
 
-`apply` 自己也会核对：结果不是增量的目标时，它会给出警告。加上 `--verify-target` 则会直接失败（退出码 2），什么也不写，适合在脚本里用。
+`apply` 自己也会核对：结果不是增量的目标时，它会给出警告。加上 `--verify-target` 则会直接失败（退出码 2），什么也不写，适合在脚本里用；只想校验、不保留结果时，可以写到 `/dev/null`（`-o /dev/null`）。
 
 ## 基准必须一致
 

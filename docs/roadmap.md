@@ -22,36 +22,12 @@ Last reviewed 2026-11-19, after 0.12.3.
 - **0.12.2** (2026-11-17): shell completions, GraphML and GEXF, the canvas's focus ring and the
   region instead of a nested main landmark.
 
-## 0.12.4
-
-From the reviews before 0.12.3; small, and none of them a defect in what was released:
-
-- **`sceneFromReport` and a node shape it does not know.** A `view.locale` or `view.palette` of
-  a later version is passed over, but an unknown shape in `view.shapes` is an `invalid-input`
-  error from `buildScene`, where `<kgdiff-viewer>` drops the entry with a warning. Filter the
-  entries as the viewer does (`shapes` is experimental, so this may change).
-- **Three assertions missing** in `packages/scene/test/report.test.ts`: `options.palette` over
-  the payload's, `{ locale: undefined }`, and `unsupported-version` for a diff or a layout of
-  another version. All three behave as documented; nothing pins them.
-- **A hidden edge's colour**, `kgdiff apply -o /dev/null`, the G6 adapter's dev page and the
-  slow property tests, below.
-
 ## 0.12.x, not started
 
-- **A hidden edge's colour is the empty string**, which `parseColor` refuses. A host that
-  parses every edge's colour has to look at `visible` first. Giving hidden elements a colour
-  that parses is an addition.
-- **`kgdiff apply … -o /dev/null` fails** with "operation not permitted": the output is written
-  to a temporary file and renamed, which a device does not allow. Found while testing
-  `--verify-target`, whose use in automation is exactly "check, and keep nothing".
-- **Two property tests are slow.** `packages/core/test/properties.test.ts` takes over a minute
-  on its own, and two of its tests passed their 5 s limit when the machine was busy (a
-  pre-release run on 2026-11-18); they have not failed in CI. Give them the limit the two heavy
-  tests already have, or fewer cases.
-- **The G6 adapter's dev page is broken** (`packages/g6/dev/main.ts`): it calls `diff` and
-  `layoutDiff` without awaiting them, which they have needed since 0.11, and stops with
-  "diff.nodes is not iterable". It is the only page that draws the adapter with a real G6 in
-  a browser, and it has no entry in `.claude/launch.json`.
+- **Two property tests were slow** in a pre-release run on 2026-11-18, past their 5 s limit on a
+  busy machine. Not reproduced on 2026-11-24: `packages/core/test/properties.test.ts` runs in
+  about 3.4 s, its slowest test in 122 ms, and they have not failed in CI. Nothing to do unless
+  it happens again; then note which tests and the value of `KGDIFF_PROPERTY_RUNS`.
 - **GEXF as NetworkX writes it**: node and edge attributes named `start`, `end` and `pid` are
   written as XML attributes, where kgdiff reads them as time and hierarchy and drops the
   values, with a warning. Undecided whether to keep them as fields.

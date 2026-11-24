@@ -38,8 +38,8 @@ async function loadDataset(id: string): Promise<{ diff: DiffResult; layout: Layo
   const [b, a] = await Promise.all([read(id, meta.files.before), read(id, meta.files.after)]);
   const before = (await parseGraph(b, { filename: meta.files.before })).graph;
   const after = (await parseGraph(a, { filename: meta.files.after })).graph;
-  const result = diff(before, after, meta.options);
-  return { diff: result, layout: layoutDiff(result) };
+  const result = await diff(before, after, meta.options);
+  return { diff: result, layout: await layoutDiff(result) };
 }
 
 const ids = Object.keys(files)

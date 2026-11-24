@@ -367,7 +367,10 @@ stored layouts stay valid: every shape fits the box the layout reserves. The fie
 For an interface of your own, build a scene from the payload and give its frames to the
 renderer. `sceneFromReport` reads the payload (its `format` and `version`, the packed diff and the
 layout) and builds the scene, in the report's language, palette and node shapes (`view.locale`,
-`view.palette`, `view.shapes`) unless you pass your own; the theme is yours to choose:
+`view.palette`, `view.shapes`) unless you pass your own; the theme is yours to choose. A
+language, a palette or a node shape this version does not know, from a later version's report, is
+passed over as `<kgdiff-viewer>` passes it over (an entry of `view.shapes` with such a shape is
+left out, the others are kept); an unknown shape in the `shapes` you pass is an error:
 
 ```ts
 import { createRenderer } from '@kgdiff/renderer';
@@ -431,8 +434,9 @@ for (const glyph of frame.glyphs) {
   two ends are on, so a renderer can move the glyph with them; a pivot sits on one node and has
   only `node1`.
 - `parseColor` turns a color string into `{ r, g, b, a }`. Every color a scene carries, in its
-  theme and in what a frame draws, is in a form it parses; anything else throws
-  `KgdiffError('invalid-input')`. The colors stay CSS strings, for the canvas and for G6.
+  theme and in what a frame draws, is in a form it parses, and so is the `color` of a hidden
+  edge, so a host can read every edge's color without looking at `visible` first (a node's
+  `fill` and `stroke` may be `null`); anything else throws `KgdiffError('invalid-input')`. The colors stay CSS strings, for the canvas and for G6.
 
 ### Draw your own marks: layers
 

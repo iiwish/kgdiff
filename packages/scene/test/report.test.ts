@@ -193,6 +193,64 @@ describe('sceneFromReport', () => {
     expect(later.theme).toEqual(sceneFromReport(payload).theme);
   });
 
+  it('passes over the entries of view.shapes this version does not know, and keeps the others', () => {
+    const payload = withLayout(sample());
+    const report = reportFromJSON(payload);
+    const types = [
+      ...new Set(report.diff.nodes.flatMap((n) => [...(n.after?.types ?? n.before?.types ?? [])])),
+    ];
+    const [known = 'Thing', later = 'Other'] = types;
+    const scene = sceneFromReport({
+      ...payload,
+      view: { ...payload.view, shapes: { [later]: 'star', [known]: 'hexagon' } },
+    });
+    expect(scene.shapes).toEqual([{ type: known, shape: 'hexagon' }]);
+    expect(scene.shapes).toEqual(
+      buildScene(report.diff, report.layout!, { shapes: { [known]: 'hexagon' } }).shapes,
+    );
+    // With none left, the scene is the one without shapes.
+    const none = sceneFromReport({ ...payload, view: { ...payload.view, shapes: { [known]: 7 } } });
+    expect(none.shapes).toEqual(buildScene(report.diff, report.layout!).shapes);
+    expect(none.nodes).toEqual(buildScene(report.diff, report.layout!).nodes);
+    // An unknown shape the host gives is the host's error.
+    expect(() => sceneFromReport(payload, { shapes: { [known]: 'star' as never } })).toThrow(
+      expect.objectContaining({ code: 'invalid-input' }),
+    );
+  });
+
+  it("puts options.palette before the payload's, and reads { locale: undefined } as no locale", () => {
+    const payload = withLayout(sample());
+    const report = reportFromJSON(payload);
+    const written = {
+      ...payload,
+      view: { ...payload.view, locale: 'zh-CN', palette: 'colorblind' },
+    };
+    const given = sceneFromReport(written, { palette: 'default' });
+    expect(given.theme).toEqual(
+      buildScene(report.diff, report.layout!, { palette: 'default' }).theme,
+    );
+    expect(given.theme).not.toEqual(sceneFromReport(written).theme);
+    const unset = sceneFromReport(written, { locale: undefined, palette: undefined });
+    expect(unset.locale).toBe('zh-CN');
+    expect(unset.theme).toEqual(sceneFromReport(written).theme);
+  });
+
+  it('throws unsupported-version for a diff or a layout of another version', () => {
+    const payload = withLayout(sample());
+    const code = (json: unknown): string => {
+      try {
+        sceneFromReport(json);
+      } catch (error) {
+        return (error as { code?: string }).code ?? String(error);
+      }
+      return 'no error';
+    };
+    expect(code({ ...payload, diff: { ...payload.diff, version: 9 } })).toBe('unsupported-version');
+    expect(code({ ...payload, layout: { ...payload.layout, version: 9 } })).toBe(
+      'unsupported-version',
+    );
+  });
+
   it('reports what is wrong inside the diff and the layout with their readers\u2019 codes', () => {
     const payload = withLayout(sample());
     const code = (json: unknown): string => {

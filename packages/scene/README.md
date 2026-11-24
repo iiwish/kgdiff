@@ -50,7 +50,8 @@ const scene = buildScene(result, { positions, radii }); // Maps by union id, wor
 
 For renderers that are not a canvas (WebGL, 3D), a glyph names the nodes it runs between,
 `node1` and `node2` (indices into `scene.nodes`; a pivot has only `node1`), and
-`parseColor(css)` turns any color string of a scene into `{ r, g, b, a }`.
+`parseColor(css)` turns any color string of a scene into `{ r, g, b, a }`, the `color` of a
+hidden edge included.
 
 ## A report payload
 
@@ -73,7 +74,9 @@ inside them is reported with their codes: a `diff` that is not a kgdiff diff is
 `unsupported-version`, a `layout` that is not a kgdiff layout `invalid-input`.
 
 `sceneFromReport` takes the payload's `view.locale`, `view.palette` and `view.shapes` as the
-scene's unless the options give them, as `<kgdiff-viewer>` does; the theme is yours. It needs a
+scene's unless the options give them, as `<kgdiff-viewer>` does, and passes over what this
+version does not know (a locale, a palette, an entry of `view.shapes` with an unknown shape);
+an unknown shape in `options.shapes` is still an error. The theme is yours. It needs a
 payload with a layout: for one without, lay `diff` out with `layoutDiff` and call `buildScene`.
 
 ## The hunk of a node

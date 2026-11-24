@@ -275,6 +275,49 @@ fn writes_atomically_keeps_permissions_and_leaves_no_temporary_files() {
     assert!(temps.is_empty(), "{temps:?}");
 }
 
+#[cfg(unix)]
+#[test]
+fn writes_into_a_fifo_in_place() {
+    // A FIFO (or a device) is written through, not replaced by a renamed temporary file.
+    let dir = TempDir::new("fifo");
+    std::fs::write(dir.path("a.json"), A).unwrap();
+    std::fs::write(dir.path("b.json"), B).unwrap();
+    let fifo = dir.path("out.fifo");
+    let made = std::process::Command::new("mkfifo")
+        .arg(&fifo)
+        .status()
+        .is_ok_and(|s| s.success());
+    if !made {
+        eprintln!("skipped: mkfifo is not available");
+        return;
+    }
+    let reader = {
+        let fifo = fifo.clone();
+        std::thread::spawn(move || std::fs::read_to_string(fifo).unwrap())
+    };
+    let mut io = dir.io();
+    let code = kgdiff::cli::run(
+        &args(&["a.json", "b.json", "--json", "out.fifo", "-q"]),
+        &mut io,
+    );
+    if code != 0 {
+        // Release the reader so that the test fails instead of hanging.
+        drop(std::fs::OpenOptions::new().write(true).open(&fifo));
+    }
+    assert_eq!(code, 0, "{}", io.mem.stderr);
+    // Checked before joining: a FIFO replaced by a renamed file would leave the reader waiting.
+    use std::os::unix::fs::FileTypeExt;
+    assert!(std::fs::metadata(&fifo).unwrap().file_type().is_fifo());
+    let text = reader.join().unwrap();
+    assert!(text.contains("\"format\":\"kgdiff.diff\""), "{text}");
+    let temps: Vec<String> = std::fs::read_dir(&dir.0)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".tmp"))
+        .collect();
+    assert!(temps.is_empty(), "{temps:?}");
+}
+
 // ─── no escape sequences or bidi controls reach the terminal ─────────────────
 
 fn evil() -> String {
