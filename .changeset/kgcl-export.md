@@ -1,0 +1,5 @@
+---
+'@kgdiff/cli': patch
+---
+
+`kgdiff a.obo b.obo --kgcl [file]` (experimental) writes the changes as KGCL, the change language OBO tools such as OAK read: one command per line, hunk by hunk in the summary's order — `create node`, `delete`, `create edge`, `delete edge`, `move … from … to …`, `rename`, `create` / `remove synonym` (with the synonym's scope for OBO), `obsolete … with replacement`, `unobsolete`, and `add` / `change` / `remove definition`; with RDF inputs, node types as `rdf:type` edges. IRIs are compacted with the files' own prefixes, or written in angle brackets. A change KGCL has no command for (other attribute edits, id changes, edge labels, splits, a text with a `'` or a line break) is written as a `#` comment holding the operation as JSON, and one warning on stderr says how many there are. The commands follow the grammar of INCATools/kgcl at 1849f9c and parse with the released `kgcl-schema` 0.7.0. Like `--json`, `--delta` and `--markdown`, the file is optional (stdout), and at most one output goes to stdout. The Rust library has the same export as `kgdiff_report::render_kgcl` (experimental). Without `--kgcl` every output is unchanged.

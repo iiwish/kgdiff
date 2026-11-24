@@ -8,6 +8,7 @@ npx @kgdiff/cli before.obo after.obo -o report.html  # 自包含的交互式报�
 npx @kgdiff/cli a.json b.json --json > diff.json     # 完整的机器可读 diff
 npx @kgdiff/cli a.json b.json --delta > patch.json   # 只输出可反向的增量
 npx @kgdiff/cli a.json b.json --markdown             # PR 评论 / 作业摘要
+npx @kgdiff/cli a.obo b.obo --kgcl > changes.kgcl    # KGCL 命令（实验性）
 npx @kgdiff/cli apply a.json patch.json -o b.json    # 应用增量
 ```
 
@@ -45,10 +46,11 @@ kgdiff --help | --version | help [apply|completion]
 | `--json [file]`     | `DiffJSON`（加 `--pretty` 时格式化）                                                     |
 | `--delta [file]`    | `Delta`                                                                                  |
 | `--markdown [file]` | GitHub 风格的 Markdown：标题、统计表、可折叠的变更组列表                                 |
+| `--kgcl [file]`     | 把变更写成 [KGCL](#kgcl-导出) 命令，供 OBO 工具使用（实验性）                            |
 | `-o, --html <file>` | 自包含的 HTML 报告（查看器 + 内嵌数据；可离线使用）                                      |
 | `--open`            | 用默认浏览器打开 HTML 报告                                                               |
 
-多种输出可以组合（`-o report.html --markdown summary.md`），但最多只能有一种写到标准输出。`--json`、`--delta` 和 `--markdown` 可以跟一个文件名（`-` 或不写表示标准输出；以 `-` 开头的文件名写作 `--json=-x.json` 或 `--json ./-x.json`）。
+多种输出可以组合（`-o report.html --markdown summary.md`），但最多只能有一种写到标准输出。`--json`、`--delta`、`--markdown` 和 `--kgcl` 可以跟一个文件名（`-` 或不写表示标准输出；以 `-` 开头的文件名写作 `--json=-x.json` 或 `--json ./-x.json`）。
 
 输出文件以原子方式写入（先在同一目录写临时文件，再重命名；保留已有文件的权限）。已存在且不是普通文件的输出（如 `/dev/null` 或命名管道）直接写入。输出永远不会覆盖输入：比较的是（设备，inode），所以大小写不敏感文件系统上的大小写变体、符号链接和硬链接都能识别出来；两个输出也不会写到同一个文件。`kgdiff apply` 对 `-o` 采用同样的规则。`--open` 不带 `-o` 时，报告写到一个新建的私有临时目录（`mkdtemp`）。
 
@@ -184,6 +186,42 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
 ## Markdown 摘要
 
 用于 PR 评论和 `$GITHUB_STEP_SUMMARY`：标题、统计表（节点 / 关系 × 新增 / 删除 / 修改）、类别图例、按阶段分组、放在 `<details>` 块里的变更组列表（前 100 组，之后是“还有 N 组”），列表之前是一个 ⚑ “优先审查”块，列出修改了受关注属性的变更组（前 20 组；下面的分组可能默认折叠，其中相同的条目也标有 ⚑），以及单独放在一个 `<details>` 块里的可能的匹配，内容与终端相同（前 20 对；不超过 10 对时默认展开）。除了 `<details>/<summary>` 之外不含任何 HTML。标签都经过转义（Markdown 标点，包括用于公式的 `$`；`<`、`>`、`&` 转为实体；不可见字符和双向字符变为可见；控制字符删除），并且在转义前用零宽空格让 GitHub 在 Markdown 之后的过滤失效：`:emoji:` 短代码、`@提及`、`#123` / `org/repo#123` / `GH-123` 引用、裸露的 `scheme://` 网址和 `www.` 自动链接。摘要永远不会 @ 到别人、链接 issue，也不会把标签变成链接。
+
+## KGCL 导出
+
+**实验性**：映射可能在次版本中改变。
+
+`--kgcl` 把变更写成 [KGCL](https://github.com/INCATools/kgcl)（Knowledge Graph Change
+Language，OBO 工具读取的变更语言）：每行一条命令，按摘要里变更组的顺序，组内按增量操作的顺序。同样的输入得到同样的字节。对应的库函数是 `kgdiff_report::render_kgcl`。
+
+```sh
+kgdiff mhd-2026-09.obo mhd-2026-10.obo --kgcl changes.kgcl
+runoak -i simpleobo:mhd-2026-09.obo apply --changes-input changes.kgcl -o mhd-applied.obo   # OAK
+```
+
+| kgdiff                          | KGCL                                                       |
+| ------------------------------- | ---------------------------------------------------------- |
+| 新增节点                        | `create node X 'label'`（没有标签的节点写 `create X`）     |
+| 删除节点                        | `delete X`                                                 |
+| 新增 / 删除关系                 | `create edge S P O` / `delete edge S P O`                  |
+| 迁移：一个父节点换成另一个      | `move S P OLD from OLD to NEW`                             |
+| 标签改变                        | `rename X from 'old' to 'new'`                             |
+| 新增同义词（别名）              | `create [exact\|narrow\|broad\|related] synonym 'a' for X` |
+| 删除同义词                      | `remove synonym 'a' for X`                                 |
+| 废弃（带一个新的 `replacedBy`） | `obsolete X [with replacement Y]`                          |
+| 取消废弃                        | `unobsolete X`                                             |
+| 新增定义                        | `add definition 'd' to X`                                  |
+| 修改定义                        | `change definition of X from 'a' to 'b'`                   |
+| 删除定义                        | `remove definition for X`                                  |
+| 新增 / 删除类型（RDF 输入）     | `create edge X rdf:type T` / `delete edge X rdf:type T`    |
+
+定义指的是属性 `def`（OBO）、`definition`、`IAO:0000115` 和 `skos:definition`。
+
+其余变更没有对应的 KGCL 命令，写成**注释**：一行 `# <原因>: <JSON>`，JSON 是它代表的增量操作（或变更组），所以什么都不会丢。这些是：其他属性的改动（`xref`、`comment`、`rdfs:comment` 等）、id 改变、关系的标签和属性、`replaces` 以及不伴随废弃的 `replacedBy` 改动、RDF 以外输入的类型改动、拆分（在拆分自己的改动之前写一条注释）、不是“带替代的废弃”的合并、隐式节点（文件里没有声明、只作为关系端点出现的节点），以及新节点或新关系里命令带不下的字段。KGCL 无法加引号的文本也写成注释：KGCL 的字符串用单引号括起，没有转义，所以为空、含 `'` 或含换行的标签、同义词和定义都写不出来（例如 `Alzheimer's disease`）。kgdiff 会在标准错误输出一条警告，给出注释的条数。OAK（`runoak apply`）会跳过 `#` 开头的行；KGCL 本身没有注释，别的读取方可能需要先去掉这些行（`grep -v '^#'`）。
+
+id 按 KGCL 接受的形式写：IRI 用两个文件自己声明的前缀（加上常用前缀和 OBO PURL 规则，`http://purl.obolibrary.org/obo/GO_0008150` → `GO:0008150`）压缩成 CURIE，压缩不了就放在尖括号里（`<https://example.org/x>`）；其他 id 原样写出。含空白、或以引号或 `<` 开头的 id 写不出来，相应的改动写成注释。输入是 OBO 时，`is_a` 写成 `rdfs:subClassOf`，同义词带上范围，stanza 类型 `Term` 不另写。
+
+这些命令依据 INCATools/kgcl 在提交 `1849f9c`（2026-11-18）的语法 [`src/kgcl_schema/grammar/kgcl.lark`](https://github.com/INCATools/kgcl/blob/1849f9cbb3ebb4a5ee0e6c62b11238841eb81d66/src/kgcl_schema/grammar/kgcl.lark)，并且只用已发布的 `kgcl-schema` 0.7.0 也能解析的命令（0.7.0 没有 `add label`，所以给原来没有标签的节点加标签会写成注释）。`kgcl-schema` 的解析器只在认识尖括号里完整 IRI 的命名空间时（OBO、Bioregistry 和常见的关联数据前缀）才能解析它，其他 IRI 会被读成空值；这是那个解析器的限制，不是语法的限制。
 
 ## HTML 报告
 

@@ -317,7 +317,7 @@ fn files_are_completed_where_a_file_is_written() {
     };
     assert_eq!(value(HelpTopic::Main, "html"), Some(Completes::File));
     assert_eq!(value(HelpTopic::Apply, "output"), Some(Completes::File));
-    for name in ["json", "delta", "markdown"] {
+    for name in ["json", "delta", "markdown", "kgcl"] {
         assert_eq!(value(HelpTopic::Main, name), Some(Completes::OptionalFile));
     }
     assert_eq!(value(HelpTopic::Main, "stat"), Some(Completes::Nothing));

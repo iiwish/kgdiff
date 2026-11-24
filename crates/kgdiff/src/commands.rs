@@ -7,12 +7,13 @@ use kgdiff_core::{
     ApplyOptions, Delta, DiffResult, EdgeIdentity, ErrorCode, KGraph, NormalizeOptions,
     apply_delta, diff_to_json, graph_to_json, hash_graph, normalize, resolve_options,
 };
-use kgdiff_formats::{JsonTextError, ParseResult, ParseWarning, parse_deep_json};
+use kgdiff_formats::{FormatId, JsonTextError, ParseResult, ParseWarning, parse_deep_json};
 use kgdiff_report::html::{GZIP_THRESHOLD, render_report_html, report_payload};
 use kgdiff_report::width::sanitize;
 use kgdiff_report::{
-    MarkdownOptions, ReportInfo, ReportSide, TextContext, ViewerBundles, describe_diff, format_int,
-    needs_compute, render_markdown, render_name_status, render_stat, render_summary,
+    KgclOptions, MarkdownOptions, ReportInfo, ReportSide, TextContext, ViewerBundles,
+    describe_diff, format_int, needs_compute, render_kgcl, render_markdown, render_name_status,
+    render_stat, render_summary,
 };
 
 use crate::VERSION;
@@ -148,6 +149,33 @@ fn report_issues(ctx: &OutputContext, io: &mut dyn CliIo, input: &RawInput, grap
     }
 }
 
+/// The prefixes the inputs declare (and the well-known ones), the after side's winning a name
+/// both use: what `--kgcl` compacts IRIs with.
+fn file_prefixes(before: &ParseResult, after: &ParseResult) -> Vec<(String, String)> {
+    let mut map: js::IndexMap<String, String> = js::IndexMap::default();
+    for result in [before, after] {
+        for (name, namespace) in result.prefixes.iter() {
+            if let Some(namespace) = namespace.as_str() {
+                map.insert(name.as_str().to_owned(), namespace.to_owned());
+            }
+        }
+    }
+    map.into_iter().collect()
+}
+
+/// Whether a format is RDF, whose node types are `rdf:type` statements.
+fn is_rdf(format: FormatId) -> bool {
+    matches!(
+        format,
+        FormatId::Turtle
+            | FormatId::NTriples
+            | FormatId::NQuads
+            | FormatId::TriG
+            | FormatId::RdfXml
+            | FormatId::JsonLd
+    )
+}
+
 /// `JSON.stringify(value, null, pretty ? 2 : undefined)` and a newline.
 fn json_text(value: &Value, pretty: bool) -> String {
     let mut text = if pretty {
@@ -239,6 +267,10 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
                 path: o.markdown.as_deref(),
             },
             PathRole {
+                role: "--kgcl",
+                path: o.kgcl.as_deref(),
+            },
+            PathRole {
                 role: "--html",
                 path: o.html.as_deref(),
             },
@@ -283,6 +315,11 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
 
     let meta = |r: &ParseResult| r.graph.get("meta").and_then(Value::as_object).cloned();
     let (before_meta, after_meta) = (meta(&before), meta(&after));
+    let prefixes = if o.kgcl.is_some() {
+        file_prefixes(&before, &after)
+    } else {
+        Vec::new()
+    };
     let (before_format, after_format) = (before.format, after.format);
     let result = run_diff_engine(
         Value::Object(before.graph),
@@ -330,6 +367,32 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
             stdout_text = Some(md);
         } else {
             files.push((path.clone(), md, "Markdown summary".to_owned()));
+        }
+    }
+    if let Some(path) = &o.kgcl {
+        let mut options = KgclOptions::new(&prefixes);
+        options.obo = before_format == FormatId::Obo && after_format == FormatId::Obo;
+        options.rdf_types = is_rdf(before_format) && is_rdf(after_format);
+        let kgcl = render_kgcl(&result, &options)?;
+        if kgcl.comments > 0 {
+            let (has, them) = if kgcl.comments == 1 {
+                ("change has", "it as a comment (a line starting with #)")
+            } else {
+                ("changes have", "them as comments (lines starting with #)")
+            };
+            let text = format_warning(
+                &format!(
+                    "{} {has} no KGCL command; --kgcl writes {them}.",
+                    format_int(kgcl.comments)
+                ),
+                &ctx.err_paint,
+            );
+            ctx.notice(io, &text);
+        }
+        if path == STDIO {
+            stdout_text = Some(kgcl.text);
+        } else {
+            files.push((path.clone(), kgcl.text, "KGCL".to_owned()));
         }
     }
     if let (Some(bundle), Some(path)) = (&bundle, &html_path) {

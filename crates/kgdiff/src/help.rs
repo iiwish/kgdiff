@@ -76,6 +76,10 @@ const MAIN: &[Section] = &[
                 "GitHub-flavoured Markdown for PR comments and job summaries",
             ),
             e(
+                "--kgcl [file]",
+                "The changes as KGCL commands for OBO tooling (experimental)",
+            ),
+            e(
                 "-o, --html <file>",
                 "Self-contained interactive HTML report (works offline)",
             ),

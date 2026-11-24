@@ -92,3 +92,11 @@ apply; their result differs from their `target.hash` as it always did, and
 | hunk `merge` (diff level)            | obsoletion with replacement   | triples                         |
 
 Exporters to KGCL and RDF Patch can be built on top of hunks + ops without changing this format.
+`kgdiff --kgcl` (experimental) is the KGCL one: it walks the hunks in order and writes each op
+as a KGCL command, pairing the ops a hunk's semantics join (the `edge.remove` and `edge.add`
+of a move become one `move`, `deprecated` with one new `replacedBy` one `obsolete … with
+replacement`; OBO's `synonyms` attribute gives the synonyms their scope). Definitions map to
+`add` / `change` / `remove definition`, and with RDF inputs `types` to `rdf:type` edges. The
+ops KGCL has no command for (`node.rekey`, other `node.attr`, `edge.set`, `edge.attr`,
+`replaces`, a lone `replacedBy`) and splits become `#` comments that hold the op as JSON
+([CLI](cli.md#kgcl-export) has the full mapping).

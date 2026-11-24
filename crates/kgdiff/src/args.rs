@@ -84,6 +84,8 @@ pub struct DiffCommandOptions {
     pub json: Option<String>,
     pub delta: Option<String>,
     pub markdown: Option<String>,
+    /// `--kgcl`: the changes as KGCL commands (experimental).
+    pub kgcl: Option<String>,
     pub html: Option<String>,
     pub open: bool,
     pub pretty: bool,
@@ -226,12 +228,13 @@ const COMMON: [OptionSpec; 7] = [
     boolean("pretty"),
 ];
 
-const DIFF_ONLY: [OptionSpec; 28] = [
+const DIFF_ONLY: [OptionSpec; 29] = [
     boolean("stat"),
     boolean("name-status"),
     optional("json"),
     optional("delta"),
     optional("markdown"),
+    optional("kgcl"),
     short(string("html"), 'o'),
     boolean("open"),
     short(string("format"), 'f'),
@@ -583,7 +586,10 @@ struct RawParse {
 
 /// Options whose value is a file path (a leading `-` can be written `./-name`).
 fn looks_like_path(name: &str) -> bool {
-    matches!(name, "html" | "output" | "json" | "delta" | "markdown")
+    matches!(
+        name,
+        "html" | "output" | "json" | "delta" | "markdown" | "kgcl"
+    )
 }
 
 fn raw_parse(
@@ -1039,6 +1045,7 @@ fn parse_diff(argv: &[String]) -> CliResult<Command> {
         json: v.target("json"),
         delta: v.target("delta"),
         markdown: v.target("markdown"),
+        kgcl: v.target("kgcl"),
         html: v.string("html"),
         open: v.flag("open"),
         pretty: v.flag("pretty"),
@@ -1077,6 +1084,9 @@ fn check_outputs(o: &DiffCommandOptions) -> CliResult<()> {
     if stdio(&o.markdown) {
         to_stdout.push("--markdown");
     }
+    if stdio(&o.kgcl) {
+        to_stdout.push("--kgcl");
+    }
     if o.stat || o.name_status {
         to_stdout.push(if o.stat { "--stat" } else { "--name-status" });
     }
@@ -1087,7 +1097,11 @@ fn check_outputs(o: &DiffCommandOptions) -> CliResult<()> {
             format!("{} and {last} would all write to stdout.", rest.join(", ")),
             format!(
                 "Send all but one to a file, e.g. {first} out.{}.",
-                if first == "--markdown" { "md" } else { "json" }
+                match first {
+                    "--markdown" => "md",
+                    "--kgcl" => "kgcl",
+                    _ => "json",
+                }
             ),
         ));
     }

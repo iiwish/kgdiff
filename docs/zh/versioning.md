@@ -51,6 +51,8 @@ kgdiff 遵循[语义化版本](https://semver.org/lang/zh-CN/)。本页说明版
 
 `kgdiff` crate 的嵌入接口同样是实验性的：它的 `cli`、`io`、`system` 和 `testing` 四个模块可能在次版本里变化。`CliIo` 的签名还带着从 JavaScript 移植过来的写法（`columns() -> Option<f64>`、`now() -> io::Result<String>`、路径用 `&str`），而且目前没有外部宿主在用。等 Python 绑定用过之后，再把这几个模块纳入承诺。`kgdiff-core`、`kgdiff-formats`、`kgdiff-layout` 和 `kgdiff-report` 不受影响。
 
+KGCL 导出同样是实验性的：`--kgcl` 的输出，以及 `kgdiff_report` 的 `render_kgcl`、`KgclOptions` 和 `Kgcl`（`kgcl` 模块）。哪些变更写成哪条 KGCL 命令、哪些写成注释，在 OBO 工具用过之前可能在次版本里改变。
+
 ## 平台
 
 - **Node.js**：`engines` 列出的版本线（22 及以后），每条都在 CI 里测试。

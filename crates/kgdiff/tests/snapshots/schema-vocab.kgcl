@@ -1,0 +1,42 @@
+obsolete schema:Code with replacement schema:SoftwareSourceCode
+# no KGCL command for an attribute change: {"op":"node.attr","id":"https://schema.org/Code","key":"rdfs:comment","from":"Program text, such as a snippet or a complete program.","to":"Program text, such as a snippet or a complete program. Deprecated: use SoftwareSourceCode."}
+obsolete schema:employees with replacement schema:employee
+# no KGCL command for an attribute change: {"op":"node.attr","id":"https://schema.org/employees","key":"rdfs:comment","from":"People employed by the organization.","to":"People employed by the organization. Deprecated: use employee, which is repeatable."}
+create edge schema:Review schema:itemReviewed schema:Thing
+create synonym 'Company' for schema:Corporation
+# no KGCL command for an attribute change: {"op":"node.attr","id":"https://schema.org/Dataset","key":"rdfs:comment","from":"A collection of structured data about one or more topics.","to":"A collection of structured data about one or more topics, published as a unit with one or more distributions."}
+# no KGCL command for an attribute change: {"op":"node.attr","id":"https://schema.org/Event","key":"rdfs:comment","from":"Something that happens at a given time and place, such as a concert, a lecture or a festival.","to":"Something that happens at a given time and place, such as a concert, a lecture or a festival. Recurring events are described as one Event per occurrence."}
+rename schema:NGO from 'NGO' to 'Non-governmental organization'
+create synonym 'NGO' for schema:NGO
+rename schema:ScholarlyArticle from 'Scholarly artcle' to 'Scholarly article'
+create node schema:CafeOrCoffeeShop 'Cafe or coffee shop'
+create edge schema:CafeOrCoffeeShop rdf:type rdfs:Class
+create synonym '咖啡馆' for schema:CafeOrCoffeeShop
+# no KGCL command for these fields of a created node: {"id":"https://schema.org/CafeOrCoffeeShop","attrs":{"rdfs:comment":"A small establishment serving coffee, tea and light meals."}}
+create node schema:FoodEstablishment 'Food establishment'
+create edge schema:FoodEstablishment rdf:type rdfs:Class
+create synonym '餐饮场所' for schema:FoodEstablishment
+# no KGCL command for these fields of a created node: {"id":"https://schema.org/FoodEstablishment","attrs":{"rdfs:comment":"A business that prepares or serves food or drink."}}
+create edge schema:CafeOrCoffeeShop rdfs:subClassOf schema:FoodEstablishment
+create edge schema:FoodEstablishment rdfs:subClassOf schema:LocalBusiness
+move schema:Restaurant rdfs:subClassOf schema:LocalBusiness from schema:LocalBusiness to schema:FoodEstablishment
+delete edge schema:servesCuisine schema:domainIncludes schema:Restaurant
+# no KGCL command for an attribute change: {"op":"node.attr","id":"https://schema.org/servesCuisine","key":"rdfs:comment","from":"The style of food the restaurant serves.","to":"The style of food the establishment serves."}
+create edge schema:servesCuisine schema:domainIncludes schema:FoodEstablishment
+create node schema:DiscussionForumPosting 'Discussion forum posting'
+create edge schema:DiscussionForumPosting rdf:type rdfs:Class
+create synonym '论坛帖子' for schema:DiscussionForumPosting
+# no KGCL command for these fields of a created node: {"id":"https://schema.org/DiscussionForumPosting","attrs":{"rdfs:comment":"A message posted to an online discussion forum."}}
+create node schema:SocialMediaPosting 'Social media posting'
+create edge schema:SocialMediaPosting rdf:type rdfs:Class
+create synonym '社交媒体帖子' for schema:SocialMediaPosting
+# no KGCL command for these fields of a created node: {"id":"https://schema.org/SocialMediaPosting","attrs":{"rdfs:comment":"A post published on a social or community platform, including blog entries and forum messages."}}
+create edge schema:DiscussionForumPosting rdfs:subClassOf schema:SocialMediaPosting
+create edge schema:SocialMediaPosting rdfs:subClassOf schema:Article
+move schema:BlogPosting rdfs:subClassOf schema:Article from schema:Article to schema:SocialMediaPosting
+create node schema:VirtualLocation 'Virtual location'
+create edge schema:VirtualLocation rdf:type rdfs:Class
+create synonym '线上地点' for schema:VirtualLocation
+# no KGCL command for these fields of a created node: {"id":"https://schema.org/VirtualLocation","attrs":{"rdfs:comment":"A location that exists only online, such as a video-conference room or a live stream."}}
+create edge schema:VirtualLocation rdfs:subClassOf schema:Intangible
+create edge schema:location schema:rangeIncludes schema:VirtualLocation
