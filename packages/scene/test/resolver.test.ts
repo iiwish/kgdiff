@@ -826,4 +826,47 @@ describe('colors a scene carries', () => {
       for (const c of colors) expect(() => parseColor(c), c).not.toThrow();
     },
   );
+
+  it.each(['dark', 'light'] as const)(
+    'gives every element of every frame a color parseColor reads, hidden ones too (%s)',
+    (theme) => {
+      const s = buildScene(diff, makeLayout(diff, POSITIONS), { theme });
+      const views: Partial<ViewState>[] = [
+        {},
+        { layer: 'before' },
+        { layer: 'after' },
+        { focus: computeFocus(s, { hops: 0 }) },
+        ...s.timeline.windows.flatMap((w) =>
+          [0, 0.5, 1].map((u) => ({
+            layer: 'replay' as const,
+            t: w.start + u * (w.end - w.start),
+          })),
+        ),
+      ];
+      const check = (f: FrameVisuals, view: Partial<ViewState>): number => {
+        let hidden = 0;
+        for (const e of f.edges) {
+          if (!e.visible) hidden++;
+          expect(() => parseColor(e.color), JSON.stringify(view)).not.toThrow();
+        }
+        for (const v of [...f.nodes, ...f.glyphs]) {
+          const colors = new Set<string>();
+          visualColors(v, colors);
+          for (const c of colors) expect(() => parseColor(c), c).not.toThrow();
+        }
+        return hidden;
+      };
+      // A frame of its own for each view: its hidden edges were never drawn.
+      let hidden = 0;
+      for (const view of views) {
+        hidden += check(createVisualResolver(s).resolve(createViewState(view)), view);
+      }
+      expect(hidden).toBeGreaterThan(0);
+      // One frame through every view: its hidden edges were drawn before.
+      const r = createVisualResolver(s);
+      const f = r.resolve(createViewState());
+      for (const view of [...views, ...[...views].reverse()])
+        check(r.resolve(createViewState(view), f), view);
+    },
+  );
 });

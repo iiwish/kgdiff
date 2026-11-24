@@ -69,10 +69,22 @@ fn random_name(len: usize) -> String {
         .collect()
 }
 
+/// Whether `path` (links followed) is something other than a regular file or a directory: a
+/// character device such as `/dev/null`, a FIFO, a socket. Renaming over one is refused or
+/// would replace the device node, so it is written in place.
+fn is_special_file(path: &str) -> bool {
+    fs::metadata(path).is_ok_and(|m| !m.is_file() && !m.is_dir())
+}
+
 /// Atomic replace: write `.<name>.<random>.tmp` next to `path` (created exclusively), copy the
 /// permissions of the file it replaces, then rename it over `path`; the temporary file is
-/// removed on failure.
+/// removed on failure. A `path` that exists and is not a regular file or a directory
+/// (`/dev/null`, a FIFO) is opened and written directly instead.
 fn write_file_atomic(path: &str, data: &[u8]) -> io::Result<()> {
+    if is_special_file(path) {
+        let mut file = fs::OpenOptions::new().write(true).open(path)?;
+        return file.write_all(data).and_then(|()| file.flush());
+    }
     let temp = paths::join(
         &paths::dirname(path),
         &format!(".{}.{}.tmp", paths::basename(path), random_hex(12)),

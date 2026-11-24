@@ -14,6 +14,12 @@
       "port": 5198
     },
     {
+      "name": "g6-harness",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["vite", "--config", "packages/g6/dev/vite.config.ts"],
+      "port": 5197
+    },
+    {
       "name": "site",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["vite", "--config", "apps/site/vite.config.ts", "--port", "5196"],

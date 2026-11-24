@@ -184,7 +184,8 @@ const newNode = (): NodeVisual => ({
   z: 0,
 });
 
-const newEdge = (): EdgeVisual => ({
+/** `color` is the edge's union-layer color, so a hidden edge has a color too (`EdgeVisual.color`). */
+const newEdge = (color: string): EdgeVisual => ({
   visible: false,
   x1: 0,
   y1: 0,
@@ -193,7 +194,7 @@ const newEdge = (): EdgeVisual => ({
   r1: 0,
   r2: 0,
   curvature: 0,
-  color: '',
+  color,
   width: 0,
   alpha: 0,
   dash: null,
@@ -601,7 +602,13 @@ class SceneResolver implements VisualResolver {
     if (frame.nodes.length !== this.N) frame.nodes.length = this.N;
     if (frame.edges.length !== this.M) frame.edges.length = this.M;
     for (let i = 0; i < this.N; i++) if (frame.nodes[i] === undefined) frame.nodes[i] = newNode();
-    for (let j = 0; j < this.M; j++) if (frame.edges[j] === undefined) frame.edges[j] = newEdge();
+    for (let j = 0; j < this.M; j++) {
+      if (frame.edges[j] === undefined) {
+        frame.edges[j] = newEdge(
+          ((this.eStyles[j] as readonly EdgeStyle[])[L_UNION] as EdgeStyle).color,
+        );
+      }
+    }
     let pool = this.pools.get(frame);
     if (pool === undefined || pool.n !== this.N || pool.m !== this.M) {
       const make = <T>(n: number, f: () => T): T[] => Array.from({ length: n }, f);

@@ -33,7 +33,8 @@ kgdiff after.obo patched.json --exit-code -q && echo identical
 ```
 
 `apply` checks this too: when the result is not the delta's target, it warns. With
-`--verify-target` it fails instead (exit 2) and writes nothing, which suits scripts.
+`--verify-target` it fails instead (exit 2) and writes nothing, which suits scripts; to check a
+delta without keeping the result, write it to `/dev/null` (`-o /dev/null`).
 
 ## The base must match
 

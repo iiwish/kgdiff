@@ -278,7 +278,7 @@ shapes: Some(vec![
 
 ### 或者自己画
 
-要做自己的界面，就用载荷构建场景，把它的帧交给渲染器。`sceneFromReport` 读取载荷（检查 `format` 和 `version`，读出压缩的 diff 和布局），再构建场景；语言、调色板和节点形状取报告里写的（`view.locale`、`view.palette`、`view.shapes`），除非你自己传；主题由你决定：
+要做自己的界面，就用载荷构建场景，把它的帧交给渲染器。`sceneFromReport` 读取载荷（检查 `format` 和 `version`，读出压缩的 diff 和布局），再构建场景；语言、调色板和节点形状取报告里写的（`view.locale`、`view.palette`、`view.shapes`），除非你自己传；主题由你决定。这个版本不认识的语言、调色板或节点形状（来自更新版本的报告）会被略过，和 `<kgdiff-viewer>` 一样（`view.shapes` 里形状不认识的条目被去掉，其余保留）；你自己传的 `shapes` 里有不认识的形状则是错误：
 
 ```ts
 import { createRenderer } from '@kgdiff/renderer';
@@ -323,7 +323,7 @@ for (const glyph of frame.glyphs) {
 
 - `buildScene` 只读布局里的位置、半径和（如果有的话）`hidden`（类型 `SceneLayout`）：`@kgdiff/layout` 的 `LayoutResult` 是一个，你自己的 `{ positions, radii }` 也是。缺了半径的节点用布局会给它的半径。
 - 标记（合并、拆分、替代箭头，边的旧形态的幽灵，建议，支点）指明它的节点：`node1` 和 `node2` 是 `scene.nodes` 的下标，即它两端所在的节点，渲染器可以让标记跟着节点走；支点只在一个节点上，只有 `node1`。
-- `parseColor` 把颜色字符串转成 `{ r, g, b, a }`。场景带的每个颜色，无论在主题里还是在一帧画出的东西里，都是它能解析的形式；别的输入抛出 `KgdiffError('invalid-input')`。颜色仍然是 CSS 字符串，供 canvas 和 G6 使用。
+- `parseColor` 把颜色字符串转成 `{ r, g, b, a }`。场景带的每个颜色，无论在主题里还是在一帧画出的东西里，都是它能解析的形式，隐藏的边的 `color` 也是，所以宿主读每条边的颜色前不必先看 `visible`（节点的 `fill` 和 `stroke` 可能是 `null`）；别的输入抛出 `KgdiffError('invalid-input')`。颜色仍然是 CSS 字符串，供 canvas 和 G6 使用。
 
 ### 画自己的标记：图层
 

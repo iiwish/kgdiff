@@ -102,7 +102,8 @@ pub trait CliIo: Env {
     fn read_file(&mut self, path: &str) -> io::Result<Vec<u8>>;
     /// Creates or replaces a file atomically: a temporary file in the same directory renamed
     /// over `path` (readers never see a half-written file; a link at `path` is replaced, not
-    /// written through).
+    /// written through). An existing `path` that is neither a regular file nor a directory
+    /// (`/dev/null`, a FIFO) is written in place.
     ///
     /// # Errors
     ///

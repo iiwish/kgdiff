@@ -96,3 +96,51 @@ fn stops_quietly_when_stdout_closes_early() {
     assert_eq!(out.status.code(), Some(0));
     assert_eq!(String::from_utf8(out.stderr).unwrap(), "");
 }
+
+#[cfg(unix)]
+#[test]
+fn apply_verify_target_writes_to_dev_null() {
+    // `apply --verify-target -o /dev/null`: check a delta in automation and keep nothing. A
+    // device cannot be replaced by renaming a temporary file over it, so it is written in place.
+    let d = dataset("schema-vocab");
+    let mut argv = vec![d.before.as_str(), d.after.as_str()];
+    argv.extend(d.flags.iter().map(String::as_str));
+    argv.push("--delta");
+    let (code, delta, stderr) = kgdiff(&argv, None);
+    assert_eq!(code, 0, "{stderr}");
+    let (code, stdout, stderr) = kgdiff(
+        &[
+            "apply",
+            &d.before,
+            "-",
+            "--verify-target",
+            "-o",
+            "/dev/null",
+        ],
+        Some(delta.as_bytes()),
+    );
+    assert_eq!(code, 0, "{stderr}");
+    assert_eq!(stdout, "");
+    assert!(stderr.contains("Wrote patched graph"), "{stderr}");
+    assert!(stderr.contains("/dev/null"), "{stderr}");
+    // A graph the delta does not lead to still fails, and still exits 2.
+    let (code, _, stderr) = kgdiff(
+        &["apply", &d.after, "-", "--verify-target", "-o", "/dev/null"],
+        Some(delta.as_bytes()),
+    );
+    assert_eq!(code, 2, "{stderr}");
+}
+
+#[cfg(unix)]
+#[test]
+fn writes_every_output_to_dev_null() {
+    let d = dataset("schema-vocab");
+    for output in ["-o", "--json", "--delta", "--markdown"] {
+        let mut argv = vec![d.before.as_str(), d.after.as_str()];
+        argv.extend(d.flags.iter().map(String::as_str));
+        argv.extend([output, "/dev/null", "-q"]);
+        let (code, stdout, stderr) = kgdiff(&argv, None);
+        assert_eq!(code, 0, "{output}: {stderr}");
+        assert_eq!(stdout, "", "{output}");
+    }
+}

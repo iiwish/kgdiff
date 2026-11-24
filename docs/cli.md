@@ -64,10 +64,11 @@ stdout. `--json`, `--delta` and `--markdown` take an optional file (`-` or no va
 `--json=-x.json` or `--json ./-x.json` for names starting with `-`).
 
 Output files are written atomically (a temporary file in the same directory, then rename;
-existing permissions are kept). Outputs never overwrite an input — compared by (device, inode),
-so case variants on case-insensitive file systems, symlinks and hard links are caught — and two
-outputs never share a file; `kgdiff apply` applies the same rule to `-o`. `--open` without `-o`
-writes into a fresh private temporary directory (`mkdtemp`).
+existing permissions are kept). An output that exists and is not a regular file, such as
+`/dev/null` or a named pipe, is written in place instead. Outputs never overwrite an input —
+compared by (device, inode), so case variants on case-insensitive file systems, symlinks and hard
+links are caught — and two outputs never share a file; `kgdiff apply` applies the same rule to
+`-o`. `--open` without `-o` writes into a fresh private temporary directory (`mkdtemp`).
 
 ### Diff options
 

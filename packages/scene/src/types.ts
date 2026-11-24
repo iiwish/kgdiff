@@ -526,6 +526,10 @@ export interface EdgeVisual {
   shape2?: NodeShape;
   /** See the curve convention above. */
   curvature: number;
+  /**
+   * A color `parseColor` reads, also while the edge is hidden: then it is the color it was last
+   * drawn in, or the one of its union layer before it was ever drawn (nothing is drawn with it).
+   */
   color: string;
   /** px */
   width: number;

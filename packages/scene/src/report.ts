@@ -7,6 +7,7 @@ import { diffFromJSON, KgdiffError, unpackDiffJSON } from '@kgdiff/core';
 import type { LayoutJSON, LayoutResult } from '@kgdiff/layout';
 import { layoutFromJSON } from '@kgdiff/layout';
 import { buildScene } from './build.js';
+import { isNodeShape } from './shapes.js';
 import type { NodeShape, PaletteName, Scene, SceneOptions } from './types.js';
 
 /**
@@ -68,6 +69,18 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 const isLocale = (v: unknown): v is Locale => v === 'en' || v === 'zh-CN';
 const isPalette = (v: unknown): v is PaletteName => v === 'default' || v === 'colorblind';
 
+/**
+ * The entries of a payload's `view.shapes` with a shape this version knows, as `<kgdiff-viewer>`
+ * keeps them: a later version's report may name another. Undefined when none is left; a value
+ * that is not an object is returned as it is, for `buildScene` to reject.
+ */
+function knownShapes(shapes: unknown): unknown {
+  if (!isObject(shapes)) return shapes;
+  const known: Record<string, NodeShape> = {};
+  for (const [type, shape] of Object.entries(shapes)) if (isNodeShape(shape)) known[type] = shape;
+  return Object.keys(known).length > 0 ? known : undefined;
+}
+
 function invalid(message: string): never {
   throw new KgdiffError('invalid-input', `reportFromJSON: ${message}`);
 }
@@ -127,10 +140,14 @@ export function reportFromJSON(json: unknown): ReportContent {
 /**
  * The scene of a report payload: `reportFromJSON`, then `buildScene` on its diff and layout.
  * What the payload's `view` says about the scene is the default: its `locale`, `palette` and
- * `shapes` are the scene's unless `options` gives them, as `<kgdiff-viewer>` takes them. A
- * `locale` or `palette` this version does not know is passed over. The theme is the host's
- * (`view.theme` may be `auto`, which only a page can resolve), and so are the view's other
- * members, a viewer's: read them from `reportFromJSON(json).view`.
+ * `shapes` are the scene's unless `options` gives them (a member of `options` that is undefined
+ * gives nothing), as `<kgdiff-viewer>` takes them. What a later version's report may name and
+ * this version does not know is passed over, as the viewer passes it over: a `locale` or a
+ * `palette`, and each entry of `view.shapes` whose shape is not one of `NODE_SHAPES` (its other
+ * entries are kept). An unknown shape in `options.shapes` is still the error `buildScene`
+ * throws: that one is the host's, not the report's. The theme is the host's (`view.theme` may be
+ * `auto`, which only a page can resolve), and so are the view's other members, a viewer's: read
+ * them from `reportFromJSON(json).view`.
  *
  * @throws KgdiffError what `reportFromJSON` and `buildScene` throw, and `invalid-input` for a
  *   payload without a layout (lay its diff out with `layoutDiff`, then call `buildScene`).
@@ -143,7 +160,7 @@ export function sceneFromReport(json: unknown, options: SceneOptions = {}): Scen
   const view = report.view;
   const locale = options.locale ?? (isLocale(view?.locale) ? view.locale : undefined);
   const palette = options.palette ?? (isPalette(view?.palette) ? view.palette : undefined);
-  const shapes = options.shapes ?? view?.shapes;
+  const shapes = options.shapes ?? (knownShapes(view?.shapes) as ReportView['shapes']);
   return buildScene(report.diff, report.layout, {
     ...options,
     ...(locale !== undefined ? { locale } : {}),
