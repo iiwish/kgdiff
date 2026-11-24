@@ -1787,6 +1787,31 @@ fn kgcl_warns_once_about_the_changes_it_writes_as_comments() {
         one.stderr,
         "warning: 1 change has no KGCL command; --kgcl writes it as a comment (a line starting with #).\n"
     );
+    // A created node is exported; the fields its command cannot carry are counted apart.
+    let created = run_with(
+        &["a.json", "b.json", "--kgcl"],
+        io().file("a.json", r#"{"nodes":[],"edges":[]}"#)
+            .file("b.json", attrs(4)),
+    );
+    assert_eq!(
+        created.stderr,
+        "warning: 1 created node or edge has fields with no KGCL command; --kgcl writes them as a comment (a line starting with #).\n"
+    );
+    let both = run_with(
+        &["a.json", "b.json", "--kgcl"],
+        io().file("a.json", attrs(4)).file(
+            "b.json",
+            attrs(3).replacen("]", r#",{"id":"dog","label":"Dog","attrs":{"legs":4}}]"#, 1),
+        ),
+    );
+    assert_eq!(
+        both.stderr,
+        "warning: 1 change has no KGCL command, and 1 created node or edge has fields with no KGCL command; --kgcl writes these as comments (lines starting with #).\n"
+    );
+    assert_eq!(
+        both.stdout.lines().filter(|l| l.starts_with("# ")).count(),
+        2
+    );
     // --quiet keeps stderr empty, and the file is still written.
     let quiet = run_with(
         &["a.json", "b.json", "--kgcl", "c.kgcl", "--quiet"],

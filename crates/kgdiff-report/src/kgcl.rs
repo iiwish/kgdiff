@@ -2,9 +2,12 @@
 //! [KGCL](https://github.com/INCATools/kgcl) commands, the change language OBO tooling reads.
 //! **Experimental**: the mapping may change in a minor release.
 //!
-//! One command per line, hunk by hunk in the diff's order and, inside a hunk, in the order of its
-//! delta operations; the operations that belong to no hunk (the id changes a delta sequences
-//! first) come before the hunks. The same diff gives the same bytes.
+//! The commands are a change list to apply to the **before** file (OAK's `runoak apply` is the
+//! consumer in mind): one command per line, hunk by hunk in the diff's order and, inside a hunk,
+//! in the order of its delta operations, except that a created node a command names as a
+//! replacement is created before that command, even when its hunk comes later. The operations that belong to no hunk (the changes of
+//! ignored attributes and the id changes a delta sequences first) come before the hunks. The
+//! same diff gives the same bytes.
 //!
 //! The commands are those of the KGCL grammar `src/kgcl_schema/grammar/kgcl.lark` in the
 //! [INCATools/kgcl](https://github.com/INCATools/kgcl) repository at commit
@@ -17,25 +20,42 @@
 //! | `node.add`                                               | `create node X 'label'` (`create X` without a label) |
 //! | `node.remove`                                            | `delete X`                                          |
 //! | `edge.add` / `edge.remove`                               | `create edge S P O` / `delete edge S P O`           |
-//! | a move (one parent replaced by another)                  | `move S P OLD from OLD to NEW`                      |
 //! | `node.set label`                                         | `rename X from 'old' to 'new'`                      |
 //! | `node.set aliases`                                       | `create [exact…] synonym 'a' for X` / `remove synonym 'a' for X` |
 //! | `node.set deprecated` (with one new `replacedBy`)        | `obsolete X [with replacement Y]` / `unobsolete X`  |
 //! | a definition attribute (`def`, `IAO:0000115`, …)         | `add definition` / `change definition` / `remove definition` |
 //! | `node.set types`, with [`KgclOptions::rdf_types`]        | `create edge X rdf:type T` / `delete edge X rdf:type T` |
 //!
+//! A move (one parent replaced by another) is its `delete edge` and its `create edge`, not KGCL's
+//! `move`: OAK's simpleobo implementation only logs a warning for a `NodeMove`, and its sqldb
+//! implementation does not implement it.
+//!
+//! KGCL cannot change an id, so the id changes are not exported (each is a comment), and every
+//! command names a node by its id in the before file, the file the commands apply to: after
+//! `A:1` became `A:2`, `rename A:1 …`. A node that takes the old id of a renamed node cannot be
+//! named so, and its changes are comments.
+//!
+//! An edge whose triple stays (another edge with the same source, predicate and target remains,
+//! or was there already) is a comment: `delete edge` would remove the triple, and `create edge`
+//! would add nothing. With OBO inputs only `is_a` and `relationship` clauses are edges KGCL can
+//! write; `intersection_of`, `union_of`, `equivalent_to`, `disjoint_from` and `instance_of` are
+//! comments.
+//!
 //! Everything else has no KGCL command and is written as a comment, a line starting with `#`
-//! that says what was not exported, with the operation as JSON: id changes, other attribute
-//! changes, edge labels and attributes, `replaces` and other `replacedBy` changes, splits, merges
-//! that are not an obsoletion with replacement, implicit nodes, and any change whose text or id
-//! KGCL cannot write. [`Kgcl::comments`] counts them. KGCL itself has no comments: OAK
+//! that says what was not exported, with the operation as JSON, as it is in the delta: id
+//! changes, other attribute changes, edge labels and attributes, `replaces` and other
+//! `replacedBy` changes, implicit nodes, and any change whose text or id KGCL cannot write. A
+//! split, and a merge that is not an obsoletion with replacement, get a note before their
+//! changes. [`Kgcl`] counts the comments of each kind. KGCL itself has no comments: OAK
 //! (`runoak apply`) skips `#` lines, while `kgcl_schema.grammar.parser.parse` does not.
 //!
 //! How text and ids are written, following the grammar:
 //!
 //! - Labels, synonyms and definitions are `SINGLE_QUOTE_LITERAL`s, which have no escapes: a text
 //!   that is empty, holds a `'` or a line break (anything Python's `str.splitlines` splits on)
-//!   cannot be written, and its change becomes a comment.
+//!   cannot be written, and its change becomes a comment. A removed definition needs no text
+//!   (`remove definition for X`), and a changed one whose old text cannot be written is
+//!   `change definition of X to 'new'`; `rename` and the synonym commands have no such form.
 //! - An IRI is compacted to a CURIE with the prefixes the caller passes ([`KgclOptions::prefixes`],
 //!   the files' own) and the OBO PURL rule (`http://purl.obolibrary.org/obo/GO_0008150` →
 //!   `GO:0008150`), with a prefix of `[A-Za-z0-9_]+` only (the grammar's `CURIE`); an IRI that
@@ -43,14 +63,24 @@
 //!   written as it is, as an `ID`, when it has no whitespace and does not start with a quote or
 //!   `<`; otherwise its change becomes a comment.
 
-use kgdiff_core::js::{IndexMap, JsStr, Object, Value, json};
-use kgdiff_core::model::{HunkKind, NodeFacet, UnionNode};
+use kgdiff_core::js::{IndexMap, JsStr, Lookup, Object, Value, json};
+use kgdiff_core::model::{Hunk, HunkKind, NodeFacet, UnionNode};
 use kgdiff_core::{DeltaOp, DiffResult, KgdiffError, NodeField};
 
 use crate::model::is_definition_key;
 
 /// The OBO PURL namespace.
 const OBO_PURL: &str = "http://purl.obolibrary.org/obo/";
+
+/// The OBO tags kgdiff reads as edges that are not relations between two terms: KGCL's
+/// `create edge` / `delete edge` would say something else.
+const OBO_NOT_RELATIONS: [&str; 5] = [
+    "disjoint_from",
+    "equivalent_to",
+    "instance_of",
+    "intersection_of",
+    "union_of",
+];
 
 /// What the KGCL export needs to know besides the diff. **Experimental.**
 #[non_exhaustive]
@@ -59,8 +89,9 @@ pub struct KgclOptions<'a> {
     /// `(prefix, namespace)` pairs that compact IRIs to CURIEs, for example the `prefixes` of
     /// the inputs' parse results. When several namespaces match, the longest wins.
     pub prefixes: &'a [(String, String)],
-    /// The graphs are OBO: `is_a` is written `rdfs:subClassOf`, and the stanza type `Term` of a
-    /// created node goes without saying.
+    /// The graphs are OBO: `is_a` is written `rdfs:subClassOf`, the stanza type `Term` of a
+    /// created node goes without saying, and the edges of `intersection_of`, `union_of`,
+    /// `equivalent_to`, `disjoint_from` and `instance_of` clauses are comments.
     pub obo: bool,
     /// The graphs are RDF: node types are `rdf:type` statements, written as edges.
     pub rdf_types: bool,
@@ -85,8 +116,15 @@ pub struct Kgcl {
     pub text: String,
     /// The KGCL commands written.
     pub commands: usize,
-    /// The changes written as comments because KGCL has no command for them.
+    /// The comment lines written: `unexported` + `partial` + the notes before a split or a merge
+    /// that is not an obsoletion with replacement (their changes follow them).
     pub comments: usize,
+    /// The changes written as comments instead of commands, which applying the commands leaves
+    /// out: an operation KGCL has no command for, or one synonym or type of an operation.
+    pub unexported: usize,
+    /// The created nodes and edges with fields their command cannot carry, written as a comment
+    /// after it.
+    pub partial: usize,
 }
 
 /// The changes of a diff as KGCL, as `kgdiff --kgcl` writes them. **Experimental.**
@@ -125,10 +163,10 @@ pub fn render_kgcl(diff: &DiffResult, options: &KgclOptions<'_>) -> Result<Kgcl,
             }
         }
     }
-    let mut out = Writer::new(options);
-    // The operations of no hunk: a delta's preamble of id changes.
+    let mut out = Writer::new(options, diff);
+    // The operations of no hunk: a delta's preamble of ignored attributes and id changes.
     let preamble: Vec<usize> = (0..ops.len()).filter(|&i| !owned[i]).collect();
-    out.ops(diff, &preamble, None);
+    out.ops(diff, &preamble, &Plan::default());
     for hunk in &diff.hunks {
         let plan = Plan::of(diff, hunk, &out);
         match hunk.kind {
@@ -136,7 +174,7 @@ pub fn render_kgcl(diff: &DiffResult, options: &KgclOptions<'_>) -> Result<Kgcl,
             HunkKind::Merge => out.merge_notes(diff, hunk, &plan),
             _ => {}
         }
-        out.ops(diff, &hunk.ops, Some(&plan));
+        out.ops(diff, &hunk.ops, &plan);
     }
     let mut text = out.lines.join("\n");
     if !text.is_empty() {
@@ -145,7 +183,9 @@ pub fn render_kgcl(diff: &DiffResult, options: &KgclOptions<'_>) -> Result<Kgcl,
     Ok(Kgcl {
         text,
         commands: out.commands,
-        comments: out.comments,
+        comments: out.unexported + out.partial + out.notes,
+        unexported: out.unexported,
+        partial: out.partial,
     })
 }
 
@@ -281,186 +321,182 @@ fn obo_local_id(local: &str) -> Option<(&str, &str)> {
     Some((&local[..end], rest))
 }
 
-// ─── Plans: operations a hunk exports as one command ─────────────────────────
+// ─── Id changes ──────────────────────────────────────────────────────────────
 
-/// Synonym scopes (`exact`, `narrow`, …) by synonym text.
-type Scopes = Vec<(String, String)>;
-
-/// The pairings of a hunk: operations written together as one command.
+/// The id changes of a delta, which KGCL cannot write: the commands name each node by its id in
+/// the before file.
 #[derive(Default)]
-struct Plan {
-    /// `edge.remove` index → (`edge.add` index, the `move` command).
-    moves: Vec<(usize, usize, String)>,
-    /// `node.set deprecated` index → (`node.set replacedBy` index, the replacement's raw id).
-    replacements: Vec<(usize, usize, JsStr)>,
-    /// `node.set aliases` index → (`node.attr synonyms` index or `None`, scopes by text).
-    synonyms: Vec<(usize, Option<usize>, Scopes)>,
+struct Rekeys<'d> {
+    /// The operations from this index on come after every `node.rekey` and name nodes by their
+    /// new ids; the ones before (the changes of ignored attributes) by their ids in the before
+    /// file.
+    renamed_from: usize,
+    /// A renamed node's id after the delta's renames → its id in the before file.
+    to_before: Lookup<&'d str, &'d str>,
+    /// A renamed node's id in the before file → its id after the renames.
+    to_after: Lookup<&'d str, &'d str>,
 }
 
-impl Plan {
-    fn of(diff: &DiffResult, hunk: &kgdiff_core::model::Hunk, out: &Writer<'_>) -> Plan {
+impl<'d> Rekeys<'d> {
+    fn of(ops: &'d [DeltaOp]) -> Rekeys<'d> {
+        // The renames run in order and may go through temporary ids: follow each node.
+        let mut current: IndexMap<&'d str, &'d str> = IndexMap::default();
+        let mut renamed_from = 0;
+        for (i, op) in ops.iter().enumerate() {
+            if let DeltaOp::NodeRekey { from, to } = op {
+                let origin = current.shift_remove(from.as_str()).unwrap_or(from.as_str());
+                current.insert(to.as_str(), origin);
+                renamed_from = i + 1;
+            }
+        }
+        let mut rekeys = Rekeys {
+            renamed_from,
+            ..Rekeys::default()
+        };
+        for (&now, &origin) in &current {
+            rekeys.to_before.insert(now, origin);
+            rekeys.to_after.insert(origin, now);
+        }
+        rekeys
+    }
+}
+
+/// The `(source, predicate, target)` triples of a graph's edges.
+type Triples<'d> = Lookup<(&'d str, &'d str, &'d str), ()>;
+
+fn triples(graph: &kgdiff_core::KGraph) -> Triples<'_> {
+    let mut set = Lookup::with_capacity(graph.edge_count());
+    for edge in graph.edges() {
+        set.insert(
+            (
+                edge.source().as_str(),
+                edge.predicate().as_str(),
+                edge.target().as_str(),
+            ),
+            (),
+        );
+    }
+    set
+}
+
+// ─── Plans: operations a hunk exports together ───────────────────────────────
+
+/// Synonym scopes (`exact`, `narrow`, …) by synonym text.
+type Scopes<'d> = Lookup<&'d str, &'static str>;
+
+/// How a hunk's operations are written together, by operation index.
+#[derive(Default)]
+struct Plan<'d> {
+    /// Operations another one writes: a `replacedBy` an obsoletion names, a `synonyms`
+    /// attribute the aliases account for.
+    consumed: Lookup<usize, ()>,
+    /// `node.set deprecated` → the replacement's id (as the delta writes it).
+    replacement: Lookup<usize, &'d str>,
+    /// The node a `node.set deprecated` obsoletes → its replacement, for the merge notes.
+    obsoleted: Lookup<&'d str, &'d str>,
+    /// `node.set aliases` → the scopes of the added synonyms.
+    scopes: Lookup<usize, Scopes<'d>>,
+    /// A `node.set deprecated` → the `node.add` of its replacement, written before it (even
+    /// when that `node.add` belongs to a later hunk).
+    first: Lookup<usize, usize>,
+}
+
+impl<'d> Plan<'d> {
+    fn of(diff: &'d DiffResult, hunk: &Hunk, out: &Writer<'_>) -> Plan<'d> {
         let ops = &diff.delta.ops;
-        let in_hunk = || hunk.ops.iter().map(|&i| (i, &ops[i]));
-        let mut plan = Plan::default();
-        // Moves: one parent replaced by another under a hierarchy predicate.
-        for node in hunk.nodes.iter().filter_map(|id| diff.node(id)) {
-            let (Some(before), Some(after)) = (&node.before_id, &node.after_id) else {
-                continue;
-            };
-            if before != after {
-                continue;
-            }
-            for facet in &node.facets {
-                let NodeFacet::Move {
-                    predicate,
-                    from,
-                    to,
-                    ..
-                } = facet
-                else {
-                    continue;
-                };
-                let (Some(old), Some(new)) = (
-                    single(from).and_then(|u| diff.node(u)?.before_id.clone()),
-                    single(to).and_then(|u| diff.node(u)?.after_id.clone()),
-                ) else {
-                    continue;
-                };
-                let find = |remove: bool, target: &str| {
-                    let found: Vec<usize> = in_hunk()
-                        .filter(|(_, op)| match op {
-                            DeltaOp::EdgeRemove { edge } if remove => {
-                                plain_edge(edge, before, predicate, target, true)
-                            }
-                            DeltaOp::EdgeAdd { edge } if !remove => {
-                                plain_edge(edge, before, predicate, target, false)
-                            }
-                            _ => false,
-                        })
-                        .map(|(i, _)| i)
-                        .collect();
-                    single(&found).copied()
-                };
-                if let (Some(r), Some(a)) = (find(true, &old), find(false, &new))
-                    && let (Some(s), Some(p), Some(o), Some(n)) = (
-                        out.id(before),
-                        out.predicate(predicate),
-                        out.id(&old),
-                        out.id(&new),
-                    )
-                {
-                    plan.moves
-                        .push((r, a, format!("move {s} {p} {o} from {o} to {n}")));
-                }
-            }
-        }
-        // Obsoletion with replacement: `deprecated` false → true and one new `replacedBy`.
-        for (d, op) in in_hunk() {
-            let DeltaOp::NodeSet {
-                id,
-                field: NodeField::Deprecated,
-                to: Value::Bool(true),
-                ..
-            } = op
-            else {
-                continue;
-            };
-            let found = in_hunk().find_map(|(r, op)| match op {
+        // The hunk's operations by node id.
+        let mut replaced_by: Lookup<&str, usize> = Lookup::new();
+        let mut synonyms: Lookup<&str, usize> = Lookup::new();
+        for &i in &hunk.ops {
+            match &ops[i] {
                 DeltaOp::NodeSet {
-                    id: other,
+                    id,
                     field: NodeField::ReplacedBy,
-                    from,
-                    to,
-                } if other == id && strings(from).is_some_and(|f| f.is_empty()) => {
-                    let to = strings(to)?;
-                    let only = single(&to)?;
-                    out.id(only).is_some().then(|| (r, JsStr::from(*only)))
+                    ..
+                } => {
+                    replaced_by.get_or_insert_with(id.as_str(), || i);
                 }
-                _ => None,
-            });
-            if let Some((r, replacement)) = found {
-                plan.replacements.push((d, r, replacement));
+                DeltaOp::NodeAttr { id, key, .. }
+                    if out.options.obo && key.as_str() == "synonyms" =>
+                {
+                    synonyms.get_or_insert_with(id.as_str(), || i);
+                }
+                _ => {}
             }
         }
-        // Synonym scopes: OBO keeps them in the `synonyms` attribute (`text (SCOPE)`).
-        for (s, op) in in_hunk() {
-            let DeltaOp::NodeSet {
-                id,
-                field: NodeField::Aliases,
-                from,
-                to,
-            } = op
-            else {
-                continue;
-            };
-            let attr = if out.options.obo {
-                in_hunk().find_map(|(a, op)| match op {
-                    DeltaOp::NodeAttr {
-                        id: other,
-                        key,
-                        from,
-                        to,
-                    } if other == id && key.as_str() == "synonyms" => Some((a, from, to)),
-                    _ => None,
-                })
-            } else {
-                None
-            };
-            let Some((a, attr_from, attr_to)) = attr else {
-                plan.synonyms.push((s, None, Vec::new()));
-                continue;
-            };
-            let before = scopes(attr_from.as_ref());
-            let after = scopes(attr_to.as_ref());
-            let scopes_of_added = after.clone().unwrap_or_default();
-            // The attribute is accounted for when it changes exactly as the aliases do and no
-            // kept synonym changes its scope.
-            let consistent = match (&before, &after, strings(from), strings(to)) {
-                (Some(old), Some(new), Some(from), Some(to)) => {
-                    let texts = |list: &[(String, String)]| -> Vec<String> {
-                        let mut t: Vec<String> = list.iter().map(|(t, _)| t.clone()).collect();
-                        t.sort();
-                        t
+        let mut plan = Plan::default();
+        for &i in &hunk.ops {
+            match &ops[i] {
+                // Obsoletion with replacement: `deprecated` false → true and one new `replacedBy`.
+                DeltaOp::NodeSet {
+                    id,
+                    field: NodeField::Deprecated,
+                    to: Value::Bool(true),
+                    ..
+                } => {
+                    let Some(&r) = replaced_by.get(id.as_str()) else {
+                        continue;
                     };
-                    let mut from: Vec<String> = from.iter().map(|s| (*s).to_owned()).collect();
-                    let mut to: Vec<String> = to.iter().map(|s| (*s).to_owned()).collect();
-                    from.sort();
-                    to.sort();
-                    let kept_same = old
-                        .iter()
-                        .all(|(t, scope)| new.iter().all(|(t2, s2)| t2 != t || s2 == scope));
-                    texts(old) == from && texts(new) == to && kept_same
+                    let DeltaOp::NodeSet { from, to, .. } = &ops[r] else {
+                        continue;
+                    };
+                    if !strings(from).is_some_and(|f| f.is_empty()) {
+                        continue;
+                    }
+                    let Some(&only) = strings(to).as_deref().and_then(single) else {
+                        continue;
+                    };
+                    if out.node(only, true).is_err() {
+                        continue;
+                    }
+                    plan.consumed.insert(r, ());
+                    plan.replacement.insert(i, only);
+                    plan.obsoleted.insert(id.as_str(), only);
+                    if let Some(&a) = out.created.get(only) {
+                        plan.first.insert(i, a);
+                    }
                 }
-                _ => false,
-            };
-            plan.synonyms
-                .push((s, consistent.then_some(a), scopes_of_added));
+                // Synonym scopes: OBO keeps them in the `synonyms` attribute (`text (SCOPE)`).
+                DeltaOp::NodeSet {
+                    id,
+                    field: NodeField::Aliases,
+                    from,
+                    to,
+                } => {
+                    let Some(&a) = synonyms.get(id.as_str()) else {
+                        continue;
+                    };
+                    let DeltaOp::NodeAttr {
+                        from: attr_from,
+                        to: attr_to,
+                        ..
+                    } = &ops[a]
+                    else {
+                        continue;
+                    };
+                    let before = scopes(attr_from.as_ref());
+                    let after = scopes(attr_to.as_ref());
+                    // The attribute is accounted for when it changes exactly as the aliases do
+                    // and no kept synonym changes its scope.
+                    if let (Some(old), Some(new), Some(from), Some(to)) =
+                        (&before, &after, strings(from), strings(to))
+                    {
+                        let by_text = scope_lookup(new);
+                        let kept_same = old
+                            .iter()
+                            .all(|(t, scope)| by_text.get(t).is_none_or(|s| s == scope));
+                        if same_texts(old, from) && same_texts(new, to) && kept_same {
+                            plan.consumed.insert(a, ());
+                        }
+                    }
+                    if let Some(new) = &after {
+                        plan.scopes.insert(i, scope_lookup(new));
+                    }
+                }
+                _ => {}
+            }
         }
         plan
-    }
-
-    fn move_at(&self, i: usize) -> Option<&(usize, usize, String)> {
-        self.moves.iter().find(|(r, _, _)| *r == i)
-    }
-
-    fn consumed(&self, i: usize) -> bool {
-        self.moves.iter().any(|(_, a, _)| *a == i)
-            || self.replacements.iter().any(|(_, r, _)| *r == i)
-            || self.synonyms.iter().any(|(_, a, _)| *a == Some(i))
-    }
-
-    fn replacement_of(&self, i: usize) -> Option<&JsStr> {
-        self.replacements
-            .iter()
-            .find(|(d, _, _)| *d == i)
-            .map(|(_, _, r)| r)
-    }
-
-    fn scopes_at(&self, i: usize) -> &[(String, String)] {
-        self.synonyms
-            .iter()
-            .find(|(s, _, _)| *s == i)
-            .map_or(&[], |(_, _, scopes)| scopes.as_slice())
     }
 }
 
@@ -480,22 +516,16 @@ fn member<'a>(object: &'a Object, key: &str) -> &'a str {
     object.get(key).and_then(Value::as_str).unwrap_or("")
 }
 
-/// An edge snapshot `source predicate target` with nothing a `move` would drop.
-fn plain_edge(edge: &Object, source: &str, predicate: &str, target: &str, removed: bool) -> bool {
-    member(edge, "source") == source
-        && member(edge, "predicate") == predicate
-        && member(edge, "target") == target
-        && !edge.contains_key("attrs")
-        && (removed || !edge.contains_key("label"))
-}
-
-/// `["T1DM (EXACT)", …]` as `(text, scope)` pairs, or `None` when an entry is not of that form.
-fn scopes(value: Option<&Value>) -> Option<Scopes> {
+/// `["T1DM (EXACT)", …]` as `(text, scope)` pairs, or `None` when an entry is not of that form
+/// or a text comes twice.
+fn scopes(value: Option<&Value>) -> Option<Vec<(&str, &'static str)>> {
     let Some(value) = value else {
         return Some(Vec::new());
     };
-    let mut out = Vec::new();
-    for entry in value.as_array()? {
+    let list = value.as_array()?;
+    let mut out = Vec::with_capacity(list.len());
+    let mut seen: Lookup<&str, ()> = Lookup::with_capacity(list.len());
+    for entry in list {
         let entry = entry.as_str()?;
         let (text, scope) = entry.strip_suffix(')')?.rsplit_once(" (")?;
         let scope = match scope {
@@ -505,18 +535,48 @@ fn scopes(value: Option<&Value>) -> Option<Scopes> {
             "RELATED" => "related",
             _ => return None,
         };
-        if out.iter().any(|(t, _): &(String, String)| t == text) {
+        if seen.insert(text, ()).is_some() {
             return None;
         }
-        out.push((text.to_owned(), scope.to_owned()));
+        out.push((text, scope));
     }
     Some(out)
+}
+
+fn scope_lookup<'d>(list: &[(&'d str, &'static str)]) -> Scopes<'d> {
+    let mut by_text = Lookup::with_capacity(list.len());
+    for &(text, scope) in list {
+        by_text.insert(text, scope);
+    }
+    by_text
+}
+
+/// The scoped synonyms have exactly these texts.
+fn same_texts(scoped: &[(&str, &str)], texts: Vec<&str>) -> bool {
+    let mut a: Vec<&str> = scoped.iter().map(|(t, _)| *t).collect();
+    let mut b = texts;
+    a.sort();
+    b.sort();
+    a == b
+}
+
+/// The values of `list` that `other` does not have, in `list`'s order.
+fn missing_from<'v>(list: &[&'v str], other: &[&str]) -> Vec<&'v str> {
+    let mut has: Lookup<&str, ()> = Lookup::with_capacity(other.len());
+    for v in other {
+        has.insert(v, ());
+    }
+    list.iter()
+        .copied()
+        .filter(|v| !has.contains_key(v))
+        .collect()
 }
 
 // ─── Writing ─────────────────────────────────────────────────────────────────
 
 /// Why a change is a comment.
-const NO_REKEY: &str = "no KGCL command for an id change";
+const NO_REKEY: &str =
+    "no KGCL command for an id change, so it is not exported and the commands below use the old id";
 const NO_ATTR: &str = "no KGCL command for an attribute change";
 const NO_EDGE_LABEL: &str = "no KGCL command for an edge label change";
 const NO_EDGE_ATTR: &str = "no KGCL command for an edge attribute change";
@@ -529,28 +589,92 @@ const NO_SPLIT: &str = "no KGCL command for a split; its changes follow";
 const NO_MERGE: &str = "no KGCL command for a merge that is not an obsoletion with replacement";
 const NO_IMPLICIT: &str =
     "no KGCL command for a node the file does not declare (an edge endpoint only)";
+const NO_OBO_CLAUSE: &str = "no KGCL command for an OBO clause that is not is_a or relationship";
 const NO_NODE_REST: &str = "no KGCL command for these fields of a created node";
 const NO_EDGE_REST: &str = "no KGCL command for the label or attributes of a created edge";
 const NO_TEXT: &str = "KGCL cannot quote this text (empty, or with a ' or a line break)";
 const NO_ID: &str = "KGCL cannot write this id or predicate";
+const NO_OLD_ID: &str =
+    "KGCL cannot write this id: in the before file it is the old id of a renamed node";
 const NO_VALUE: &str = "no KGCL command for a definition that is not a single text";
+const EDGE_KEPT: &str = "KGCL cannot remove this edge alone: an edge with the same source, predicate and target remains";
+const EDGE_THERE: &str = "KGCL cannot add this edge: an edge with the same source, predicate and target is there already";
+const EDGE_REMOVED_ABOVE: &str = "KGCL cannot remove this edge alone: another edge with the same source, predicate and target is removed above";
+const EDGE_ADDED_ABOVE: &str = "KGCL cannot add this edge: another edge with the same source, predicate and target is added above";
+
+/// What a comment line stands for.
+#[derive(Clone, Copy)]
+enum Kind {
+    /// A change, or a synonym or type of one, left out.
+    Unexported,
+    /// The fields of a created node or edge its command cannot carry.
+    Partial,
+    /// A note before a split or a merge, whose changes follow.
+    Note,
+}
 
 struct Writer<'a> {
     options: &'a KgclOptions<'a>,
     prefixes: Prefixes,
+    rekeys: Rekeys<'a>,
+    /// The edge triples of the before and the after graph, when the delta adds or removes edges.
+    triples: Option<(Triples<'a>, Triples<'a>)>,
+    /// The operation being written names nodes by their ids after the renames.
+    after_ids: bool,
+    /// The `delete edge` and `create edge` lines written.
+    edge_lines: Lookup<String, ()>,
+    /// The `node.add` of each created node, by id.
+    created: Lookup<&'a str, usize>,
+    /// A `node.add` of a node created obsolete → the `node.add` of its replacement.
+    first: Lookup<usize, usize>,
+    /// The operations written (or written by another one).
+    written: Lookup<usize, ()>,
     lines: Vec<String>,
     commands: usize,
-    comments: usize,
+    unexported: usize,
+    partial: usize,
+    notes: usize,
 }
 
 impl<'a> Writer<'a> {
-    fn new(options: &'a KgclOptions<'a>) -> Writer<'a> {
+    fn new(options: &'a KgclOptions<'a>, diff: &'a DiffResult) -> Writer<'a> {
+        let ops = &diff.delta.ops;
+        let has_edges = ops
+            .iter()
+            .any(|op| matches!(op, DeltaOp::EdgeAdd { .. } | DeltaOp::EdgeRemove { .. }));
+        let mut created: Lookup<&'a str, usize> = Lookup::new();
+        for (i, op) in ops.iter().enumerate() {
+            if let DeltaOp::NodeAdd { node } = op {
+                created.get_or_insert_with(member(node, "id"), || i);
+            }
+        }
+        let mut first: Lookup<usize, usize> = Lookup::new();
+        for (i, op) in ops.iter().enumerate() {
+            if let DeltaOp::NodeAdd { node } = op
+                && node.get("deprecated") == Some(&Value::Bool(true))
+                && let Some(replaced_by) = node.get("replacedBy").and_then(strings)
+                && let Some(&only) = single(&replaced_by)
+                && let Some(&a) = created.get(only)
+                && a != i
+            {
+                first.insert(i, a);
+            }
+        }
         Writer {
             options,
             prefixes: Prefixes::new(options.prefixes),
+            rekeys: Rekeys::of(ops),
+            triples: has_edges.then(|| (triples(&diff.before), triples(&diff.after))),
+            after_ids: true,
+            edge_lines: Lookup::new(),
+            created,
+            first,
+            written: Lookup::with_capacity(ops.len()),
             lines: Vec::new(),
             commands: 0,
-            comments: 0,
+            unexported: 0,
+            partial: 0,
+            notes: 0,
         }
     }
 
@@ -571,6 +695,31 @@ impl<'a> Writer<'a> {
         }
     }
 
+    /// The id a node has in the before file, the one the commands name it by.
+    fn before_id<'r>(&'r self, raw: &'r str, after_ids: bool) -> Result<&'r str, &'static str> {
+        if !after_ids {
+            return Ok(raw);
+        }
+        match self.rekeys.to_before.get(raw) {
+            Some(&before) => Ok(before),
+            None if self.rekeys.to_after.contains_key(raw) => Err(NO_OLD_ID),
+            None => Ok(raw),
+        }
+    }
+
+    /// The id a node has after the renames.
+    fn after_id<'r>(&'r self, raw: &'r str, after_ids: bool) -> &'r str {
+        if after_ids {
+            return raw;
+        }
+        self.rekeys.to_after.get(raw).copied().unwrap_or(raw)
+    }
+
+    /// A node as KGCL writes it: its id in the before file.
+    fn node(&self, raw: &str, after_ids: bool) -> Result<String, &'static str> {
+        self.id(self.before_id(raw, after_ids)?).ok_or(NO_ID)
+    }
+
     /// A predicate: an id, with OBO's `is_a` as `rdfs:subClassOf`.
     fn predicate(&self, raw: &str) -> Option<String> {
         if self.options.obo && raw == "is_a" {
@@ -579,22 +728,13 @@ impl<'a> Writer<'a> {
         self.id(raw)
     }
 
-    fn triple(&self, edge: &Object) -> Option<String> {
-        Some(format!(
-            "{} {} {}",
-            self.id(member(edge, "source"))?,
-            self.predicate(member(edge, "predicate"))?,
-            self.id(member(edge, "target"))?
-        ))
-    }
-
     fn command(&mut self, line: String) {
         self.lines.push(line);
         self.commands += 1;
     }
 
     /// `# reason: {json}` on one line.
-    fn comment(&mut self, reason: &str, detail: Value) {
+    fn comment(&mut self, kind: Kind, reason: &str, detail: Value) {
         let mut text = json::to_string(&detail);
         // JSON leaves these unescaped; Python's `splitlines` would end the line at them.
         for (c, escape) in [
@@ -607,10 +747,14 @@ impl<'a> Writer<'a> {
             }
         }
         self.lines.push(format!("# {reason}: {text}"));
-        self.comments += 1;
+        match kind {
+            Kind::Unexported => self.unexported += 1,
+            Kind::Partial => self.partial += 1,
+            Kind::Note => self.notes += 1,
+        }
     }
 
-    fn split_note(&mut self, diff: &DiffResult, hunk: &kgdiff_core::model::Hunk) {
+    fn split_note(&mut self, diff: &DiffResult, hunk: &Hunk) {
         let Some(anchor) = diff.node(&hunk.anchor) else {
             return;
         };
@@ -629,22 +773,21 @@ impl<'a> Writer<'a> {
                 .collect();
             detail.insert("into", Value::Array(into));
         }
-        self.comment(NO_SPLIT, Value::Object(detail));
+        self.comment(Kind::Note, NO_SPLIT, Value::Object(detail));
     }
 
-    fn merge_notes(&mut self, diff: &DiffResult, hunk: &kgdiff_core::model::Hunk, plan: &Plan) {
-        let ops = &diff.delta.ops;
+    fn merge_notes(&mut self, diff: &DiffResult, hunk: &Hunk, plan: &Plan<'_>) {
         for node in hunk.nodes.iter().filter_map(|id| diff.node(id)) {
             for facet in &node.facets {
                 let NodeFacet::MergedInto { target, .. } = facet else {
                     continue;
                 };
                 let into = diff.node(target).map(|t| raw_id(t, false));
-                let expressed = plan.replacements.iter().any(|(d, _, replacement)| {
-                    matches!(&ops[*d], DeltaOp::NodeSet { id, .. }
-                        if Some(id.as_str()) == node.after_id.as_deref())
-                        && Some(replacement.as_str()) == into.as_deref()
-                });
+                let expressed = node
+                    .after_id
+                    .as_deref()
+                    .and_then(|id| plan.obsoleted.get(id))
+                    .is_some_and(|r| Some(*r) == into.as_deref());
                 if !expressed {
                     let mut detail = Object::new();
                     detail.insert("hunk", &hunk.id);
@@ -652,57 +795,46 @@ impl<'a> Writer<'a> {
                     if let Some(into) = into {
                         detail.insert("into", into);
                     }
-                    self.comment(NO_MERGE, Value::Object(detail));
+                    self.comment(Kind::Note, NO_MERGE, Value::Object(detail));
                 }
             }
         }
     }
 
-    fn ops(&mut self, diff: &DiffResult, indices: &[usize], plan: Option<&Plan>) {
-        let empty = Plan::default();
-        let plan = plan.unwrap_or(&empty);
+    /// Writes these operations in order, each after the created node it names as a replacement.
+    fn ops(&mut self, diff: &DiffResult, indices: &[usize], plan: &Plan<'_>) {
+        let mut chain: Vec<usize> = Vec::new();
         for &i in indices {
-            if plan.consumed(i) {
-                continue;
+            chain.clear();
+            let mut at = i;
+            while !plan.consumed.contains_key(&at) && self.written.insert(at, ()).is_none() {
+                chain.push(at);
+                match plan.first.get(&at).or_else(|| self.first.get(&at)) {
+                    Some(&first) => at = first,
+                    None => break,
+                }
             }
-            if let Some((_, _, line)) = plan.move_at(i) {
-                self.command(line.clone());
-                continue;
+            for &j in chain.iter().rev() {
+                self.after_ids = j >= self.rekeys.renamed_from;
+                self.op(&diff.delta.ops[j], j, plan);
             }
-            self.op(&diff.delta.ops[i], i, plan);
         }
     }
 
-    fn op(&mut self, op: &DeltaOp, i: usize, plan: &Plan) {
+    fn op(&mut self, op: &DeltaOp, i: usize, plan: &Plan<'_>) {
         let whole = || op.to_value();
+        let after_ids = self.after_ids;
         match op {
-            DeltaOp::NodeRekey { .. } => self.comment(NO_REKEY, whole()),
-            DeltaOp::EdgeRemove { edge } => match self.triple(edge) {
-                Some(triple) => self.command(format!("delete edge {triple}")),
-                None => self.comment(NO_ID, whole()),
-            },
-            DeltaOp::EdgeAdd { edge } => match self.triple(edge) {
-                Some(triple) => {
-                    self.command(format!("create edge {triple}"));
-                    if edge.contains_key("label") || edge.contains_key("attrs") {
-                        let mut rest = Object::new();
-                        for key in ["source", "predicate", "target", "label", "attrs"] {
-                            if let Some(value) = edge.get(key) {
-                                rest.insert(key, value.clone());
-                            }
-                        }
-                        self.comment(NO_EDGE_REST, Value::Object(rest));
-                    }
-                }
-                None => self.comment(NO_ID, whole()),
-            },
+            DeltaOp::NodeRekey { .. } => self.comment(Kind::Unexported, NO_REKEY, whole()),
+            DeltaOp::EdgeRemove { edge } => self.edge(edge, false, whole),
+            DeltaOp::EdgeAdd { edge } => self.edge(edge, true, whole),
             DeltaOp::NodeRemove { node } => {
                 if node.get("implicit") == Some(&Value::Bool(true)) {
-                    self.comment(NO_IMPLICIT, whole());
+                    self.comment(Kind::Unexported, NO_IMPLICIT, whole());
                 } else {
-                    match self.id(member(node, "id")) {
-                        Some(id) => self.command(format!("delete {id}")),
-                        None => self.comment(NO_ID, whole()),
+                    match self.node(member(node, "id"), after_ids) {
+                        Ok(id) => self.command(format!("delete {id}")),
+                        Err(reason) => self.comment(Kind::Unexported, reason, whole()),
                     }
                 }
             }
@@ -713,55 +845,57 @@ impl<'a> Writer<'a> {
                 from,
                 to,
             } => {
-                let Some(x) = self.id(id) else {
-                    self.comment(NO_ID, whole());
-                    return;
+                let x = match self.node(id, after_ids) {
+                    Ok(x) => x,
+                    Err(reason) => return self.comment(Kind::Unexported, reason, whole()),
                 };
                 match field {
                     NodeField::Label => {
                         let (from, to) = (from.as_str().unwrap_or(""), to.as_str().unwrap_or(""));
                         if from == id.as_str() {
-                            self.comment(NO_ADD_LABEL, whole());
+                            self.comment(Kind::Unexported, NO_ADD_LABEL, whole());
                         } else if to == id.as_str() {
-                            self.comment(NO_REMOVE_LABEL, whole());
+                            self.comment(Kind::Unexported, NO_REMOVE_LABEL, whole());
                         } else if let (Some(a), Some(b)) = (kgcl_quote(from), kgcl_quote(to)) {
                             self.command(format!("rename {x} from {a} to {b}"));
                         } else {
-                            self.comment(NO_TEXT, whole());
+                            // `rename` cannot leave out the old label.
+                            self.comment(Kind::Unexported, NO_TEXT, whole());
                         }
                     }
                     NodeField::Aliases => {
                         let (Some(from), Some(to)) = (strings(from), strings(to)) else {
-                            self.comment(NO_TEXT, whole());
-                            return;
+                            return self.comment(Kind::Unexported, NO_TEXT, whole());
                         };
-                        for alias in from.iter().filter(|a| !to.contains(a)) {
+                        for alias in missing_from(&from, &to) {
                             self.synonym(&x, id, alias, false, None);
                         }
-                        for alias in to.iter().filter(|a| !from.contains(a)) {
-                            let scope = scope_of(plan.scopes_at(i), alias);
+                        let scopes = plan.scopes.get(&i);
+                        for alias in missing_from(&to, &from) {
+                            let scope = scopes.and_then(|s| s.get(alias)).copied();
                             self.synonym(&x, id, alias, true, scope);
                         }
                     }
                     NodeField::Types => {
-                        if !self.options.rdf_types {
-                            self.comment(NO_TYPES, whole());
-                            return;
-                        }
-                        let (Some(from), Some(to)) = (strings(from), strings(to)) else {
-                            self.comment(NO_TYPES, whole());
-                            return;
+                        let (true, Some(from), Some(to)) =
+                            (self.options.rdf_types, strings(from), strings(to))
+                        else {
+                            return self.comment(Kind::Unexported, NO_TYPES, whole());
                         };
-                        for t in from.iter().filter(|t| !to.contains(t)) {
+                        for t in missing_from(&from, &to) {
                             self.type_edge(&x, id, t, false);
                         }
-                        for t in to.iter().filter(|t| !from.contains(t)) {
+                        for t in missing_from(&to, &from) {
                             self.type_edge(&x, id, t, true);
                         }
                     }
                     NodeField::Deprecated => {
                         if to.as_bool() == Some(true) {
-                            match plan.replacement_of(i).and_then(|r| self.id(r)) {
+                            let replacement = plan
+                                .replacement
+                                .get(&i)
+                                .and_then(|r| self.node(r, after_ids).ok());
+                            match replacement {
                                 Some(r) => {
                                     self.command(format!("obsolete {x} with replacement {r}"));
                                 }
@@ -771,44 +905,108 @@ impl<'a> Writer<'a> {
                             self.command(format!("unobsolete {x}"));
                         }
                     }
-                    NodeField::Replaces => self.comment(NO_REPLACES, whole()),
-                    NodeField::ReplacedBy => self.comment(NO_REPLACED_BY, whole()),
-                    _ => self.comment(NO_ATTR, whole()),
+                    NodeField::Replaces => self.comment(Kind::Unexported, NO_REPLACES, whole()),
+                    NodeField::ReplacedBy => {
+                        self.comment(Kind::Unexported, NO_REPLACED_BY, whole());
+                    }
+                    _ => self.comment(Kind::Unexported, NO_ATTR, whole()),
                 }
             }
             DeltaOp::NodeAttr { id, key, from, to } => {
                 if !is_definition_key(key) {
-                    self.comment(NO_ATTR, whole());
-                    return;
+                    return self.comment(Kind::Unexported, NO_ATTR, whole());
                 }
-                let Some(x) = self.id(id) else {
-                    self.comment(NO_ID, whole());
-                    return;
+                let x = match self.node(id, after_ids) {
+                    Ok(x) => x,
+                    Err(reason) => return self.comment(Kind::Unexported, reason, whole()),
                 };
-                let text = |v: &Option<Value>| -> Result<Option<String>, &'static str> {
-                    match v {
-                        None => Ok(None),
-                        Some(Value::String(s)) => kgcl_quote(s).map(Some).ok_or(NO_TEXT),
-                        Some(_) => Err(NO_VALUE),
+                match (definition(from), definition(to)) {
+                    (Err(reason), _) | (_, Err(reason)) => {
+                        self.comment(Kind::Unexported, reason, whole());
                     }
-                };
-                match (text(from), text(to)) {
-                    (Err(reason), _) | (_, Err(reason)) => self.comment(reason, whole()),
-                    (Ok(None), Ok(Some(new))) => {
-                        self.command(format!("add definition {new} to {x}"));
-                    }
-                    (Ok(Some(old)), Ok(Some(new))) => {
-                        self.command(format!("change definition of {x} from {old} to {new}"));
-                    }
+                    (Ok(None), Ok(Some(new))) => match kgcl_quote(new) {
+                        Some(new) => self.command(format!("add definition {new} to {x}")),
+                        None => self.comment(Kind::Unexported, NO_TEXT, whole()),
+                    },
+                    // The old text is only a check: KGCL can leave it out when it cannot quote it.
+                    (Ok(Some(old)), Ok(Some(new))) => match (kgcl_quote(old), kgcl_quote(new)) {
+                        (_, None) => self.comment(Kind::Unexported, NO_TEXT, whole()),
+                        (Some(old), Some(new)) => {
+                            self.command(format!("change definition of {x} from {old} to {new}"));
+                        }
+                        (None, Some(new)) => {
+                            self.command(format!("change definition of {x} to {new}"));
+                        }
+                    },
                     (Ok(Some(_)), Ok(None)) => {
                         self.command(format!("remove definition for {x}"));
                     }
                     (Ok(None), Ok(None)) => {}
                 }
             }
-            DeltaOp::EdgeSet { .. } => self.comment(NO_EDGE_LABEL, whole()),
-            DeltaOp::EdgeAttr { .. } => self.comment(NO_EDGE_ATTR, whole()),
-            _ => self.comment(NO_ATTR, whole()),
+            DeltaOp::EdgeSet { .. } => self.comment(Kind::Unexported, NO_EDGE_LABEL, whole()),
+            DeltaOp::EdgeAttr { .. } => self.comment(Kind::Unexported, NO_EDGE_ATTR, whole()),
+            _ => self.comment(Kind::Unexported, NO_ATTR, whole()),
+        }
+    }
+
+    /// `delete edge` / `create edge`, unless the edge's triple stays or KGCL cannot write it.
+    fn edge(&mut self, edge: &Object, added: bool, whole: impl Fn() -> Value) {
+        let after_ids = self.after_ids;
+        let (s, p, o) = (
+            member(edge, "source"),
+            member(edge, "predicate"),
+            member(edge, "target"),
+        );
+        if self.options.obo && OBO_NOT_RELATIONS.contains(&p) {
+            return self.comment(Kind::Unexported, NO_OBO_CLAUSE, whole());
+        }
+        let triple = (|| -> Result<String, &'static str> {
+            Ok(format!(
+                "{} {} {}",
+                self.node(s, after_ids)?,
+                self.predicate(p).ok_or(NO_ID)?,
+                self.node(o, after_ids)?
+            ))
+        })();
+        let triple = match triple {
+            Ok(triple) => triple,
+            Err(reason) => return self.comment(Kind::Unexported, reason, whole()),
+        };
+        // KGCL edges are triples: one that stays in the other graph is not added or removed.
+        let stays = self.triples.as_ref().is_some_and(|(before, after)| {
+            if added {
+                let (Ok(bs), Ok(bo)) = (self.before_id(s, after_ids), self.before_id(o, after_ids))
+                else {
+                    return false;
+                };
+                before.contains_key(&(bs, p, bo))
+            } else {
+                after.contains_key(&(self.after_id(s, after_ids), p, self.after_id(o, after_ids)))
+            }
+        });
+        if stays {
+            let reason = if added { EDGE_THERE } else { EDGE_KEPT };
+            return self.comment(Kind::Unexported, reason, whole());
+        }
+        let line = format!("{} edge {triple}", if added { "create" } else { "delete" });
+        if self.edge_lines.insert(line.clone(), ()).is_some() {
+            let reason = if added {
+                EDGE_ADDED_ABOVE
+            } else {
+                EDGE_REMOVED_ABOVE
+            };
+            return self.comment(Kind::Unexported, reason, whole());
+        }
+        self.command(line);
+        if added && (edge.contains_key("label") || edge.contains_key("attrs")) {
+            let mut rest = Object::new();
+            for key in ["source", "predicate", "target", "label", "attrs"] {
+                if let Some(value) = edge.get(key) {
+                    rest.insert(key, value.clone());
+                }
+            }
+            self.comment(Kind::Partial, NO_EDGE_REST, Value::Object(rest));
         }
     }
 
@@ -828,7 +1026,7 @@ impl<'a> Writer<'a> {
                 if let Some(scope) = scope {
                     detail.insert("scope", scope);
                 }
-                self.comment(NO_TEXT, Value::Object(detail));
+                self.comment(Kind::Unexported, NO_TEXT, Value::Object(detail));
             }
         }
     }
@@ -843,21 +1041,21 @@ impl<'a> Writer<'a> {
                 detail.insert("id", id);
                 detail.insert("field", "types");
                 detail.insert(if added { "added" } else { "removed" }, raw);
-                self.comment(NO_ID, Value::Object(detail));
+                self.comment(Kind::Unexported, NO_ID, Value::Object(detail));
             }
         }
     }
 
     /// `create node` and what else KGCL can say about a new node; the rest as one comment.
     fn node_add(&mut self, node: &Object, whole: impl Fn() -> Value) {
+        let after_ids = self.after_ids;
         if node.get("implicit") == Some(&Value::Bool(true)) {
-            self.comment(NO_IMPLICIT, whole());
-            return;
+            return self.comment(Kind::Unexported, NO_IMPLICIT, whole());
         }
         let raw = member(node, "id");
-        let Some(x) = self.id(raw) else {
-            self.comment(NO_ID, whole());
-            return;
+        let x = match self.node(raw, after_ids) {
+            Ok(x) => x,
+            Err(reason) => return self.comment(Kind::Unexported, reason, whole()),
         };
         let mut rest = Object::new();
         rest.insert("id", raw);
@@ -897,21 +1095,16 @@ impl<'a> Writer<'a> {
         // Synonyms, with OBO scopes when the `synonyms` attribute names one for each.
         if let Some(aliases) = node.get("aliases").and_then(strings) {
             let scoped = if self.options.obo {
-                scopes(attrs.get("synonyms")).filter(|s| {
-                    let mut texts: Vec<&str> = s.iter().map(|(t, _)| t.as_str()).collect();
-                    let mut sorted = aliases.clone();
-                    texts.sort();
-                    sorted.sort();
-                    texts == sorted
-                })
+                scopes(attrs.get("synonyms")).filter(|s| same_texts(s, aliases.clone()))
             } else {
                 None
             };
+            let by_text = scoped.as_deref().map(scope_lookup);
             let mut kept: Vec<Value> = Vec::new();
             for alias in &aliases {
                 match kgcl_quote(alias) {
                     Some(quoted) => {
-                        let scope = scoped.as_deref().and_then(|s| scope_of(s, alias));
+                        let scope = by_text.as_ref().and_then(|s| s.get(alias));
                         let qualifier = scope.map_or(String::new(), |s| format!("{s} "));
                         self.command(format!("create {qualifier}synonym {quoted} for {x}"));
                     }
@@ -937,7 +1130,7 @@ impl<'a> Writer<'a> {
         // Obsoletion.
         let replaced_by = node.get("replacedBy").and_then(strings).unwrap_or_default();
         if node.get("deprecated") == Some(&Value::Bool(true)) {
-            match single(&replaced_by).and_then(|r| self.id(r)) {
+            match single(&replaced_by).and_then(|r| self.node(r, after_ids).ok()) {
                 Some(r) => self.command(format!("obsolete {x} with replacement {r}")),
                 None => {
                     self.command(format!("obsolete {x}"));
@@ -956,16 +1149,18 @@ impl<'a> Writer<'a> {
             rest.insert("attrs", Value::Object(attrs_rest));
         }
         if rest.len() > 1 {
-            self.comment(NO_NODE_REST, Value::Object(rest));
+            self.comment(Kind::Partial, NO_NODE_REST, Value::Object(rest));
         }
     }
 }
 
-fn scope_of<'s>(scopes: &'s [(String, String)], text: &str) -> Option<&'s str> {
-    scopes
-        .iter()
-        .find(|(t, _)| t == text)
-        .map(|(_, s)| s.as_str())
+/// A definition attribute's text, when it has one.
+fn definition(value: &Option<Value>) -> Result<Option<&str>, &'static str> {
+    match value {
+        None => Ok(None),
+        Some(Value::String(s)) => Ok(Some(s.as_str())),
+        Some(_) => Err(NO_VALUE),
+    }
 }
 
 /// A union node's id in the before (or after) graph, else its union id.

@@ -93,10 +93,14 @@ apply; their result differs from their `target.hash` as it always did, and
 
 Exporters to KGCL and RDF Patch can be built on top of hunks + ops without changing this format.
 `kgdiff --kgcl` (experimental) is the KGCL one: it walks the hunks in order and writes each op
-as a KGCL command, pairing the ops a hunk's semantics join (the `edge.remove` and `edge.add`
-of a move become one `move`, `deprecated` with one new `replacedBy` one `obsolete … with
-replacement`; OBO's `synonyms` attribute gives the synonyms their scope). Definitions map to
-`add` / `change` / `remove definition`, and with RDF inputs `types` to `rdf:type` edges. The
-ops KGCL has no command for (`node.rekey`, other `node.attr`, `edge.set`, `edge.attr`,
-`replaces`, a lone `replacedBy`) and splits become `#` comments that hold the op as JSON
+as a KGCL command for the before graph, pairing the ops a hunk's semantics join (`deprecated`
+with one new `replacedBy` becomes one `obsolete … with replacement`; OBO's `synonyms` attribute
+gives the synonyms their scope). A move stays its `edge.remove` and `edge.add`, written
+`delete edge` and `create edge`: OAK's simpleobo implementation only warns about a KGCL `move`,
+and its SQL one does not implement it. Definitions map to
+`add` / `change` / `remove definition`, and with RDF inputs `types` to `rdf:type` edges. KGCL
+cannot change an id, so a `node.rekey` is a comment and the commands name the node by its id in
+the before graph. The ops KGCL has no command for (`node.rekey`, other `node.attr`, `edge.set`,
+`edge.attr`, `replaces`, a lone `replacedBy`, an edge whose triple stays) become `#` comments that
+hold the op as JSON, and splits get a note
 ([CLI](cli.md#kgcl-export) has the full mapping).

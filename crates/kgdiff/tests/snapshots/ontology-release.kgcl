@@ -40,15 +40,20 @@ obsolete MHD:0000032 with replacement MHD:0000031
 change definition of MHD:0000032 from 'A lung disease characterized by chronic obstruction of airflow through the airways.' to 'OBSOLETE. A lung disease characterized by chronic obstruction of airflow through the airways.'
 # no KGCL command for an attribute change: {"op":"node.attr","id":"MHD:0000032","key":"xref","from":["ICD10CM:J44.9"]}
 create edge MHD:0000031 has_symptom MHD:0002011
-move MHD:0000087 rdfs:subClassOf MHD:0000085 from MHD:0000085 to MHD:0000086
-move MHD:0000072 rdfs:subClassOf MHD:0000069 from MHD:0000069 to MHD:0000071
-move MHD:0000038 rdfs:subClassOf MHD:0000028 from MHD:0000028 to MHD:0000047
-move MHD:0000082 rdfs:subClassOf MHD:0000078 from MHD:0000078 to MHD:0000079
+delete edge MHD:0000087 rdfs:subClassOf MHD:0000085
+create edge MHD:0000087 rdfs:subClassOf MHD:0000086
+delete edge MHD:0000072 rdfs:subClassOf MHD:0000069
+create edge MHD:0000072 rdfs:subClassOf MHD:0000071
+delete edge MHD:0000038 rdfs:subClassOf MHD:0000028
+create edge MHD:0000038 rdfs:subClassOf MHD:0000047
+delete edge MHD:0000082 rdfs:subClassOf MHD:0000078
 rename MHD:0000082 from 'alcoholic liver disease' to 'alcohol-related liver disease'
 create exact synonym 'alcoholic liver disease' for MHD:0000082
-move MHD:0000074 rdfs:subClassOf MHD:0000005 from MHD:0000005 to MHD:0002046
+create edge MHD:0000082 rdfs:subClassOf MHD:0000079
+delete edge MHD:0000074 rdfs:subClassOf MHD:0000005
 change definition of MHD:0000074 from 'An abnormally high concentration of glucose in the blood.' to 'An abnormal blood glucose concentration above the normal range.'
 # no KGCL command for an attribute change: {"op":"node.attr","id":"MHD:0000074","key":"namespace","from":"disease","to":"phenotype"}
+create edge MHD:0000074 rdfs:subClassOf MHD:0002046
 # KGCL cannot quote this text (empty, or with a ' or a line break): {"op":"node.set","id":"MHD:0000056","field":"label","from":"Alzheimer's disease","to":"Alzheimer disease"}
 # KGCL cannot quote this text (empty, or with a ' or a line break): {"op":"node.set","id":"MHD:0000056","field":"aliases","added":"Alzheimer's disease","scope":"exact"}
 # no KGCL command for an attribute change: {"op":"node.attr","id":"MHD:0000050","key":"xref","from":["DOID:0080600","ICD10CM:U07.1","MESH:D000086382"],"to":["DOID:0080600","ICD10CM:U07.1","ICD11:RA01","MESH:D000086382"]}
