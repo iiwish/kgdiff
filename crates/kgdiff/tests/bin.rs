@@ -135,7 +135,8 @@ fn apply_verify_target_writes_to_dev_null() {
 #[test]
 fn writes_every_output_to_dev_null() {
     let d = dataset("schema-vocab");
-    for output in ["-o", "--json", "--delta", "--markdown"] {
+    // Not `-o`: a diff's HTML report needs the viewer bundle, which a fresh checkout has not built.
+    for output in ["--json", "--delta", "--markdown", "--kgcl"] {
         let mut argv = vec![d.before.as_str(), d.after.as_str()];
         argv.extend(d.flags.iter().map(String::as_str));
         argv.extend([output, "/dev/null", "-q"]);

@@ -291,21 +291,29 @@ and `www.` autolinks — a summary never pings people, links issues or turns lab
 **Experimental**: the mapping may change in a minor release.
 
 `--kgcl` writes the changes as [KGCL](https://github.com/INCATools/kgcl) (Knowledge Graph Change
-Language), the change language OBO tools read: one command per line, hunk by hunk in the order of
-the summary and, inside a hunk, in the order of its delta operations. The same inputs give the
-same bytes. The library function is `kgdiff_report::render_kgcl`.
+Language), the change language OBO tools read: a list of changes to apply to the **before**
+file, one command per line, hunk by hunk in the order of the summary and, inside a hunk, in the
+order of its delta operations. A created node that a command names as a replacement is created
+before that command, even when its hunk comes later. The same inputs give the same bytes. The
+library function is `kgdiff_report::render_kgcl`.
 
 ```sh
 kgdiff mhd-2026-09.obo mhd-2026-10.obo --kgcl changes.kgcl
-runoak -i simpleobo:mhd-2026-09.obo apply --changes-input changes.kgcl -o mhd-applied.obo   # OAK
+runoak -i simpleobo:mhd-2026-09.obo apply --no-expand --changes-input changes.kgcl -o mhd-applied.obo   # OAK
 ```
+
+Pass `--no-expand` to OAK. By default (`--expand`) `runoak apply` expands each `obsolete` into
+more changes: it prefixes the label with “obsolete ” once more, rewires the node's children to its
+parents and deletes the node's edges. The kgdiff output already lists each of these changes the
+after file has (its `rename … to 'obsolete …'`, `delete edge` and `create edge`), so expanding
+them again changes the result. The option is as OAK's `cli.py` defines it; kgdiff's tests do
+not run OAK.
 
 | kgdiff                                 | KGCL                                                            |
 | -------------------------------------- | --------------------------------------------------------------- |
 | node added                             | `create node X 'label'` (`create X` for a node without a label) |
 | node removed                           | `delete X`                                                      |
 | edge added / removed                   | `create edge S P O` / `delete edge S P O`                       |
-| moved: one parent replaced by another  | `move S P OLD from OLD to NEW`                                  |
 | label changed                          | `rename X from 'old' to 'new'`                                  |
 | synonym (alias) added                  | `create [exact\|narrow\|broad\|related] synonym 'a' for X`      |
 | synonym removed                        | `remove synonym 'a' for X`                                      |
@@ -317,25 +325,54 @@ runoak -i simpleobo:mhd-2026-09.obo apply --changes-input changes.kgcl -o mhd-ap
 | type added / removed (RDF inputs)      | `create edge X rdf:type T` / `delete edge X rdf:type T`         |
 
 Definitions are the attributes `def` (OBO), `definition`, `IAO:0000115` and `skos:definition`.
+A move (one parent replaced by another) is its `delete edge S P OLD` and `create edge S P NEW`,
+not KGCL's `move`: OAK's simpleobo implementation only logs a warning for a move and changes
+nothing, and its SQL implementation raises `NotImplementedError`.
+
+KGCL cannot change an id. An id change is a comment, and every command names a node by its id
+in the before file, the file the commands apply to: after `A:1` became `A:2`, the label change
+is `rename A:1 …`. A new node that takes the old id of a renamed node cannot be named so, and
+its changes are comments.
+
+KGCL's edges are triples. An edge removed while another with the same source, predicate and
+target remains (a parallel edge), or added while one is there already, is a comment: `delete
+edge` would remove the triple the after file keeps, and `create edge` would add nothing. With
+OBO inputs only `is_a` (written `rdfs:subClassOf`) and `relationship` clauses are edges KGCL can
+write; `intersection_of`, `union_of`, `equivalent_to`, `disjoint_from` and `instance_of` clauses
+are not relations, and their edges are comments. (kgdiff reads both kinds of clause as edges
+with the tag or relation as predicate, so a `relationship` whose relation is named like one of
+these tags is a comment too.)
 
 The rest has no KGCL command and becomes a **comment**, a line `# <why>: <JSON>` that holds the
-delta operation (or the hunk) it stands for, so nothing is dropped: other attribute changes
-(`xref`, `comment`, `rdfs:comment`, …), id changes, edge labels and attributes, `replaces` and a
-`replacedBy` change without obsoletion, type changes outside RDF, splits (one comment before the
-split's own changes), merges that are not an obsoletion with replacement, implicit nodes (edge
-endpoints the file does not declare), and the fields of a new node or edge that its command
-cannot carry. A text KGCL cannot quote is a comment too: KGCL's strings are single-quoted with no
-escapes, so a label, synonym or definition that is empty or holds a `'` or a line break cannot be
-written (`Alzheimer's disease`). kgdiff prints one warning on stderr with the number of comments.
-OAK (`runoak apply`) skips `#` lines; KGCL itself has no comments, so other readers may need them
-removed first (`grep -v '^#'`).
+delta operation it stands for, as the delta has it, so nothing is dropped: other attribute
+changes (`xref`, `comment`, `rdfs:comment`, …), id changes, edge labels and attributes,
+`replaces` and a `replacedBy` change without obsoletion, type changes outside RDF, implicit nodes
+(edge endpoints the file does not declare), and the fields of a new node or edge that its
+command cannot carry (a comment after the command). A split, and a merge that is not an
+obsoletion with replacement, get a note before their changes. A text KGCL cannot quote is a
+comment too: KGCL's strings are single-quoted with no escapes, so a label, synonym or
+definition that is empty or holds a `'` or a line break cannot be written (`Alzheimer's
+disease`). A removed definition needs no text (`remove definition for X`), and a changed one
+whose old text cannot be quoted is written without it (`change definition of X to 'new'`, which
+both grammars below take); `rename` and the synonym commands have no such form. kgdiff prints
+one warning on stderr with the number of changes written as comments and of created nodes and
+edges with fields left in a comment; the notes are not counted. OAK (`runoak apply`) skips `#`
+lines; KGCL itself has no comments, so other readers may need them removed first
+(`grep -v '^#'`).
+
+With `--ignore-attr` the changes of the ignored attributes are still exported, as the delta
+still carries them: the commands are meant to turn the before file into the after file, and
+`--ignore-attr` only takes the attribute out of the comparison. They come first, before the
+hunks.
 
 Ids are written as KGCL takes them: an IRI as a CURIE with the prefixes the two files declare
 (plus the well-known ones and the OBO PURL rule, `http://purl.obolibrary.org/obo/GO_0008150` →
 `GO:0008150`), else in angle brackets (`<https://example.org/x>`); any other id as it is. An id
-with whitespace, or one that starts with a quote or `<`, cannot be written, and its change is a
-comment. With OBO inputs `is_a` is written `rdfs:subClassOf`, synonyms carry their scope, and the
-stanza type `Term` goes without saying.
+with whitespace (Python's, `\u00a0` included), one that starts with a quote or `<`, and an IRI
+that holds `<` or `>` and does not compact cannot be written, and its change is a comment. Ids
+that look like keywords (`with`, `from`, `to`, `edge`, `node`) are written as they are; both
+parsers below read them back as ids. With OBO inputs `is_a` is written `rdfs:subClassOf`,
+synonyms carry their scope, and the stanza type `Term` goes without saying.
 
 The commands follow the grammar [`src/kgcl_schema/grammar/kgcl.lark`](https://github.com/INCATools/kgcl/blob/1849f9cbb3ebb4a5ee0e6c62b11238841eb81d66/src/kgcl_schema/grammar/kgcl.lark) of INCATools/kgcl at commit `1849f9c` (2026-11-18),
 restricted to those the released `kgcl-schema` 0.7.0 parses too (it has no `add label`, so a

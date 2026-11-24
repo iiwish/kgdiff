@@ -192,19 +192,20 @@ kgdiff  企业信用知识图谱本体 v12 → v13                              
 **实验性**：映射可能在次版本中改变。
 
 `--kgcl` 把变更写成 [KGCL](https://github.com/INCATools/kgcl)（Knowledge Graph Change
-Language，OBO 工具读取的变更语言）：每行一条命令，按摘要里变更组的顺序，组内按增量操作的顺序。同样的输入得到同样的字节。对应的库函数是 `kgdiff_report::render_kgcl`。
+Language，OBO 工具读取的变更语言）：一份要应用到**旧版**文件上的变更清单，每行一条命令，按摘要里变更组的顺序，组内按增量操作的顺序。某条命令作为替代项引用的新建节点，会先于这条命令创建，即使它所在的变更组排在后面。同样的输入得到同样的字节。对应的库函数是 `kgdiff_report::render_kgcl`。
 
 ```sh
 kgdiff mhd-2026-09.obo mhd-2026-10.obo --kgcl changes.kgcl
-runoak -i simpleobo:mhd-2026-09.obo apply --changes-input changes.kgcl -o mhd-applied.obo   # OAK
+runoak -i simpleobo:mhd-2026-09.obo apply --no-expand --changes-input changes.kgcl -o mhd-applied.obo   # OAK
 ```
+
+给 OAK 加上 `--no-expand`。默认（`--expand`）下 `runoak apply` 会把每条 `obsolete` 展开成更多改动：给标签再加一次 “obsolete ” 前缀，把该节点的子节点重接到它的父节点上，并删除它的关系。kgdiff 的输出已经把新版文件里的这些改动逐条写出来了（它的 `rename … to 'obsolete …'`、`delete edge` 和 `create edge`），再展开一次会改变结果。这个选项按 OAK 的 `cli.py` 里的定义写，kgdiff 的测试没有实际运行 OAK。
 
 | kgdiff                          | KGCL                                                       |
 | ------------------------------- | ---------------------------------------------------------- |
 | 新增节点                        | `create node X 'label'`（没有标签的节点写 `create X`）     |
 | 删除节点                        | `delete X`                                                 |
 | 新增 / 删除关系                 | `create edge S P O` / `delete edge S P O`                  |
-| 迁移：一个父节点换成另一个      | `move S P OLD from OLD to NEW`                             |
 | 标签改变                        | `rename X from 'old' to 'new'`                             |
 | 新增同义词（别名）              | `create [exact\|narrow\|broad\|related] synonym 'a' for X` |
 | 删除同义词                      | `remove synonym 'a' for X`                                 |
@@ -215,11 +216,17 @@ runoak -i simpleobo:mhd-2026-09.obo apply --changes-input changes.kgcl -o mhd-ap
 | 删除定义                        | `remove definition for X`                                  |
 | 新增 / 删除类型（RDF 输入）     | `create edge X rdf:type T` / `delete edge X rdf:type T`    |
 
-定义指的是属性 `def`（OBO）、`definition`、`IAO:0000115` 和 `skos:definition`。
+定义指的是属性 `def`（OBO）、`definition`、`IAO:0000115` 和 `skos:definition`。迁移（一个父节点换成另一个）写成它的 `delete edge S P OLD` 和 `create edge S P NEW`，不用 KGCL 的 `move`：OAK 的 simpleobo 实现遇到 move 只记一条警告、什么也不改，SQL 实现则直接抛出 `NotImplementedError`。
 
-其余变更没有对应的 KGCL 命令，写成**注释**：一行 `# <原因>: <JSON>`，JSON 是它代表的增量操作（或变更组），所以什么都不会丢。这些是：其他属性的改动（`xref`、`comment`、`rdfs:comment` 等）、id 改变、关系的标签和属性、`replaces` 以及不伴随废弃的 `replacedBy` 改动、RDF 以外输入的类型改动、拆分（在拆分自己的改动之前写一条注释）、不是“带替代的废弃”的合并、隐式节点（文件里没有声明、只作为关系端点出现的节点），以及新节点或新关系里命令带不下的字段。KGCL 无法加引号的文本也写成注释：KGCL 的字符串用单引号括起，没有转义，所以为空、含 `'` 或含换行的标签、同义词和定义都写不出来（例如 `Alzheimer's disease`）。kgdiff 会在标准错误输出一条警告，给出注释的条数。OAK（`runoak apply`）会跳过 `#` 开头的行；KGCL 本身没有注释，别的读取方可能需要先去掉这些行（`grep -v '^#'`）。
+KGCL 不能改 id。id 改变写成注释，所有命令都用节点在旧版文件（命令要应用的那个文件）里的 id 指称它：`A:1` 改成 `A:2` 之后，标签改动写成 `rename A:1 …`。如果某个新节点占用了一个改过 id 的节点的旧 id，它就无法这样指称，它的改动写成注释。
 
-id 按 KGCL 接受的形式写：IRI 用两个文件自己声明的前缀（加上常用前缀和 OBO PURL 规则，`http://purl.obolibrary.org/obo/GO_0008150` → `GO:0008150`）压缩成 CURIE，压缩不了就放在尖括号里（`<https://example.org/x>`）；其他 id 原样写出。含空白、或以引号或 `<` 开头的 id 写不出来，相应的改动写成注释。输入是 OBO 时，`is_a` 写成 `rdfs:subClassOf`，同义词带上范围，stanza 类型 `Term` 不另写。
+KGCL 的关系是三元组。删除一条关系时如果还留着另一条来源、谓词和目标都相同的关系（平行边），或者新增一条关系时原来已经有相同的三元组，就写成注释：`delete edge` 会删掉新版文件里还保留的三元组，`create edge` 则什么也不加。输入是 OBO 时，只有 `is_a`（写成 `rdfs:subClassOf`）和 `relationship` 子句是 KGCL 能写的关系；`intersection_of`、`union_of`、`equivalent_to`、`disjoint_from` 和 `instance_of` 子句不是关系，它们的边写成注释。（kgdiff 把这两类子句都读成以标签名或关系名为谓词的边，所以关系名恰好与这些标签同名的 `relationship` 也会写成注释。）
+
+其余变更没有对应的 KGCL 命令，写成**注释**：一行 `# <原因>: <JSON>`，JSON 是它代表的增量操作，与增量里一致，所以什么都不会丢。这些是：其他属性的改动（`xref`、`comment`、`rdfs:comment` 等）、id 改变、关系的标签和属性、`replaces` 以及不伴随废弃的 `replacedBy` 改动、RDF 以外输入的类型改动、隐式节点（文件里没有声明、只作为关系端点出现的节点），以及新节点或新关系里命令带不下的字段（在命令之后写一条注释）。拆分，以及不是“带替代的废弃”的合并，在它们的改动之前写一条说明。KGCL 无法加引号的文本也写成注释：KGCL 的字符串用单引号括起，没有转义，所以为空、含 `'` 或含换行的标签、同义词和定义都写不出来（例如 `Alzheimer's disease`）。删除定义不需要文本（`remove definition for X`）；修改定义时旧文本无法加引号，就不带旧文本写（`change definition of X to 'new'`，下面两份语法都支持）；`rename` 和同义词命令没有这种写法。kgdiff 会在标准错误输出一条警告，给出写成注释的改动条数，以及有字段留在注释里的新建节点和关系的个数；说明不计在内。OAK（`runoak apply`）会跳过 `#` 开头的行；KGCL 本身没有注释，别的读取方可能需要先去掉这些行（`grep -v '^#'`）。
+
+用了 `--ignore-attr` 时，被忽略属性的改动照样导出，因为增量里照样有它们：这些命令是要把旧版文件变成新版文件的，`--ignore-attr` 只是把这个属性排除在比较之外。它们写在最前面，在所有变更组之前。
+
+id 按 KGCL 接受的形式写：IRI 用两个文件自己声明的前缀（加上常用前缀和 OBO PURL 规则，`http://purl.obolibrary.org/obo/GO_0008150` → `GO:0008150`）压缩成 CURIE，压缩不了就放在尖括号里（`<https://example.org/x>`）；其他 id 原样写出。含空白（按 Python 的定义，包括 `\u00a0`）、以引号或 `<` 开头的 id，以及压缩不了又含 `<` 或 `>` 的 IRI 写不出来，相应的改动写成注释。看起来像关键字的 id（`with`、`from`、`to`、`edge`、`node`）原样写出，下面两个解析器都会把它们读回成 id。输入是 OBO 时，`is_a` 写成 `rdfs:subClassOf`，同义词带上范围，stanza 类型 `Term` 不另写。
 
 这些命令依据 INCATools/kgcl 在提交 `1849f9c`（2026-11-18）的语法 [`src/kgcl_schema/grammar/kgcl.lark`](https://github.com/INCATools/kgcl/blob/1849f9cbb3ebb4a5ee0e6c62b11238841eb81d66/src/kgcl_schema/grammar/kgcl.lark)，并且只用已发布的 `kgcl-schema` 0.7.0 也能解析的命令（0.7.0 没有 `add label`，所以给原来没有标签的节点加标签会写成注释）。`kgcl-schema` 的解析器只在认识尖括号里完整 IRI 的命名空间时（OBO、Bioregistry 和常见的关联数据前缀）才能解析它，其他 IRI 会被读成空值；这是那个解析器的限制，不是语法的限制。
 

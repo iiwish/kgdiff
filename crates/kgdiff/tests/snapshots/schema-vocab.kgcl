@@ -19,7 +19,8 @@ create synonym '餐饮场所' for schema:FoodEstablishment
 # no KGCL command for these fields of a created node: {"id":"https://schema.org/FoodEstablishment","attrs":{"rdfs:comment":"A business that prepares or serves food or drink."}}
 create edge schema:CafeOrCoffeeShop rdfs:subClassOf schema:FoodEstablishment
 create edge schema:FoodEstablishment rdfs:subClassOf schema:LocalBusiness
-move schema:Restaurant rdfs:subClassOf schema:LocalBusiness from schema:LocalBusiness to schema:FoodEstablishment
+delete edge schema:Restaurant rdfs:subClassOf schema:LocalBusiness
+create edge schema:Restaurant rdfs:subClassOf schema:FoodEstablishment
 delete edge schema:servesCuisine schema:domainIncludes schema:Restaurant
 # no KGCL command for an attribute change: {"op":"node.attr","id":"https://schema.org/servesCuisine","key":"rdfs:comment","from":"The style of food the restaurant serves.","to":"The style of food the establishment serves."}
 create edge schema:servesCuisine schema:domainIncludes schema:FoodEstablishment
@@ -33,7 +34,8 @@ create synonym '社交媒体帖子' for schema:SocialMediaPosting
 # no KGCL command for these fields of a created node: {"id":"https://schema.org/SocialMediaPosting","attrs":{"rdfs:comment":"A post published on a social or community platform, including blog entries and forum messages."}}
 create edge schema:DiscussionForumPosting rdfs:subClassOf schema:SocialMediaPosting
 create edge schema:SocialMediaPosting rdfs:subClassOf schema:Article
-move schema:BlogPosting rdfs:subClassOf schema:Article from schema:Article to schema:SocialMediaPosting
+delete edge schema:BlogPosting rdfs:subClassOf schema:Article
+create edge schema:BlogPosting rdfs:subClassOf schema:SocialMediaPosting
 create node schema:VirtualLocation 'Virtual location'
 create edge schema:VirtualLocation rdf:type rdfs:Class
 create synonym '线上地点' for schema:VirtualLocation

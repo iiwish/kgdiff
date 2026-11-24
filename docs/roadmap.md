@@ -31,15 +31,17 @@ Last reviewed 2026-11-19, after 0.12.3.
 - **GEXF as NetworkX writes it**: node and edge attributes named `start`, `end` and `pid` are
   written as XML attributes, where kgdiff reads them as time and hierarchy and drops the
   values, with a warning. Undecided whether to keep them as fields.
-- **Fixtures written by the tools.** The NetworkX fixtures of the GraphML and GEXF readers were
-  written by hand; `crates/kgdiff-formats/tests/fixtures/networkx.py` writes them and has not
-  been run. Nothing was run through yEd or Gephi either.
+- **Fixtures written by yEd and Gephi.** The NetworkX fixtures of the GraphML and GEXF readers
+  are what NetworkX 3.7 writes (#165); nothing was run through yEd or Gephi.
+- **KGCL export, after its first release** (#10, experimental): the commands were parsed by
+  `kgcl-schema` and by the grammar, but not applied with OAK (`runoak apply`); attribute changes
+  that `change annotation` could carry are comments; there is no `toKgcl` in JavaScript.
+- **`NUL` as an output on Windows** is untested: `-o /dev/null` works on Unix since 0.12.4.
 - **Native binaries on GitHub releases and a Homebrew formula.** The workflow is ready
   ([Releasing](releasing.md#native-binaries-and-crates)); it needs the `native` environment,
   its token and `NATIVE_RELEASE_ENABLED`.
 
-- Additions with an issue: KGCL export (#10), an MCP server (#13), playground links that diff
-  two URLs (#11), the GraphRAG (#18) and ODK (#17) guides.
+- Additions with an issue: an MCP server (#13), the GraphRAG (#18) and ODK (#17) guides.
 
 ## 0.13, the next breaking release
 

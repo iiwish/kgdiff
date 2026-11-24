@@ -176,6 +176,42 @@ fn is_rdf(format: FormatId) -> bool {
     )
 }
 
+/// The `--kgcl` warning: the changes it leaves out as comments, and the created nodes and edges
+/// whose other fields it does. The notes before a split or a merge are not counted.
+fn kgcl_warning(unexported: usize, partial: usize) -> Option<String> {
+    let changes = |n: usize| {
+        if n == 1 {
+            "1 change has no KGCL command".to_owned()
+        } else {
+            format!("{} changes have no KGCL command", format_int(n))
+        }
+    };
+    let fields = |n: usize| {
+        if n == 1 {
+            "1 created node or edge has fields with no KGCL command".to_owned()
+        } else {
+            format!(
+                "{} created nodes or edges have fields with no KGCL command",
+                format_int(n)
+            )
+        }
+    };
+    let one = "a comment (a line starting with #)";
+    let many = "comments (lines starting with #)";
+    Some(match (unexported, partial) {
+        (0, 0) => return None,
+        (1, 0) => format!("{}; --kgcl writes it as {one}.", changes(1)),
+        (u, 0) => format!("{}; --kgcl writes them as {many}.", changes(u)),
+        (0, 1) => format!("{}; --kgcl writes them as {one}.", fields(1)),
+        (0, p) => format!("{}; --kgcl writes them as {many}.", fields(p)),
+        (u, p) => format!(
+            "{}, and {}; --kgcl writes these as {many}.",
+            changes(u),
+            fields(p)
+        ),
+    })
+}
+
 /// `JSON.stringify(value, null, pretty ? 2 : undefined)` and a newline.
 fn json_text(value: &Value, pretty: bool) -> String {
     let mut text = if pretty {
@@ -374,20 +410,8 @@ pub fn run_diff(o: &DiffCommandOptions, io: &mut dyn CliIo) -> CliResult<u8> {
         options.obo = before_format == FormatId::Obo && after_format == FormatId::Obo;
         options.rdf_types = is_rdf(before_format) && is_rdf(after_format);
         let kgcl = render_kgcl(&result, &options)?;
-        if kgcl.comments > 0 {
-            let (has, them) = if kgcl.comments == 1 {
-                ("change has", "it as a comment (a line starting with #)")
-            } else {
-                ("changes have", "them as comments (lines starting with #)")
-            };
-            let text = format_warning(
-                &format!(
-                    "{} {has} no KGCL command; --kgcl writes {them}.",
-                    format_int(kgcl.comments)
-                ),
-                &ctx.err_paint,
-            );
-            ctx.notice(io, &text);
+        if let Some(text) = kgcl_warning(kgcl.unexported, kgcl.partial) {
+            ctx.notice(io, &format_warning(&text, &ctx.err_paint));
         }
         if path == STDIO {
             stdout_text = Some(kgcl.text);
