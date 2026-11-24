@@ -141,6 +141,23 @@ graph-diff:
 - 一次运行写出两种输出：`--markdown` 写摘要，`-o` 写报告。`--title` 同时用作两者的标题。`--reproducible` 不在报告里写时间戳，输入相同，文件就完全相同。
 - `--exit-code` 让任何差异都以退出码 1 结束，于是作业失败，并打印出变了什么。
 
+## 在 PR 里链接一个 diff
+
+文件公开时，一个指向 [playground](/playground.html?lang=zh) 的链接就能打开可交互的 diff，什么都不用安装：`before` 和 `after` 是两个文件的地址（这里分成三行显示，实际的链接写在一行里）：
+
+```
+https://iiwish.github.io/kgdiff/playground.html
+  ?before=https://raw.githubusercontent.com/org/onto/v1.0/onto.obo
+  &after=https://raw.githubusercontent.com/org/onto/v1.1/onto.obo
+```
+
+playground 会先显示这两个地址，访客点了「载入文件」才下载；文件由浏览器直接下载，不经过任何 kgdiff 服务器。
+
+- 只接受 `http` 和 `https` 地址。地址本身带查询参数（`?`、`&`）时，在链接里要做百分号编码；分享按钮会自动处理。链接标签或提交（`raw.githubusercontent.com/<owner>/<repo>/<sha>/<path>`），不要链接分支，这样链接打开的始终是同一个 diff。
+- 文件所在的主机要允许其他网站读取它（CORS）。`raw.githubusercontent.com` 允许；主机不允许时，浏览器不会说明下载失败的原因，playground 会提示很可能是 CORS 的问题。私有仓库的文件无法链接：下载时不会带上 cookie 或令牌。
+- 和拖入的文件一样，格式由地址里的文件名决定，`.gz` 文件会被解压。链接的文件最大 256 MB，下载的大小和解压后的大小都算。
+- 分享按钮复制的链接带着这两个地址，以及当前的视图和选项（`mode`、`hunk`、`match`、`threshold` 等），所以可以先把 diff 调好，再贴出它的链接。
+
 ## 提示
 
 - 本地和 CI 使用相同的选项（`--match`、`--hierarchy`、`--lang`、`--ignore-attr`，在 action 里通过 `args` 传入），这样审阅者看到的就是你看到的 diff。
