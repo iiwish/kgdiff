@@ -26,6 +26,10 @@ export const ZH: Dictionary = {
   'pg.dropAfter': '作为「变更后」',
   'pg.dropBoth': '或在任意位置拖入两个文件：第一个作为变更前，第二个作为变更后',
   'pg.dropPrivate': '文件不会离开你的浏览器',
+  'pg.linkedTitle': '要载入这两个文件吗？',
+  'pg.linkedLead': '这个链接比较网上的两个文件。浏览器会直接从下面的地址下载它们，不经过 kgdiff。',
+  'pg.linkedLoad': '载入文件',
+  'pg.linkedCancel': '改为打开示例',
   'opt.title': '比较选项',
   'opt.close': '关闭',
   'opt.match': '节点匹配方式',
@@ -80,6 +84,21 @@ export const TEXT = {
     langLabel: '中文',
     reportDescription: 'Interactive kgdiff report',
     pickTitle: 'Choose a file, or drop one here',
+    downloading: 'Downloading {name}…',
+    linkedInvalid: {
+      missing: 'The link has no “{side}” address. Showing the example instead.',
+      invalid: 'The link’s “{side}” address is not a URL. Showing the example instead.',
+      scheme: 'The link’s “{side}” address is not http(s). Showing the example instead.',
+      credentials:
+        'The link’s “{side}” address contains a user name or password. Showing the example instead.',
+    },
+    linkedUnreachable:
+      'Couldn’t download {url}. The host may not allow other sites to read its files (CORS), or it could not be reached. raw.githubusercontent.com allows it: link the file’s “Raw” address.',
+    linkedHttp: '{host} answered HTTP {status} for {url}.',
+    linkedTooLarge:
+      'The file is larger than {limit}, the most the playground downloads from a link. Download it and drop it here instead.',
+    linkedGzip: 'The file starts like a gzip file but does not decompress.',
+    notText: 'The file is not valid UTF-8 (or UTF-16) text.',
   },
   'zh-CN': {
     docTitle: 'Playground · kgdiff',
@@ -114,5 +133,19 @@ export const TEXT = {
     langLabel: 'EN',
     reportDescription: 'kgdiff 交互式报告',
     pickTitle: '选择文件，或拖放到这里',
+    downloading: '正在下载 {name}…',
+    linkedInvalid: {
+      missing: '链接里没有「{side}」的地址，改为显示示例。',
+      invalid: '链接里「{side}」的地址不是有效的 URL，改为显示示例。',
+      scheme: '链接里「{side}」的地址不是 http(s) 地址，改为显示示例。',
+      credentials: '链接里「{side}」的地址带有用户名或密码，改为显示示例。',
+    },
+    linkedUnreachable:
+      '无法下载 {url}。可能是该主机不允许其他网站读取它的文件（CORS），也可能是连不上该主机。raw.githubusercontent.com 允许跨域读取：可以链接文件的「Raw」地址。',
+    linkedHttp: '{host} 对 {url} 返回了 HTTP {status}。',
+    linkedTooLarge:
+      '文件超过 {limit}，这是 playground 从链接下载文件的上限。可以先下载下来，再拖到这里。',
+    linkedGzip: '文件开头像 gzip 文件，但无法解压。',
+    notText: '文件不是有效的 UTF-8（或 UTF-16）文本。',
   },
 } as const;

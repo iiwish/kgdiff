@@ -3,6 +3,8 @@
  * dataset (with its meta.json options) or bring two files (picker or drag and drop, any
  * supported format, gzip ok); tune the diff options; share the dataset view as a URL
  * (`?dataset=…&mode=…&hunk=…` + non-default options); download a self-contained HTML report.
+ * `?before=<url>&after=<url>` diffs two public files: after one confirmation the browser
+ * downloads them itself (`remote.ts`), and the share button keeps both addresses.
  * Everything runs locally: files are parsed, diffed and laid out in the browser.
  */
 
@@ -38,6 +40,17 @@ import {
   storeTheme,
 } from '../shared/prefs.js';
 import { onViewer } from '../shared/viewer-events.js';
+import {
+  decodeText,
+  displayUrl,
+  fetchLinked,
+  fileNameFromUrl,
+  formatBytes,
+  type LinkedFailure,
+  LinkedFileError,
+  type LinkedPair,
+  linkedParams,
+} from './remote.js';
 import { downloadText, renderReportHtml, slug } from './report.js';
 import { TEXT, ZH } from './strings.js';
 
@@ -52,7 +65,9 @@ interface Side {
   /** Used for format detection (`.gz` stripped). */
   readonly parseName: string;
   readonly text: string;
-  readonly origin: 'dataset' | 'file';
+  readonly origin: 'dataset' | 'file' | 'url';
+  /** Where a linked file (`origin: 'url'`) was downloaded from. */
+  readonly url?: string;
 }
 
 interface Options {
@@ -241,6 +256,7 @@ function renderDatasetSelect(): void {
  * graphs in another language, so options, swap and the selected change carry over.
  */
 async function selectDataset(id: string, from?: 'url' | 'translation'): Promise<void> {
+  dismissLinked();
   const fromUrl = from === 'url';
   const keep = from === 'translation';
   const d = datasetById(id) ?? featuredFor(state.locale);
@@ -281,12 +297,6 @@ async function gunzip(bytes: Uint8Array): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
-function decodeText(bytes: Uint8Array): string {
-  if (bytes[0] === 0xff && bytes[1] === 0xfe) return new TextDecoder('utf-16le').decode(bytes);
-  if (bytes[0] === 0xfe && bytes[1] === 0xff) return new TextDecoder('utf-16be').decode(bytes);
-  return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-}
-
 class ReadError extends Error {}
 
 async function readFile(file: File): Promise<Side> {
@@ -306,6 +316,7 @@ async function readFile(file: File): Promise<Side> {
 /** Put local files in: one side, or both (sorted by name, so v12 comes before v13). */
 async function useFiles(files: readonly File[], side?: SideName): Promise<void> {
   if (files.length === 0) return;
+  dismissLinked();
   const sorted = [...files].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { numeric: true }),
   );
@@ -454,8 +465,9 @@ function setStatus(text: string): void {
   statusEl.textContent = text;
 }
 
-function showError(side: SideName, name: string, error: Error): void {
+function showError(side: SideName, name: string, error: Error, formatHint = true): void {
   errorSide = side;
+  byId('error-hint').hidden = !formatHint;
   byId(`slot-${side}`).setAttribute('data-error', '');
   byId('error-title').textContent = format(t().readFailed, { name });
   byId('error-msg').textContent = error.message;
@@ -547,10 +559,132 @@ async function run(): Promise<void> {
   }
 }
 
+// ── Linked files (`?before=<url>&after=<url>`) ─────────────────────────────
+
+const linkedEl = byId('linked');
+/** The pair being confirmed or downloaded; it stays in the address meanwhile. */
+let linkedPending: LinkedPair | null = null;
+let linkedAbort: AbortController | null = null;
+
+/** Shows both addresses (as text, the host always visible) and waits for one click. */
+function askLinked(pair: LinkedPair): void {
+  linkedPending = pair;
+  state.dataset = null;
+  state.swapped = false;
+  state.before = null;
+  state.after = null;
+  state.defaults = ENGINE_DEFAULTS;
+  state.options = optionsFromUrl(params, ENGINE_DEFAULTS);
+  for (const side of ['before', 'after'] as const) {
+    const el = byId(`linked-${side}`);
+    el.textContent = displayUrl(pair[side]);
+    el.title = pair[side].href;
+  }
+  linkedEl.hidden = false;
+  renderDatasetSelect();
+  renderSlots();
+  byId<HTMLButtonElement>('linked-load').focus({ preventScroll: true });
+}
+
+/** The visitor chose something else (an example, local files): forget the linked pair. */
+function dismissLinked(): void {
+  linkedAbort?.abort();
+  linkedAbort = null;
+  linkedPending = null;
+  linkedEl.hidden = true;
+}
+
+function linkedMessage(failure: LinkedFailure, url: URL): string {
+  switch (failure.kind) {
+    case 'unreachable':
+      return format(t().linkedUnreachable, { url: displayUrl(url) });
+    case 'http':
+      return format(t().linkedHttp, {
+        host: url.host,
+        status: failure.statusText ? `${failure.status} ${failure.statusText}` : failure.status,
+        url: displayUrl(url),
+      });
+    case 'too-large':
+      return format(t().linkedTooLarge, { limit: formatBytes(failure.limit) });
+    case 'gzip':
+      return t().linkedGzip;
+    case 'encoding':
+      return t().notText;
+  }
+}
+
+async function loadLinked(pair: LinkedPair): Promise<void> {
+  linkedAbort?.abort();
+  const abort = new AbortController();
+  linkedAbort = abort;
+  linkedEl.hidden = true;
+  hideError();
+  setStatus(
+    format(t().downloading, {
+      name: [...new Set([fileNameFromUrl(pair.before), fileNameFromUrl(pair.after)])].join(' · '),
+    }),
+  );
+  const results = await Promise.allSettled(
+    (['before', 'after'] as const).map((side) => fetchLinked(pair[side], { signal: abort.signal })),
+  );
+  if (abort.signal.aborted) return;
+  linkedAbort = null;
+  setStatus('');
+  // A side that arrived is kept, so after a failure "Choose another file" completes the pair.
+  let failed: { readonly side: SideName; readonly error: unknown } | null = null;
+  for (const [i, side] of (['before', 'after'] as const).entries()) {
+    const result = results[i];
+    if (result?.status === 'fulfilled') {
+      state[side] = { ...result.value, origin: 'url', url: pair[side].href };
+    } else {
+      failed ??= { side, error: result?.reason };
+    }
+  }
+  renderSlots();
+  syncUrl();
+  if (failed) {
+    const { side, error } = failed;
+    const url = pair[side];
+    const message =
+      error instanceof LinkedFileError
+        ? linkedMessage(error.failure, url)
+        : error instanceof Error
+          ? error.message
+          : String(error);
+    showError(side, fileNameFromUrl(url), new Error(message), false);
+    return;
+  }
+  linkedPending = null;
+  await run();
+}
+
+byId('linked-load').addEventListener('click', () => {
+  if (linkedPending) void loadLinked(linkedPending);
+});
+byId('linked-cancel').addEventListener('click', () => {
+  dismissLinked();
+  void selectDataset(featuredFor(state.locale).id);
+});
+
+/** The addresses the page's link keeps: the pair being confirmed, or two linked sides. */
+function linkedHrefs(): { before: string; after: string } | null {
+  if (linkedPending) {
+    return { before: linkedPending.before.href, after: linkedPending.after.href };
+  }
+  const b = state.before?.url;
+  const a = state.after?.url;
+  return b && a ? { before: b, after: a } : null;
+}
+
 // ── URL ────────────────────────────────────────────────────────────────────
 
 function syncUrl(): void {
   const p = new URLSearchParams();
+  const linked = linkedHrefs();
+  if (linked) {
+    p.set('before', linked.before);
+    p.set('after', linked.after);
+  }
   if (state.dataset) {
     p.set('dataset', state.dataset);
     if (state.swapped) p.set('swap', '1');
@@ -572,13 +706,15 @@ function syncUrl(): void {
   if (o.splits !== base.splits) p.set('splits', o.splits ? '1' : '0');
   const lang = langParam(state.locale);
   if (lang) p.set('lang', lang);
-  const next = `${location.pathname}?${p.toString()}`;
+  // `:` and `/` are allowed as they are in a query: linked addresses stay readable in the link.
+  const query = p.toString().replace(/%3A/gi, ':').replace(/%2F/gi, '/');
+  const next = `${location.pathname}?${query}`;
   if (next !== location.pathname + location.search) history.replaceState(null, '', next);
 }
 
 byId('share-btn').addEventListener('click', () => {
   syncUrl();
-  const local = state.dataset === null;
+  const local = state.dataset === null && linkedHrefs() === null;
   void copyText(location.href).then((ok) =>
     toast(
       ok ? (local ? t().linkCopiedLocal : t().linkCopied) : t().copyFailed,
@@ -807,4 +943,13 @@ new MutationObserver(() => {
 
 applyTheme(state.theme);
 applyLocale();
-void selectDataset(params.get('dataset') ?? featuredFor(state.locale).id, 'url');
+const linkedAtStart = linkedParams(params);
+if (linkedAtStart.kind === 'ok') {
+  askLinked(linkedAtStart.pair);
+} else {
+  if (linkedAtStart.kind === 'invalid') {
+    const side = linkedAtStart.side === 'before' ? t().sideBefore : t().sideAfter;
+    toast(format(t().linkedInvalid[linkedAtStart.reason], { side }), 'error', 6000);
+  }
+  void selectDataset(params.get('dataset') ?? featuredFor(state.locale).id, 'url');
+}

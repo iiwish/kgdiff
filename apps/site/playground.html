@@ -143,10 +143,28 @@
           <h2 id="error-title" data-i18n="pg.errorTitle">Couldn’t read the file</h2>
           <p class="pg-error-msg" id="error-msg"></p>
           <p class="pg-error-where" id="error-where"></p>
-          <p class="pg-error-hint" data-i18n="pg.errorHint">kgdiff reads Turtle, N-Triples, N-Quads, TriG, RDF/XML (.rdf, .owl), JSON-LD with inline contexts, OBO 1.4 and JSON (kgdiff, Cytoscape.js, d3 / NetworkX, AntV G6, graphology, vis-network), optionally gzip-compressed.</p>
+          <p class="pg-error-hint" id="error-hint" data-i18n="pg.errorHint">kgdiff reads Turtle, N-Triples, N-Quads, TriG, RDF/XML (.rdf, .owl), JSON-LD with inline contexts, OBO 1.4 and JSON (kgdiff, Cytoscape.js, d3 / NetworkX, AntV G6, graphology, vis-network), optionally gzip-compressed.</p>
           <div class="pg-error-actions">
             <button class="btn btn-primary btn-sm" type="button" id="error-retry" data-i18n="pg.chooseOther">Choose another file</button>
             <button class="btn btn-ghost btn-sm" type="button" id="error-reset" data-i18n="pg.backToExample">Back to the example</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="pg-error pg-linked" id="linked" role="dialog" aria-modal="false" hidden aria-labelledby="linked-title" aria-describedby="linked-lead">
+        <div class="pg-error-card">
+          <svg class="i pg-linked-icon" aria-hidden="true"><use href="#i-link" /></svg>
+          <h2 id="linked-title" data-i18n="pg.linkedTitle">Load these two files?</h2>
+          <p class="pg-error-hint" id="linked-lead" data-i18n="pg.linkedLead">This link compares two files from the web. Your browser downloads them straight from these addresses; nothing goes through kgdiff.</p>
+          <dl class="pg-linked-list">
+            <dt data-i18n="pg.before">Before</dt>
+            <dd><code id="linked-before"></code></dd>
+            <dt data-i18n="pg.after">After</dt>
+            <dd><code id="linked-after"></code></dd>
+          </dl>
+          <div class="pg-error-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="linked-load" data-i18n="pg.linkedLoad">Load the files</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="linked-cancel" data-i18n="pg.linkedCancel">Open the example instead</button>
           </div>
         </div>
       </section>

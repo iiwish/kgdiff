@@ -184,6 +184,35 @@ graph-diff:
 - `--exit-code` turns any difference into exit code 1, which fails the job and prints what
   changed.
 
+## Link a diff from a pull request
+
+For public files, a link to the [playground](/playground.html) opens an interactive diff with
+nothing to install: `before` and `after` are the addresses of the two files (broken over three
+lines here; a link is one line):
+
+```
+https://iiwish.github.io/kgdiff/playground.html
+  ?before=https://raw.githubusercontent.com/org/onto/v1.0/onto.obo
+  &after=https://raw.githubusercontent.com/org/onto/v1.1/onto.obo
+```
+
+The playground shows both addresses and downloads them only
+after the visitor clicks "Load the files"; the browser fetches them itself, so they never pass
+through a kgdiff server.
+
+- Only `http` and `https` addresses are accepted. An address with a query of its own (`?`, `&`)
+  has to be percent-encoded in the link; the share button does that. Link a tag or a commit
+  (`raw.githubusercontent.com/<owner>/<repo>/<sha>/<path>`) rather than a branch, so the link
+  keeps showing the same diff.
+- The host has to allow other sites to read the file (CORS). `raw.githubusercontent.com` does;
+  when a host does not, the browser does not say why a download failed, and the playground says
+  that CORS is the likely cause. Files of private repositories cannot be linked: no cookies or
+  tokens are sent.
+- The format comes from the file name in the address, as for a dropped file, and `.gz` files
+  are decompressed. A linked file may be up to 256 MB, downloaded and after decompression.
+- The share button copies a link with both addresses and the current view and options (`mode`,
+  `hunk`, `match`, `threshold`, …), so you can set the diff up and then paste its link.
+
 ## Tips
 
 - Use the same options locally and in CI (`--match`, `--hierarchy`, `--lang`, `--ignore-attr`,
