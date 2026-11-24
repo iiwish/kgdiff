@@ -2,6 +2,8 @@
 #
 #   uv run --with networkx python crates/kgdiff-formats/tests/fixtures/networkx.py
 #
+# The checked-in files are what this script writes with NetworkX 3.7 (Python 3.13), unedited, except that
+# the GEXF files' lastmodifieddate is today's date when run.
 # tests/graphml.rs and tests/gexf.rs check that kgdiff reads the files of a graph as the same graph.
 # GEXF holds a graph's name and no other graph attribute, and a date in its <meta>.
 import json
