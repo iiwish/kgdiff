@@ -4,7 +4,7 @@
 //! `--name-status` and the Markdown summary, in English or Simplified Chinese, laid out for a
 //! width in terminal columns — and assembles the single-file HTML report. It does no I/O, so an
 //! application that embeds the engine renders the same summary as the CLI without depending on
-//! it.
+//! it. [`render_kgcl`] (experimental) writes the changes as KGCL commands, as `kgdiff --kgcl` does.
 //!
 //! A report carries the diff and its layout ([`report_payload`], [`build_report_html`]: the
 //! layout of the default options). An application that has a layout already hands it over with
@@ -69,6 +69,7 @@
 struct ReadmeDoctests;
 
 pub mod html;
+pub mod kgcl;
 #[doc(hidden)]
 pub mod locale;
 pub mod markdown;
@@ -84,6 +85,7 @@ pub use html::{
     build_report_html_with, describe_diff, embedded_viewer, needs_compute, report_payload,
     report_payload_with,
 };
+pub use kgcl::{Kgcl, KgclOptions, render_kgcl};
 #[doc(hidden)]
 pub use locale::{format_int, match_locale, messages, resolve_locale};
 pub use markdown::{MarkdownOptions, escape_markdown, render_markdown};

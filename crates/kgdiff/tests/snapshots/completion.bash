@@ -85,7 +85,7 @@ _kgdiff() {
 
     if [[ "$cur" == -* ]]; then
         case "$cmd" in
-            diff) COMPREPLY=($(compgen -W "--help -h --version -v --quiet -q --color --locale --lang --pretty --stat --name-status --json --delta --markdown --html -o --open --format -f --before-format --after-format --match --threshold --edge-identity --hierarchy --ignore-attr --no-merges --no-splits --title --theme --mode --scope --panels --reproducible --no-compute --allow-empty --exit-code --limit --watch-attr" -- "$cur")) ;;
+            diff) COMPREPLY=($(compgen -W "--help -h --version -v --quiet -q --color --locale --lang --pretty --stat --name-status --json --delta --markdown --kgcl --html -o --open --format -f --before-format --after-format --match --threshold --edge-identity --hierarchy --ignore-attr --no-merges --no-splits --title --theme --mode --scope --panels --reproducible --no-compute --allow-empty --exit-code --limit --watch-attr" -- "$cur")) ;;
             apply) COMPREPLY=($(compgen -W "--help -h --version -v --quiet -q --color --locale --lang --pretty --output -o --format -f --no-strict --verify-target --allow-empty --verbose" -- "$cur")) ;;
             help) COMPREPLY=($(compgen -W "--color" -- "$cur")) ;;
             completion) COMPREPLY=($(compgen -W "--help -h --color" -- "$cur")) ;;

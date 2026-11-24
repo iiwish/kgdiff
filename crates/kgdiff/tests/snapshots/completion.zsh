@@ -80,6 +80,7 @@ _kgdiff() {
         '--json=[Full machine-readable diff (DiffJSON)]::file:_files'
         '--delta=[Invertible delta only, for kgdiff apply]::file:_files'
         '--markdown=[GitHub-flavoured Markdown for PR comments and job summaries]::file:_files'
+        '--kgcl=[The changes as KGCL commands for OBO tooling (experimental)]::file:_files'
         '(-o --html)--html=[Self-contained interactive HTML report (works offline)]:file:_files'
         '(-o --html)-o+[Self-contained interactive HTML report (works offline)]:file:_files'
         '--open[Open the HTML report in the browser (a temporary file without -o)]'

@@ -79,3 +79,35 @@ fn matches_the_snapshots() {
         "differ from the snapshots: {failures:?}"
     );
 }
+
+/// `--kgcl` on the ontology datasets (OBO and Turtle), compared with `tests/snapshots/*.kgcl`.
+/// The commands of both were checked once by hand with kgcl-schema 0.7.0's parser and the
+/// grammar of INCATools/kgcl at 1849f9c (`kgdiff_report::kgcl`); the comments are written to
+/// stderr as one warning with their count.
+#[test]
+fn kgcl_matches_the_snapshots() {
+    let mut failures = Vec::new();
+    for (id, comments) in [("ontology-release", 27), ("schema-vocab", 10)] {
+        let d = dataset(id);
+        let r = run_with(&d.argv(&["--kgcl"]), io());
+        assert_eq!(r.code, 0, "{}", r.stderr);
+        assert_eq!(
+            r.stderr,
+            format!(
+                "warning: {comments} changes have no KGCL command; --kgcl writes them as comments (lines starting with #).\n"
+            ),
+            "{id}"
+        );
+        let commented = r.stdout.lines().filter(|l| l.starts_with('#')).count();
+        assert_eq!(commented, comments, "{id}");
+        // The same diff gives the same bytes.
+        assert_eq!(run_with(&d.argv(&["--kgcl"]), io()).stdout, r.stdout);
+        if !matches(&format!("{id}.kgcl"), &r.stdout) {
+            failures.push(id);
+        }
+    }
+    assert!(
+        failures.is_empty(),
+        "differ from the snapshots: {failures:?}"
+    );
+}

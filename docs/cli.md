@@ -9,6 +9,7 @@ npx @kgdiff/cli before.obo after.obo -o report.html  # self-contained interactiv
 npx @kgdiff/cli a.json b.json --json > diff.json     # full machine-readable diff
 npx @kgdiff/cli a.json b.json --delta > patch.json   # invertible delta only
 npx @kgdiff/cli a.json b.json --markdown             # PR comment / job summary
+npx @kgdiff/cli a.obo b.obo --kgcl > changes.kgcl    # KGCL commands (experimental)
 npx @kgdiff/cli apply a.json patch.json -o b.json    # apply a delta
 ```
 
@@ -56,11 +57,12 @@ offline and reproducible), so a document that references one fails with a hint t
 | `--json [file]`     | `DiffJSON` (pretty with `--pretty`)                                                                                   |
 | `--delta [file]`    | `Delta`                                                                                                               |
 | `--markdown [file]` | GitHub-flavoured Markdown: title, diffstat table, collapsible hunk list                                               |
+| `--kgcl [file]`     | The changes as [KGCL](#kgcl-export) commands, for OBO tooling (experimental)                                          |
 | `-o, --html <file>` | Self-contained HTML report (viewer + embedded payload; works offline)                                                 |
 | `--open`            | Open the HTML report in the default browser                                                                           |
 
 Several outputs may be combined (`-o report.html --markdown summary.md`); at most one goes to
-stdout. `--json`, `--delta` and `--markdown` take an optional file (`-` or no value = stdout;
+stdout. `--json`, `--delta`, `--markdown` and `--kgcl` take an optional file (`-` or no value = stdout;
 `--json=-x.json` or `--json ./-x.json` for names starting with `-`).
 
 Output files are written atomically (a temporary file in the same directory, then rename;
@@ -283,6 +285,63 @@ invisible and bidi characters made visible; control characters dropped), and Git
 post-Markdown filters are defused with a zero-width space before escaping: `:emoji:`
 shortcodes, `@mentions`, `#123` / `org/repo#123` / `GH-123` references, bare `scheme://` URLs
 and `www.` autolinks — a summary never pings people, links issues or turns labels into links.
+
+## KGCL export
+
+**Experimental**: the mapping may change in a minor release.
+
+`--kgcl` writes the changes as [KGCL](https://github.com/INCATools/kgcl) (Knowledge Graph Change
+Language), the change language OBO tools read: one command per line, hunk by hunk in the order of
+the summary and, inside a hunk, in the order of its delta operations. The same inputs give the
+same bytes. The library function is `kgdiff_report::render_kgcl`.
+
+```sh
+kgdiff mhd-2026-09.obo mhd-2026-10.obo --kgcl changes.kgcl
+runoak -i simpleobo:mhd-2026-09.obo apply --changes-input changes.kgcl -o mhd-applied.obo   # OAK
+```
+
+| kgdiff                                 | KGCL                                                            |
+| -------------------------------------- | --------------------------------------------------------------- |
+| node added                             | `create node X 'label'` (`create X` for a node without a label) |
+| node removed                           | `delete X`                                                      |
+| edge added / removed                   | `create edge S P O` / `delete edge S P O`                       |
+| moved: one parent replaced by another  | `move S P OLD from OLD to NEW`                                  |
+| label changed                          | `rename X from 'old' to 'new'`                                  |
+| synonym (alias) added                  | `create [exact\|narrow\|broad\|related] synonym 'a' for X`      |
+| synonym removed                        | `remove synonym 'a' for X`                                      |
+| deprecated (with one new `replacedBy`) | `obsolete X [with replacement Y]`                               |
+| no longer deprecated                   | `unobsolete X`                                                  |
+| definition added                       | `add definition 'd' to X`                                       |
+| definition changed                     | `change definition of X from 'a' to 'b'`                        |
+| definition removed                     | `remove definition for X`                                       |
+| type added / removed (RDF inputs)      | `create edge X rdf:type T` / `delete edge X rdf:type T`         |
+
+Definitions are the attributes `def` (OBO), `definition`, `IAO:0000115` and `skos:definition`.
+
+The rest has no KGCL command and becomes a **comment**, a line `# <why>: <JSON>` that holds the
+delta operation (or the hunk) it stands for, so nothing is dropped: other attribute changes
+(`xref`, `comment`, `rdfs:comment`, …), id changes, edge labels and attributes, `replaces` and a
+`replacedBy` change without obsoletion, type changes outside RDF, splits (one comment before the
+split's own changes), merges that are not an obsoletion with replacement, implicit nodes (edge
+endpoints the file does not declare), and the fields of a new node or edge that its command
+cannot carry. A text KGCL cannot quote is a comment too: KGCL's strings are single-quoted with no
+escapes, so a label, synonym or definition that is empty or holds a `'` or a line break cannot be
+written (`Alzheimer's disease`). kgdiff prints one warning on stderr with the number of comments.
+OAK (`runoak apply`) skips `#` lines; KGCL itself has no comments, so other readers may need them
+removed first (`grep -v '^#'`).
+
+Ids are written as KGCL takes them: an IRI as a CURIE with the prefixes the two files declare
+(plus the well-known ones and the OBO PURL rule, `http://purl.obolibrary.org/obo/GO_0008150` →
+`GO:0008150`), else in angle brackets (`<https://example.org/x>`); any other id as it is. An id
+with whitespace, or one that starts with a quote or `<`, cannot be written, and its change is a
+comment. With OBO inputs `is_a` is written `rdfs:subClassOf`, synonyms carry their scope, and the
+stanza type `Term` goes without saying.
+
+The commands follow the grammar [`src/kgcl_schema/grammar/kgcl.lark`](https://github.com/INCATools/kgcl/blob/1849f9cbb3ebb4a5ee0e6c62b11238841eb81d66/src/kgcl_schema/grammar/kgcl.lark) of INCATools/kgcl at commit `1849f9c` (2026-11-18),
+restricted to those the released `kgcl-schema` 0.7.0 parses too (it has no `add label`, so a
+label given to a node that had none is a comment). The parser of `kgcl-schema` resolves a full
+IRI in angle brackets only when its namespace is one it knows (OBO, Bioregistry, common linked
+data prefixes); other IRIs it reads as empty, which is a limit of that parser, not of the syntax.
 
 ## HTML report
 

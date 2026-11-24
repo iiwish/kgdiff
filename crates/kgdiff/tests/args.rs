@@ -429,6 +429,60 @@ fn allows_only_one_output_on_stdout() {
 }
 
 #[test]
+fn parses_kgcl_as_the_other_optional_outputs() {
+    assert_eq!(
+        diff_options(&["a", "b", "--kgcl"]).kgcl.as_deref(),
+        Some("-")
+    );
+    assert_eq!(
+        diff_options(&["a", "b", "--kgcl", "changes.kgcl"])
+            .kgcl
+            .as_deref(),
+        Some("changes.kgcl")
+    );
+    assert_eq!(
+        diff_options(&["a", "b", "--kgcl=-x.kgcl"]).kgcl.as_deref(),
+        Some("-x.kgcl")
+    );
+    // Before the graphs, it leaves them alone; it does not take an option as its file.
+    let o = diff_options(&["--kgcl", "a.obo", "b.obo", "--pretty"]);
+    assert_eq!(
+        (o.before.as_str(), o.after.as_str(), o.kgcl.as_deref()),
+        ("a.obo", "b.obo", Some("-"))
+    );
+    let p = diff_options(&["a", "b", "--kgcl", "--json", "d.json"]);
+    assert_eq!(
+        (p.kgcl.as_deref(), p.json.as_deref()),
+        (Some("-"), Some("d.json"))
+    );
+    // It combines with the other outputs; without it there is none.
+    let q = diff_options(&["a", "b", "--markdown", "m.md", "--kgcl", "c.kgcl", "--json"]);
+    assert_eq!(
+        (q.markdown.as_deref(), q.kgcl.as_deref(), q.json.as_deref()),
+        (Some("m.md"), Some("c.kgcl"), Some("-"))
+    );
+    assert_eq!(diff_options(&["a", "b"]).kgcl, None);
+}
+
+#[test]
+fn allows_kgcl_on_stdout_alone() {
+    assert_eq!(
+        usage_error(&["a", "b", "--kgcl", "--markdown"]),
+        (
+            "--markdown and --kgcl would all write to stdout.".to_owned(),
+            "Send all but one to a file, e.g. --markdown out.md.".to_owned()
+        )
+    );
+    assert_eq!(
+        usage_error(&["a", "b", "--kgcl", "--stat"]),
+        (
+            "--kgcl and --stat would all write to stdout.".to_owned(),
+            "Send all but one to a file, e.g. --kgcl out.kgcl.".to_owned()
+        )
+    );
+}
+
+#[test]
 fn refuses_an_html_report_on_stdout() {
     assert!(
         usage_error(&["a", "b", "-o", "-"])

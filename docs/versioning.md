@@ -102,6 +102,10 @@ origin (`columns() -> Option<f64>`, `now() -> io::Result<String>`, paths as `&st
 external host uses it. Once the Python bindings have, these modules join the promise.
 `kgdiff-core`, `kgdiff-formats`, `kgdiff-layout` and `kgdiff-report` are not affected.
 
+The KGCL export is experimental as well: the output of `--kgcl` and `kgdiff_report`'s
+`render_kgcl`, `KgclOptions` and `Kgcl` (the `kgcl` module). Which changes become which KGCL
+command, and which become comments, may change in a minor release until OBO tooling has used it.
+
 ## Platforms
 
 - **Node.js**: the lines `engines` lists (22 and later), each tested in CI.

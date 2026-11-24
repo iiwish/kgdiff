@@ -64,4 +64,4 @@
 | 变更组 `move`（diff 层面）           | `move … from … to …`          | `D` + `A`                |
 | 变更组 `merge`（diff 层面）          | 带替代的废弃                  | 三元组                   |
 
-导出到 KGCL 和 RDF Patch 的功能可以基于变更组和操作来实现，不需要改动这个格式。
+导出到 KGCL 和 RDF Patch 的功能可以基于变更组和操作来实现，不需要改动这个格式。`kgdiff --kgcl`（实验性）就是 KGCL 的导出：按顺序遍历变更组，把每个操作写成一条 KGCL 命令，并把变更组语义上连在一起的操作合成一条（迁移的 `edge.remove` 和 `edge.add` 合成一条 `move`，`deprecated` 加一个新的 `replacedBy` 合成一条 `obsolete … with replacement`；OBO 的 `synonyms` 属性给同义词带上范围）。定义对应 `add` / `change` / `remove definition`，RDF 输入的 `types` 对应 `rdf:type` 关系。KGCL 没有对应命令的操作（`node.rekey`、其他 `node.attr`、`edge.set`、`edge.attr`、`replaces`、单独的 `replacedBy`）以及拆分写成 `#` 注释，注释里是该操作的 JSON（完整的映射见[命令行](cli.md#kgcl-导出)）。

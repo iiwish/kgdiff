@@ -1732,3 +1732,91 @@ fn truncates_very_long_labels_to_the_terminal_width() {
     }
     assert!(r.stdout.contains('…'));
 }
+
+const KGCL: &str = "delete edge dodo eats bird\ndelete dodo\nrename cat from 'Cat' to 'House cat'\ncreate node owl 'Owl'\ncreate edge owl is_a bird\n";
+
+#[test]
+fn kgcl_writes_the_changes_to_stdout_or_a_file() {
+    let r = run(&["before.json", "after.json", "--kgcl"], &FILES);
+    assert_eq!(
+        (r.code, r.stdout.as_str(), r.stderr.as_str()),
+        (0, KGCL, "")
+    );
+    let r = run(
+        &[
+            "before.json",
+            "after.json",
+            "--kgcl",
+            "changes.kgcl",
+            "--markdown",
+            "summary.md",
+        ],
+        &FILES,
+    );
+    assert_eq!(r.code, 0);
+    assert_eq!(r.file("changes.kgcl"), KGCL);
+    assert!(r.file("summary.md").starts_with("## kgdiff · zoo v1 → v2"));
+    assert!(re(r"✓ Wrote KGCL changes\.kgcl \(\d+ B\)").is_match(&r.stderr));
+    // The summary still goes to stdout.
+    assert!(r.stdout.starts_with("kgdiff  zoo v1 → v2"));
+}
+
+#[test]
+fn kgcl_warns_once_about_the_changes_it_writes_as_comments() {
+    let attrs = |legs: u32| {
+        format!(
+            r#"{{"nodes":[{{"id":"cat","label":"Cat","attrs":{{"legs":{legs},"tail":true}}}}],"edges":[]}}"#
+        )
+    };
+    let r = run_with(
+        &["a.json", "b.json", "--kgcl"],
+        io().file("a.json", attrs(4))
+            .file("b.json", attrs(3).replace(",\"tail\":true", "")),
+    );
+    assert_eq!(r.code, 0);
+    assert_eq!(
+        r.stderr,
+        "warning: 2 changes have no KGCL command; --kgcl writes them as comments (lines starting with #).\n"
+    );
+    assert_eq!(r.stdout.lines().filter(|l| l.starts_with("# ")).count(), 2);
+    let one = run_with(
+        &["a.json", "b.json", "--kgcl"],
+        io().file("a.json", attrs(4)).file("b.json", attrs(3)),
+    );
+    assert_eq!(
+        one.stderr,
+        "warning: 1 change has no KGCL command; --kgcl writes it as a comment (a line starting with #).\n"
+    );
+    // --quiet keeps stderr empty, and the file is still written.
+    let quiet = run_with(
+        &["a.json", "b.json", "--kgcl", "c.kgcl", "--quiet"],
+        io().file("a.json", attrs(4)).file("b.json", attrs(3)),
+    );
+    assert_eq!((quiet.stdout.as_str(), quiet.stderr.as_str()), ("", ""));
+    assert!(
+        quiet
+            .file("c.kgcl")
+            .starts_with("# no KGCL command for an attribute change: ")
+    );
+}
+
+#[test]
+fn kgcl_never_overwrites_an_input() {
+    let r = run(
+        &["before.json", "after.json", "--kgcl", "after.json"],
+        &FILES,
+    );
+    assert_eq!(r.code, 2);
+    assert!(r.stderr.contains("--kgcl \"after.json\""), "{}", r.stderr);
+    assert!(r.io.written.is_empty());
+}
+
+#[test]
+fn kgcl_of_identical_graphs_is_empty() {
+    let r = run(
+        &["before.json", "before.json", "--kgcl", "same.kgcl"],
+        &FILES,
+    );
+    assert_eq!(r.code, 0);
+    assert_eq!(r.file("same.kgcl"), "");
+}

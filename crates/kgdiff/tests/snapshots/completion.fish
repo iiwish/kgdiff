@@ -49,6 +49,7 @@ complete -c kgdiff -n '__kgdiff_in diff' -l name-status -d 'One line per hunk: A
 complete -c kgdiff -n '__kgdiff_in diff' -l json -d 'Full machine-readable diff (DiffJSON)'
 complete -c kgdiff -n '__kgdiff_in diff' -l delta -d 'Invertible delta only, for kgdiff apply'
 complete -c kgdiff -n '__kgdiff_in diff' -l markdown -d 'GitHub-flavoured Markdown for PR comments and job summaries'
+complete -c kgdiff -n '__kgdiff_in diff' -l kgcl -d 'The changes as KGCL commands for OBO tooling (experimental)'
 complete -c kgdiff -n '__kgdiff_in diff' -l html -s o -r -F -d 'Self-contained interactive HTML report (works offline)'
 complete -c kgdiff -n '__kgdiff_in diff' -l open -d 'Open the HTML report in the browser (a temporary file without -o)'
 complete -c kgdiff -n '__kgdiff_in diff' -l format -s f -x -a 'auto json jsonld turtle ntriples nquads trig rdfxml obo graphml gexf' -d 'Input format: auto, json, jsonld, turtle, ntriples, nquads, trig, rdfxml, obo, graphml, gexf'
