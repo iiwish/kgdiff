@@ -13,8 +13,6 @@
   <key id="d1" for="graph" attr.name="version" attr.type="string" />
   <key id="d0" for="graph" attr.name="name" attr.type="string" />
   <graph edgedefault="undirected">
-    <data key="d0">chibi</data>
-    <data key="d1">1</data>
     <node id="曹操">
       <data key="d2">曹操</data>
       <data key="d3">人物</data>
@@ -56,5 +54,7 @@
       <data key="d9">参战</data>
       <data key="d10">0.5</data>
     </edge>
+    <data key="d0">chibi</data>
+    <data key="d1">1</data>
   </graph>
 </graphml>
